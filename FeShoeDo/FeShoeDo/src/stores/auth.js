@@ -1,0 +1,112 @@
+import { defineStore } from 'pinia';
+import api from '@/services/api';
+
+export const useAuthStore = defineStore('auth', {
+  state: () => ({
+    user: JSON.parse(localStorage.getItem('user')) || null,
+    token: localStorage.getItem('auth_token') || null,
+    isLoading: false,
+    error: null,
+  }),
+  
+  getters: {
+    isAuthenticated: (state) => !!state.user,
+    userRole: (state) => state.user?.role,
+    userName: (state) => state.user?.name,
+    isEmployee: (state) => state.user?.role === 'EMPLOYEE' || state.user?.role === 'ADMIN',
+    isCustomer: (state) => state.user?.role === 'CUSTOMER',
+    isAdmin: (state) => state.user?.vaiTro === 'Admin',
+    isActive: (state) => state.user?.isActive === true,
+    maUser: (state) => state.user?.maUser, 
+    userName: (state) => state.user?.userName,
+  },
+  
+  actions: {
+    async login(credentials) {
+      this.isLoading = true;
+      this.error = null;
+      
+      try {
+        const response = await api.login(credentials);
+        
+        if (response.data.success) {
+          this.user = response.data.user;
+          localStorage.setItem('user', JSON.stringify(this.user));
+          return { success: true };
+        } else {
+          this.error = response.data.message;
+          return { success: false, message: response.data.message };
+        }
+      } catch (error) {
+        this.error = error.response?.data?.message || 'Đăng nhập thất bại';
+        return { success: false, message: this.error };
+      } finally {
+        this.isLoading = false;
+      }
+    },
+    
+    async register(credentials) {
+      this.isLoading = true;
+      this.error = null;
+      
+      try {
+        const registerData = {
+          mail: credentials.mail,
+          pass: credentials.pass,
+          fullname: credentials.fullname,
+          phone: credentials.phone,
+          remember: credentials.remember || false
+        };
+        
+        const response = await api.register(registerData);
+        
+        if (response.data.success) {
+          this.user = response.data.user;
+          localStorage.setItem('user', JSON.stringify(this.user));
+          return { success: true };
+        } else {
+          this.error = response.data.message;
+          return { success: false, message: response.data.message };
+        }
+      } catch (error) {
+        this.error = error.response?.data?.message || 'Đăng ký thất bại';
+        return { success: false, message: this.error };
+      } finally {
+        this.isLoading = false;
+      }
+    },
+    
+    async logout() {
+      try {
+        await api.logout();
+        localStorage.removeItem('user');
+        localStorage.removeItem('auth_token');
+      } catch (error) {
+        console.error('Logout error:', error);
+      } finally {
+        this.clearAuth();
+      }
+    },
+    
+    async fetchCurrentUser() {
+      try {
+        const response = await api.getCurrentUser();
+        if (response.data.success) {
+          this.user = response.data.user;
+          localStorage.setItem('user', JSON.stringify(this.user));
+          return true;
+        }
+      } catch (error) {
+        this.clearAuth();
+      }
+      return false;
+    },
+    
+    clearAuth() {
+      this.user = null;
+      this.token = null;
+      localStorage.removeItem('user');
+      localStorage.removeItem('auth_token');
+    }
+  },
+});
