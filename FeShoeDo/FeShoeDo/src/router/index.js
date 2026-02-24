@@ -1,9 +1,13 @@
 import { createRouter, createWebHistory } from 'vue-router';
+<<<<<<< HEAD
 import { useAuthStore } from '@/stores/auth';
+=======
+>>>>>>> MINH
 
 const routes = [
   {
     path: '/',
+<<<<<<< HEAD
     redirect: '/customer/index',
   },
   {
@@ -60,10 +64,14 @@ const routes = [
     name: 'EmployeeDashboard',
     component: () => import('@/components/employee/NV_Index.vue'),
     meta: { requiresAuth: true, role: 'EMPLOYEE' }
+=======
+    redirect: '/employee/products',
+>>>>>>> MINH
   },
   {
     path: '/employee/products',
     name: 'ProductManagement',
+<<<<<<< HEAD
     component: () => import('@/components/employee/NV_QLSanPham.vue'),
     meta: { requiresAuth: true, role: 'EMPLOYEE' }
   },
@@ -86,6 +94,15 @@ const routes = [
     meta: { requiresAuth: true, role: 'EMPLOYEE' }
   },
   
+=======
+    component: () => import('@/components/Employee/NV_QLSP.vue'),
+  },
+    {
+    path: '/employee/import',
+    name: 'NhapKho',
+    component: () => import('@/components/Employee/NV_NhapKho.vue'),
+  },
+>>>>>>> MINH
 ];
 
 const router = createRouter({
@@ -93,6 +110,7 @@ const router = createRouter({
   routes,
 });
 
+<<<<<<< HEAD
 router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore();
 
@@ -172,4 +190,6 @@ router.beforeEach(async (to, from, next) => {
   next();
 });
 
+=======
+>>>>>>> MINH
 export default router;
