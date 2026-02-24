@@ -63,39 +63,29 @@ CREATE TABLE Size (
     CoGiay INT UNIQUE -- 39, 40, 41
 );
 
--- 8. Bảng Màu Sắc
+-- 9. Bảng Sản phẩm - Màu sắc (Biến thể hình ảnh)
 CREATE TABLE MauSac (
     MaMau INT IDENTITY(1,1) PRIMARY KEY,
-    TenMau NVARCHAR(50) UNIQUE, 
-    MaHex NVARCHAR(10) 
-);
-
--- 9. Bảng Sản phẩm - Màu sắc (Biến thể hình ảnh)
-CREATE TABLE SanPham_MauSac (
-    MaSP_Mau INT IDENTITY(1,1) PRIMARY KEY,
-    MaSP INT,
-    MaMau INT,
-    HinhAnh NVARCHAR(MAX), 
-    -- Ràng buộc: 1 sản phẩm không thể có cùng 1 màu 2 lần.
-    CONSTRAINT UQ_SPMau UNIQUE (MaSP, MaMau),
-
-    FOREIGN KEY (MaSP) REFERENCES SanPham(MaSP),
-    FOREIGN KEY (MaMau) REFERENCES MauSac(MaMau)
+    MaSP INT NOT NULL,
+    TenMau NVARCHAR(50),
+    HinhAnh NVARCHAR(MAX),
+    CONSTRAINT UQ_SP_TenMau UNIQUE (MaSP, TenMau),
+    CONSTRAINT FK_MauSac_SanPham FOREIGN KEY (MaSP) REFERENCES SanPham(MaSP)
 );
 
 -- 10. Bảng Chi tiết sản phẩm (SKU - Kho hàng - Giá)
 CREATE TABLE SanPham_ChiTiet (
     MaSKU INT IDENTITY(1,1) PRIMARY KEY,
-    MaSP_Mau INT, -- Link tới bảng Màu (đã có ảnh)
+    MaMau INT, -- Link tới bảng Màu (đã có ảnh)
     MaSize INT, 
     TrangThai NVARCHAR(50),
     SoLuong INT DEFAULT 0 CHECK (SoLuong >= 0),
     DonGia DECIMAL(18,2) CHECK (DonGia > 0),
     -- Ràng buộc: 1 màu + 1 size = 1 SKU duy nhất
-    CONSTRAINT UQ_SKU UNIQUE (MaSP_Mau, MaSize),
+    CONSTRAINT UQ_SKU UNIQUE (MaMau, MaSize),
 
     CONSTRAINT FK_ChiTiet_Size FOREIGN KEY (MaSize) REFERENCES Size(MaSize),
-    CONSTRAINT FK_ChiTiet_Mau FOREIGN KEY (MaSP_Mau) REFERENCES SanPham_MauSac(MaSP_Mau) -- ĐÃ BỔ SUNG
+    CONSTRAINT FK_ChiTiet_Mau FOREIGN KEY (MaMau) REFERENCES MauSac(MaMau)
 );
 
 -- 11. Bảng Nhập Kho
@@ -166,7 +156,7 @@ CREATE TABLE DanhGia (
     -- Ràng buộc: Mua 1 lần -> đánh giá 1 lần (Unique trên MaKH và MaHDCT)
     CONSTRAINT UQ_DanhGia_MotLan UNIQUE (MaHDCT),
 
-    CONSTRAINT FK_DanhGia_HoaDonCT FOREIGN KEY (MaHDCT) REFERENCES HoaDonCT(MaHDCT),
+    CONSTRAINT FK_DanhGia_HoaDonCT FOREIGN KEY (MaHDCT) REFERENCES HoaDonCT(MaHDCT)
 );
 
 -- 17. Bảng Tìm Kiếm
@@ -184,14 +174,14 @@ GO
 
 -- 1. Dữ liệu mẫu cho bảng [User]
 INSERT INTO Users (UserName, Mail, PassWord, IsActive) VALUES 
-('admin', 'admin@shop.com', '$2a$10$gaokpPUPhNj.QRNj5PpgDu5LzVKJXz2Xyosg9yDeZobLciTzZH3gW', 1),
-('nv1', 'nhanvien1@gmail.com', '$2a$10$gaokpPUPhNj.QRNj5PpgDu5LzVKJXz2Xyosg9yDeZobLciTzZH3gW', 1),
-('nv2', 'nhanvien2@gmail.com', '$2a$10$gaokpPUPhNj.QRNj5PpgDu5LzVKJXz2Xyosg9yDeZobLciTzZH3gW', 1),
-('nv3', 'nhanvien3@gmail.com', '$2a$10$gaokpPUPhNj.QRNj5PpgDu5LzVKJXz2Xyosg9yDeZobLciTzZH3gW', 1),
-('user1', 'user1@gmail.com', '$2a$10$gaokpPUPhNj.QRNj5PpgDu5LzVKJXz2Xyosg9yDeZobLciTzZH3gW', 1),
-('user2', 'user2@gmail.com', '$2a$10$gaokpPUPhNj.QRNj5PpgDu5LzVKJXz2Xyosg9yDeZobLciTzZH3gW', 1),
-('user3', 'user3@gmail.com', '$2a$10$gaokpPUPhNj.QRNj5PpgDu5LzVKJXz2Xyosg9yDeZobLciTzZH3gW', 1),
-('QuanTesteremail', 'nguyenhoangminhquan786@gmail.com', '$2a$10$gaokpPUPhNj.QRNj5PpgDu5LzVKJXz2Xyosg9yDeZobLciTzZH3gW', 1);
+('admin', 'admin@shop.com', 'PasswordEncoder', 1),
+('nv1', 'nhanvien1@gmail.com', 'PasswordEncoder', 1),
+('nv2', 'nhanvien2@gmail.com', 'PasswordEncoder', 1),
+('nv3', 'nhanvien3@gmail.com', 'PasswordEncoder', 1),
+('user1', 'user1@gmail.com', 'PasswordEncoder', 1),
+('user2', 'user2@gmail.com', 'PasswordEncoder', 1),
+('user3', 'user3@gmail.com', 'PasswordEncoder', 1),
+('QuanTesteremail', 'nguyenhoangminhquan786@gmail.com', 'PasswordEncoder', 1);
 
 -- 2. Dữ liệu mẫu cho bảng Khách Hàng (MaUser 5, 6, 7, 8)
 INSERT INTO KhachHang (TenKH, SDT, MaUser) VALUES 
@@ -285,47 +275,33 @@ INSERT INTO Size (CoGiay) VALUES
 (42), -- ID 7: Size 42
 (43); -- ID 8: Size 43
 
--- 7. Dữ liệu Màu Sắc
-INSERT INTO MauSac (TenMau, MaHex) VALUES 
-(N'Trắng', '#FFFFFF'), -- 1
-(N'Đen',   '#000000'), -- 2
-(N'Đỏ',    '#FF0000'), -- 3
-(N'Xám',   '#808080'), -- 4
-(N'Nâu',   '#8B4513'), -- 5
-(N'Xanh Lá','#008000'), -- 6
-(N'Cam',   '#FFA500'), -- 7 
-(N'Xanh',  '#0000FF'), -- 8
-(N'Đen bóng', '#000000'), -- 9
-(N'Nâu đậm', '#654321'), -- 10
-(N'Đa màu', '#Rainbow'); -- 11
-
--- 8. Dữ liệu Sản phẩm - Màu sắc (Tách từ bảng PhanLoai cũ)
-INSERT INTO SanPham_MauSac (MaSP, MaMau, HinhAnh) VALUES
-(1, 1, 'sp1_trang_40.jpg'), -- 1
-(1, 2, 'sp1_den_41.jpg'),   -- 2
-(2, 2, 'sp2_den_38.jpg'),   -- 3
-(2, 4, 'sp2_xam_39.jpg'),   -- 4
-(3, 3, 'sp3_do_37.jpg'),    -- 5
-(3, 2, 'sp3_den_38.jpg'),   -- 6
-(4, 1, 'sp4_trang_41.jpg'), -- 7
-(4, 4, 'sp4_xam_42.jpg'),   -- 8
-(5, 2, 'sp5_den_42.jpg'),   -- 9
-(5, 8, 'sp5_xanh_43.jpg'),  -- 10
-(6, 6, 'sp6_xanh_40.jpg'),  -- 11
-(6, 7, 'sp6_cam_41.jpg'),   -- 12
-(7, 5, 'sp7_nau_40.jpg'),   -- 13
-(7, 2, 'sp7_den_41.jpg'),   -- 14
-(8, 2, 'sp8_den_41.jpg'),   -- 15
-(8, 5, 'sp8_nau_42.jpg'),   -- 16
-(9, 9, 'sp9_den_41.jpg'),   -- 17
-(9, 10, 'sp9_nau_42.jpg'),  -- 18
-(10, 1, 'pk_vottt1.jpg'),   -- 19
-(11, 2, 'pk_vottt2.jpg'),   -- 20
-(12, 4, 'pk_vottt3.jpg'),   -- 21
-(13, 11, 'pk_daygiay.jpg'); -- 22
+-- 8. Dữ liệu Sản phẩm
+Màu sắc INSERT INTO MauSac (MaSP, TenMau, HinhAnh) VALUES
+(1, N'Trắng', 'sp1_trang_40.jpg'), -- 1
+(1, N'Đen', 'sp1_den_41.jpg'),   -- 2
+(2, N'Đen', 'sp2_den_38.jpg'),   -- 3
+(2, N'Xám', 'sp2_xam_39.jpg'),   -- 4
+(3, N'Đỏ', 'sp3_do_37.jpg'),    -- 5
+(3, N'Đen', 'sp3_den_38.jpg'),   -- 6
+(4, N'Trắng', 'sp4_trang_41.jpg'), -- 7
+(4, N'Xám', 'sp4_xam_42.jpg'),   -- 8
+(5, N'Đen', 'sp5_den_42.jpg'),   -- 9
+(5, N'Xanh biển', 'sp5_xanhbien_43.jpg'),  -- 10
+(6, N'Xanh Lá', 'sp6_xanh_40.jpg'),  -- 11
+(6, N'Cam', 'sp6_cam_41.jpg'),   -- 12
+(7, N'Nâu', 'sp7_nau_40.jpg'),   -- 13
+(7, N'Đen', 'sp7_den_41.jpg'),   -- 14
+(8, N'Đen', 'sp8_den_41.jpg'),   -- 15
+(8, N'Nâu', 'sp8_nau_42.jpg'),   -- 16
+(9, N'Đen bóng', 'sp9_den_41.jpg'),   -- 17
+(9, N'Nâu đậm', 'sp9_nau_42.jpg'),  -- 18
+(10, N'Trắng', 'pk_vottt1.jpg'),   -- 19
+(11, N'Đen', 'pk_vottt2.jpg'),   -- 20
+(12, N'Xám', 'pk_vottt3.jpg'),   -- 21
+(13, N'Đa màu', 'pk_daygiay.jpg'); -- 22
 
 -- 9.Note: Cột MaSize bây giờ điền ID của bảng Size ở trên (Ví dụ: ID 5 là size 40, ID 6 là size 41)
-INSERT INTO SanPham_ChiTiet (MaSP_Mau, MaSize, TrangThai, SoLuong, DonGia) VALUES
+INSERT INTO SanPham_ChiTiet (MaMau, MaSize, TrangThai, SoLuong, DonGia) VALUES
 -- =======================
 -- Giày da (MaSP 1,2,3)
 -- =======================

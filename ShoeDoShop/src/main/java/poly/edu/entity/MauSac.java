@@ -16,13 +16,18 @@ public class MauSac {
     @Column(name = "MaMau")
     private Integer maMau;
 
-    @Column(name = "TenMau", unique = true)
-    private String tenMau;
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "MaSP")
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "mauSacs"})
+    private SanPham sanPham;
 
-    @Column(name = "MaHex")
-    private String maHex;
+    @Column(name = "TenMau")
+    private String tenMau;
+    
+    @Column(name = "HinhAnh", columnDefinition = "nvarchar(max)")
+    private String hinhAnh;
 
     @OneToMany(mappedBy = "mauSac", fetch = FetchType.LAZY)
     @JsonIgnore
-    private List<SanPhamMauSac> sanPhamMauSacs;
+    private List<SanPhamChiTiet> sanPhamChiTiets;
 }
