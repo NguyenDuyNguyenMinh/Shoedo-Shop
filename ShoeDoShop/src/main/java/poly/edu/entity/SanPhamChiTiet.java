@@ -17,9 +17,9 @@ public class SanPhamChiTiet {
     private Integer maSKU;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "MaSP_Mau")
+    @JoinColumn(name = "MaMau")
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "sanPhamChiTiets"})
-    private SanPhamMauSac sanPhamMauSac;
+    private MauSac mauSac;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "MaSize")
