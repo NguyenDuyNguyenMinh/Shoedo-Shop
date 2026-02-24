@@ -157,7 +157,6 @@ router.beforeEach(async (to, from, next) => {
     }
   }
   
-  // Kiểm tra nếu route yêu cầu chưa đăng nhập
   if (to.meta.requiresGuest && authStore.isAuthenticated) {
     if (authStore.userRole === 'CUSTOMER') {
       next('/customer/index');
