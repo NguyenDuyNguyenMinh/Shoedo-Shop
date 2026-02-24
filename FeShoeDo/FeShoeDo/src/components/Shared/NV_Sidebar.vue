@@ -1,11 +1,7 @@
 <template>
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
-<<<<<<< HEAD
-      <h3>BlackWhite</h3>
-=======
       <h3>ShoeDo Shop</h3>
->>>>>>> MINH
       <small>Quản lý cửa hàng của bạn</small>
       
       <!-- User info -->
