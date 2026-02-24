@@ -1,17 +1,39 @@
 <script setup>
-// Không cần script phức tạp, chỉ thuần template và css
+import { ref } from 'vue'
+import logoUrl from '@/assets/Logoc.png'
+
+// Biến trạng thái để ẩn/hiện popup lịch sử tìm kiếm
+const isSearchFocused = ref(false)
+
+// Dữ liệu mẫu (Mock data) cho lịch sử tìm kiếm
+const searchHistory = ref([
+  'Giày chạy bộ nam',
+  'Sneaker trắng',
+  'Giày thể thao Nike',
+  'Adidas Ultraboost'
+])
+
+// Hàm xử lý khi click ra ngoài ô tìm kiếm
+const hideSearchHistory = () => {
+  // Dùng setTimeout một chút để nếu người dùng click vào chữ trong lịch sử 
+  // thì nó vẫn kịp nhận diện sự kiện click trước khi menu bị đóng lại
+  setTimeout(() => {
+    isSearchFocused.value = false
+  }, 200)
+}
 </script>
 
 <template>
   <nav class="navbar navbar-expand-lg bg-black py-3 sticky-top" data-bs-theme="dark">
     <div class="container-fluid px-4 px-lg-5 d-flex align-items-center justify-content-between">
       
-      <a class="navbar-brand logo-box d-flex align-items-center justify-content-center text-white" href="#">
-        Logo
+      <a class="navbar-brand logo-box d-flex align-items-center justify-content-center" href="#">
+        <img :src="logoUrl" alt="Shoedo" class="logo-img">
       </a>
 
       <div class="collapse navbar-collapse flex-grow-0 mx-auto d-none d-lg-block" id="navbarNav">
-        <ul class="navbar-nav gap-5"> <li class="nav-item">
+        <ul class="navbar-nav gap-5"> 
+          <li class="nav-item">
             <a class="nav-link text-uppercase text-white fw-light" href="#">Trang Chủ</a>
           </li>
           <li class="nav-item">
@@ -25,25 +47,45 @@
 
       <div class="d-flex align-items-center gap-3 right-actions">
         
-        <div class="search-wrapper d-none d-md-block">
+        <div class="search-wrapper d-none d-md-block position-relative">
           <div class="input-group">
-            <span class="input-group-text bg-black border-0 ps-3">
-              <span class="text-secondary fw-light" style="font-size: 0.9rem;">Tìm Kiếm</span>
-            </span>
-            <input type="text" class="form-control bg-black border-0 shadow-none text-white" aria-label="Search">
-            <button class="btn btn-outline-light border-0 bg-black" type="button">
+            <input 
+              type="text" 
+              class="form-control bg-black border-0 shadow-none text-white ps-3" 
+              placeholder="Tìm Kiếm" 
+              aria-label="Search"
+              @focus="isSearchFocused = true"
+              @blur="hideSearchHistory"
+            >
+            <button class="btn btn-outline-light border-0 bg-black pe-3" type="button">
               <i class="bi bi-search text-white"></i>
             </button>
+          </div>
+
+          <div v-if="isSearchFocused && searchHistory.length > 0" class="search-history-dropdown">
+            <div class="d-flex justify-content-between align-items-center px-3 py-2 border-bottom border-dark">
+              <span class="text-secondary" style="font-size: 0.8rem; font-weight: 600;">Lịch sử tìm kiếm</span>
+              <span class="text-secondary clear-history" style="font-size: 0.8rem;">Xóa</span>
+            </div>
+            <ul class="list-unstyled mb-0 py-1">
+              <li v-for="(item, index) in searchHistory" :key="index" class="history-item px-3 py-2 text-white">
+                <i class="bi bi-clock-history me-2 text-secondary"></i>
+                {{ item }}
+              </li>
+            </ul>
           </div>
         </div>
 
         <a href="#" class="btn btn-icon position-relative text-white">
           <i class="bi bi-cart3 fs-5"></i>
+          <span class="position-absolute badge rounded-pill bg-danger cart-badge">
+            3
+          </span>
         </a>
 
         <div class="user-box d-flex align-items-center gap-2 px-3 py-2 rounded-0 cursor-pointer text-white">
           <i class="bi bi-person fs-5"></i>
-          <span class="fw-light">Minh</span>
+          <span class="fw-light">Tài Khoản</span>
           <i class="bi bi-chevron-down" style="font-size: 0.7rem;"></i>
         </div>
 
@@ -59,41 +101,45 @@
 <style scoped>
 /* --- DARK LUXURY THEME CSS --- */
 
-/* Nền đen tuyền */
 .bg-black {
   background-color: #000000 !important;
 }
 
-/* 1. Logo Box: Viền trắng, chữ trắng */
+/* 1. Logo Box */
 .logo-box {
-  width: 120px;
-  height: 48px;
-  border: 1px solid #ffffff; 
-  font-weight: 500;
-  letter-spacing: 2px;
-  font-size: 1rem;
+  width: 120px;  
+  height: 48px; 
   transition: all 0.3s ease;
+  padding: 5px; 
+}
+
+.logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain; 
+  transform: scale(1.5); 
+  transition: transform 0.3s ease;
 }
 
 .logo-box:hover {
   background-color: #fff;
-  color: #000 !important; /* Đảo màu khi hover */
+  border-color: #fff;
 }
 
 /* 2. Navigation Links */
 .nav-link {
   font-size: 0.9rem;
-  letter-spacing: 1.5px; /* Giãn chữ tạo cảm giác cao cấp */
+  letter-spacing: 1.5px; 
   position: relative;
   opacity: 0.9;
   transition: opacity 0.3s;
+  font-weight: 700 !important;
 }
 
 .nav-link:hover {
   opacity: 1;
 }
 
-/* Gạch chân trắng mảnh khi hover */
 .nav-link::after {
   content: '';
   position: absolute;
@@ -112,27 +158,85 @@
 /* 3. Search Bar Container */
 .search-wrapper {
   width: 320px;
+  z-index: 100; /* Đảm bảo wrapper nổi lên để popup hiển thị đúng */
 }
 
 .search-wrapper .input-group {
-  border: 1px solid #ffffff; /* Viền bao quanh màu trắng */
-  border-radius: 8px; /* Bo góc cho ô tìm kiếm */
-  overflow: hidden; /* Giữ bo góc cho phần tử con */
-  height: 44px; /* Chiều cao tiêu chuẩn cho tất cả controls */
+  border: 1px solid #ffffff; 
+  border-radius: 8px; 
+  overflow: hidden; 
+  height: 44px; 
+  background-color: #000;
+  /* Thêm transition để nếu có popup thì bo góc dưới mất đi cho liền mạch */
+  transition: border-radius 0.2s;
 }
 
-/* Tùy chỉnh placeholder cho input */
+/* Đổi màu viền khi ô tìm kiếm được chọn (focus-within) */
+.search-wrapper:focus-within .input-group {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
 input::placeholder {
   color: #666 !important;
+  font-weight: 700 !important;
+  font-size: 0.9rem;
+}
+
+.search-wrapper .input-group > input.form-control,
+.search-wrapper .input-group > .btn {
+  height: 100%;
+  border-radius: 0;
+}
+
+input:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+/* --- CSS CHO POPUP LỊCH SỬ TÌM KIẾM --- */
+.search-history-dropdown {
+  position: absolute;
+  top: 100%; /* Canh sát ngay dưới input group */
+  left: 0;
+  width: 100%;
+  background-color: #000000;
+  border: 1px solid #ffffff;
+  border-top: none; /* Bỏ viền trên để liền khối với thanh tìm kiếm */
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
+  z-index: 1050;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.5);
+}
+
+.history-item {
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.history-item:hover {
+  background-color: #222222; /* Sáng lên nhẹ khi di chuột */
+}
+
+.clear-history {
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.clear-history:hover {
+  color: #ffffff !important;
+  text-decoration: underline;
 }
 
 /* 4. Cart Icon Box */
 .btn-icon {
   padding: 0 14px;
   border: 1px solid #ffffff;
-  border-radius: 10px; /* Bo góc cho nút cart */
+  border-radius: 10px; 
   transition: transform 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease;
-  height: 48px; /* Cao hơn một chút để có cảm giác nổi */
+  height: 48px; 
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -147,7 +251,6 @@ input::placeholder {
   color: #000 !important;
 }
 
-/* Press (lift) effect */
 .btn-icon:active,
 .btn-icon.is-pressed {
   transform: translateY(-3px);
@@ -162,9 +265,9 @@ input::placeholder {
 /* 5. User Box */
 .user-box {
   border: 1px solid #ffffff;
-  border-radius: 8px !important; /* Bo góc cho user box */
+  border-radius: 8px !important; 
   transition: all 0.3s;
-  height: 44px; /* Chiều cao bằng ô tìm kiếm */
+  height: 44px; 
   align-items: center;
 }
 
@@ -173,26 +276,23 @@ input::placeholder {
   color: #000 !important;
 }
 
-/* Make nav links and small labels bold */
-.nav-link {
-  font-weight: 700 !important;
-}
-
 .user-box span {
   font-weight: 700 !important;
 }
 
-.search-wrapper .input-group .input-group-text .text-secondary,
-.search-wrapper .input-group .input-group-text {
-  font-weight: 700 !important;
+/* 6. Cart Badge */
+.cart-badge {
+  top: -6px;            
+  right: -6px;          
+  font-size: 0.7rem;    
+  padding: 0.35em 0.6em;
+  border: 2px solid #000000; 
+  font-weight: bold;
+  transition: border-color 0.18s ease;
 }
 
-/* Ensure inner input and buttons fill the container height and don't round separately */
-.search-wrapper .input-group > .input-group-text,
-.search-wrapper .input-group > input.form-control,
-.search-wrapper .input-group > .btn {
-  height: 100%;
-  border-radius: 0;
+.btn-icon:hover .cart-badge {
+  border-color: #ffffff;
 }
 
 /* Responsive */
