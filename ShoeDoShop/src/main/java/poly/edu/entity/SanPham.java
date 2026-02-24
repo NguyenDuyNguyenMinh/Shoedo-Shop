@@ -40,5 +40,5 @@ public class SanPham {
 
     @OneToMany(mappedBy = "sanPham", fetch = FetchType.LAZY)
     @JsonIgnore
-    private List<SanPhamMauSac> sanPhamMauSacs;
+    private List<MauSac> MauSacs;
 }
