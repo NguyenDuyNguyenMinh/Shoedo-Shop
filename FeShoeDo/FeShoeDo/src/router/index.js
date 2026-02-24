@@ -1,108 +1,21 @@
 import { createRouter, createWebHistory } from 'vue-router';
-<<<<<<< HEAD
 import { useAuthStore } from '@/stores/auth';
-=======
->>>>>>> MINH
 
 const routes = [
   {
     path: '/',
-<<<<<<< HEAD
-    redirect: '/customer/index',
-  },
-  {
-    path: '/auth/login',
-    name: 'Login',
-    component: () => import('@/components/auth/Login.vue'),
-    meta: { requiresGuest: true }
-  },
-  {
-    path: '/customer/index',
-    name: 'CustomerIndex',
-    component: () => import('@/components/customer/KH_Index.vue'),
-    meta: { requiresAuth: true, role: 'CUSTOMER' }
-  },
-  {
-    path: '/customer/detail-product/:id?',
-    name: 'DetailProduct',
-    component: () => import('@/components/customer/KH_DetailProduct.vue'),
-    meta: { requiresAuth: true, role: 'CUSTOMER' }
-  },
-  {
-    path: '/customer/cart',
-    name: 'Cart',
-    component: () => import('@/components/customer/KH_GioHang.vue'),
-    meta: { requiresAuth: true, role: 'CUSTOMER' }
-  },
-  {
-    path: '/customer/checkout',
-    name: 'Checkout',
-    component: () => import('@/components/customer/KH_DatHang.vue'),
-    meta: { requiresAuth: true, role: 'CUSTOMER' }
-  },
-  {
-    path: '/customer/orders',
-    name: 'Orders',
-    component: () => import('@/components/customer/KH_QLDonHang.vue'),
-    meta: { requiresAuth: true, role: 'CUSTOMER' }
-  },
-  {
-    path: '/customer/order/:id',
-    name: 'OrderDetail',
-    component: () => import('@/components/customer/KH_CTDonHang.vue'),
-    meta: { requiresAuth: true, role: 'CUSTOMER' }
-  },
-  {
-    path: '/customer/profile',
-    name: 'Profile',
-    component: () => import('@/components/customer/KH_QLUser.vue'),
-    meta: { requiresAuth: true, role: 'CUSTOMER' }
-  },
-  // Employee routes
-  {
-    path: '/employee/dashboard',
-    name: 'EmployeeDashboard',
-    component: () => import('@/components/employee/NV_Index.vue'),
-    meta: { requiresAuth: true, role: 'EMPLOYEE' }
-=======
     redirect: '/employee/products',
->>>>>>> MINH
   },
   {
     path: '/employee/products',
     name: 'ProductManagement',
-<<<<<<< HEAD
-    component: () => import('@/components/employee/NV_QLSanPham.vue'),
-    meta: { requiresAuth: true, role: 'EMPLOYEE' }
-  },
-  {
-    path: '/employee/orders',
-    name: 'OrderManagement',
-    component: () => import('@/components/employee/NV_QLDonHang.vue'),
-    meta: { requiresAuth: true, role: 'EMPLOYEE' }
-  },
-  {
-    path: '/employee/users',
-    name: 'UserManagement',
-    component: () => import('@/components/employee/NV_QLUser.vue'),
-    meta: { requiresAuth: true, role: 'EMPLOYEE' }
-  },
-  {
-    path: '/employee/import',
-    name: 'ImportStock',
-    component: () => import('@/components/employee/NV_NhapKho.vue'),
-    meta: { requiresAuth: true, role: 'EMPLOYEE' }
-  },
-  
-=======
     component: () => import('@/components/Employee/NV_QLSP.vue'),
   },
-    {
+  {
     path: '/employee/import',
     name: 'NhapKho',
     component: () => import('@/components/Employee/NV_NhapKho.vue'),
   },
->>>>>>> MINH
 ];
 
 const router = createRouter({
@@ -110,7 +23,6 @@ const router = createRouter({
   routes,
 });
 
-<<<<<<< HEAD
 router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore();
 
@@ -125,10 +37,8 @@ router.beforeEach(async (to, from, next) => {
     '/auth/login'
   ];
   
-  // Kiểm tra nếu route là public
   const isPublicPath = publicPaths.some(path => {
     if (path.includes(':')) {
-      // Kiểm tra pattern
       const pattern = new RegExp('^' + path.replace(/:\w+\?/g, '([^/]+)?').replace(/\//g, '\\/') + '$');
       return pattern.test(to.path);
     }
@@ -140,13 +50,10 @@ router.beforeEach(async (to, from, next) => {
     return;
   }
   
-  // Kiểm tra nếu route yêu cầu đăng nhập
   if (to.meta.requiresAuth) {
     if (!authStore.isAuthenticated) {
-      // Thử lấy user từ server
       try {
         await authStore.fetchCurrentUser();
-        
         if (!authStore.isAuthenticated) {
           next('/auth/login');
           return;
@@ -158,11 +65,9 @@ router.beforeEach(async (to, from, next) => {
       }
     }
     
-    // Kiểm tra quyền truy cập
     if (to.meta.role) {
       const userRole = authStore.userRole;
       if (userRole !== to.meta.role) {
-        // Redirect dựa trên role
         if (userRole === 'CUSTOMER') {
           next('/customer/index');
         } else if (userRole === 'EMPLOYEE') {
@@ -175,7 +80,6 @@ router.beforeEach(async (to, from, next) => {
     }
   }
   
-  // Kiểm tra nếu route yêu cầu chưa đăng nhập
   if (to.meta.requiresGuest && authStore.isAuthenticated) {
     if (authStore.userRole === 'CUSTOMER') {
       next('/customer/index');
@@ -190,6 +94,4 @@ router.beforeEach(async (to, from, next) => {
   next();
 });
 
-=======
->>>>>>> MINH
 export default router;
