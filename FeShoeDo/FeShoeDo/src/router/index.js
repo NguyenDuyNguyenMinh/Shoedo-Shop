@@ -24,18 +24,18 @@ const routes = [
   //   component: () => import('@/components/customer/KH_DetailProduct.vue'),
   //   meta: { requiresAuth: true, role: 'CUSTOMER' }
   // },
-  // {
-  //   path: '/customer/cart',
-  //   name: 'Cart',
-  //   component: () => import('@/components/customer/KH_GioHang.vue'),
-  //   meta: { requiresAuth: true, role: 'CUSTOMER' }
-  // },
-  // {
-  //   path: '/customer/checkout',
-  //   name: 'Checkout',
-  //   component: () => import('@/components/customer/KH_DatHang.vue'),
-  //   meta: { requiresAuth: true, role: 'CUSTOMER' }
-  // },
+  {
+    path: '/customer/cart',
+    name: 'Cart',
+    component: () => import('@/components/customer/KH_GioHang.vue'),
+    // meta: { requiresAuth: true, role: 'CUSTOMER' }
+  },
+  {
+    path: '/customer/checkout',
+    name: 'Checkout',
+    component: () => import('@/components/customer/KH_DatHang.vue'),
+    // meta: { requiresAuth: true, role: 'CUSTOMER' }
+  },
   // {
   //   path: '/customer/orders',
   //   name: 'Orders',
@@ -62,6 +62,12 @@ const routes = [
   //   meta: { requiresAuth: true, role: 'EMPLOYEE' }
   // },
   {
+    path: '/employee/dashboard',
+    name: 'EmployeeDashboard',
+    component: () => import('@/components/employee/NV_ThongKe.vue'),
+    // meta: { requiresAuth: true, role: 'EMPLOYEE' }
+  },
+  {
     path: '/employee/products',
     name: 'ProductManagement',
     component: () => import('@/components/employee/NV_QLSP.vue'),
@@ -73,19 +79,19 @@ const routes = [
   //   component: () => import('@/components/employee/NV_QLDonHang.vue'),
   //   meta: { requiresAuth: true, role: 'EMPLOYEE' }
   // },
-  // {
-  //   path: '/employee/users',
-  //   name: 'UserManagement',
-  //   component: () => import('@/components/employee/NV_QLUser.vue'),
-  //   meta: { requiresAuth: true, role: 'EMPLOYEE' }
-  // },
+  {
+    path: '/employee/users',
+    name: 'UserManagement',
+    component: () => import('@/components/employee/NV_QLUser.vue'),
+    // meta: { requiresAuth: true, role: 'EMPLOYEE' }
+  },
   {
     path: '/employee/import',
     name: 'ImportStock',
     component: () => import('@/components/employee/NV_NhapKho.vue'),
     // meta: { requiresAuth: true, role: 'EMPLOYEE' }
   },
-  
+
 ];
 
 const router = createRouter({
@@ -98,7 +104,7 @@ router.beforeEach(async (to, from, next) => {
 
   console.log('📍 Route change:', to.path);
   console.log('🔐 Auth state:', authStore.isAuthenticated);
-  
+
   // Cho phép truy cập công khai các trang này
   const publicPaths = [
     '/',
@@ -106,7 +112,7 @@ router.beforeEach(async (to, from, next) => {
     '/customer/detail-product/:id?',
     '/auth/login'
   ];
-  
+
   // Kiểm tra nếu route là public
   const isPublicPath = publicPaths.some(path => {
     if (path.includes(':')) {
@@ -116,19 +122,19 @@ router.beforeEach(async (to, from, next) => {
     }
     return to.path === path;
   });
-  
+
   if (isPublicPath) {
     next();
     return;
   }
-  
+
   // Kiểm tra nếu route yêu cầu đăng nhập
   if (to.meta.requiresAuth) {
     if (!authStore.isAuthenticated) {
       // Thử lấy user từ server
       try {
         await authStore.fetchCurrentUser();
-        
+
         if (!authStore.isAuthenticated) {
           next('/auth/login');
           return;
@@ -139,7 +145,7 @@ router.beforeEach(async (to, from, next) => {
         return;
       }
     }
-    
+
     // Kiểm tra quyền truy cập
     if (to.meta.role) {
       const userRole = authStore.userRole;
@@ -156,7 +162,7 @@ router.beforeEach(async (to, from, next) => {
       }
     }
   }
-  
+
   if (to.meta.requiresGuest && authStore.isAuthenticated) {
     if (authStore.userRole === 'CUSTOMER') {
       next('/customer/index');
@@ -166,8 +172,8 @@ router.beforeEach(async (to, from, next) => {
       next('/');
     }
     return;
-  } 
-  
+  }
+
   next();
 });
 
