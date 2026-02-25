@@ -49,6 +49,11 @@ const routes = [
     meta: { requiresAuth: true, role: 'CUSTOMER' }
   },
   {
+    path: '/customer/policy',
+    name: 'Policy',
+    component: () => import('@/components/customer/KH_ChinhSach.vue'),
+  },
+  {
     path: '/customer/profile',
     name: 'Profile',
     component: () => import('@/components/customer/KH_QLUser.vue'),
