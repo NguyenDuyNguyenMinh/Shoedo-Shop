@@ -7,34 +7,52 @@
         <i class="fas fa-check-circle me-2"></i>
         {{ message }}
         <button type="button" class="btn-close" @click="message = ''"></button>
-          </div>
+      </div>
           
       <div v-if="error" class="alert alert-danger alert-dismissible fade show">
         <i class="fas fa-exclamation-circle me-2"></i>
         {{ error }}
         <button type="button" class="btn-close" @click="error = ''"></button>
-          </div>
+      </div>
 
       <div class="row align-items-stretch">
         <!-- Thông tin cá nhân -->
-        <div class="col-md-6">
+        <div class="col-md-7">
           <div class="card shadow-sm mb-4">
-            <div class="card-header">
+            <div class="card-header bg-dark text-white">
               <i class="fa-solid fa-user me-2"></i> Thông tin cá nhân
-                  </div>
+            </div>
             <div class="card-body">
               <form @submit.prevent="updateProfile">
-                <div class="mb-3">
-                  <label class="form-label fw-bold">Họ và tên</label>
-                  <input type="text" class="form-control" v-model="profile.fullname" required disabled>
-                </div>
-                <div class="mb-3">
-                  <label class="form-label fw-bold">Email</label>
-                  <input type="email" class="form-control" v-model="profile.email" required>
-                </div>
-                <div class="mb-3">
-                  <label class="form-label fw-bold">Số điện thoại</label>
-                  <input type="text" class="form-control" v-model="profile.phone" required>
+                <div class="row">
+                  <!-- Cột 1 -->
+                  <div class="col-md-6">
+                    <div class="mb-3">
+                      <label class="form-label fw-bold">Tên đăng nhập</label>
+                      <input type="text" class="form-control" :value="user.userName" disabled>
+                    </div>
+                    <div class="mb-3">
+                      <label class="form-label fw-bold">Họ và tên</label>
+                      <input type="text" class="form-control" v-model="customer.tenKH" required>
+                    </div>
+                    <div class="mb-3">
+                      <label class="form-label fw-bold">Email</label>
+                      <input type="email" class="form-control" v-model="user.mail" required>
+                    </div>
+                  </div>
+                  
+                  <!-- Cột 2 -->
+                  <div class="col-md-6">
+                    <div class="mb-3">
+                      <label class="form-label fw-bold">Số điện thoại</label>
+                      <input type="text" class="form-control" v-model="customer.sdt" required 
+                             pattern="[0-9]{9,11}" placeholder="090xxxxxxx">
+                    </div>
+                    <div class="mb-3">
+                      <label class="form-label fw-bold">Ngày tham gia</label>
+                      <input type="text" class="form-control" :value="formatDate(user.createAt)" disabled>
+                    </div>
+                  </div>
                 </div>
 
                 <div class="text-end">
@@ -45,24 +63,25 @@
                 </div>
               </form>
             </div>
-                </div>
-              </div>
+          </div>
+        </div>
               
         <!-- Đổi mật khẩu -->
-        <div class="col-md-6">
+        <div class="col-md-5">
           <div class="card shadow-sm mb-4">
-            <div class="card-header">
+            <div class="card-header bg-dark text-white">
               <i class="fas fa-key me-2"></i> Đổi mật khẩu
-                  </div>
+            </div>
             <div class="card-body">
               <form @submit.prevent="changePassword">
                 <div class="mb-3">
                   <label class="form-label fw-bold">Mật khẩu hiện tại</label>
                   <input type="password" class="form-control" v-model="password.currentPassword" required>
-                  </div>
+                </div>
                 <div class="mb-3">
                   <label class="form-label fw-bold">Mật khẩu mới</label>
-                  <input type="password" class="form-control" v-model="password.newPassword" required>
+                  <input type="password" class="form-control" v-model="password.newPassword" required
+                         minlength="6">
                 </div>
                 <div class="mb-3">
                   <label class="form-label fw-bold">Xác nhận mật khẩu mới</label>
@@ -73,7 +92,7 @@
                   <button type="submit" class="btn btn-primary" :disabled="passwordLoading">
                     <span v-if="passwordLoading" class="spinner-border spinner-border-sm me-1"></span>
                     <i v-else class="fas fa-key me-1"></i> Đổi mật khẩu
-                        </button>
+                  </button>
                 </div>
               </form>
             </div>
@@ -83,46 +102,53 @@
 
       <!-- Quản lý địa chỉ -->
       <div class="card shadow-sm">
-        <div class="card-header d-flex justify-content-between align-items-center">
-          <span>📍 Quản lý địa chỉ nhận hàng</span>
+        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+          <span><i class="fas fa-map-marker-alt me-2"></i> Quản lý địa chỉ nhận hàng</span>
           <button class="btn btn-light btn-sm" @click="showAddModal = true">
             <i class="fas fa-plus me-1"></i> Thêm địa chỉ mới
-                        </button>
+          </button>
         </div>
         <div class="card-body">
           <!-- Địa chỉ mặc định -->
           <div v-for="address in addresses" :key="address.maDC" 
-               class="address-card mb-3" :class="{ 'default': address.macDinh }">
+               class="address-card mb-3" :class="{ 'default-address': address.macDinh }">
             <div class="d-flex justify-content-between align-items-center">
               <div>
                 <div class="address-header">
-                  <span>{{ address.tenNN }}</span> 
-                  <span class="text-muted"> | {{ address.sdt }}</span>
+                  <span class="fw-bold">{{ address.tenNN }}</span>
+                  <span class="text-muted mx-2">|</span>
+                  <span>{{ address.sdt }}</span>
+                  <span v-if="address.macDinh" class="badge bg-danger ms-2">Mặc định</span>
                 </div>
-                <div>{{ address.diemGiao }}</div>
+                <div class="mt-1">
+                  <i class="fas fa-home me-2 text-muted"></i>
+                  {{ address.diemGiao }}
+                </div>
               </div>
               <div class="text-end">
-                <button v-if="address.macDinh" class="btn btn-sm btn-outline-danger me-2" disabled>
-                  <i class="fas fa-check"></i> Mặc định
-                </button>
-                <button v-else class="btn btn-sm btn-outline-success me-2" 
-                        @click="setDefaultAddress(address.maDC)">
-                  <i class="fas fa-check"></i> Đặt mặc định
+                <button v-if="!address.macDinh" class="btn btn-sm btn-outline-success me-2" 
+                        @click="setDefaultAddress(address.maDC)"
+                        title="Đặt làm mặc định">
+                  <i class="fas fa-check-circle"></i>
                 </button>
                 <button class="btn btn-sm btn-outline-primary me-2" 
-                        @click="editAddress(address)">
-                  <i class="fas fa-edit"></i> Cập nhật
+                        @click="editAddress(address)"
+                        title="Chỉnh sửa">
+                  <i class="fas fa-edit"></i>
                 </button>
                 <button class="btn btn-sm btn-outline-danger" 
-                        @click="deleteAddress(address.maDC)">
-                  <i class="fas fa-trash"></i> Xóa
+                        @click="deleteAddress(address.maDC)"
+                        :disabled="address.macDinh"
+                        title="Xóa">
+                  <i class="fas fa-trash"></i>
                 </button>
               </div>
             </div>
           </div>
 
           <div v-if="addresses.length === 0" class="text-center text-muted p-4">
-            Chưa có địa chỉ nào
+            <i class="fas fa-map-marked-alt fa-3x mb-3"></i>
+            <p>Chưa có địa chỉ nào. Thêm địa chỉ mới để dễ dàng đặt hàng!</p>
           </div>
         </div>
       </div>
@@ -133,26 +159,34 @@
       <div class="modal-dialog">
         <div class="modal-content">
           <form @submit.prevent="saveAddress">
-            <div class="modal-header">
-              <h5 class="modal-title">{{ editingAddress ? 'Cập nhật địa chỉ' : 'Thêm địa chỉ mới' }}</h5>
-              <button type="button" class="btn-close" @click="closeModal"></button>
+            <div class="modal-header bg-dark text-white">
+              <h5 class="modal-title">
+                <i :class="editingAddress ? 'fas fa-edit' : 'fas fa-plus-circle'" class="me-2"></i>
+                {{ editingAddress ? 'Cập nhật địa chỉ' : 'Thêm địa chỉ mới' }}
+              </h5>
+              <button type="button" class="btn-close btn-close-white" @click="closeModal"></button>
             </div>
             <div class="modal-body">
               <div class="mb-3">
-                <label class="form-label">Họ và tên</label>
-                <input type="text" class="form-control" v-model="addressForm.tenNN" required>
+                <label class="form-label fw-bold">Họ và tên người nhận</label>
+                <input type="text" class="form-control" v-model="addressForm.tenNN" required
+                       placeholder="Nhập họ tên người nhận">
               </div>
               <div class="mb-3">
-                <label class="form-label">Số điện thoại</label>
-                <input type="text" class="form-control" v-model="addressForm.sdt" required pattern="[0-9]{9,11}">
+                <label class="form-label fw-bold">Số điện thoại</label>
+                <input type="text" class="form-control" v-model="addressForm.sdt" required 
+                       pattern="[0-9]{9,11}" placeholder="090xxxxxxx">
+                <small class="text-muted">9-11 số</small>
               </div>
               <div class="mb-3">
-                <label class="form-label">Địa chỉ</label>
-                <textarea class="form-control" v-model="addressForm.diemGiao" rows="3" required></textarea>
+                <label class="form-label fw-bold">Địa chỉ</label>
+                <textarea class="form-control" v-model="addressForm.diemGiao" rows="3" required
+                          placeholder="Số nhà, tên đường, phường/xã, quận/huyện, tỉnh/thành phố"></textarea>
               </div>
               <div class="form-check">
-                <input class="form-check-input" type="checkbox" v-model="addressForm.macDinh">
-                <label class="form-check-label">
+                <input class="form-check-input" type="checkbox" v-model="addressForm.macDinh"
+                       :true-value="1" :false-value="0">
+                <label class="form-check-label fw-bold">
                   Đặt làm địa chỉ mặc định
                 </label>
               </div>
@@ -160,9 +194,10 @@
             <div class="modal-footer">
               <button type="submit" class="btn btn-primary" :disabled="addressLoading">
                 <span v-if="addressLoading" class="spinner-border spinner-border-sm me-1"></span>
+                <i v-else :class="editingAddress ? 'fas fa-save' : 'fas fa-plus-circle'" class="me-1"></i>
                 {{ editingAddress ? 'Cập nhật' : 'Thêm địa chỉ' }}
               </button>
-              <button type="button" class="btn btn-secondary" @click="closeModal">Đóng</button>
+              <button type="button" class="btn btn-secondary" @click="closeModal">Hủy</button>
             </div>
           </form>
         </div>
@@ -174,7 +209,6 @@
 
 <script>
 import { ref, onMounted } from 'vue';
-import api from '@/services/api';
 import KH_Navbar from '@/components/shared/KH_Navbar.vue';
 import Footer from '@/components/shared/Footer.vue';
 
@@ -185,10 +219,49 @@ export default {
     Footer
   },
   setup() {
-    const profile = ref({
-      fullname: '',
-      email: '',
-      phone: ''
+    // Dữ liệu mẫu từ database ShoedoShop
+    const user = ref({
+      maUser: 5,
+      userName: 'user1',
+      mail: 'user1@gmail.com',
+      isActive: true,
+      createAt: '2025-01-01T00:00:00'
+    });
+
+    const customer = ref({
+      maKH: 1,
+      tenKH: 'Nguyễn Văn A',
+      sdt: '0901234567'
+    });
+    
+    const addresses = ref([
+      {
+        maDC: 1,
+        tenNN: 'Nguyễn Văn A',
+        sdt: '0901234567',
+        diemGiao: '123 Nguyễn Huệ A, Quận 1, TP.HCM',
+        macDinh: 1
+      },
+      {
+        maDC: 2,
+        tenNN: 'Nguyễn Văn A-B',
+        sdt: '0901234567',
+        diemGiao: '123 Nguyễn Huệ B, Quận 1, TP.HCM',
+        macDinh: 0
+      },
+      {
+        maDC: 3,
+        tenNN: 'Nguyễn Văn A-C',
+        sdt: '0901234567',
+        diemGiao: '123 Nguyễn Huệ C, Quận 1, TP.HCM',
+        macDinh: 0
+      }
+    ]);
+
+    const statistics = ref({
+      totalOrders: 3,  // Dựa vào hóa đơn: HD1, HD5, HD9
+      totalSpent: 2500000 + 2800000 + 300000 + 2500000 + 4500000 + 320000 + 2500000 + 1800000,
+      totalReviews: 0   // Chưa có đánh giá nào cho KH này
     });
     
     const password = ref({
@@ -197,7 +270,6 @@ export default {
       confirmPassword: ''
     });
     
-    const addresses = ref([]);
     const loading = ref(false);
     const profileLoading = ref(false);
     const passwordLoading = ref(false);
@@ -212,31 +284,22 @@ export default {
       tenNN: '',
       sdt: '',
       diemGiao: '',
-      macDinh: false
+      macDinh: 0
     });
 
-    const fetchProfile = async () => {
-      loading.value = true;
-      try {
-        const response = await api.getProfile();
-        if (response.data.success) {
-          profile.value.fullname = response.data.customer?.tenKH || '';
-          profile.value.email = response.data.userMail || '';
-          profile.value.phone = response.data.customer?.sdt || '';
-          addresses.value = response.data.addresses || [];
-          addresses.value.sort((a, b) => {
-            if (a.macDinh && !b.macDinh) return -1;
-            if (!a.macDinh && b.macDinh) return 1;
-            return 0;
-          });
-        }
+    // Format currency
+    const formatCurrency = (value) => {
+      return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);
+    };
 
-      } catch (err) {
-        error.value = 'Không thể tải thông tin hồ sơ';
-        console.error('Error fetching profile:', err);
-      } finally {
-        loading.value = false;
-      }
+    // Format date
+    const formatDate = (dateString) => {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('vi-VN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      });
     };
 
     const updateProfile = async () => {
@@ -244,22 +307,24 @@ export default {
       error.value = '';
       message.value = '';
       
+      // Validate phone
+      if (!/^[0-9]{9,11}$/.test(customer.value.sdt)) {
+        error.value = 'Số điện thoại không hợp lệ (9-11 số)';
+        profileLoading.value = false;
+        return;
+      }
+      
       try {
-        const response = await api.updateProfile({
-          fullname: profile.value.fullname,
-          email: profile.value.email,
-          phone: profile.value.phone
-        });
+        // Giả lập API call
+        await new Promise(resolve => setTimeout(resolve, 1000));
         
-        if (response.data.success) {
-          message.value = response.data.message || 'Cập nhật thông tin thành công!';
-          await fetchProfile();
-        } else {
-          error.value = response.data.message || 'Cập nhật thất bại';
-        }
+        message.value = 'Cập nhật thông tin thành công!';
+        console.log('Updated profile:', {
+          user: user.value,
+          customer: customer.value
+        });
       } catch (err) {
         error.value = 'Lỗi kết nối máy chủ';
-        console.error('Error updating profile:', err);
       } finally {
         profileLoading.value = false;
       }
@@ -268,6 +333,11 @@ export default {
     const changePassword = async () => {
       if (password.value.newPassword !== password.value.confirmPassword) {
         error.value = 'Mật khẩu mới và xác nhận mật khẩu không khớp';
+        return;
+      }
+      
+      if (password.value.newPassword.length < 6) {
+        error.value = 'Mật khẩu mới phải có ít nhất 6 ký tự';
         return;
       }
       
@@ -281,83 +351,96 @@ export default {
       message.value = '';
       
       try {
-        const response = await api.changePassword({
-          currentPassword: password.value.currentPassword,
-          newPassword: password.value.newPassword,
-          confirmPassword: password.value.confirmPassword
-        });
+        // Giả lập API call
+        await new Promise(resolve => setTimeout(resolve, 1000));
         
-        if (response.data.success) {
-          message.value = response.data.message || 'Đổi mật khẩu thành công!';
-          password.value = { currentPassword: '', newPassword: '', confirmPassword: '' };
-        } else {
-          error.value = response.data.message || 'Đổi mật khẩu thất bại';
-        }
+        message.value = 'Đổi mật khẩu thành công!';
+        password.value = { currentPassword: '', newPassword: '', confirmPassword: '' };
       } catch (err) {
-        error.value = 'Mật khẩu hiện tại sai';
-        console.error('Error changing password:', err);
+        error.value = 'Mật khẩu hiện tại không đúng';
       } finally {
         passwordLoading.value = false;
       }
     };
 
     const saveAddress = async () => {
+      // Validate phone
+      if (!/^[0-9]{9,11}$/.test(addressForm.value.sdt)) {
+        error.value = 'Số điện thoại không hợp lệ (9-11 số)';
+        return;
+      }
+
       addressLoading.value = true;
       error.value = '';
       message.value = '';
 
       try {
-        let response;
-        if (editingAddress.value) {
-          response = await api.updateAddress(addressForm.value.maDC, addressForm.value);
-        } else {
-          response = await api.addAddress(addressForm.value);
-        }
+        // Giả lập API call
+        await new Promise(resolve => setTimeout(resolve, 1000));
         
-        if (response.data.success) {
-          message.value = response.data.message || (editingAddress.value ? 'Cập nhật địa chỉ thành công!' : 'Thêm địa chỉ thành công!');
-          await fetchProfile();
-          closeModal();
+        if (editingAddress.value) {
+          // Update existing address
+          const index = addresses.value.findIndex(a => a.maDC === addressForm.value.maDC);
+          if (index !== -1) {
+            addresses.value[index] = { ...addressForm.value };
+          }
+          message.value = 'Cập nhật địa chỉ thành công!';
         } else {
-          error.value = response.data.message || 'Thao tác thất bại';
+          // Add new address
+          const newAddress = {
+            maDC: Math.max(...addresses.value.map(a => a.maDC)) + 1,
+            ...addressForm.value
+          };
+          addresses.value.push(newAddress);
+          message.value = 'Thêm địa chỉ thành công!';
         }
+
+        // Nếu đặt mặc định, cập nhật các địa chỉ khác
+        if (addressForm.value.macDinh === 1) {
+          addresses.value.forEach(addr => {
+            addr.macDinh = addr.maDC === (editingAddress.value ? addressForm.value.maDC : addresses.value[addresses.value.length - 1].maDC) ? 1 : 0;
+          });
+        }
+
+        closeModal();
       } catch (err) {
         error.value = 'Lỗi kết nối máy chủ';
-        console.error('Error saving address:', err);
       } finally {
         addressLoading.value = false;
       }
     };
 
     const deleteAddress = async (maDC) => {
+      const address = addresses.value.find(a => a.maDC === maDC);
+      if (address.macDinh) {
+        error.value = 'Không thể xóa địa chỉ mặc định';
+        return;
+      }
+
       if (!confirm('Bạn có chắc muốn xóa địa chỉ này?')) return;
       
       try {
-        const response = await api.deleteAddress(maDC);
-        if (response.data.success) {
-          message.value = response.data.message || 'Xóa địa chỉ thành công!';
-          await fetchProfile();
-        } else {
-          error.value = response.data.message || 'Xóa địa chỉ thất bại';
-        }
+        // Giả lập API call
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        addresses.value = addresses.value.filter(a => a.maDC !== maDC);
+        message.value = 'Xóa địa chỉ thành công!';
       } catch (err) {
         error.value = 'Lỗi kết nối máy chủ';
-        console.error('Error deleting address:', err);
       }
     };
 
     const setDefaultAddress = async (maDC) => {
       try {
-        const response = await api.setDefaultAddress(maDC);
-        if (response.data.success) {
-          message.value = response.data.message || 'Đặt địa chỉ mặc định thành công!';
-          await fetchProfile();
-        } else {
-          error.value = response.data.message || 'Thao tác thất bại';
-        }
+        // Giả lập API call
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        addresses.value.forEach(addr => {
+          addr.macDinh = addr.maDC === maDC ? 1 : 0;
+        });
+        message.value = 'Đặt địa chỉ mặc định thành công!';
       } catch (err) {
         error.value = 'Lỗi kết nối máy chủ';
-        console.error('Error setting default address:', err);
       }
     };
 
@@ -381,18 +464,21 @@ export default {
         tenNN: '',
         sdt: '',
         diemGiao: '',
-        macDinh: false
+        macDinh: 0
       };
     };
 
     onMounted(() => {
-      fetchProfile();
+      // Sắp xếp địa chỉ: mặc định lên đầu
+      addresses.value.sort((a, b) => b.macDinh - a.macDinh);
     });
 
     return {
-      profile,
+      user,
+      customer,
       password,
       addresses,
+      statistics,
       loading,
       profileLoading,
       passwordLoading,
@@ -402,6 +488,8 @@ export default {
       showAddModal,
       editingAddress,
       addressForm,
+      formatCurrency,
+      formatDate,
       updateProfile,
       changePassword,
       saveAddress,
@@ -435,15 +523,14 @@ export default {
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
-.address-card.default {
+.address-card.default-address {
   border: 2px solid #dc3545;
-  background-color: #f8f9fa;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  background-color: #fff8f8;
+  box-shadow: 0 4px 10px rgba(220, 53, 69, 0.1);
 }
 
 .address-header {
-  font-weight: bold;
-  font-size: 1.1rem;
+  font-size: 1rem;
 }
 
 .badge-default {
@@ -457,17 +544,19 @@ export default {
 
 .card-header {
   font-weight: bold;
-  background-color: #000000;
-  color: #ffffff;
   border-bottom: 2px solid #000000;
 }
 
-.btn-primary {
+.card-header.bg-dark {
+  background-color: #000000 !important;
+}
+
+.btn-primary, .btn-success {
   background-color: #000000;
   border-color: #000000;
 }
 
-.btn-primary:hover {
+.btn-primary:hover, .btn-success:hover {
   background-color: #333333;
   border-color: #333333;
 }
@@ -484,24 +573,44 @@ export default {
   color: #000000;
 }
 
-.btn-success {
+.btn-outline-primary {
+  border-color: #000000;
+  color: #000000;
+}
+
+.btn-outline-primary:hover {
   background-color: #000000;
   border-color: #000000;
+  color: #ffffff;
 }
 
-.btn-success:hover {
-  background-color: #333333;
-  border-color: #333333;
+.btn-outline-success {
+  border-color: #28a745;
+  color: #28a745;
 }
 
-.btn-danger {
-  background-color: #000000;
-  border-color: #000000;
+.btn-outline-success:hover {
+  background-color: #28a745;
+  border-color: #28a745;
+  color: #ffffff;
 }
 
-.btn-danger:hover {
-  background-color: #333333;
-  border-color: #333333;
+.btn-outline-danger {
+  border-color: #dc3545;
+  color: #dc3545;
+}
+
+.btn-outline-danger:hover:not(:disabled) {
+  background-color: #dc3545;
+  border-color: #dc3545;
+  color: #ffffff;
+}
+
+.btn-outline-danger:disabled {
+  border-color: #6c757d;
+  color: #6c757d;
+  cursor: not-allowed;
+  opacity: 0.5;
 }
 
 .form-control {
@@ -513,16 +622,49 @@ export default {
   box-shadow: 0 0 0 0.2rem rgba(0, 0, 0, 0.25);
 }
 
+.form-control:disabled {
+  background-color: #f8f9fa;
+  cursor: not-allowed;
+}
+
 .modal-content {
   border: 2px solid #000000;
   border-radius: 10px;
 }
 
-.modal-header {
-  border-bottom: 1px solid #000000;
+.modal-header.bg-dark {
+  background-color: #000000 !important;
+  border-bottom: 2px solid #000000;
+}
+
+.modal-header .btn-close-white {
+  filter: invert(1) grayscale(100%) brightness(200%);
 }
 
 .modal-footer {
   border-top: 1px solid #000000;
+}
+
+.badge.bg-success {
+  background-color: #28a745 !important;
+  font-size: 0.9rem;
+  padding: 8px 12px;
+}
+
+.badge.bg-danger {
+  background-color: #dc3545 !important;
+  font-size: 0.9rem;
+  padding: 8px 12px;
+}
+
+.card.bg-light {
+  background-color: #f8f9fa !important;
+  border: 1px solid #000000;
+}
+
+.display-6 {
+  font-size: 2rem;
+  font-weight: 600;
+  color: #000000;
 }
 </style>
