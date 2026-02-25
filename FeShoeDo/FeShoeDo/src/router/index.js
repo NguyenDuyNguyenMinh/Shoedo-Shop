@@ -52,6 +52,12 @@ const routes = [
   //   component: () => import('@/components/employee/NV_Index.vue'),
   // },
   {
+    path: '/employee/dashboard',
+    name: 'EmployeeDashboard',
+    component: () => import('@/components/employee/NV_ThongKe.vue'),
+    // meta: { requiresAuth: true, role: 'EMPLOYEE' }
+  },
+  {
     path: '/employee/products',
     name: 'ProductManagement',
     component: () => import('@/components/employee/NV_QLSP.vue'),
