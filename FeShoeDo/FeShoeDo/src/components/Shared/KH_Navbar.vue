@@ -27,20 +27,20 @@ const hideSearchHistory = () => {
   <nav class="navbar navbar-expand-lg bg-black py-3 sticky-top" data-bs-theme="dark">
     <div class="container-fluid px-4 px-lg-5 d-flex align-items-center justify-content-between">
       
-      <a class="navbar-brand logo-box d-flex align-items-center justify-content-center" href="#">
+      <router-link to="/customer/index" class="navbar-brand logo-box d-flex align-items-center justify-content-center">
         <img :src="logoUrl" alt="Shoedo" class="logo-img">
-      </a>
+      </router-link>
 
       <div class="collapse navbar-collapse flex-grow-0 mx-auto d-none d-lg-block" id="navbarNav">
         <ul class="navbar-nav gap-5"> 
           <li class="nav-item">
-            <a class="nav-link text-uppercase text-white fw-light" href="#">Trang Chủ</a>
+            <router-link class="nav-link text-uppercase text-white fw-light" to="/customer/index">Trang Chủ</router-link>
           </li>
           <li class="nav-item">
-            <a class="nav-link text-uppercase text-white fw-light" href="#">Sản Phẩm</a>
+            <router-link class="nav-link text-uppercase text-white fw-light" to="/customer/sanpham">Sản Phẩm</router-link>
           </li>
           <li class="nav-item">
-            <a class="nav-link text-uppercase text-white fw-light" href="#">Chính Sách</a>
+            <router-link class="nav-link text-uppercase text-white fw-light" to="/customer/chinhsach">Chính Sách</router-link>
           </li>
         </ul>
       </div>
@@ -76,18 +76,18 @@ const hideSearchHistory = () => {
           </div>
         </div>
 
-        <a href="#" class="btn btn-icon position-relative text-white">
+        <router-link to="/customer/cart" class="btn btn-icon position-relative text-white">
           <i class="bi bi-cart3 fs-5"></i>
           <span class="position-absolute badge rounded-pill bg-danger cart-badge">
             3
           </span>
-        </a>
+        </router-link>
 
-        <div class="user-box d-flex align-items-center gap-2 px-3 py-2 rounded-0 cursor-pointer text-white">
+        <router-link to="/customer/profile" class="user-box d-flex align-items-center gap-2 px-3 py-2 rounded-0 cursor-pointer text-white">
           <i class="bi bi-person fs-5"></i>
           <span class="fw-light">Tài Khoản</span>
           <i class="bi bi-chevron-down" style="font-size: 0.7rem;"></i>
-        </div>
+        </router-link>
 
         <button class="navbar-toggler border-white" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
           <span class="navbar-toggler-icon"></span>

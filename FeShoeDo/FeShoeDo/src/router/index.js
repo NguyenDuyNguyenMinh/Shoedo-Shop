@@ -10,24 +10,29 @@ const routes = [
     name: 'Login',
     component: () => import('@/components/Auth/Login.vue'),
   },
-  // {
-  //   path: '/customer/index',
-  //   name: 'CustomerIndex',
-  //   component: () => import('@/components/customer/KH_Index.vue'),
-  // },
-  // {
-  //   path: '/customer/detail-product/:id?',
-  //   name: 'DetailProduct',
-  //   component: () => import('@/components/customer/KH_DetailProduct.vue'),
-  // },
+  {
+    path: '/customer/index',
+    name: 'CustomerIndex',
+    component: () => import('@/components/customer/KH_index.vue'),
+  },
+  {
+    path: '/customer/sanpham',
+    name: 'Sanpham',
+    component: () => import('@/components/customer/KH_Sanpham.vue'),
+  },
+  {
+    path: '/customer/detail-product/:id?',
+    name: 'DetailProduct',
+    component: () => import('@/components/customer/KH_DetailProduct.vue'),
+  },
   {
     path: '/customer/cart',
     name: 'Cart',
     component: () => import('@/components/customer/KH_GioHang.vue'),
   },
-    {
+  {
     path: '/customer/chinhsach',
-    name: 'Cart',
+    name: 'ChinhSach',
     component: () => import('@/components/customer/KH_ChinhSach.vue'),
   },
   {
