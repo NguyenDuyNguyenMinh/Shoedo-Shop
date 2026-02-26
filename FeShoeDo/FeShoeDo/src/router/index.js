@@ -10,11 +10,11 @@ const routes = [
     name: 'Login',
     component: () => import('@/components/Auth/Login.vue'),
   },
-  // {
-  //   path: '/customer/index',
-  //   name: 'CustomerIndex',
-  //   component: () => import('@/components/customer/KH_Index.vue'),
-  // },
+  {
+    path: '/customer/index',
+    name: 'CustomerIndex',
+    component: () => import('@/components/customer/KH_Index.vue'),
+  },
   // {
   //   path: '/customer/detail-product/:id?',
   //   name: 'DetailProduct',
@@ -30,20 +30,25 @@ const routes = [
   //   name: 'Checkout',
   //   component: () => import('@/components/customer/KH_DatHang.vue'),
   // },
-  // {
-  //   path: '/customer/orders',
-  //   name: 'Orders',
-  //   component: () => import('@/components/customer/KH_QLDonHang.vue'),
-  // },
-  // {
-  //   path: '/customer/order/:id',
-  //   name: 'OrderDetail',
-  //   component: () => import('@/components/customer/KH_CTDonHang.vue'),
-  // },
+  {
+    path: '/customer/orders',
+    name: 'Orders',
+    component: () => import('@/components/customer/KH_QLDonHang.vue'),
+  },
+  {
+    path: '/customer/order/:id',
+    name: 'OrderDetail',
+    component: () => import('@/components/customer/KH_CTDonHang.vue'),
+  },
   {
     path: '/customer/profile',
     name: 'Profile',
     component: () => import('@/components/customer/KH_QLUser.vue'),
+  },
+  {
+    path: '/policy',
+    name: 'Policy',
+    component: () => import('@/components/customer/KH_ChinhSach.vue'),
   },
   // Employee routes
   // {
