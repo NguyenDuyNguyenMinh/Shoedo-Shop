@@ -20,37 +20,36 @@ const routes = [
   //   name: 'DetailProduct',
   //   component: () => import('@/components/customer/KH_DetailProduct.vue'),
   // },
-  // {
-  //   path: '/customer/cart',
-  //   name: 'Cart',
-  //   component: () => import('@/components/customer/KH_GioHang.vue'),
-  // },
-  // {
-  //   path: '/customer/checkout',
-  //   name: 'Checkout',
-  //   component: () => import('@/components/customer/KH_DatHang.vue'),
-  // },
-  // {
-  //   path: '/customer/orders',
-  //   name: 'Orders',
-  //   component: () => import('@/components/customer/KH_QLDonHang.vue'),
-  // },
-  // {
-  //   path: '/customer/order/:id',
-  //   name: 'OrderDetail',
-  //   component: () => import('@/components/customer/KH_CTDonHang.vue'),
-  // },
+  {
+    path: '/customer/cart',
+    name: 'Cart',
+    component: () => import('@/components/customer/KH_GioHang.vue'),
+  },
+    {
+    path: '/customer/chinhsach',
+    name: 'Cart',
+    component: () => import('@/components/customer/KH_ChinhSach.vue'),
+  },
+  {
+    path: '/customer/checkout',
+    name: 'Checkout',
+    component: () => import('@/components/customer/KH_DatHang.vue'),
+  },
+  {
+    path: '/customer/orders',
+    name: 'Orders',
+    component: () => import('@/components/customer/KH_QLDonHang.vue'),
+  },
+  {
+    path: '/customer/order/:id',
+    name: 'OrderDetail',
+    component: () => import('@/components/customer/KH_CTDonHang.vue'),
+  },
   {
     path: '/customer/profile',
     name: 'Profile',
     component: () => import('@/components/customer/KH_QLUser.vue'),
   },
-  // Employee routes
-  // {
-  //   path: '/employee/dashboard',
-  //   name: 'EmployeeDashboard',
-  //   component: () => import('@/components/employee/NV_Index.vue'),
-  // },
   {
     path: '/employee/dashboard',
     name: 'EmployeeDashboard',
@@ -67,11 +66,11 @@ const routes = [
     name: 'OrderManagement',
     component: () => import('@/components/employee/NV_QLDonHang.vue'),
   },
-  // {
-  //   path: '/employee/users',
-  //   name: 'UserManagement',
-  //   component: () => import('@/components/employee/NV_QLUser.vue'),
-  // },
+  {
+    path: '/employee/users',
+    name: 'UserManagement',
+    component: () => import('@/components/employee/NV_QLUser.vue'),
+  },
   {
     path: '/employee/import',
     name: 'ImportStock',

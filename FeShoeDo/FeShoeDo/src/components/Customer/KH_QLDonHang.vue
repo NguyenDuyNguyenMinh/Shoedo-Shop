@@ -114,7 +114,7 @@ export default {
       return [
         {
           maHD: 1,
-          maKH: 001,
+          maKH: 1,
           maQT: 1,
           ngayMua: '2024-01-15T10:30:00',
           trangThai: 'Đang giao',
@@ -163,7 +163,7 @@ export default {
         },
         {
           maHD: 2,
-          maKH: 001,
+          maKH: 1,
           maQT: 1,
           ngayMua: '2024-01-10T14:20:00',
           trangThai: 'Hoàn tất',
@@ -196,7 +196,7 @@ export default {
         },
         {
           maHD: 3,
-          maKH: 001,
+          maKH: 1,
           maQT: 2,
           ngayMua: '2024-01-05T09:15:00',
           trangThai: 'Đang xử lý',
@@ -245,7 +245,7 @@ export default {
         },
         {
           maHD: 4,
-          maKH: 001,
+          maKH: 1,
           maQT: 2,
           ngayMua: '2023-12-28T16:45:00',
           trangThai: 'Đã từ chối',
@@ -278,7 +278,7 @@ export default {
         },
         {
           maHD: 5,
-          maKH: 001,
+          maKH: 1,
           maQT: 3,
           ngayMua: '2024-01-12T11:30:00',
           trangThai: 'Hoàn hàng/trả hàng',
@@ -311,7 +311,7 @@ export default {
         },
         {
           maHD: 6,
-          maKH: 001,
+          maKH: 1,
           maQT: 3,
           ngayMua: '2024-01-18T15:20:00',
           trangThai: 'Đang giao',
@@ -360,7 +360,7 @@ export default {
         },
         {
           maHD: 7,
-          maKH: 001,
+          maKH: 1,
           maQT: 1,
           ngayMua: '2024-01-20T09:45:00',
           trangThai: 'Đang xử lý',
@@ -393,7 +393,7 @@ export default {
         },
         {
           maHD: 8,
-          maKH: 001,
+          maKH: 1,
           maQT: 2,
           ngayMua: '2024-01-22T13:15:00',
           trangThai: 'Hoàn tất',
@@ -426,7 +426,7 @@ export default {
         },
         {
           maHD: 9,
-          maKH: 001,
+          maKH: 1,
           maQT: 3,
           ngayMua: '2024-01-23T10:00:00',
           trangThai: 'Báo lỗi',
@@ -459,7 +459,7 @@ export default {
         },
         {
           maHD: 10,
-          maKH: 001,
+          maKH: 1,
           maQT: 1,
           ngayMua: '2024-01-24T16:30:00',
           trangThai: 'Đang giao',
@@ -621,7 +621,7 @@ export default {
 
 hr {
   margin-top: auto !important;
-
+}
 .card:hover {
   transform: translateY(-5px);
   box-shadow: 0 5px 15px rgba(0,0,0,0.1);
