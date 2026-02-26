@@ -3,23 +3,7 @@
     <KH_Navbar />
     
     <main class="container">
-      <!-- Hiển thị lỗi nếu có -->
-      <div v-if="errorMessage" class="alert alert-danger mt-3">
-        <i class="bi bi-exclamation-triangle me-2"></i>
-        {{ errorMessage }}
-      </div>
 
-      <!-- Hiển thị kết quả tìm kiếm -->
-      <div v-if="searchPerformed && resultCount !== null" class="search-result-info mt-4 text-center">
-        <span class="badge bg-success-subtle text-success py-2 px-4">
-          <i class="bi bi-check-circle me-2"></i>
-          Tìm thấy <strong>{{ resultCount }}</strong> sản phẩm
-          <span v-if="keyword"> với từ khóa: "{{ keyword }}"</span>
-          <span v-if="selectedCategoryName"> trong danh mục: {{ selectedCategoryName }}</span>
-        </span>
-      </div>
-
-      <!-- Banner Carousel -->
       <div class="row mt-4 g-3">
         <div class="col-lg-8">
           <div id="mainCarousel" class="carousel slide" data-bs-ride="carousel">
@@ -55,11 +39,9 @@
         </div>
       </div>
 
-      <!-- Products from API -->
       <div class="flash-sale mt-4">
         <h2 class="section-title">
-          <span v-if="searchPerformed">Kết Quả Tìm Kiếm</span>
-          <span v-else>Tất Cả Sản Phẩm</span>
+          Tất Cả Sản Phẩm
           <small class="text-muted ms-2 fs-6">
             ({{ resultCount }} sản phẩm)
           </small>
@@ -72,45 +54,36 @@
           <p class="mt-2">Đang tải sản phẩm...</p>
         </div>
         
-        <div v-else>
-          <div v-if="sanPhams.length === 0" class="text-center py-5">
-            <div class="alert alert-info">
-              <i class="bi bi-info-circle me-2"></i>
-              <span v-if="searchPerformed">Không tìm thấy sản phẩm phù hợp</span>
-              <span v-else>Không có sản phẩm nào trong hệ thống</span>
-            </div>
-          </div>
-          
-          <div v-else class="row g-3">
-            <div class="col-6 col-lg-2" v-for="sp in sanPhams" :key="sp.maSP">
-              <div class="product-card">
-                <div class="product-image" style="height:200px">
-                  <router-link :to="`/customer/detail-product/${sp.maSP}`">
-                    <img :src="getImageUrl(sp.hinh)" 
-                         :alt="sp.tenSP"
-                         @error="handleImageError"
-                         class="product-image" style="max-width: 150px;">
-                  </router-link>
-                  <span class="product-badge" v-if="sp.trangThai && sp.trangThai === 'Mới'">{{ sp.trangThai }}</span>
+        <div v-else class="row g-3">
+          <div class="col-6 col-lg-2" v-for="sp in sanPhams" :key="sp.maSP">
+            <div class="product-card">
+              <div class="product-image" style="height:200px">
+                <router-link :to="`/customer/detail-product/${sp.maSP}`">
+                  <img :src="sp.hinh" 
+                       :alt="sp.tenSP"
+                       @error="handleImageError"
+                       class="product-image" style="max-width: 150px;">
+                </router-link>
+                <span class="product-badge" v-if="sp.trangThai === 'Mới'">{{ sp.trangThai }}</span>
+              </div>
+              <div class="product-info">
+                <h5 class="product-name">{{ sp.tenSP }}</h5>
+                <div class="mb-2">
+                  <span class="price-current">{{ formatPrice(sp.donGia) }}</span>
                 </div>
-                <div class="product-info">
-                  <h5 class="product-name">{{ sp.tenSP }}</h5>
-                  <div class="mb-2">
-                    <span class="price-current">{{ formatPrice(sp.donGia) }}</span>
-                  </div>
-                  <div class="product-sold">
-                    <i class="bi bi-box me-1"></i>
-                    Kho: <span>{{ sp.soLuong || 0 }}</span>
-                  </div>
-                  <div class="product-category mt-2">
-                    <i class="bi bi-tag me-1"></i>
-                    <small>{{ getCategoryName(sp.danhMuc) }}</small>
-                  </div>
+                <div class="product-sold">
+                  <i class="bi bi-box me-1"></i>
+                  Kho: <span>{{ sp.soLuong }}</span>
+                </div>
+                <div class="product-category mt-2">
+                  <i class="bi bi-tag me-1"></i>
+                  <small>{{ getCategoryName(sp.danhMuc) }}</small>
                 </div>
               </div>
             </div>
           </div>
         </div>
+
       </div>
     </main>
     
@@ -118,11 +91,8 @@
   </div>
 </template>
 
-<!-- Trong script -->
 <script>
-import { ref, onMounted, watch } from 'vue';
-import { useRoute } from 'vue-router';
-import api from '@/services/api';
+import { ref, onMounted } from 'vue';
 import KH_Navbar from '@/components/shared/KH_Navbar.vue';
 import Footer from '@/components/shared/Footer.vue';
 
@@ -133,160 +103,98 @@ export default {
     Footer
   },
   setup() {
-    const route = useRoute();
+    // Khởi tạo các biến chứa dữ liệu mẫu
     const sanPhams = ref([]);
-    const loading = ref(false);
-    const resultCount = ref(null);
-    const keyword = ref('');
-    const categoryId = ref(null);
-    const selectedCategoryName = ref('');
-    const searchPerformed = ref(false);
-    const danhMucs = ref([]);
-    const errorMessage = ref('');
+    const loading = ref(true);
+    const resultCount = ref(0);
 
-    const getImageUrl = (imageName) => {
-      if (!imageName) return 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=400&fit=crop';
-      return `http://localhost:8080/images/${imageName}`;
-    };
-
-    const handleImageError = (event) => {
-      event.target.src = 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=400&fit=crop';
-    };
-
+    // Xử lý tiền tệ
     const formatPrice = (price) => {
-      if (!price) return '0₫';
       return new Intl.NumberFormat('vi-VN', {
         style: 'currency',
         currency: 'VND'
       }).format(price);
     };
 
+    // Lấy tên danh mục
     const getCategoryName = (danhMuc) => {
       return danhMuc?.tenDM || 'Không phân loại';
     };
 
-    const fetchCategories = async () => {
-      try {
-        console.log('Fetching categories...');
-        const response = await api.getCategories();
-        if (response.data.success) {
-          danhMucs.value = response.data.data || [];
-        }
-      } catch (error) {
-        console.error('Error fetching categories:', error);
-      }
+    // Xử lý lỗi ảnh (Ảnh dự phòng)
+    const handleImageError = (event) => {
+      event.target.src = 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=400&fit=crop';
     };
 
-    const fetchAllProducts = async () => {
-      loading.value = true;
-      errorMessage.value = '';
-      searchPerformed.value = false;
-      keyword.value = '';
-      categoryId.value = null;
-      selectedCategoryName.value = '';
-      
-      try {
-        const response = await api.getPublicProducts();
-
-        if (response.data.success) {
-          sanPhams.value = response.data.data || [];
-          resultCount.value = response.data.count || sanPhams.value.length;
-        } else {
-          sanPhams.value = [];
-          resultCount.value = 0;
-          errorMessage.value = response.data.message || 'Không thể tải sản phẩm';
-        }
-      } catch (error) {
-        console.error('Error fetching all products:', error);
-        sanPhams.value = [];
-        resultCount.value = 0;
-        errorMessage.value = 'Lỗi kết nối server: ' + error.message;
-      } finally {
-        loading.value = false;
-      }
-    };
-
-    const searchProducts = async (searchKeyword = keyword.value, searchCategoryId = categoryId.value) => {
-      loading.value = true;
-      errorMessage.value = '';
-      searchPerformed.value = true;
-      
-      try {
-        const params = {};
-        if (searchKeyword && searchKeyword.trim()) {
-          params.keyword = searchKeyword.trim();
-        }
-        if (searchCategoryId) {
-          params.categoryId = searchCategoryId;
-        }
-
-        const response = await api.searchPublicProducts(params); 
-        if (response.data.success) {
-          sanPhams.value = response.data.data || [];
-          resultCount.value = response.data.count || 0;
-          
-          if (searchCategoryId) {
-            const category = danhMucs.value.find(dm => dm.maDM == searchCategoryId);
-            selectedCategoryName.value = category ? category.tenDM : '';
-          } else {
-            selectedCategoryName.value = '';
+    // Giả lập load dữ liệu khi trang vừa mở
+    onMounted(() => {
+      // Dùng setTimeout để tạo cảm giác đang load data (0.5 giây)
+      setTimeout(() => {
+        sanPhams.value = [
+          {
+            maSP: 1,
+            tenSP: 'Nike Air Force 1 07',
+            hinh: 'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=400&h=400&fit=crop',
+            donGia: 2900000,
+            soLuong: 45,
+            trangThai: 'Mới',
+            danhMuc: { tenDM: 'Sneaker' }
+          },
+          {
+            maSP: 2,
+            tenSP: 'Adidas Ultraboost Light',
+            hinh: 'https://images.unsplash.com/photo-1584735174965-48c48d4daf27?w=400&h=400&fit=crop',
+            donGia: 4500000,
+            soLuong: 12,
+            trangThai: '',
+            danhMuc: { tenDM: 'Giày Chạy Bộ' }
+          },
+          {
+            maSP: 3,
+            tenSP: 'Puma RS-X3 Puzzle',
+            hinh: 'https://images.unsplash.com/photo-1608231387042-66d1773070a5?w=400&h=400&fit=crop',
+            donGia: 2800000,
+            soLuong: 8,
+            trangThai: 'Mới',
+            danhMuc: { tenDM: 'Giày Thể Thao' }
+          },
+          {
+            maSP: 4,
+            tenSP: 'New Balance 550 White',
+            hinh: 'https://images.unsplash.com/photo-1539185441755-769473a23570?w=400&h=400&fit=crop',
+            donGia: 3100000,
+            soLuong: 20,
+            trangThai: '',
+            danhMuc: { tenDM: 'Sneaker' }
+          },
+          {
+            maSP: 5,
+            tenSP: 'Converse Chuck 70 Vintage',
+            hinh: 'https://images.unsplash.com/photo-1607522370275-ba12051bed92?w=400&h=400&fit=crop',
+            donGia: 1800000,
+            soLuong: 55,
+            trangThai: '',
+            danhMuc: { tenDM: 'Classic' }
+          },
+          {
+            maSP: 6,
+            tenSP: 'Vans Old Skool Black',
+            hinh: 'https://images.unsplash.com/photo-1525966222134-fcfa99b8ae77?w=400&h=400&fit=crop',
+            donGia: 1650000,
+            soLuong: 30,
+            trangThai: 'Mới',
+            danhMuc: { tenDM: 'Skate' }
           }
-          
-        } else {
-          sanPhams.value = [];
-          resultCount.value = 0;
-          errorMessage.value = response.data.message || 'Tìm kiếm thất bại';
-        }
-      } catch (error) {
-        sanPhams.value = [];
-        resultCount.value = 0;
-        errorMessage.value = 'Lỗi tìm kiếm: ' + error.message;
-      } finally {
+        ];
+        resultCount.value = sanPhams.value.length;
         loading.value = false;
-      }
-    };
-
-    watch(() => route.query, (newQuery) => {
-      const newKeyword = newQuery.keyword || '';
-      const newCategoryId = newQuery.categoryId || null;
-      
-      keyword.value = newKeyword;
-      categoryId.value = newCategoryId;
-      
-      if (newKeyword || newCategoryId) {
-        searchProducts(newKeyword, newCategoryId);
-      } else {
-        searchPerformed.value = false;
-        selectedCategoryName.value = '';
-        fetchAllProducts();
-      }
-    }, { immediate: true });
-
-    onMounted(async () => {
-      console.log('Page mounted');
-      await fetchCategories();
-      
-      keyword.value = route.query.keyword || '';
-      categoryId.value = route.query.categoryId || null;
-      
-      if (keyword.value || categoryId.value) {
-        searchProducts(keyword.value, categoryId.value);
-      } else {
-        fetchAllProducts();
-      }
+      }, 500); // Đợi 500ms rồi hiện data
     });
 
     return {
       sanPhams,
       loading,
       resultCount,
-      keyword,
-      categoryId,
-      selectedCategoryName,
-      searchPerformed,
-      danhMucs,
-      errorMessage,
-      getImageUrl,
       handleImageError,
       formatPrice,
       getCategoryName
@@ -294,6 +202,7 @@ export default {
   }
 };
 </script>
+
 <style scoped>
 :root {
   --pine-primary: #333333;

@@ -1,419 +1,304 @@
+<script setup>
+import { ref } from 'vue'
+import logoUrl from '@/assets/Logoc.png'
+
+// Biến trạng thái để ẩn/hiện popup lịch sử tìm kiếm
+const isSearchFocused = ref(false)
+
+// Dữ liệu mẫu (Mock data) cho lịch sử tìm kiếm
+const searchHistory = ref([
+  'Giày chạy bộ nam',
+  'Sneaker trắng',
+  'Giày thể thao Nike',
+  'Adidas Ultraboost'
+])
+
+// Hàm xử lý khi click ra ngoài ô tìm kiếm
+const hideSearchHistory = () => {
+  // Dùng setTimeout một chút để nếu người dùng click vào chữ trong lịch sử 
+  // thì nó vẫn kịp nhận diện sự kiện click trước khi menu bị đóng lại
+  setTimeout(() => {
+    isSearchFocused.value = false
+  }, 200)
+}
+</script>
+
 <template>
-  <!-- 🔹 Navbar -->
-  <div class="main-header">
-    <div class="container">
-      <div class="d-flex align-items-center justify-content-between">
-        <!-- Logo -->
-        <router-link to="/customer/index" class="logo d-flex align-items-center me-3">
-          <img :src="getImageUrl('anh/logo blackwhite.jpg')" alt="BlackWhite" style="max-width: 200px;">
-        </router-link>
+  <nav class="navbar navbar-expand-lg bg-black py-3 sticky-top" data-bs-theme="dark">
+    <div class="container-fluid px-4 px-lg-5 d-flex align-items-center justify-content-between">
+      
+      <a class="navbar-brand logo-box d-flex align-items-center justify-content-center" href="#">
+        <img :src="logoUrl" alt="Shoedo" class="logo-img">
+      </a>
 
-        <!-- Search box with category dropdown -->
-        <div class="flex-grow-1 mx-3">
-          <form @submit.prevent="handleSearch" class="search-container">
-            <select v-model="selectedCategoryId" class="category-select" id="categorySelect">
-              <option value="">Tất cả danh mục</option>
-              <option v-for="dm in danhMucs" :key="dm.maDM" :value="dm.maDM">
-                {{ dm.tenDM }}
-              </option>
-            </select>
-            <div class="search-box d-flex flex-grow-1">
-              <input type="text" class="form-control" 
-                     v-model="searchKeyword"
-                     placeholder="Tìm kiếm sản phẩm..."
-                     @keyup.enter="handleSearch">
-              <button class="btn" type="button" @click="handleSearch"><i class="bi bi-search"></i></button>
+      <div class="collapse navbar-collapse flex-grow-0 mx-auto d-none d-lg-block" id="navbarNav">
+        <ul class="navbar-nav gap-5"> 
+          <li class="nav-item">
+            <a class="nav-link text-uppercase text-white fw-light" href="#">Trang Chủ</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link text-uppercase text-white fw-light" href="#">Sản Phẩm</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link text-uppercase text-white fw-light" href="#">Chính Sách</a>
+          </li>
+        </ul>
+      </div>
+
+      <div class="d-flex align-items-center gap-3 right-actions">
+        
+        <div class="search-wrapper d-none d-md-block position-relative">
+          <div class="input-group">
+            <input 
+              type="text" 
+              class="form-control bg-black border-0 shadow-none text-white ps-3" 
+              placeholder="Tìm Kiếm" 
+              aria-label="Search"
+              @focus="isSearchFocused = true"
+              @blur="hideSearchHistory"
+            >
+            <button class="btn btn-outline-light border-0 bg-black pe-3" type="button">
+              <i class="bi bi-search text-white"></i>
+            </button>
+          </div>
+
+          <div v-if="isSearchFocused && searchHistory.length > 0" class="search-history-dropdown">
+            <div class="d-flex justify-content-between align-items-center px-3 py-2 border-bottom border-dark">
+              <span class="text-secondary" style="font-size: 0.8rem; font-weight: 600;">Lịch sử tìm kiếm</span>
+              <span class="text-secondary clear-history" style="font-size: 0.8rem;">Xóa</span>
             </div>
-          </form>
-        </div>
-
-        <!-- Cart & Account -->
-        <div class="d-flex align-items-center gap-3">
-          <router-link to="/customer/cart" class="cart-icon position-relative" style="text-decoration:none;">
-            <i class="bi bi-cart3 fs-4"></i>
-            <span class="cart-badge">{{ cartItemCount }}</span>
-          </router-link>
-          
-          <!-- Account Dropdown -->
-          <div class="dropdown" ref="dropdown">
-            <a class="btn d-flex align-items-center px-3 py-2 account-btn rounded-pill shadow-sm fw-bold"
-               href="#" id="accountDropdown" 
-               @click.prevent="toggleDropdown"
-               style="font-size:16px;">
-              <span class="me-2 d-flex align-items-center justify-content-center"
-                    style="width:32px; height:32px; background:#000000; border-radius:50%;">
-                <i class="bi bi-person-fill" style="color:#ffffff; font-size:22px;"></i>
-              </span>
-              {{ dropdownTitle }}
-              <i class="bi bi-caret-down-fill ms-2" style="font-size:14px;"></i>
-            </a>
-            <ul class="dropdown-menu dropdown-menu-end" :class="{ show: showDropdown }" v-show="showDropdown">
-              <li v-if="!isAuthenticated">
-                <router-link class="dropdown-item" to="/auth/login">Đăng nhập</router-link>
-              </li>
-              <li v-if="!isAuthenticated">
-                <router-link class="dropdown-item" to="/auth/login">Đăng ký</router-link>
-              </li>
-              <li v-if="isAuthenticated">
-                <span class="dropdown-item-text">
-                  Xin chào, 
-                  <span class="fw-bold" id="userLastName">{{ lastName }}</span>
-                </span>
-              </li>
-              <li v-if="isAuthenticated"><hr class="dropdown-divider"></li>
-              <li v-if="isAuthenticated">
-                <router-link class="dropdown-item" to="/customer/profile">Quản Lý Tài Khoản</router-link>
-              </li>
-              <li v-if="isAuthenticated">
-                <router-link class="dropdown-item" to="/customer/orders">Đơn Hàng Của Bạn</router-link>
-              </li>
-              <li v-if="isAuthenticated"><hr class="dropdown-divider"></li>
-              <li v-if="isAuthenticated">
-                <a class="dropdown-item text-danger" href="/auth/logout" @click.prevent="logout">Đăng Xuất</a>
+            <ul class="list-unstyled mb-0 py-1">
+              <li v-for="(item, index) in searchHistory" :key="index" class="history-item px-3 py-2 text-white">
+                <i class="bi bi-clock-history me-2 text-secondary"></i>
+                {{ item }}
               </li>
             </ul>
           </div>
         </div>
+
+        <a href="#" class="btn btn-icon position-relative text-white">
+          <i class="bi bi-cart3 fs-5"></i>
+          <span class="position-absolute badge rounded-pill bg-danger cart-badge">
+            3
+          </span>
+        </a>
+
+        <div class="user-box d-flex align-items-center gap-2 px-3 py-2 rounded-0 cursor-pointer text-white">
+          <i class="bi bi-person fs-5"></i>
+          <span class="fw-light">Tài Khoản</span>
+          <i class="bi bi-chevron-down" style="font-size: 0.7rem;"></i>
+        </div>
+
+        <button class="navbar-toggler border-white" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+          <span class="navbar-toggler-icon"></span>
+        </button>
       </div>
+
     </div>
-  </div>
+  </nav>
 </template>
 
-<script>
-import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue';
-import { useRouter, useRoute } from 'vue-router';
-import { useAuthStore } from '@/stores/auth';
-import { useCartStore } from '@/stores/cart';
-
-export default {
-  name: 'KH_Navbar',
-  setup() {
-    const router = useRouter();
-    const route = useRoute();
-    const authStore = useAuthStore();
-    const cartStore = useCartStore();
-    const dropdown = ref(null);
-    
-    const searchKeyword = ref('');
-    const selectedCategoryId = ref('');
-    const showDropdown = ref(false);
-    const danhMucs = ref([]);
-    const sessionChecked = ref(false);
-    const sessionValid = ref(false);
-
-    const checkSessionWithServer = async () => {
-      try {
-        const userInStorage = localStorage.getItem('user');
-        if (!userInStorage) {
-          sessionValid.value = false;
-          sessionChecked.value = true;
-          return;
-        }
-        
-        const response = await fetch('/api/auth/check-session', {
-          method: 'GET',
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-          }
-        });
-        
-        if (response.ok) {
-          const data = await response.json();
-          
-          if (data.success && data.user) {
-            authStore.user = data.user;
-            localStorage.setItem('user', JSON.stringify(data.user));
-            sessionValid.value = true;
-          } else {
-            console.log('❌ Session invalid, clearing localStorage');
-            authStore.clearAuth();
-            localStorage.removeItem('user');
-            localStorage.removeItem('auth_token');
-            sessionValid.value = false;
-          }
-        } else {
-          console.log('❌ Server error, clearing session');
-          authStore.clearAuth();
-          localStorage.removeItem('user');
-          localStorage.removeItem('auth_token');
-          sessionValid.value = false;
-        }
-      } catch (error) {
-        console.log('🌐 Network error, assuming session invalid:', error);
-        authStore.clearAuth();
-        localStorage.removeItem('user');
-        localStorage.removeItem('auth_token');
-        sessionValid.value = false;
-      } finally {
-        sessionChecked.value = true;
-      }
-    };
-
-    const isAuthenticated = computed(() => {
-      if (!sessionChecked.value) return false;
-      return sessionValid.value && authStore.isAuthenticated;
-    });
-
-    const userName = computed(() => {
-      if (!isAuthenticated.value) return '';
-      return authStore.user?.name || authStore.user?.fullname || 'User';
-    });
-
-    const cartItemCount = computed(() => cartStore.cartItemCount);
-
-    const lastName = computed(() => {
-      if (!userName.value || userName.value.trim() === '') {
-        return 'User';
-      }
-      const names = userName.value.trim().split(/\s+/);
-      return names[names.length - 1];
-    });
-
-    const dropdownTitle = computed(() => {
-      return isAuthenticated.value ? 'Tài Khoản' : 'Tài Khoản';
-    });
-
-    const getImageUrl = (imagePath) => {
-      return `http://localhost:8080/${imagePath}`;
-    };
-
-    const fetchCategories = async () => {
-      try {
-        const response = await fetch('/api/categories');
-        if (response.ok) {
-          const data = await response.json();
-          if (data.success) {
-            danhMucs.value = data.data || [];
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching categories:', error);
-      }
-    };
-
-    const handleSearch = () => {
-      if (!searchKeyword.value.trim() && !selectedCategoryId.value) {
-        router.push({ path: '/customer/index' });
-        return;
-      }
-      
-      const query = {};
-      if (searchKeyword.value.trim()) {
-        query.keyword = searchKeyword.value.trim();
-      }
-      if (selectedCategoryId.value) {
-        query.categoryId = selectedCategoryId.value;
-      }
-      
-      router.push({ 
-        path: '/customer/index', 
-        query: query 
-      });
-    };
-
-    const toggleDropdown = async () => {
-      if (!sessionChecked.value) {
-        await checkSessionWithServer();
-      }
-      showDropdown.value = !showDropdown.value;
-    };
-
-    const logout = async () => {
-      try {
-        await authStore.logout();
-        localStorage.clear();
-        sessionStorage.clear();
-        localStorage.removeItem('user');
-        localStorage.removeItem('auth_token');
-        window.location.href = '/auth/login';
-      } catch (error) {
-        console.error('Logout error:', error);
-      }
-    };
-
-    const handleClickOutside = (event) => {
-      if (!dropdown.value) return;
-      if (dropdown.value.contains(event.target)) return;
-      showDropdown.value = false;
-    };
-
-    const resetSearchForm = () => {
-      searchKeyword.value = '';
-      selectedCategoryId.value = '';
-    };
-
-    onMounted(async () => {
-      await checkSessionWithServer();
-      
-      fetchCategories();
-      resetSearchForm();
-      document.addEventListener('click', handleClickOutside);
-      if (sessionValid.value) {
-        cartStore.fetchCartCount();
-      }
-
-      window.addEventListener('online', handleOnlineStatus);
-      window.addEventListener('offline', handleOfflineStatus);
-    });
-
-    const handleOnlineStatus = async () => {
-      console.log('🌐 Network is back online, rechecking session');
-      await checkSessionWithServer();
-    };
-
-    const handleOfflineStatus = () => {
-      console.log('🌐 Network is offline');
-    };
-
-    onBeforeUnmount(() => {
-      document.removeEventListener('click', handleClickOutside);
-      window.removeEventListener('online', handleOnlineStatus);
-      window.removeEventListener('offline', handleOfflineStatus);
-    });
-
-    watch(() => route.path, async () => {
-      if (!sessionChecked.value) {
-        await checkSessionWithServer();
-      }
-    });
-
-    return {
-      searchKeyword,
-      selectedCategoryId,
-      showDropdown,
-      danhMucs,
-      isAuthenticated,
-      userName,
-      lastName,
-      cartItemCount,
-      dropdownTitle,
-      dropdown,
-      getImageUrl,
-      handleSearch,
-      toggleDropdown,
-      logout
-    };
-  }
-};
-</script>
-
 <style scoped>
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background: #ffffff;
-  color: #000000;
+/* --- DARK LUXURY THEME CSS --- */
+
+.bg-black {
+  background-color: #000000 !important;
 }
 
-/* Header */
-.main-header {
-  background: #ffffff;
-  padding: 20px 0;
-  border-bottom: 2px solid #000000;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+/* 1. Logo Box */
+.logo-box {
+  width: 120px;  
+  height: 48px; 
+  transition: all 0.3s ease;
+  padding: 5px; 
 }
 
-.logo img {
-  max-width: 200px;
+.logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain; 
+  transform: scale(1.5); 
+  transition: transform 0.3s ease;
 }
 
-/* Search box */
-.search-container {
-  display: flex;
+.logo-box:hover {
+  background-color: #fff;
+  border-color: #fff;
+}
+
+/* 2. Navigation Links */
+.nav-link {
+  font-size: 0.9rem;
+  letter-spacing: 1.5px; 
+  position: relative;
+  opacity: 0.9;
+  transition: opacity 0.3s;
+  font-weight: 700 !important;
+}
+
+.nav-link:hover {
+  opacity: 1;
+}
+
+.nav-link::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 1px;
+  bottom: 2px;
+  left: 0;
+  background-color: #fff;
+  transition: width 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.nav-link:hover::after {
   width: 100%;
 }
 
-.category-select {
-  border: 2px solid #000000;
-  border-right: none;
-  border-radius: 8px 0 0 8px;
-  padding: 10px 15px;
-  background: #ffffff;
-  color: #000000;
-  font-weight: 500;
-  min-width: 150px;
+/* 3. Search Bar Container */
+.search-wrapper {
+  width: 320px;
+  z-index: 100; /* Đảm bảo wrapper nổi lên để popup hiển thị đúng */
 }
 
-.search-box .form-control {
-  border: 2px solid #000000;
-  border-left: none;
-  border-right: none;
-  padding: 10px 15px;
+.search-wrapper .input-group {
+  border: 1px solid #ffffff; 
+  border-radius: 8px; 
+  overflow: hidden; 
+  height: 44px; 
+  background-color: #000;
+  /* Thêm transition để nếu có popup thì bo góc dưới mất đi cho liền mạch */
+  transition: border-radius 0.2s;
+}
+
+/* Đổi màu viền khi ô tìm kiếm được chọn (focus-within) */
+.search-wrapper:focus-within .input-group {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+input::placeholder {
+  color: #666 !important;
+  font-weight: 700 !important;
+  font-size: 0.9rem;
+}
+
+.search-wrapper .input-group > input.form-control,
+.search-wrapper .input-group > .btn {
+  height: 100%;
   border-radius: 0;
-  background: #ffffff;
-  color: #000000;
 }
 
-.search-box .btn {
-  background: #000000;
-  border: 2px solid #000000;
-  color: white;
-  padding: 10px 20px;
-  border-radius: 0 8px 8px 0;
-  font-weight: 500;
+input:focus {
+  outline: none;
+  box-shadow: none;
 }
 
-.search-box .btn:hover {
-  background: #333333;
-  border-color: #333333;
-}
-
-/* Cart */
-.cart-icon {
-  color: #000000;
-  font-size: 28px;
-  position: relative;
-  cursor: pointer;
-}
-
-.cart-badge {
+/* --- CSS CHO POPUP LỊCH SỬ TÌM KIẾM --- */
+.search-history-dropdown {
   position: absolute;
-  top: -8px;
-  right: -8px;
-  background: #000000;
-  color: #ffffff;
-  border-radius: 50%;
-  width: 20px;
-  height: 20px;
-  display: flex;
+  top: 100%; /* Canh sát ngay dưới input group */
+  left: 0;
+  width: 100%;
+  background-color: #000000;
+  border: 1px solid #ffffff;
+  border-top: none; /* Bỏ viền trên để liền khối với thanh tìm kiếm */
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
+  z-index: 1050;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.5);
+}
+
+.history-item {
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.history-item:hover {
+  background-color: #222222; /* Sáng lên nhẹ khi di chuột */
+}
+
+.clear-history {
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.clear-history:hover {
+  color: #ffffff !important;
+  text-decoration: underline;
+}
+
+/* 4. Cart Icon Box */
+.btn-icon {
+  padding: 0 14px;
+  border: 1px solid #ffffff;
+  border-radius: 10px; 
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease;
+  height: 48px; 
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 11px;
-  font-weight: bold;
-}
-
-/* Dropdown */
-.dropdown-menu {
-  border: 2px solid #000000;
-  border-radius: 8px;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-}
-
-.dropdown-item {
-  padding: 10px 15px;
-  color: #000000;
   cursor: pointer;
+  box-shadow: 0 8px 18px rgba(0,0,0,0.45), 0 2px 6px rgba(0,0,0,0.35);
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.06));
 }
 
-.dropdown-item:hover {
-  background-color: #f0f0f0;
-  color: #000000;
+.btn-icon:hover {
+  transform: none;
+  background-color: #fff;
+  color: #000 !important;
 }
 
-.dropdown-divider {
-  border-top: 1px solid #000000;
+.btn-icon:active,
+.btn-icon.is-pressed {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 24px rgba(0,0,0,0.55), 0 4px 8px rgba(0,0,0,0.4);
 }
 
-/* Account button */
-.account-btn {
-  border: 2px solid #000000;
-  background: #ffffff;
-  color: #000000;
-  font-weight: 500;
+.btn-icon:focus {
+  outline: none;
+  box-shadow: 0 8px 18px rgba(0,0,0,0.45);
 }
 
-.account-btn:hover {
-  background: #000000;
-  color: #ffffff;
+/* 5. User Box */
+.user-box {
+  border: 1px solid #ffffff;
+  border-radius: 8px !important; 
+  transition: all 0.3s;
+  height: 44px; 
+  align-items: center;
+}
+
+.user-box:hover {
+  background-color: #fff;
+  color: #000 !important;
+}
+
+.user-box span {
+  font-weight: 700 !important;
+}
+
+/* 6. Cart Badge */
+.cart-badge {
+  top: -6px;            
+  right: -6px;          
+  font-size: 0.7rem;    
+  padding: 0.35em 0.6em;
+  border: 2px solid #000000; 
+  font-weight: bold;
+  transition: border-color 0.18s ease;
+}
+
+.btn-icon:hover .cart-badge {
+  border-color: #ffffff;
+}
+
+/* Responsive */
+@media (max-width: 991px) {
+  .search-wrapper {
+    display: none;
+  }
 }
 </style>
