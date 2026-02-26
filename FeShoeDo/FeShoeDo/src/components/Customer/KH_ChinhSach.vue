@@ -30,7 +30,7 @@
       <!-- Footer message -->
       <div class="text-center mt-5 pt-4">
         <div class="brand-message">
-          <img :src="getImageUrl('anh/logo blackwhite.jpg')" alt="BlackWhite" class="brand-logo mb-3" style="max-width: 150px;">
+          <img :src="getImageUrl('assets/Logoc.png')" alt="Shoedo" class="brand-logo mb-3" style="max-width: 150px;">
           <p class="lead fw-bold">SHOUDO - Localbrand giày Việt</p>
           <p class="text-muted">Cám ơn bạn đã tin tưởng và ủng hộ shop!</p>
         </div>
