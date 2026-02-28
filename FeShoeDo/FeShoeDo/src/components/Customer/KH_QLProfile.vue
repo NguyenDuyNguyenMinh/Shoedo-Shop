@@ -3,7 +3,6 @@
     <KH_Navbar />
     
     <main class="container mt-4">
-      <!-- Alert Messages -->
       <div v-if="message" class="alert alert-success alert-dismissible fade show">
         <i class="fas fa-check-circle me-2"></i>
         {{ message }}
@@ -29,32 +28,33 @@
                   <div class="col-md-6">
                     <div class="mb-3">
                       <label class="form-label fw-bold">Tên đăng nhập</label>
-                      <input type="text" class="form-control" :value="user.userName" disabled>
+                      <input type="text" class="form-control" v-model="user.userName" required 
+                             @input="user.userName = user.userName.trimStart()">
                     </div>
                     <div class="mb-3">
                       <label class="form-label fw-bold">Họ và tên</label>
-                      <input type="text" class="form-control" v-model="customer.tenKH" required>
+                      <input type="text" class="form-control" v-model="customer.tenKH" required
+                             @input="customer.tenKH = customer.tenKH.trimStart()">
                     </div>
                   </div>
                   <div class="col-md-6">
                     <div class="mb-3">
-                      <label class="form-label fw-bold">ngày tạo </label>
-                      <input type="text" class="form-control" v-model="customer.sdt" required 
-                             pattern="[0-9]{9,11}" placeholder="090xxxxxxx">
+                      <label class="form-label fw-bold">Ngày tạo</label>
+                      <input type="text" class="form-control" :value="user.createAt" disabled>
                     </div>
                     <div class="mb-3">
                       <label class="form-label fw-bold">Số điện thoại</label>
                       <input type="text" class="form-control" v-model="customer.sdt" required 
-                             pattern="[0-9]{9,11}" placeholder="090xxxxxxx">
+                             pattern="[0-9]{9,11}" placeholder="090xxxxxxx"
+                             @input="customer.sdt = customer.sdt.replace(/[^0-9]/g, '')">
                     </div>
                   </div>
                 </div>
                 <div class="row">
                   <div class="col-md-12 mb-3">
-                      <label class="form-label fw-bold">Email</label>
-                      <input type="email" class="form-control" :value="user.mail" disabled>
-                      <small class="text-muted">Email không thể thay đổi</small>
-                    </div>
+                    <label class="form-label fw-bold">Email</label>
+                    <input type="email" class="form-control" :value="user.mail" disabled>
+                  </div>
                 </div>
                 
                 <div class="text-end">
@@ -162,16 +162,19 @@
             <div class="modal-body">
               <div class="mb-3">
                 <label class="form-label">Họ và tên người nhận</label>
-                <input type="text" class="form-control" v-model="addressForm.tenNN" required>
+                <input type="text" class="form-control" v-model="addressForm.tenNN" required
+                       @input="addressForm.tenNN = addressForm.tenNN.trimStart()">
               </div>
               <div class="mb-3">
                 <label class="form-label">Số điện thoại</label>
-                <input type="text" class="form-control" v-model="addressForm.sdt" required pattern="[0-9]{9,11}">
+                <input type="text" class="form-control" v-model="addressForm.sdt" required pattern="[0-9]{9,11}"
+                       @input="addressForm.sdt = addressForm.sdt.replace(/[^0-9]/g, '')">
                 <small class="text-muted">9-11 số</small>
               </div>
               <div class="mb-3">
                 <label class="form-label">Địa chỉ</label>
-                <textarea class="form-control" v-model="addressForm.diemGiao" rows="3" required></textarea>
+                <textarea class="form-control" v-model="addressForm.diemGiao" rows="3" required
+                          @input="addressForm.diemGiao = addressForm.diemGiao.trimStart()"></textarea>
               </div>
               <div class="form-check">
                 <input class="form-check-input" type="checkbox" v-model="addressForm.macDinh">
@@ -244,7 +247,6 @@ export default {
       macDinh: false
     });
 
-    // Fetch profile data
     const fetchProfile = async () => {
       try {
         const response = await api.getProfile();
@@ -252,7 +254,7 @@ export default {
           user.value = response.data.user;
           customer.value = response.data.customer;
           addresses.value = response.data.addresses || [];
-          // Sort addresses: default first
+
           addresses.value.sort((a, b) => {
             if (a.macDinh && !b.macDinh) return -1;
             if (!a.macDinh && b.macDinh) return 1;
@@ -265,11 +267,23 @@ export default {
       }
     };
 
-    // Update profile
     const updateProfile = async () => {
-      // Validate phone
+      user.value.userName = user.value.userName.trim();
+      customer.value.tenKH = customer.value.tenKH.trim();
+      customer.value.sdt = customer.value.sdt.trim();
+
       if (!/^[0-9]{9,11}$/.test(customer.value.sdt)) {
         error.value = 'Số điện thoại không hợp lệ (9-11 số)';
+        return;
+      }
+
+      if (!user.value.userName || user.value.userName.length < 3) {
+        error.value = 'Tên đăng nhập phải có ít nhất 3 ký tự';
+        return;
+      }
+
+      if (!customer.value.tenKH) {
+        error.value = 'Họ và tên không được để trống';
         return;
       }
 
@@ -279,24 +293,31 @@ export default {
       
       try {
         const response = await api.updateProfile({
+          userName: user.value.userName,
           fullname: customer.value.tenKH,
           phone: customer.value.sdt
         });
         
         if (response.data.success) {
           message.value = response.data.message;
-          customer.value = response.data.customer;
+
+          if (response.data.user) {
+            user.value.userName = response.data.user.userName;
+          }
+          if (response.data.customer) {
+            customer.value.tenKH = response.data.customer.tenKH;
+            customer.value.sdt = response.data.customer.sdt;
+          }
         } else {
           error.value = response.data.message;
         }
       } catch (err) {
-        error.value = 'Lỗi kết nối máy chủ';
+        error.value = err.response?.data?.message || 'Lỗi kết nối máy chủ';
       } finally {
         profileLoading.value = false;
       }
     };
 
-    // Change password
     const changePassword = async () => {
       if (password.value.newPassword !== password.value.confirmPassword) {
         error.value = 'Mật khẩu mới và xác nhận mật khẩu không khớp';
@@ -331,15 +352,18 @@ export default {
           error.value = response.data.message;
         }
       } catch (err) {
-        error.value = 'Mật khẩu hiện tại không đúng';
+        error.value = err.response?.data?.message || 'Mật khẩu hiện tại không đúng';
       } finally {
         passwordLoading.value = false;
       }
     };
 
-    // Save address
     const saveAddress = async () => {
-      // Validate phone
+
+      addressForm.value.tenNN = addressForm.value.tenNN.trim();
+      addressForm.value.sdt = addressForm.value.sdt.trim();
+      addressForm.value.diemGiao = addressForm.value.diemGiao.trim();
+
       if (!/^[0-9]{9,11}$/.test(addressForm.value.sdt)) {
         error.value = 'Số điện thoại không hợp lệ (9-11 số)';
         return;
@@ -365,13 +389,12 @@ export default {
           error.value = response.data.message;
         }
       } catch (err) {
-        error.value = 'Lỗi kết nối máy chủ';
+        error.value = err.response?.data?.message || 'Lỗi kết nối máy chủ';
       } finally {
         addressLoading.value = false;
       }
     };
 
-    // Delete address
     const deleteAddress = async (maDC) => {
       if (!confirm('Bạn có chắc muốn xóa địa chỉ này?')) return;
       
@@ -384,11 +407,10 @@ export default {
           error.value = response.data.message;
         }
       } catch (err) {
-        error.value = 'Lỗi kết nối máy chủ';
+        error.value = err.response?.data?.message || 'Lỗi kết nối máy chủ';
       }
     };
 
-    // Set default address
     const setDefaultAddress = async (maDC) => {
       try {
         const response = await api.setDefaultAddress(maDC);
@@ -399,11 +421,10 @@ export default {
           error.value = response.data.message;
         }
       } catch (err) {
-        error.value = 'Lỗi kết nối máy chủ';
+        error.value = err.response?.data?.message || 'Lỗi kết nối máy chủ';
       }
     };
 
-    // Edit address
     const editAddress = (address) => {
       editingAddress.value = address;
       addressForm.value = {
@@ -416,7 +437,6 @@ export default {
       showAddModal.value = true;
     };
 
-    // Close modal
     const closeModal = () => {
       showAddModal.value = false;
       editingAddress.value = null;
@@ -581,6 +601,6 @@ export default {
 }
 
 .modal-footer {
-  border-top: 1px solid #000000;
+  border-top: 1px solid #000000;  
 }
 </style>
