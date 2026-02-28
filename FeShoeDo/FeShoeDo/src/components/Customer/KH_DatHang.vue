@@ -2,559 +2,463 @@
   <div class="customer-layout">
     <KH_Navbar />
     
-    <main class="container">
-      <h2 class="mt-4 mb-3">Thanh Toán</h2>
-      
-      <form @submit.prevent="placeOrder">
-        <div class="card mb-3">
-          <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="mt-2"><i class="bi bi-geo-alt-fill text-danger"></i> Địa Chỉ Nhận Hàng</h5>
-            <button type="button" class="btn btn-outline-light btn-sm" @click="showAddressModal = true">
-              Quản lý địa chỉ
+    <main class="container py-4">
+      <!-- Breadcrumb -->
+      <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="/customer/index">Trang chủ</a></li>
+          <li class="breadcrumb-item"><a href="/customer/cart">Giỏ hàng</a></li>
+          <li class="breadcrumb-item active">Đặt hàng</li>
+        </ol>
+      </nav>
+
+      <h2 class="page-title-main mb-4">
+        <i class="bi bi-credit-card me-2"></i>Thanh toán
+      </h2>
+
+      <div class="row g-4">
+        <!-- Left: Form đặt hàng -->
+        <div class="col-lg-7">
+
+          <!-- 1. Địa chỉ giao hàng -->
+          <div class="checkout-section">
+            <div class="section-header">
+              <h5><i class="bi bi-geo-alt me-2"></i>Địa chỉ giao hàng</h5>
+              <button class="btn btn-outline-dark btn-sm">
+                <i class="bi bi-plus-circle me-1"></i>Thêm địa chỉ mới
+              </button>
+            </div>
+
+            <!-- Địa chỉ 1 - Mặc định -->
+            <div class="address-option selected">
+              <div class="d-flex align-items-start gap-3">
+                <input class="form-check-input mt-1" type="radio" name="address" id="addr1" checked>
+                <label for="addr1" class="flex-fill">
+                  <div class="d-flex align-items-center gap-2 mb-1">
+                    <span class="fw-bold">Nguyễn Văn A</span>
+                    <span class="text-muted">|</span>
+                    <span class="text-muted">0901234567</span>
+                    <span class="badge bg-dark ms-1">Mặc định</span>
+                  </div>
+                  <div class="text-muted small">123 Nguyễn Huệ A, Quận 1, TP.HCM</div>
+                </label>
+              </div>
+            </div>
+
+            <!-- Địa chỉ 2 -->
+            <div class="address-option">
+              <div class="d-flex align-items-start gap-3">
+                <input class="form-check-input mt-1" type="radio" name="address" id="addr2">
+                <label for="addr2" class="flex-fill">
+                  <div class="d-flex align-items-center gap-2 mb-1">
+                    <span class="fw-bold">Nguyễn Văn A-B</span>
+                    <span class="text-muted">|</span>
+                    <span class="text-muted">0901234567</span>
+                  </div>
+                  <div class="text-muted small">123 Nguyễn Huệ B, Quận 1, TP.HCM</div>
+                </label>
+              </div>
+            </div>
+
+            <!-- Địa chỉ 3 -->
+            <div class="address-option">
+              <div class="d-flex align-items-start gap-3">
+                <input class="form-check-input mt-1" type="radio" name="address" id="addr3">
+                <label for="addr3" class="flex-fill">
+                  <div class="d-flex align-items-center gap-2 mb-1">
+                    <span class="fw-bold">Nguyễn Văn A-C</span>
+                    <span class="text-muted">|</span>
+                    <span class="text-muted">0901234567</span>
+                  </div>
+                  <div class="text-muted small">123 Nguyễn Huệ C, Quận 1, TP.HCM</div>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. Phương thức thanh toán -->
+          <div class="checkout-section">
+            <div class="section-header">
+              <h5><i class="bi bi-wallet2 me-2"></i>Phương thức thanh toán</h5>
+            </div>
+
+            <div class="payment-option selected">
+              <div class="d-flex align-items-center gap-3">
+                <input class="form-check-input" type="radio" name="payment" id="payCOD" checked>
+                <label for="payCOD" class="d-flex align-items-center gap-3 flex-fill">
+                  <div class="payment-icon">
+                    <i class="bi bi-cash-stack"></i>
+                  </div>
+                  <div>
+                    <div class="fw-bold">Thanh toán khi nhận hàng (COD)</div>
+                    <div class="text-muted small">Thanh toán bằng tiền mặt khi nhận hàng</div>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <div class="payment-option">
+              <div class="d-flex align-items-center gap-3">
+                <input class="form-check-input" type="radio" name="payment" id="payTransfer">
+                <label for="payTransfer" class="d-flex align-items-center gap-3 flex-fill">
+                  <div class="payment-icon">
+                    <i class="bi bi-bank"></i>
+                  </div>
+                  <div>
+                    <div class="fw-bold">Chuyển khoản ngân hàng</div>
+                    <div class="text-muted small">Chuyển khoản qua tài khoản ngân hàng</div>
+                  </div>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. Ghi chú -->
+          <div class="checkout-section">
+            <div class="section-header">
+              <h5><i class="bi bi-chat-left-text me-2"></i>Ghi chú đơn hàng</h5>
+            </div>
+            <textarea class="form-control" rows="3" placeholder="Ghi chú cho người bán (ví dụ: giao giờ hành chính, gọi trước khi giao...)"></textarea>
+          </div>
+        </div>
+
+        <!-- Right: Tóm tắt đơn hàng -->
+        <div class="col-lg-5">
+          <div class="order-review sticky-top" style="top: 100px;">
+            <h5 class="review-title">Đơn hàng của bạn</h5>
+
+            <!-- Sản phẩm 1 -->
+            <div class="review-item">
+              <div class="d-flex gap-3">
+                <div class="review-item-image">
+                  <img src="https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=100&h=100&fit=crop" alt="">
+                  <span class="item-qty-badge">1</span>
+                </div>
+                <div class="flex-fill">
+                  <div class="review-item-name">SP001-ShoeDo - SP1 - GD</div>
+                  <div class="review-item-variant">Trắng / Size 40</div>
+                </div>
+                <div class="review-item-price">2.500.000₫</div>
+              </div>
+            </div>
+
+            <!-- Sản phẩm 2 -->
+            <div class="review-item">
+              <div class="d-flex gap-3">
+                <div class="review-item-image">
+                  <img src="https://images.unsplash.com/photo-1539185441755-769473a23570?w=100&h=100&fit=crop" alt="">
+                  <span class="item-qty-badge">2</span>
+                </div>
+                <div class="flex-fill">
+                  <div class="review-item-name">SP003-ShoeDo - SP3 - GD</div>
+                  <div class="review-item-variant">Đỏ / Size 37</div>
+                </div>
+                <div class="review-item-price">9.000.000₫</div>
+              </div>
+            </div>
+
+            <!-- Sản phẩm 3 -->
+            <div class="review-item">
+              <div class="d-flex gap-3">
+                <div class="review-item-image">
+                  <img src="https://images.unsplash.com/photo-1608231387042-66d1773070a5?w=100&h=100&fit=crop" alt="">
+                  <span class="item-qty-badge">1</span>
+                </div>
+                <div class="flex-fill">
+                  <div class="review-item-name">SP008-ShoeDo - SP1 - GBT</div>
+                  <div class="review-item-variant">Đen / Size 41</div>
+                </div>
+                <div class="review-item-price">3.500.000₫</div>
+              </div>
+            </div>
+
+            <hr>
+
+            <!-- Voucher -->
+            <div class="mb-3">
+              <div class="input-group">
+                <input type="text" class="form-control" placeholder="Nhập mã giảm giá">
+                <button class="btn btn-outline-dark">Áp dụng</button>
+              </div>
+            </div>
+
+            <hr>
+
+            <!-- Tổng -->
+            <div class="summary-line">
+              <span>Tạm tính</span>
+              <span class="fw-semibold">15.000.000₫</span>
+            </div>
+            <div class="summary-line">
+              <span>Phí vận chuyển</span>
+              <span class="text-success fw-semibold">Miễn phí</span>
+            </div>
+            <div class="summary-line">
+              <span>Giảm giá</span>
+              <span class="text-success fw-semibold">-0₫</span>
+            </div>
+
+            <hr>
+
+            <div class="summary-line total-line">
+              <span>Tổng thanh toán</span>
+              <span>15.000.000₫</span>
+            </div>
+
+            <button class="btn btn-dark w-100 mt-3 py-3 place-order-btn">
+              <i class="bi bi-bag-check me-2"></i>Đặt hàng
             </button>
-          </div>
-          
-          <div class="p-3">
-            <div v-if="addresses.length === 0">
-              <p class="text-danger">Bạn chưa có địa chỉ nào. Vui lòng thêm địa chỉ.</p>
-            </div>
-            
-            <!-- Hiển thị địa chỉ mặc định trước -->
-            <div v-if="defaultAddress" class="mb-3">
-              <div class="form-check">
-                <input class="form-check-input" type="radio" 
-                      v-model="selectedAddressId" :value="defaultAddress.maDC" 
-                      :id="'addr' + defaultAddress.maDC" checked>
-                <label class="form-check-label" :for="'addr' + defaultAddress.maDC">
-                  <strong>{{ defaultAddress.tenNN }} | {{ defaultAddress.sdt }}</strong>
-                  <p class="mb-0">{{ defaultAddress.diemGiao }}</p>
-                  <span class="badge bg-success">Mặc định</span>
-                </label>
-              </div>
-              <hr>
-            </div>
-            
-            <!-- Hiển thị các địa chỉ khác -->
-            <div v-for="addr in otherAddresses" :key="addr.maDC" class="mb-3">
-              <div class="form-check">
-                <input class="form-check-input" type="radio" 
-                      v-model="selectedAddressId" :value="addr.maDC" :id="'addr' + addr.maDC">
-                <label class="form-check-label" :for="'addr' + addr.maDC">
-                  <strong>{{ addr.tenNN }} | {{ addr.sdt }}</strong>
-                  <p class="mb-0">{{ addr.diemGiao }}</p>
-                </label>
-              </div>
-              <hr>
-            </div>
-          </div>
-        </div>
 
-        <div class="card">
-          <div class="card-header">
-            <h5 class="mb-0">Danh Sách Sản Phẩm</h5>
-          </div>
-          <div class="table-responsive">
-            <table class="table table-hover mb-0">
-              <thead class="table-light">
-                <tr>
-                  <th class="ps-4 col-sm-6 text-start">Sản phẩm</th>
-                  <th class="col-sm-2 text-center">Số lượng</th>
-                  <th class="col-sm-2 text-center">Đơn giá</th>
-                  <th class="col-sm-2 text-center">Thành tiền</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="item in checkoutItems" :key="item.maGH || item.maSP" class="align-middle" >
-                  <td >
-                    <div class="ps-3 col-sm-6 d-flex align-items-center" style="height: 70px;"> 
-                      <img :src="getImageUrl(item.sanPham?.hinh || item.hinh)" 
-                           alt="Hình sản phẩm" class="img-thumbnail me-3" 
-                           style="max-width: 70px;">
-                      <div>
-                        <p class="mb-0 fw-bold">{{ item.sanPham?.tenSP || item.tenSP }}</p>
-                        <small class="text-muted">Phân loại: {{ item.sanPham?.phanLoai || item.phanLoai }}</small>
-                      </div>
-                    </div>
-                  </td>
-                  <td class="col-sm-2 text-center" style="height: 70px;">{{ item.soLuong }}</td>
-                  <td class="col-sm-2 text-center" style="height: 70px;">{{ formatPrice(item.sanPham?.donGia || item.donGia) }}</td>
-                  <td class="col-sm-2 text-center" style="height: 70px;">
-                    {{ formatPrice((item.sanPham?.donGia || item.donGia) * item.soLuong) }}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <div class="card-footer d-flex justify-content-end align-items-center">
-            <h5 class="mb-0 me-3">Tổng Cộng:</h5>
-            <h4 class="mb-0 text-danger fw-bold">{{ formatPrice(totalPrice) }}</h4>
-          </div>
-        </div>
-        
-        <div class="card p-3 mt-3">
-          <div class="row">
-            <div class="col-md-6">
-              <h5>Phương thức thanh toán</h5>
-              <div class="form-check">
-                <input class="form-check-input" type="radio" name="paymentMethod" id="cod" value="cod" checked>
-                <label class="form-check-label" for="cod">
-                  Thanh toán khi nhận hàng (COD)
-                </label>
-              </div>
-            </div>
-            <div class="col-md-6 text-end">
-              <p>Tổng tiền hàng: {{ formatPrice(totalPrice) }}</p>
-              <p>Phí vận chuyển: <span>0₫</span></p>
-              <h5>Tổng thanh toán: <span class="text-danger fw-bold">{{ formatPrice(totalPrice) }}</span></h5>
-            </div>
-          </div>
-          <button type="submit" class="btn btn-success mt-2" :disabled="loading || !selectedAddressId">
-            <span v-if="loading" class="spinner-border spinner-border-sm me-2"></span>
-            Đặt Hàng
-          </button>
-        </div>
-      </form>
-    </main>
-
-    <!-- Modal Quản Lý Địa Chỉ -->
-    <div v-if="showAddressModal" class="modal fade show d-block" style="background: rgba(0,0,0,0.5); z-index: 1050;">
-      <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">📍 Quản Lý Địa Chỉ</h5>
-            <button type="button" class="btn-close" @click="closeAddressModal"></button>
-          </div>
-          
-          <div class="modal-body">
-            <!-- Form Thêm/Sửa Địa Chỉ -->
-            <div class="mb-4">
-              <h6 class="mb-3">{{ editingAddress ? 'Cập nhật địa chỉ' : 'Thêm địa chỉ mới' }}</h6>
-              <form @submit.prevent="saveAddress">
-                <div class="row g-3">
-                  <div class="col-md-6">
-                    <label class="form-label">Họ và tên</label>
-                    <input type="text" class="form-control" v-model="addressForm.tenNN" required>
-                  </div>
-                  <div class="col-md-6">
-                    <label class="form-label">Số điện thoại</label>
-                    <input type="text" class="form-control" v-model="addressForm.sdt" required pattern="[0-9]{9,11}">
-                  </div>
-                  <div class="col-12">
-                    <label class="form-label">Địa chỉ chi tiết</label>
-                    <textarea class="form-control" v-model="addressForm.diemGiao" rows="2" required 
-                              placeholder="Số nhà, tên đường, phường/xã, quận/huyện, tỉnh/thành phố"></textarea>
-                  </div>
-                  <div class="col-12">
-                    <div class="form-check">
-                      <input class="form-check-input" type="checkbox" v-model="addressForm.macDinh" id="setDefault">
-                      <label class="form-check-label" for="setDefault">
-                        Đặt làm địa chỉ mặc định
-                      </label>
-                    </div>
-                  </div>
-                  <div class="col-12">
-                    <button type="submit" class="btn btn-primary me-2" :disabled="addressLoading">
-                      <span v-if="addressLoading" class="spinner-border spinner-border-sm me-1"></span>
-                      {{ editingAddress ? 'Cập nhật' : 'Thêm địa chỉ' }}
-                    </button>
-                    <button v-if="editingAddress" type="button" class="btn btn-secondary" @click="cancelEdit">
-                      Hủy
-                    </button>
-                  </div>
-                </div>
-              </form>
-            </div>
-
-            <!-- Danh sách địa chỉ -->
-            <h6 class="mb-3">Danh sách địa chỉ</h6>
-            <div v-if="addressModalLoading" class="text-center p-3">
-              <div class="spinner-border spinner-border-sm text-primary"></div>
-              <span class="ms-2">Đang tải...</span>
-            </div>
-            
-            <div v-else-if="addresses.length === 0" class="text-center text-muted p-3">
-              Chưa có địa chỉ nào
-            </div>
-            
-            <div v-else class="address-list">
-              <div v-for="addr in addresses" :key="addr.maDC" 
-                   class="address-item mb-3 p-3 border rounded" 
-                   :class="{ 'border-primary bg-light': addr.macDinh }">
-                <div class="d-flex justify-content-between align-items-start">
-                  <div class="flex-grow-1">
-                    <div class="d-flex align-items-center mb-2">
-                      <strong>{{ addr.tenNN }}</strong>
-                      <span class="text-muted ms-2">| {{ addr.sdt }}</span>
-                      <span v-if="addr.macDinh" class="badge bg-success ms-2">Mặc định</span>
-                    </div>
-                    <p class="mb-0 text-muted">{{ addr.diemGiao }}</p>
-                  </div>
-                  <div class="btn-group btn-group-sm ms-3">
-                    <button class="btn btn-outline-primary" @click="editAddress(addr)" title="Chỉnh sửa">
-                      <i class="fas fa-edit"></i>
-                    </button>
-                    <button v-if="!addr.macDinh" class="btn btn-outline-success" 
-                            @click="setDefaultAddress(addr.maDC)" title="Đặt mặc định">
-                      <i class="fas fa-check"></i>
-                    </button>
-                    <button class="btn btn-outline-danger" @click="deleteAddress(addr.maDC)" title="Xóa">
-                      <i class="fas fa-trash"></i>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" @click="closeAddressModal">Đóng</button>
+            <p class="text-center text-muted small mt-3">
+              Bằng việc nhấn "Đặt hàng", bạn đồng ý với 
+              <a href="#" class="text-dark">Điều khoản dịch vụ</a> và 
+              <a href="#" class="text-dark">Chính sách bảo mật</a>
+            </p>
           </div>
         </div>
       </div>
-    </div>
+    </main>
 
     <Footer />
   </div>
 </template>
 
 <script>
-import { ref, computed, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
-import api from '@/services/api';
 import KH_Navbar from '@/components/shared/KH_Navbar.vue';
 import Footer from '@/components/shared/Footer.vue';
 
 export default {
-  name: 'DatHang',
-  components: {
-    KH_Navbar,
-    Footer
-  },
-  setup() {
-    const router = useRouter();
-    const addresses = ref([]);
-    const selectedAddressId = ref(null);
-    const checkoutItems = ref([]);
-    const loading = ref(false);
-    const showAddressModal = ref(false);
-    const addressModalLoading = ref(false);
-
-    const editingAddress = ref(null);
-    const addressLoading = ref(false);
-    const addressForm = ref({
-      maDC: null,
-      tenNN: '',
-      sdt: '',
-      diemGiao: '',
-      macDinh: false
-    });
-
-    const defaultAddress = computed(() => {
-      return addresses.value.find(addr => addr.macDinh);
-    });
-    
-    const otherAddresses = computed(() => {
-      return addresses.value.filter(addr => !addr.macDinh);
-    });
-
-    const fetchAddresses = async () => {
-      try {
-        const response = await api.getProfile();
-        if (response.data.success) {
-          addresses.value = response.data.addresses || [];
-          addresses.value.sort((a, b) => {
-            if (a.macDinh && !b.macDinh) return -1;
-            if (!a.macDinh && b.macDinh) return 1;
-            return 0;
-          });
-          if (defaultAddress.value) {
-            selectedAddressId.value = defaultAddress.value.maDC;
-          } else if (addresses.value.length > 0) {
-            selectedAddressId.value = addresses.value[0].maDC;
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching addresses:', error);
-      }
-    };
-
-    const openAddressModal = async () => {
-      showAddressModal.value = true;
-      addressModalLoading.value = true;
-      try {
-        await fetchAddresses();
-      } finally {
-        addressModalLoading.value = false;
-      }
-    };
-
-    const closeAddressModal = () => {
-      showAddressModal.value = false;
-      editingAddress.value = null;
-      resetAddressForm();
-    };
-
-    const resetAddressForm = () => {
-      addressForm.value = {
-        maDC: null,
-        tenNN: '',
-        sdt: '',
-        diemGiao: '',
-        macDinh: false
-      };
-    };
-
-    const editAddress = (address) => {
-      editingAddress.value = address;
-      addressForm.value = {
-        maDC: address.maDC,
-        tenNN: address.tenNN,
-        sdt: address.sdt,
-        diemGiao: address.diemGiao,
-        macDinh: address.macDinh
-      };
-    };
-
-    const cancelEdit = () => {
-      editingAddress.value = null;
-      resetAddressForm();
-    };
-
-    const saveAddress = async () => {
-      addressLoading.value = true;
-      try {
-        let response;
-        if (editingAddress.value) {
-          response = await api.updateAddress(addressForm.value.maDC, addressForm.value);
-        } else {
-          response = await api.addAddress(addressForm.value);
-        }
-        
-        if (response.data.success) {
-          await fetchAddresses();
-          editingAddress.value = null;
-          resetAddressForm();
-        } else {
-          alert(response.data.message || 'Thao tác thất bại');
-        }
-      } catch (err) {
-        alert('Lỗi kết nối máy chủ');
-        console.error('Error saving address:', err);
-      } finally {
-        addressLoading.value = false;
-      }
-    };
-
-    const deleteAddress = async (maDC) => {
-      if (!confirm('Bạn có chắc muốn xóa địa chỉ này?')) return;
-      
-      try {
-        const response = await api.deleteAddress(maDC);
-        if (response.data.success) {
-          await fetchAddresses();
-        } else {
-          alert(response.data.message || 'Xóa địa chỉ thất bại');
-        }
-      } catch (err) {
-        alert('Lỗi kết nối máy chủ');
-        console.error('Error deleting address:', err);
-      }
-    };
-
-    const setDefaultAddress = async (maDC) => {
-      try {
-        const response = await api.setDefaultAddress(maDC);
-        if (response.data.success) {
-          await fetchAddresses();
-        } else {
-          alert(response.data.message || 'Thao tác thất bại');
-        }
-      } catch (err) {
-        alert('Lỗi kết nối máy chủ');
-        console.error('Error setting default address:', err);
-      }
-    };
-
-    const placeOrder = async () => {
-      if (!selectedAddressId.value) {
-        alert('Vui lòng chọn địa chỉ nhận hàng');
-        return;
-      }
-
-      loading.value = true;
-      try {
-        const isBuyNow = checkoutItems.value.length === 1 && 
-                        checkoutItems.value[0].maPLSP && 
-                        !checkoutItems.value[0].maGH;
-        
-        let response;
-        
-        if (isBuyNow) {
-          const buyNowItem = checkoutItems.value[0];
-          const orderData = {
-            maDC: selectedAddressId.value,
-            maPLSP: buyNowItem.maPLSP || buyNowItem.plSanPham?.maPLSP,
-            soLuong: buyNowItem.soLuong
-          };
-          
-          response = await api.checkoutBuyNow(orderData);
-        } else {
-          const orderData = {
-            maDC: selectedAddressId.value,
-            selectedItems: checkoutItems.value
-              .filter(item => item.maGH)
-              .map(item => item.maGH)
-          };
-          
-          response = await api.checkout(orderData);
-        }
-        
-        if (response.data.success) {
-          alert('Đặt hàng thành công! Đơn hàng của bạn đang chờ duyệt.');
-
-          localStorage.removeItem('selectedCartItems');
-          sessionStorage.removeItem('buyNowItem');
-          
-          router.push('/customer/orders');
-        } else {
-          alert(response.data.message);
-        }
-      } catch (error) {
-        alert('Đặt hàng thất bại: ' + (error.response?.data?.message || error.message));
-      } finally {
-        loading.value = false;
-      }
-    };
-    const loadCheckoutItems = () => {
-      const buyNowItem = sessionStorage.getItem('buyNowItem');
-      if (buyNowItem) {
-        const item = JSON.parse(buyNowItem);
-        checkoutItems.value = [item];
-        sessionStorage.removeItem('buyNowItem');
-        return;
-      }
-
-      const selectedCartItems = localStorage.getItem('selectedCartItems');
-      if (selectedCartItems) {
-        checkoutItems.value = JSON.parse(selectedCartItems);
-      } else {
-        router.push('/customer/cart');
-      }
-    };
-
-    const getImageUrl = (imageName) => {
-      return `http://localhost:8080/images/${imageName || 'default.jpg'}`;
-    };
-
-    const formatPrice = (price) => {
-      return new Intl.NumberFormat('vi-VN', {
-        style: 'currency',
-        currency: 'VND'
-      }).format(price);
-    };
-
-    const totalPrice = computed(() => {
-      return checkoutItems.value.reduce((total, item) => {
-        const price = item.sanPham?.donGia || item.donGia || 0;
-        return total + (price * item.soLuong);
-      }, 0);
-    });
-
-    onMounted(() => {
-      fetchAddresses();
-      loadCheckoutItems();
-    });
-
-    return {
-      addresses,
-      defaultAddress,
-      otherAddresses,
-      selectedAddressId,
-      checkoutItems,
-      loading,
-      showAddressModal,
-      addressModalLoading,
-      editingAddress,
-      addressLoading,
-      addressForm,
-      totalPrice,
-      getImageUrl,
-      formatPrice,
-      placeOrder,
-      openAddressModal,
-      closeAddressModal,
-      editAddress,
-      cancelEdit,
-      saveAddress,
-      deleteAddress,
-      setDefaultAddress
-    };
-  }
+  name: 'KH_DatHang',
+  components: { KH_Navbar, Footer }
 };
 </script>
 
 <style scoped>
-.card { 
-  border: 2px solid #000000; 
-  border-radius: 10px;
+/* Breadcrumb */
+.breadcrumb-item a {
+  color: #000;
+  text-decoration: none;
+  font-weight: 500;
 }
-.card-header {
-  font-weight: bold;
-  background-color: #000000;
-  color: #ffffff;
-  border-bottom: 2px solid #000000;
-}
-.table thead th {
-  background-color: #f8f9fa;
-  border-bottom: 2px solid #000000;
+.breadcrumb-item a:hover {
+  text-decoration: underline;
 }
 
-/* Modal styles */
-.modal-content {
-  border: 2px solid #000000;
+/* Page Title */
+.page-title-main {
+  font-size: 28px;
+  font-weight: 800;
+  color: #000;
+  letter-spacing: -0.5px;
+}
+
+/* Checkout Section */
+.checkout-section {
+  background: #fff;
+  border: 2px solid #000;
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 20px;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #eee;
+}
+
+.section-header h5 {
+  font-size: 18px;
+  font-weight: 700;
+  color: #000;
+  margin: 0;
+}
+
+/* Radio */
+.form-check-input:checked {
+  background-color: #000;
+  border-color: #000;
+}
+
+/* Address Option */
+.address-option {
+  padding: 16px 18px;
+  border: 2px solid #e0e0e0;
   border-radius: 10px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  transition: all 0.25s;
 }
-.modal-header {
-  border-bottom: 2px solid #000000;
-  background-color: #000000;
-  color: #ffffff;
+
+.address-option:hover {
+  border-color: #999;
 }
-.modal-footer {
-  border-top: 2px solid #000000;
+
+.address-option.selected {
+  border-color: #000;
+  background: #fafafa;
 }
-.address-item {
-  border: 1px solid #dee2e6;
-  transition: all 0.2s;
+
+.address-option label {
+  cursor: pointer;
 }
-.address-item:hover {
-  border-color: #000000;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+
+/* Payment Option */
+.payment-option {
+  padding: 16px 18px;
+  border: 2px solid #e0e0e0;
+  border-radius: 10px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  transition: all 0.25s;
 }
-.address-item.border-primary {
-  border-width: 2px;
+
+.payment-option:hover {
+  border-color: #999;
 }
-.btn-outline-primary {
-  border-color: #000000;
-  color: #000000;
+
+.payment-option.selected {
+  border-color: #000;
+  background: #fafafa;
 }
-.btn-outline-primary:hover {
-  background-color: #000000;
-  color: #ffffff;
+
+.payment-option label {
+  cursor: pointer;
 }
-.btn-outline-success {
-  border-color: #28a745;
-  color: #28a745;
+
+.payment-icon {
+  width: 44px;
+  height: 44px;
+  background: #000;
+  color: #fff;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
 }
-.btn-outline-success:hover {
-  background-color: #28a745;
-  color: #ffffff;
+
+/* Order Review */
+.order-review {
+  background: #fff;
+  border: 2px solid #000;
+  border-radius: 14px;
+  padding: 28px;
 }
-.btn-outline-danger {
-  border-color: #dc3545;
-  color: #dc3545;
+
+.review-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: #000;
+  margin-bottom: 20px;
+  padding-bottom: 14px;
+  border-bottom: 2px solid #000;
 }
-.btn-outline-danger:hover {
-  background-color: #dc3545;
-  color: #ffffff;
+
+/* Review Item */
+.review-item {
+  padding: 12px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.review-item:last-of-type {
+  border-bottom: none;
+}
+
+.review-item-image {
+  width: 64px;
+  height: 64px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #eee;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.review-item-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.item-qty-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 22px;
+  height: 22px;
+  background: #000;
+  color: #fff;
+  border-radius: 50%;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #fff;
+}
+
+.review-item-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #000;
+  margin-bottom: 2px;
+}
+
+.review-item-variant {
+  font-size: 12px;
+  color: #666;
+}
+
+.review-item-price {
+  font-size: 14px;
+  font-weight: 700;
+  color: #000;
+  white-space: nowrap;
+}
+
+/* Summary Lines */
+.summary-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  font-size: 14px;
+  color: #333;
+}
+
+.total-line {
+  font-size: 20px;
+  font-weight: 800;
+  color: #000;
+  padding: 12px 0;
+}
+
+/* Place Order Button */
+.place-order-btn {
+  font-size: 16px;
+  font-weight: 700;
+  border-radius: 10px;
+  letter-spacing: 0.5px;
+  transition: all 0.3s;
+}
+
+.place-order-btn:hover {
+  background: #333;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
 }
 </style>

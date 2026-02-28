@@ -2,7 +2,7 @@
   <div class="footer">
     <div class="container">
       <div class="footer-bottom">
-        <p>© 2025 Shop BlackWhite. All rights reserved.</p>
+        <p>© 2026 Shoedo Shop. All rights reserved.</p>
       </div>
     </div>
   </div>

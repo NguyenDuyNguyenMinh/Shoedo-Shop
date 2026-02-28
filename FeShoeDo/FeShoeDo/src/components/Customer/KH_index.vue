@@ -1,575 +1,205 @@
+<script setup>
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import KH_Navbar from '@/components/Shared/KH_Navbar.vue'
+import Footer from '@/components/Shared/Footer.vue'
+
+const router = useRouter()
+
+// ── BANNER CAROUSEL ──
+const currentSlide = ref(0)
+const slides = ref([
+  { id: 1, bg: '#111',    line1: 'SALE', line2: 'GIÀY XỊN' },
+  { id: 2, bg: '#0d1b2a', line1: 'NEW',  line2: 'ARRIVALS' },
+  { id: 3, bg: '#1a0a0a', line1: 'HOT',  line2: 'DEALS'    },
+])
+const prevSlide = () => {
+  currentSlide.value = (currentSlide.value - 1 + slides.value.length) % slides.value.length
+}
+const nextSlide = () => {
+  currentSlide.value = (currentSlide.value + 1) % slides.value.length
+}
+
+// ── DANH SÁCH SẢN PHẨM ──
+const products = ref([
+  { id: 1,  name: 'Nike Air Max 270',       price: '2.890.000 đ', stock: 20, category: 'Thể thao',  image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=300&q=80' },
+  { id: 2,  name: 'Adidas Ultraboost 23',   price: '3.490.000 đ', stock: 15, category: 'Chạy bộ',   image: 'https://images.unsplash.com/photo-1608231387042-66d1773070a5?w=300&q=80' },
+  { id: 3,  name: 'Air Jordan 1 Retro',     price: '4.190.000 đ', stock: 8,  category: 'Jordan',    image: 'https://images.unsplash.com/photo-1600185365926-3a2ce3cdb9eb?w=300&q=80' },
+  { id: 4,  name: 'Vans Old Skool Classic', price: '1.290.000 đ', stock: 50, category: 'Vans',      image: 'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=300&q=80' },
+  { id: 5,  name: 'Converse Chuck 70 Hi',   price: '1.590.000 đ', stock: 35, category: 'Converse',  image: 'https://images.unsplash.com/photo-1460353581641-37baddab0fa2?w=300&q=80' },
+  { id: 6,  name: 'New Balance 574 Core',   price: '1.990.000 đ', stock: 18, category: 'Lifestyle', image: 'https://images.unsplash.com/photo-1584735175315-9d5df23be620?w=300&q=80' },
+  { id: 7,  name: 'Nike React Infinity',    price: '2.690.000 đ', stock: 12, category: 'Chạy bộ',   image: 'https://images.unsplash.com/photo-1539185441755-769473a23570?w=300&q=80' },
+  { id: 8,  name: 'Puma RS-X Reinvention',  price: '1.650.000 đ', stock: 25, category: 'Lifestyle', image: 'https://images.unsplash.com/photo-1491553895911-0055eca6402d?w=300&q=80' },
+  { id: 9,  name: 'Reebok Classic Leather', price: '1.190.000 đ', stock: 30, category: 'Classic',   image: 'https://images.unsplash.com/photo-1556906781-9a412961a28c?w=300&q=80' },
+  { id: 10, name: 'Balenciaga Triple S',    price: '5.990.000 đ', stock: 5,  category: 'High-end',  image: 'https://images.unsplash.com/photo-1512374382149-233c42b6a83b?w=300&q=80' },
+])
+
+const goToDetail = (id) => {
+  router.push({ name: 'DetailProduct', params: { id } })
+}
+</script>
+
 <template>
-  <div class="customer-layout">
+  <div class="kh-index">
+
     <KH_Navbar />
-    
-    <main class="container">
-      <!-- Hiển thị lỗi nếu có -->
-      <div v-if="errorMessage" class="alert alert-danger mt-3">
-        <i class="bi bi-exclamation-triangle me-2"></i>
-        {{ errorMessage }}
-      </div>
 
-      <!-- Hiển thị kết quả tìm kiếm -->
-      <div v-if="searchPerformed && resultCount !== null" class="search-result-info mt-4 text-center">
-        <span class="badge bg-success-subtle text-success py-2 px-4">
-          <i class="bi bi-check-circle me-2"></i>
-          Tìm thấy <strong>{{ resultCount }}</strong> sản phẩm
-          <span v-if="keyword"> với từ khóa: "{{ keyword }}"</span>
-          <span v-if="selectedCategoryName"> trong danh mục: {{ selectedCategoryName }}</span>
-        </span>
+    <!-- ════════ HERO BANNER ════════ -->
+    <div class="hero-wrap">
+      <div class="hero-main" :style="{ background: slides[currentSlide].bg }">
+        <div class="banner-bg"></div>
+        <button class="arrow-btn left" @click="prevSlide">
+          <i class="bi bi-chevron-left"></i>
+        </button>
+        <div class="banner-text">
+          {{ slides[currentSlide].line1 }}<br />
+          <span>{{ slides[currentSlide].line2 }}</span>
+        </div>
+        <button class="arrow-btn right" @click="nextSlide">
+          <i class="bi bi-chevron-right"></i>
+        </button>
       </div>
+      <div class="hero-promos">
+        <div class="promo-box"><span class="promo-label">MIỄN PHÍ SHIP</span></div>
+        <div class="promo-box"><span class="promo-label">VOUCHER 100K</span></div>
+      </div>
+    </div>
 
-      <!-- Banner Carousel -->
-      <div class="row mt-4 g-3">
-        <div class="col-lg-8">
-          <div id="mainCarousel" class="carousel slide" data-bs-ride="carousel">
-            <div class="carousel-inner">
-              <div class="carousel-item active">
-                <img src="https://hoanghamobile.com/tin-tuc/wp-content/uploads/2024/02/black-friday.jpg" 
-                     class="d-block w-100" 
-                     alt="Banner 1"
-                     style="height: 300px; object-fit: cover;">
-              </div>
-              <div class="carousel-item">
-                <img src="https://img.freepik.com/premium-vector/special-sale-editable-text_404732-78.jpg" 
-                     class="d-block w-100" 
-                     alt="Banner 2"
-                     style="height: 300px; object-fit: cover;">
-              </div>
-            </div>
-            <button class="carousel-control-prev" type="button" data-bs-target="#mainCarousel" data-bs-slide="prev">
-              <span class="carousel-control-prev-icon"></span>
-            </button>
-            <button class="carousel-control-next" type="button" data-bs-target="#mainCarousel" data-bs-slide="next">
-              <span class="carousel-control-next-icon"></span>
-            </button>
+    <!-- ════════ SẢN PHẨM ════════ -->
+    <div class="products-wrap">
+      <div class="section-heading">
+        TẤT CẢ SẢN PHẨM
+        <span class="count">({{ products.length }} SẢN PHẨM)</span>
+      </div>
+      <div class="product-grid">
+        <div
+          v-for="product in products"
+          :key="product.id"
+          class="pcard"
+          @click="goToDetail(product.id)"
+        >
+          <div class="pcard-img-wrap">
+            <img :src="product.image" :alt="product.name" class="pcard-img" />
           </div>
-        </div>
-        <div class="col-lg-4">
-          <div class="side-banner mb-3 text-center p-4">
-            <h5>MIỄN PHÍ SHIP</h5>
-          </div>
-          <div class="side-banner text-center p-4">
-            <h5>VOUCHER 100K</h5>
+          <div class="pcard-body">
+            <div class="pcard-name">{{ product.name }}</div>
+            <div class="pcard-price">{{ product.price }}</div>
+            <div class="pcard-meta"><i class="bi bi-box-seam"></i> Kho: {{ product.stock }}</div>
+            <div class="pcard-meta"><i class="bi bi-tag"></i> {{ product.category }}</div>
           </div>
         </div>
       </div>
+    </div>
 
-      <!-- Products from API -->
-      <div class="flash-sale mt-4">
-        <h2 class="section-title">
-          <span v-if="searchPerformed">Kết Quả Tìm Kiếm</span>
-          <span v-else>Tất Cả Sản Phẩm</span>
-          <small class="text-muted ms-2 fs-6">
-            ({{ resultCount }} sản phẩm)
-          </small>
-        </h2>
-        
-        <div v-if="loading" class="text-center py-5">
-          <div class="spinner-border text-dark" role="status">
-            <span class="visually-hidden">Loading...</span>
-          </div>
-          <p class="mt-2">Đang tải sản phẩm...</p>
-        </div>
-        
-        <div v-else>
-          <div v-if="sanPhams.length === 0" class="text-center py-5">
-            <div class="alert alert-info">
-              <i class="bi bi-info-circle me-2"></i>
-              <span v-if="searchPerformed">Không tìm thấy sản phẩm phù hợp</span>
-              <span v-else>Không có sản phẩm nào trong hệ thống</span>
-            </div>
-          </div>
-          
-          <div v-else class="row g-3">
-            <div class="col-6 col-lg-2" v-for="sp in sanPhams" :key="sp.maSP">
-              <div class="product-card">
-                <div class="product-image" style="height:200px">
-                  <router-link :to="`/customer/detail-product/${sp.maSP}`">
-                    <img :src="getImageUrl(sp.hinh)" 
-                         :alt="sp.tenSP"
-                         @error="handleImageError"
-                         class="product-image" style="max-width: 150px;">
-                  </router-link>
-                  <span class="product-badge" v-if="sp.trangThai && sp.trangThai === 'Mới'">{{ sp.trangThai }}</span>
-                </div>
-                <div class="product-info">
-                  <h5 class="product-name">{{ sp.tenSP }}</h5>
-                  <div class="mb-2">
-                    <span class="price-current">{{ formatPrice(sp.donGia) }}</span>
-                  </div>
-                  <div class="product-sold">
-                    <i class="bi bi-box me-1"></i>
-                    Kho: <span>{{ sp.soLuong || 0 }}</span>
-                  </div>
-                  <div class="product-category mt-2">
-                    <i class="bi bi-tag me-1"></i>
-                    <small>{{ getCategoryName(sp.danhMuc) }}</small>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </main>
-    
     <Footer />
+
   </div>
 </template>
 
-<!-- Trong script -->
-<script>
-import { ref, onMounted, watch } from 'vue';
-import { useRoute } from 'vue-router';
-import api from '@/services/api';
-import KH_Navbar from '@/components/shared/KH_Navbar.vue';
-import Footer from '@/components/shared/Footer.vue';
-
-export default {
-  name: 'CustomerIndex',
-  components: {
-    KH_Navbar,
-    Footer
-  },
-  setup() {
-    const route = useRoute();
-    const sanPhams = ref([]);
-    const loading = ref(false);
-    const resultCount = ref(null);
-    const keyword = ref('');
-    const categoryId = ref(null);
-    const selectedCategoryName = ref('');
-    const searchPerformed = ref(false);
-    const danhMucs = ref([]);
-    const errorMessage = ref('');
-
-    const getImageUrl = (imageName) => {
-      if (!imageName) return 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=400&fit=crop';
-      return `http://localhost:8080/images/${imageName}`;
-    };
-
-    const handleImageError = (event) => {
-      event.target.src = 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=400&fit=crop';
-    };
-
-    const formatPrice = (price) => {
-      if (!price) return '0₫';
-      return new Intl.NumberFormat('vi-VN', {
-        style: 'currency',
-        currency: 'VND'
-      }).format(price);
-    };
-
-    const getCategoryName = (danhMuc) => {
-      return danhMuc?.tenDM || 'Không phân loại';
-    };
-
-    const fetchCategories = async () => {
-      try {
-        console.log('Fetching categories...');
-        const response = await api.getCategories();
-        if (response.data.success) {
-          danhMucs.value = response.data.data || [];
-        }
-      } catch (error) {
-        console.error('Error fetching categories:', error);
-      }
-    };
-
-    const fetchAllProducts = async () => {
-      loading.value = true;
-      errorMessage.value = '';
-      searchPerformed.value = false;
-      keyword.value = '';
-      categoryId.value = null;
-      selectedCategoryName.value = '';
-      
-      try {
-        const response = await api.getPublicProducts();
-
-        if (response.data.success) {
-          sanPhams.value = response.data.data || [];
-          resultCount.value = response.data.count || sanPhams.value.length;
-        } else {
-          sanPhams.value = [];
-          resultCount.value = 0;
-          errorMessage.value = response.data.message || 'Không thể tải sản phẩm';
-        }
-      } catch (error) {
-        console.error('Error fetching all products:', error);
-        sanPhams.value = [];
-        resultCount.value = 0;
-        errorMessage.value = 'Lỗi kết nối server: ' + error.message;
-      } finally {
-        loading.value = false;
-      }
-    };
-
-    const searchProducts = async (searchKeyword = keyword.value, searchCategoryId = categoryId.value) => {
-      loading.value = true;
-      errorMessage.value = '';
-      searchPerformed.value = true;
-      
-      try {
-        const params = {};
-        if (searchKeyword && searchKeyword.trim()) {
-          params.keyword = searchKeyword.trim();
-        }
-        if (searchCategoryId) {
-          params.categoryId = searchCategoryId;
-        }
-
-        const response = await api.searchPublicProducts(params); 
-        if (response.data.success) {
-          sanPhams.value = response.data.data || [];
-          resultCount.value = response.data.count || 0;
-          
-          if (searchCategoryId) {
-            const category = danhMucs.value.find(dm => dm.maDM == searchCategoryId);
-            selectedCategoryName.value = category ? category.tenDM : '';
-          } else {
-            selectedCategoryName.value = '';
-          }
-          
-        } else {
-          sanPhams.value = [];
-          resultCount.value = 0;
-          errorMessage.value = response.data.message || 'Tìm kiếm thất bại';
-        }
-      } catch (error) {
-        sanPhams.value = [];
-        resultCount.value = 0;
-        errorMessage.value = 'Lỗi tìm kiếm: ' + error.message;
-      } finally {
-        loading.value = false;
-      }
-    };
-
-    watch(() => route.query, (newQuery) => {
-      const newKeyword = newQuery.keyword || '';
-      const newCategoryId = newQuery.categoryId || null;
-      
-      keyword.value = newKeyword;
-      categoryId.value = newCategoryId;
-      
-      if (newKeyword || newCategoryId) {
-        searchProducts(newKeyword, newCategoryId);
-      } else {
-        searchPerformed.value = false;
-        selectedCategoryName.value = '';
-        fetchAllProducts();
-      }
-    }, { immediate: true });
-
-    onMounted(async () => {
-      console.log('Page mounted');
-      await fetchCategories();
-      
-      keyword.value = route.query.keyword || '';
-      categoryId.value = route.query.categoryId || null;
-      
-      if (keyword.value || categoryId.value) {
-        searchProducts(keyword.value, categoryId.value);
-      } else {
-        fetchAllProducts();
-      }
-    });
-
-    return {
-      sanPhams,
-      loading,
-      resultCount,
-      keyword,
-      categoryId,
-      selectedCategoryName,
-      searchPerformed,
-      danhMucs,
-      errorMessage,
-      getImageUrl,
-      handleImageError,
-      formatPrice,
-      getCategoryName
-    };
-  }
-};
-</script>
 <style scoped>
-:root {
-  --pine-primary: #333333;
-  --pine-secondary: #666666;
-  --pine-green: #000000;
-  --pine-dark: #111111;
-  --pine-light: #f8f9fa;
-}
-
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background: #ffffff;
-  color: #000000;
+.kh-index {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  font-size: 13px;
+  background: #f0f0f0;
   min-height: 100vh;
 }
 
-/* Categories */
-.categories {
-  background: #ffffff;
-  padding: 35px 25px 40px 25px;
-  border-radius: 16px;
-  margin-top: 30px;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.13);
-  border: 2px solid #000000;
+/* ════════ HERO ════════ */
+.hero-wrap {
+  display: flex;
+  gap: 8px;
+  height: 200px;
+  margin: 12px 12px 0;
 }
-
-.category-item {
-  text-align: center;
-  cursor: pointer;
-  padding: 18px 0 0 0;
-  transition: transform 0.25s, box-shadow 0.25s;
-  border-radius: 12px;
-  background: transparent;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
+.hero-main {
+  flex: 0 0 62%;
   position: relative;
-}
-
-.category-item:hover {
-  transform: translateY(-8px) scale(1.10);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-  background: #f8f9fa;
-  z-index: 2;
-}
-
-.category-icon {
-  width: 64px;
-  height: 64px;
-  margin: 0 auto 12px;
-  background: #000000;
-  border-radius: 20%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 32px;
-  color: #ffffff;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-  border: 2px solid #000000;
-  transition: background 0.2s, box-shadow 0.2s, color 0.2s;
-}
-
-.category-item:hover .category-icon {
-  background: #333333;
-  color: #ffffff;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-  border: 2px solid #333333;
-}
-
-.category-name {
-  font-size: 15px;
-  color: #000000;
-  font-weight: 600;
-  letter-spacing: 1px;
-  margin-top: 2px;
-}
-
-/* Carousel */
-.carousel-item img {
-  height: 300px;
-  object-fit: cover;
-  border-radius: 8px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
-}
-
-.carousel-control-prev-icon,
-.carousel-control-next-icon {
-  background-color: #000000;
-  border-radius: 50%;
-  padding: 20px;
-}
-
-/* Side Banners */
-.side-banner {
-  background: #000000;
-  height: 145px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #ffffff;
-  font-size: 18px;
-  font-weight: bold;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
-}
-
-/* Flash Sale */
-.flash-sale {
-  background: #ffffff;
-  padding: 25px;
-  border-radius: 8px;
-  margin-top: 20px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.09);
-  border: 2px solid #000000;
-}
-
-.flash-title {
-  font-size: 18px;
-  color: #000000;
-  font-weight: bold;
-}
-
-.flash-timer {
-  background: #000000;
-  color: white;
-  padding: 8px 15px;
-  border-radius: 8px;
-  font-size: 14px;
-}
-
-/* Product Card */
-.product-card {
-  background: #ffffff;
-  border: 2px solid #000000;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
-  margin-bottom: 15px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-}
-
-.product-card:hover {
-  transform: translateY(-2px) scale(1.03);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.13);
-}
-
-.product-image {
-  width: 100%;
-  background: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.product-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.3s
-}
-
-
-.product-card:hover .product-image img {
-  transform: scale(1.07);
-}
-
-.product-badge {
-  position: absolute;
-  top: 5px;
-  left: 5px;
-  background: #000000;
-  color: #ffffff;
-  padding: 3px 8px;
-  font-size: 12px;
-  border-radius: 4px;
-  font-weight: bold;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-}
-
-.product-info {
-  padding: 12px;
-}
-
-.product-name {
-  font-size: 15px;
-  color: #000000;
-  height: 40px;
   overflow: hidden;
-  margin-bottom: 8px;
-  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.4s;
 }
-
-.price-current {
-  color: #000000;
-  font-size: 16px;
-  font-weight: 600;
+.banner-bg {
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 30% 50%, rgba(255,255,255,0.03) 0%, transparent 60%);
 }
-
-.price-discount {
-  background: #000000;
-  color: #ffffff;
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-size: 12px;
-  margin-left: 5px;
-  font-weight: bold;
-}
-
-.product-sold {
-  font-size: 12px;
-  color: #666666;
-  margin-top: 8px;
-}
-
-/* Section Title */
-.section-title {
-  font-size: 26px;
-  color: #000000;
-  font-weight: bold;
-  text-align: center;
-  margin-bottom: 32px;
+.banner-text {
+  font-size: 64px;
+  font-weight: 900;
+  color: #e53935;
   text-transform: uppercase;
-  letter-spacing: 2px;
-  border-bottom: 2px solid #000000;
-  display: inline-block;
-  padding-bottom: 6px;
-}
-
-/* Footer */
-.footer {
-  background: #ffffff;
-  margin-top: 40px;
-  padding: 40px 0 20px;
-  border-top: 4px solid #000000;
-  border-radius: 8px 8px 0 0;
-}
-
-.footer h5 {
-  font-size: 14px;
-  color: #000000;
-  margin-bottom: 15px;
-  text-transform: uppercase;
-}
-
-.footer ul {
-  list-style: none;
-  padding: 0;
-}
-
-.footer li {
-  margin-bottom: 10px;
-}
-
-.footer a {
-  color: #000000;
-  text-decoration: none;
-  font-size: 13px;
-}
-
-.footer a:hover {
-  color: #333333;
-}
-
-.footer-bottom {
+  line-height: 1;
   text-align: center;
-  padding-top: 20px;
-  border-top: 1px solid #000000;
-  color: #000000;
-  font-size: 12px;
+  position: relative;
+  z-index: 2;
+  letter-spacing: -1px;
+  font-family: Impact, 'Arial Black', sans-serif;
+  text-shadow: 0 0 60px rgba(229,57,53,0.5);
 }
-
-.btn-primary {
-  background-color: #000000;
-  border-color: #000000;
+.banner-text span { display: block; color: #fff; font-size: 40px; letter-spacing: 6px; }
+.arrow-btn {
+  position: absolute;
+  top: 50%; transform: translateY(-50%);
+  background: rgba(255,255,255,0.15);
+  border: none; color: #fff;
+  width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; cursor: pointer; z-index: 5;
+  border-radius: 2px; transition: background 0.2s;
 }
+.arrow-btn:hover { background: rgba(255,255,255,0.3); }
+.arrow-btn.left  { left: 8px; }
+.arrow-btn.right { right: 8px; }
+.hero-promos { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+.promo-box {
+  flex: 1; background: #111;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: background 0.2s;
+}
+.promo-box:hover { background: #1e1e1e; }
+.promo-label { color: #fff; font-weight: 700; font-size: 16px; letter-spacing: 1px; text-transform: uppercase; }
 
-.btn-primary:hover {
-  background-color: #333333;
-  border-color: #333333;
+/* ════════ PRODUCTS ════════ */
+.products-wrap {
+  margin: 12px;
+  background: #fff;
+  border: 1px solid #ddd;
+  padding: 16px;
+}
+.section-heading {
+  font-size: 14px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.5px;
+  margin-bottom: 14px;
+  display: flex; align-items: baseline; gap: 8px;
+}
+.count { font-size: 11px; color: #888; font-weight: 400; }
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+}
+.pcard {
+  border: 1px solid #e0e0e0;
+  background: #fff;
+  cursor: pointer;
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+.pcard:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.12); transform: translateY(-2px); }
+.pcard-img-wrap { width: 100%; aspect-ratio: 1/1; overflow: hidden; background: #f8f8f8; }
+.pcard-img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.3s; }
+.pcard:hover .pcard-img { transform: scale(1.05); }
+.pcard-body { padding: 8px 10px 10px; }
+.pcard-name { font-size: 12px; font-weight: 500; color: #222; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pcard-price { font-size: 12px; font-weight: 700; color: #e53935; margin-bottom: 5px; }
+.pcard-meta { font-size: 10px; color: #888; display: flex; align-items: center; gap: 4px; margin-bottom: 2px; }
+.pcard-meta i { font-size: 10px; }
+
+@media (max-width: 992px) { .product-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 576px) {
+  .product-grid { grid-template-columns: repeat(2, 1fr); }
+  .hero-wrap { height: 130px; }
+  .banner-text { font-size: 36px; }
+  .banner-text span { font-size: 24px; }
 }
 </style>
