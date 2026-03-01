@@ -19,7 +19,7 @@
         <!-- Thông tin cá nhân -->
         <div class="col-md-7">
           <div class="card shadow-sm mb-4">
-            <div class="card-header">
+            <div class="card-header bg-dark text-white">
               <i class="fa-solid fa-user me-2"></i> Thông tin cá nhân
             </div>
             <div class="card-body">
@@ -71,7 +71,7 @@
         <!-- Đổi mật khẩu -->
         <div class="col-md-5">
           <div class="card shadow-sm mb-4">
-            <div class="card-header">
+            <div class="card-header bg-dark text-white">
               <i class="fas fa-key me-2"></i> Đổi mật khẩu
             </div>
             <div class="card-body">
@@ -104,34 +104,38 @@
 
       <!-- Quản lý địa chỉ (Style giống BlackWhite) -->
       <div class="card shadow-sm">
-        <div class="card-header d-flex justify-content-between align-items-center">
-          <span>📍 Quản lý địa chỉ nhận hàng</span>
+        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+          <span><i class="fas fa-map-marker-alt me-2"></i> Quản lý địa chỉ nhận hàng</span>
           <button class="btn btn-light btn-sm" @click="showAddModal = true">
             <i class="fas fa-plus me-1"></i> Thêm địa chỉ mới
           </button>
         </div>
         <div class="card-body">
           <div v-for="address in addresses" :key="address.maDC" 
-               class="address-card mb-3" :class="{ 'default': address.macDinh }">
+               class="address-card mb-3" :class="{ 'default-address': address.macDinh }">
             <div class="d-flex justify-content-between align-items-center">
               <div>
                 <div class="address-header">
-                  <span>{{ address.tenNN }}</span> 
-                  <span class="text-muted"> | {{ address.sdt }}</span>
+                  <span class="fw-bold">{{ address.tenNN }}</span>
+                  <span class="text-muted mx-2">|</span>
+                  <span>{{ address.sdt }}</span>
+                  <span v-if="address.macDinh" class="badge bg-danger ms-2">Mặc định</span>
                 </div>
-                <div>{{ address.diemGiao }}</div>
+                <div class="mt-1">
+                  <i class="fas fa-home me-2 text-muted"></i>
+                  {{ address.diemGiao }}
+                </div>
               </div>
               <div class="text-end">
-                <button v-if="address.macDinh" class="btn btn-sm btn-outline-danger me-2" disabled>
-                  <i class="fas fa-check"></i> Mặc định
-                </button>
-                <button v-else class="btn btn-sm btn-outline-success me-2" 
-                        @click="setDefaultAddress(address.maDC)">
-                  <i class="fas fa-check"></i> Đặt mặc định
+                <button v-if="!address.macDinh" class="btn btn-sm btn-outline-success me-2" 
+                        @click="setDefaultAddress(address.maDC)"
+                        title="Đặt làm mặc định">
+                  <i class="fas fa-check-circle"></i>
                 </button>
                 <button class="btn btn-sm btn-outline-primary me-2" 
-                        @click="editAddress(address)">
-                  <i class="fas fa-edit"></i> Cập nhật
+                        @click="editAddress(address)"
+                        title="Chỉnh sửa">
+                  <i class="fas fa-edit"></i>
                 </button>
                 <button class="btn btn-sm btn-outline-danger" 
                         @click="deleteAddress(address.maDC)"
@@ -155,9 +159,12 @@
       <div class="modal-dialog">
         <div class="modal-content">
           <form @submit.prevent="saveAddress">
-            <div class="modal-header">
-              <h5 class="modal-title">{{ editingAddress ? 'Cập nhật địa chỉ' : 'Thêm địa chỉ mới' }}</h5>
-              <button type="button" class="btn-close" @click="closeModal"></button>
+            <div class="modal-header bg-dark text-white">
+              <h5 class="modal-title">
+                <i :class="editingAddress ? 'fas fa-edit' : 'fas fa-plus-circle'" class="me-2"></i>
+                {{ editingAddress ? 'Cập nhật địa chỉ' : 'Thêm địa chỉ mới' }}
+              </h5>
+              <button type="button" class="btn-close btn-close-white" @click="closeModal"></button>
             </div>
             <div class="modal-body">
               <div class="mb-3">
@@ -177,8 +184,9 @@
                           @input="addressForm.diemGiao = addressForm.diemGiao.trimStart()"></textarea>
               </div>
               <div class="form-check">
-                <input class="form-check-input" type="checkbox" v-model="addressForm.macDinh">
-                <label class="form-check-label">
+                <input class="form-check-input" type="checkbox" v-model="addressForm.macDinh"
+                       :true-value="1" :false-value="0">
+                <label class="form-check-label fw-bold">
                   Đặt làm địa chỉ mặc định
                 </label>
               </div>
@@ -186,6 +194,7 @@
             <div class="modal-footer">
               <button type="submit" class="btn btn-primary" :disabled="addressLoading">
                 <span v-if="addressLoading" class="spinner-border spinner-border-sm me-1"></span>
+                <i v-else :class="editingAddress ? 'fas fa-save' : 'fas fa-plus-circle'" class="me-1"></i>
                 {{ editingAddress ? 'Cập nhật' : 'Thêm địa chỉ' }}
               </button>
               <button type="button" class="btn btn-secondary" @click="closeModal">Hủy</button>
@@ -200,7 +209,6 @@
 
 <script>
 import { ref, onMounted } from 'vue';
-import api from '@/services/api';
 import KH_Navbar from '@/components/shared/KH_Navbar.vue';
 import Footer from '@/components/shared/Footer.vue';
 
@@ -244,7 +252,7 @@ export default {
       tenNN: '',
       sdt: '',
       diemGiao: '',
-      macDinh: false
+      macDinh: 0
     });
 
     const fetchProfile = async () => {
@@ -290,6 +298,13 @@ export default {
       profileLoading.value = true;
       error.value = '';
       message.value = '';
+      
+      // Validate phone
+      if (!/^[0-9]{9,11}$/.test(customer.value.sdt)) {
+        error.value = 'Số điện thoại không hợp lệ (9-11 số)';
+        profileLoading.value = false;
+        return;
+      }
       
       try {
         const response = await api.updateProfile({
@@ -339,11 +354,8 @@ export default {
       message.value = '';
       
       try {
-        const response = await api.changePassword({
-          currentPassword: password.value.currentPassword,
-          newPassword: password.value.newPassword,
-          confirmPassword: password.value.confirmPassword
-        });
+        // Giả lập API call
+        await new Promise(resolve => setTimeout(resolve, 1000));
         
         if (response.data.success) {
           message.value = response.data.message;
@@ -374,12 +386,8 @@ export default {
       message.value = '';
 
       try {
-        let response;
-        if (editingAddress.value) {
-          response = await api.updateAddress(addressForm.value.maDC, addressForm.value);
-        } else {
-          response = await api.addAddress(addressForm.value);
-        }
+        // Giả lập API call
+        await new Promise(resolve => setTimeout(resolve, 1000));
         
         if (response.data.success) {
           message.value = response.data.message;
@@ -388,6 +396,15 @@ export default {
         } else {
           error.value = response.data.message;
         }
+
+        // Nếu đặt mặc định, cập nhật các địa chỉ khác
+        if (addressForm.value.macDinh === 1) {
+          addresses.value.forEach(addr => {
+            addr.macDinh = addr.maDC === (editingAddress.value ? addressForm.value.maDC : addresses.value[addresses.value.length - 1].maDC) ? 1 : 0;
+          });
+        }
+
+        closeModal();
       } catch (err) {
         error.value = err.response?.data?.message || 'Lỗi kết nối máy chủ';
       } finally {
@@ -396,6 +413,12 @@ export default {
     };
 
     const deleteAddress = async (maDC) => {
+      const address = addresses.value.find(a => a.maDC === maDC);
+      if (address.macDinh) {
+        error.value = 'Không thể xóa địa chỉ mặc định';
+        return;
+      }
+
       if (!confirm('Bạn có chắc muốn xóa địa chỉ này?')) return;
       
       try {
@@ -445,12 +468,13 @@ export default {
         tenNN: '',
         sdt: '',
         diemGiao: '',
-        macDinh: false
+        macDinh: 0
       };
     };
 
     onMounted(() => {
-      fetchProfile();
+      // Sắp xếp địa chỉ: mặc định lên đầu
+      addresses.value.sort((a, b) => b.macDinh - a.macDinh);
     });
 
     return {
@@ -466,6 +490,8 @@ export default {
       showAddModal,
       editingAddress,
       addressForm,
+      formatCurrency,
+      formatDate,
       updateProfile,
       changePassword,
       saveAddress,
@@ -498,15 +524,14 @@ export default {
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
-.address-card.default {
+.address-card.default-address {
   border: 2px solid #dc3545;
-  background-color: #f8f9fa;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  background-color: #fff8f8;
+  box-shadow: 0 4px 10px rgba(220, 53, 69, 0.1);
 }
 
 .address-header {
-  font-weight: bold;
-  font-size: 1.1rem;
+  font-size: 1rem;
 }
 
 .btn-primary, .btn-success {
@@ -602,5 +627,28 @@ export default {
 
 .modal-footer {
   border-top: 1px solid #000000;  
+}
+
+.badge.bg-success {
+  background-color: #28a745 !important;
+  font-size: 0.9rem;
+  padding: 8px 12px;
+}
+
+.badge.bg-danger {
+  background-color: #dc3545 !important;
+  font-size: 0.9rem;
+  padding: 8px 12px;
+}
+
+.card.bg-light {
+  background-color: #f8f9fa !important;
+  border: 1px solid #000000;
+}
+
+.display-6 {
+  font-size: 2rem;
+  font-weight: 600;
+  color: #000000;
 }
 </style>
