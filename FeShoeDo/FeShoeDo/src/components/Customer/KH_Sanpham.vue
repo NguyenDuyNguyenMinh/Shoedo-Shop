@@ -222,12 +222,16 @@ onUnmounted(() => document.removeEventListener('click', closeDropdowns))
 .pcard-price-row { display: flex; align-items: baseline; gap: 8px; }
 .pcard-price     { font-size: 14px; font-weight: 700; color: #e53935; }
 .pcard-old-price { font-size: 11px; color: #bbb; text-decoration: line-through; }
-
+/* Tìm dòng này và thay thế */
+.gender-btn  { width: 80px; text-align: center; padding: 8px 0; font-size: 13px; font-weight: 600; background: #fff; border: none; cursor: pointer; color: #444; transition: all 0.2s; }
 .empty-state { text-align: center; padding: 80px 0; color: #aaa; }
 .empty-state i { font-size: 48px; display: block; margin-bottom: 12px; }
 .empty-state p { font-size: 15px; margin-bottom: 20px; }
 .btn-reset { padding: 10px 24px; background: #111; border: none; border-radius: 6px; color: #fff; font-size: 13px; font-weight: 600; cursor: pointer; }
 .btn-reset:hover { background: #333; }
+/* Tìm dòng này */
+.gender-tabs { display: flex; border: 1.5px solid #bbb; border-radius: 6px; overflow: hidden; }
+.gender-tabs { display: flex; border: 1.5px solid #bbb; border-radius: 50px; overflow: hidden; }
 
 @media (max-width: 1024px) { .product-grid { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 768px)  { .product-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; } .page-title { font-size: 22px; } .filter-bar { flex-wrap: wrap; } }

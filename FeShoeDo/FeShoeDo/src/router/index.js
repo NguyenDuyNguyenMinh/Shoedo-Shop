@@ -60,7 +60,7 @@ const routes = [
     path: '/employee/dashboard',
     name: 'EmployeeDashboard',
     component: () => import('@/components/employee/NV_ThongKe.vue'),
-    // meta: { requiresAuth: true, role: 'EMPLOYEE' }
+
   },
   {
     path: '/employee/products',
