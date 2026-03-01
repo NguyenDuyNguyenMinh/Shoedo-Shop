@@ -53,7 +53,8 @@ const routes = [
   {
     path: '/customer/profile',
     name: 'Profile',
-    component: () => import('@/components/customer/KH_QLUser.vue'),
+    component: () => import('@/components/customer/KH_QLProfile.vue'),
+    meta: { requiresAuth: true, role: 'CUSTOMER' }
   },
   {
     path: '/employee/dashboard',
