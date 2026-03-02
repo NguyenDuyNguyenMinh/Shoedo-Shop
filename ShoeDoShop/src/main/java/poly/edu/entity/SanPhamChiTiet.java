@@ -17,9 +17,15 @@ public class SanPhamChiTiet {
     private Integer maSKU;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "MaMau")
+    @JoinColumn(name = "MaSP")
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "sanPhamChiTiets"})
-    private MauSac mauSac;
+    private SanPham sanPham;
+
+    @Column(name = "TenMau")
+    private String tenMau;
+    
+    @Column(name = "HinhAnh", columnDefinition = "nvarchar(max)")
+    private String hinhAnh;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "MaSize")

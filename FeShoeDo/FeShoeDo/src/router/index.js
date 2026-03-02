@@ -13,23 +13,33 @@ const routes = [
   {
     path: '/customer/index',
     name: 'CustomerIndex',
-    component: () => import('@/components/customer/KH_Index.vue'),
+    component: () => import('@/components/customer/KH_index.vue'),
   },
-  // {
-  //   path: '/customer/detail-product/:id?',
-  //   name: 'DetailProduct',
-  //   component: () => import('@/components/customer/KH_DetailProduct.vue'),
-  // },
-  // {
-  //   path: '/customer/cart',
-  //   name: 'Cart',
-  //   component: () => import('@/components/customer/KH_GioHang.vue'),
-  // },
-  // {
-  //   path: '/customer/checkout',
-  //   name: 'Checkout',
-  //   component: () => import('@/components/customer/KH_DatHang.vue'),
-  // },
+  {
+    path: '/customer/sanpham',
+    name: 'Sanpham',
+    component: () => import('@/components/customer/KH_Sanpham.vue'),
+  },
+  {
+    path: '/customer/detail-product/:id?',
+    name: 'DetailProduct',
+    component: () => import('@/components/customer/KH_DetailProduct.vue'),
+  },
+  {
+    path: '/customer/cart',
+    name: 'Cart',
+    component: () => import('@/components/customer/KH_GioHang.vue'),
+  },
+  {
+    path: '/customer/chinhsach',
+    name: 'ChinhSach',
+    component: () => import('@/components/customer/KH_ChinhSach.vue'),
+  },
+  {
+    path: '/customer/checkout',
+    name: 'Checkout',
+    component: () => import('@/components/customer/KH_DatHang.vue'),
+  },
   {
     path: '/customer/orders',
     name: 'Orders',
@@ -43,24 +53,14 @@ const routes = [
   {
     path: '/customer/profile',
     name: 'Profile',
-    component: () => import('@/components/customer/KH_QLUser.vue'),
+    component: () => import('@/components/customer/KH_QLProfile.vue'),
+    meta: { requiresAuth: true, role: 'CUSTOMER' }
   },
-  {
-    path: '/policy',
-    name: 'Policy',
-    component: () => import('@/components/customer/KH_ChinhSach.vue'),
-  },
-  // Employee routes
-  // {
-  //   path: '/employee/dashboard',
-  //   name: 'EmployeeDashboard',
-  //   component: () => import('@/components/employee/NV_Index.vue'),
-  // },
   {
     path: '/employee/dashboard',
     name: 'EmployeeDashboard',
     component: () => import('@/components/employee/NV_ThongKe.vue'),
-    // meta: { requiresAuth: true, role: 'EMPLOYEE' }
+
   },
   {
     path: '/employee/products',
@@ -72,11 +72,11 @@ const routes = [
     name: 'OrderManagement',
     component: () => import('@/components/employee/NV_QLDonHang.vue'),
   },
-  // {
-  //   path: '/employee/users',
-  //   name: 'UserManagement',
-  //   component: () => import('@/components/employee/NV_QLUser.vue'),
-  // },
+  {
+    path: '/employee/users',
+    name: 'UserManagement',
+    component: () => import('@/components/employee/NV_QLUser.vue'),
+  },
   {
     path: '/employee/import',
     name: 'ImportStock',

@@ -5,7 +5,6 @@
 </template>
 
 <style>
-/* Global styles giữ nguyên */
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   background: #ffffff;

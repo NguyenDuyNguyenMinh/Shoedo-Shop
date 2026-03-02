@@ -15,7 +15,7 @@
         <button type="button" class="btn-close" @click="error = ''"></button>
       </div>
 
-      <div class="row align-items-stretch">
+      <div class="row">
         <!-- Thông tin cá nhân -->
         <div class="col-md-7">
           <div class="card shadow-sm mb-4">
@@ -25,36 +25,38 @@
             <div class="card-body">
               <form @submit.prevent="updateProfile">
                 <div class="row">
-                  <!-- Cột 1 -->
                   <div class="col-md-6">
                     <div class="mb-3">
                       <label class="form-label fw-bold">Tên đăng nhập</label>
-                      <input type="text" class="form-control" :value="user.userName" disabled>
+                      <input type="text" class="form-control" v-model="user.userName" required 
+                             @input="user.userName = user.userName.trimStart()">
                     </div>
                     <div class="mb-3">
                       <label class="form-label fw-bold">Họ và tên</label>
-                      <input type="text" class="form-control" v-model="customer.tenKH" required>
-                    </div>
-                    <div class="mb-3">
-                      <label class="form-label fw-bold">Email</label>
-                      <input type="email" class="form-control" v-model="user.mail" required>
+                      <input type="text" class="form-control" v-model="customer.tenKH" required
+                             @input="customer.tenKH = customer.tenKH.trimStart()">
                     </div>
                   </div>
-                  
-                  <!-- Cột 2 -->
                   <div class="col-md-6">
+                    <div class="mb-3">
+                      <label class="form-label fw-bold">Ngày tạo</label>
+                      <input type="text" class="form-control" :value="user.createAt" disabled>
+                    </div>
                     <div class="mb-3">
                       <label class="form-label fw-bold">Số điện thoại</label>
                       <input type="text" class="form-control" v-model="customer.sdt" required 
-                             pattern="[0-9]{9,11}" placeholder="090xxxxxxx">
-                    </div>
-                    <div class="mb-3">
-                      <label class="form-label fw-bold">Ngày tham gia</label>
-                      <input type="text" class="form-control" :value="formatDate(user.createAt)" disabled>
+                             pattern="[0-9]{9,11}" placeholder="090xxxxxxx"
+                             @input="customer.sdt = customer.sdt.replace(/[^0-9]/g, '')">
                     </div>
                   </div>
                 </div>
-
+                <div class="row">
+                  <div class="col-md-12 mb-3">
+                    <label class="form-label fw-bold">Email</label>
+                    <input type="email" class="form-control" :value="user.mail" disabled>
+                  </div>
+                </div>
+                
                 <div class="text-end">
                   <button type="submit" class="btn btn-success" :disabled="profileLoading">
                     <span v-if="profileLoading" class="spinner-border spinner-border-sm me-1"></span>
@@ -100,7 +102,7 @@
         </div>
       </div>
 
-      <!-- Quản lý địa chỉ -->
+      <!-- Quản lý địa chỉ (Style giống BlackWhite) -->
       <div class="card shadow-sm">
         <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
           <span><i class="fas fa-map-marker-alt me-2"></i> Quản lý địa chỉ nhận hàng</span>
@@ -109,7 +111,6 @@
           </button>
         </div>
         <div class="card-body">
-          <!-- Địa chỉ mặc định -->
           <div v-for="address in addresses" :key="address.maDC" 
                class="address-card mb-3" :class="{ 'default-address': address.macDinh }">
             <div class="d-flex justify-content-between align-items-center">
@@ -138,9 +139,8 @@
                 </button>
                 <button class="btn btn-sm btn-outline-danger" 
                         @click="deleteAddress(address.maDC)"
-                        :disabled="address.macDinh"
-                        title="Xóa">
-                  <i class="fas fa-trash"></i>
+                        :disabled="address.macDinh">
+                  <i class="fas fa-trash"></i> Xóa
                 </button>
               </div>
             </div>
@@ -168,20 +168,20 @@
             </div>
             <div class="modal-body">
               <div class="mb-3">
-                <label class="form-label fw-bold">Họ và tên người nhận</label>
+                <label class="form-label">Họ và tên người nhận</label>
                 <input type="text" class="form-control" v-model="addressForm.tenNN" required
-                       placeholder="Nhập họ tên người nhận">
+                       @input="addressForm.tenNN = addressForm.tenNN.trimStart()">
               </div>
               <div class="mb-3">
-                <label class="form-label fw-bold">Số điện thoại</label>
-                <input type="text" class="form-control" v-model="addressForm.sdt" required 
-                       pattern="[0-9]{9,11}" placeholder="090xxxxxxx">
+                <label class="form-label">Số điện thoại</label>
+                <input type="text" class="form-control" v-model="addressForm.sdt" required pattern="[0-9]{9,11}"
+                       @input="addressForm.sdt = addressForm.sdt.replace(/[^0-9]/g, '')">
                 <small class="text-muted">9-11 số</small>
               </div>
               <div class="mb-3">
-                <label class="form-label fw-bold">Địa chỉ</label>
+                <label class="form-label">Địa chỉ</label>
                 <textarea class="form-control" v-model="addressForm.diemGiao" rows="3" required
-                          placeholder="Số nhà, tên đường, phường/xã, quận/huyện, tỉnh/thành phố"></textarea>
+                          @input="addressForm.diemGiao = addressForm.diemGiao.trimStart()"></textarea>
               </div>
               <div class="form-check">
                 <input class="form-check-input" type="checkbox" v-model="addressForm.macDinh"
@@ -213,64 +213,32 @@ import KH_Navbar from '@/components/shared/KH_Navbar.vue';
 import Footer from '@/components/shared/Footer.vue';
 
 export default {
-  name: 'QLUser',
+  name: 'QLProfile',
   components: {
     KH_Navbar,
     Footer
   },
   setup() {
-    // Dữ liệu mẫu từ database ShoedoShop
     const user = ref({
-      maUser: 5,
-      userName: 'user1',
-      mail: 'user1@gmail.com',
-      isActive: true,
-      createAt: '2025-01-01T00:00:00'
+      maUser: null,
+      userName: '',
+      mail: '',
+      createAt: ''
     });
-
+    
     const customer = ref({
-      maKH: 1,
-      tenKH: 'Nguyễn Văn A',
-      sdt: '0901234567'
+      maKH: null,
+      tenKH: '',
+      sdt: ''
     });
     
-    const addresses = ref([
-      {
-        maDC: 1,
-        tenNN: 'Nguyễn Văn A',
-        sdt: '0901234567',
-        diemGiao: '123 Nguyễn Huệ A, Quận 1, TP.HCM',
-        macDinh: 1
-      },
-      {
-        maDC: 2,
-        tenNN: 'Nguyễn Văn A-B',
-        sdt: '0901234567',
-        diemGiao: '123 Nguyễn Huệ B, Quận 1, TP.HCM',
-        macDinh: 0
-      },
-      {
-        maDC: 3,
-        tenNN: 'Nguyễn Văn A-C',
-        sdt: '0901234567',
-        diemGiao: '123 Nguyễn Huệ C, Quận 1, TP.HCM',
-        macDinh: 0
-      }
-    ]);
-
-    const statistics = ref({
-      totalOrders: 3,  // Dựa vào hóa đơn: HD1, HD5, HD9
-      totalSpent: 2500000 + 2800000 + 300000 + 2500000 + 4500000 + 320000 + 2500000 + 1800000,
-      totalReviews: 0   // Chưa có đánh giá nào cho KH này
-    });
-    
+    const addresses = ref([]);
     const password = ref({
       currentPassword: '',
       newPassword: '',
       confirmPassword: ''
     });
     
-    const loading = ref(false);
     const profileLoading = ref(false);
     const passwordLoading = ref(false);
     const addressLoading = ref(false);
@@ -287,22 +255,46 @@ export default {
       macDinh: 0
     });
 
-    // Format currency
-    const formatCurrency = (value) => {
-      return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);
-    };
+    const fetchProfile = async () => {
+      try {
+        const response = await api.getProfile();
+        if (response.data.success) {
+          user.value = response.data.user;
+          customer.value = response.data.customer;
+          addresses.value = response.data.addresses || [];
 
-    // Format date
-    const formatDate = (dateString) => {
-      const date = new Date(dateString);
-      return date.toLocaleDateString('vi-VN', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit'
-      });
+          addresses.value.sort((a, b) => {
+            if (a.macDinh && !b.macDinh) return -1;
+            if (!a.macDinh && b.macDinh) return 1;
+            return 0;
+          });
+        }
+      } catch (err) {
+        error.value = 'Không thể tải thông tin hồ sơ';
+        console.error('Error fetching profile:', err);
+      }
     };
 
     const updateProfile = async () => {
+      user.value.userName = user.value.userName.trim();
+      customer.value.tenKH = customer.value.tenKH.trim();
+      customer.value.sdt = customer.value.sdt.trim();
+
+      if (!/^[0-9]{9,11}$/.test(customer.value.sdt)) {
+        error.value = 'Số điện thoại không hợp lệ (9-11 số)';
+        return;
+      }
+
+      if (!user.value.userName || user.value.userName.length < 3) {
+        error.value = 'Tên đăng nhập phải có ít nhất 3 ký tự';
+        return;
+      }
+
+      if (!customer.value.tenKH) {
+        error.value = 'Họ và tên không được để trống';
+        return;
+      }
+
       profileLoading.value = true;
       error.value = '';
       message.value = '';
@@ -315,16 +307,27 @@ export default {
       }
       
       try {
-        // Giả lập API call
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        message.value = 'Cập nhật thông tin thành công!';
-        console.log('Updated profile:', {
-          user: user.value,
-          customer: customer.value
+        const response = await api.updateProfile({
+          userName: user.value.userName,
+          fullname: customer.value.tenKH,
+          phone: customer.value.sdt
         });
+        
+        if (response.data.success) {
+          message.value = response.data.message;
+
+          if (response.data.user) {
+            user.value.userName = response.data.user.userName;
+          }
+          if (response.data.customer) {
+            customer.value.tenKH = response.data.customer.tenKH;
+            customer.value.sdt = response.data.customer.sdt;
+          }
+        } else {
+          error.value = response.data.message;
+        }
       } catch (err) {
-        error.value = 'Lỗi kết nối máy chủ';
+        error.value = err.response?.data?.message || 'Lỗi kết nối máy chủ';
       } finally {
         profileLoading.value = false;
       }
@@ -354,17 +357,25 @@ export default {
         // Giả lập API call
         await new Promise(resolve => setTimeout(resolve, 1000));
         
-        message.value = 'Đổi mật khẩu thành công!';
-        password.value = { currentPassword: '', newPassword: '', confirmPassword: '' };
+        if (response.data.success) {
+          message.value = response.data.message;
+          password.value = { currentPassword: '', newPassword: '', confirmPassword: '' };
+        } else {
+          error.value = response.data.message;
+        }
       } catch (err) {
-        error.value = 'Mật khẩu hiện tại không đúng';
+        error.value = err.response?.data?.message || 'Mật khẩu hiện tại không đúng';
       } finally {
         passwordLoading.value = false;
       }
     };
 
     const saveAddress = async () => {
-      // Validate phone
+
+      addressForm.value.tenNN = addressForm.value.tenNN.trim();
+      addressForm.value.sdt = addressForm.value.sdt.trim();
+      addressForm.value.diemGiao = addressForm.value.diemGiao.trim();
+
       if (!/^[0-9]{9,11}$/.test(addressForm.value.sdt)) {
         error.value = 'Số điện thoại không hợp lệ (9-11 số)';
         return;
@@ -378,21 +389,12 @@ export default {
         // Giả lập API call
         await new Promise(resolve => setTimeout(resolve, 1000));
         
-        if (editingAddress.value) {
-          // Update existing address
-          const index = addresses.value.findIndex(a => a.maDC === addressForm.value.maDC);
-          if (index !== -1) {
-            addresses.value[index] = { ...addressForm.value };
-          }
-          message.value = 'Cập nhật địa chỉ thành công!';
+        if (response.data.success) {
+          message.value = response.data.message;
+          await fetchProfile();
+          closeModal();
         } else {
-          // Add new address
-          const newAddress = {
-            maDC: Math.max(...addresses.value.map(a => a.maDC)) + 1,
-            ...addressForm.value
-          };
-          addresses.value.push(newAddress);
-          message.value = 'Thêm địa chỉ thành công!';
+          error.value = response.data.message;
         }
 
         // Nếu đặt mặc định, cập nhật các địa chỉ khác
@@ -404,7 +406,7 @@ export default {
 
         closeModal();
       } catch (err) {
-        error.value = 'Lỗi kết nối máy chủ';
+        error.value = err.response?.data?.message || 'Lỗi kết nối máy chủ';
       } finally {
         addressLoading.value = false;
       }
@@ -420,27 +422,29 @@ export default {
       if (!confirm('Bạn có chắc muốn xóa địa chỉ này?')) return;
       
       try {
-        // Giả lập API call
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        addresses.value = addresses.value.filter(a => a.maDC !== maDC);
-        message.value = 'Xóa địa chỉ thành công!';
+        const response = await api.deleteAddress(maDC);
+        if (response.data.success) {
+          message.value = response.data.message;
+          await fetchProfile();
+        } else {
+          error.value = response.data.message;
+        }
       } catch (err) {
-        error.value = 'Lỗi kết nối máy chủ';
+        error.value = err.response?.data?.message || 'Lỗi kết nối máy chủ';
       }
     };
 
     const setDefaultAddress = async (maDC) => {
       try {
-        // Giả lập API call
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        addresses.value.forEach(addr => {
-          addr.macDinh = addr.maDC === maDC ? 1 : 0;
-        });
-        message.value = 'Đặt địa chỉ mặc định thành công!';
+        const response = await api.setDefaultAddress(maDC);
+        if (response.data.success) {
+          message.value = response.data.message;
+          await fetchProfile();
+        } else {
+          error.value = response.data.message;
+        }
       } catch (err) {
-        error.value = 'Lỗi kết nối máy chủ';
+        error.value = err.response?.data?.message || 'Lỗi kết nối máy chủ';
       }
     };
 
@@ -476,10 +480,8 @@ export default {
     return {
       user,
       customer,
-      password,
       addresses,
-      statistics,
-      loading,
+      password,
       profileLoading,
       passwordLoading,
       addressLoading,
@@ -503,12 +505,11 @@ export default {
 </script>
 
 <style scoped>
-:root {
-  --pine-primary: #333333;
-  --pine-secondary: #666666;
-  --pine-green: #000000;
-  --pine-dark: #111111;
-  --pine-light: #f8f9fa;
+.card-header {
+  font-weight: bold;
+  background-color: #000000;
+  color: #ffffff;
+  border-bottom: 2px solid #000000;
 }
 
 .address-card {
@@ -531,24 +532,6 @@ export default {
 
 .address-header {
   font-size: 1rem;
-}
-
-.badge-default {
-  background-color: #ffffff;
-  border: 1px solid #000000;
-  color: #000000;
-  font-size: 0.8rem;
-  padding: 3px 6px;
-  border-radius: 5px;
-}
-
-.card-header {
-  font-weight: bold;
-  border-bottom: 2px solid #000000;
-}
-
-.card-header.bg-dark {
-  background-color: #000000 !important;
 }
 
 .btn-primary, .btn-success {
@@ -632,17 +615,18 @@ export default {
   border-radius: 10px;
 }
 
-.modal-header.bg-dark {
-  background-color: #000000 !important;
+.modal-header {
+  background-color: #000000;
+  color: #ffffff;
   border-bottom: 2px solid #000000;
 }
 
-.modal-header .btn-close-white {
+.modal-header .btn-close {
   filter: invert(1) grayscale(100%) brightness(200%);
 }
 
 .modal-footer {
-  border-top: 1px solid #000000;
+  border-top: 1px solid #000000;  
 }
 
 .badge.bg-success {

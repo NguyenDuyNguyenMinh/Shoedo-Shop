@@ -5,6 +5,9 @@ import { fileURLToPath, URL } from 'node:url'
 export default defineConfig({
   plugins: [vue()],
   server: {
+    watch: {
+      usePolling: true, // Thêm dòng này để ép Vite liên tục kiểm tra file thay đổi
+    },
     port: 5173,
     proxy: {
       '/api': {
