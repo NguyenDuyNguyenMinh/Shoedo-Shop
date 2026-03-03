@@ -83,7 +83,7 @@ const hideSearchHistory = () => {
           </span>
         </router-link>
 
-        <router-link to="/customer/KH_QLProfile" class="user-box d-flex align-items-center gap-2 px-3 py-2 rounded-0 cursor-pointer text-white">
+        <router-link to="/customer/profile" class="user-box d-flex align-items-center gap-2 px-3 py-2 rounded-0 cursor-pointer text-white">
           <i class="bi bi-person fs-5"></i>
           <span class="fw-light">Tài Khoản</span>
           <i class="bi bi-chevron-down" style="font-size: 0.7rem;"></i>
