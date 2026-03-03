@@ -534,4 +534,4 @@ INSERT INTO TimKiem (MaKH, NoiDungTimKiem) VALUES
 (2, N'Giày sneaker nữ trắng'),
 (3, N'Giày đá banh sân cỏ nhân tạo'),
 (4, N'Vớ thể thao cổ ngắn');
-GO
+GO 
