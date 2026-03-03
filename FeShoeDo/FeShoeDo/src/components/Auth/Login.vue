@@ -71,7 +71,7 @@
         </ul>
 
         <!-- Hiển thị thông báo -->
-        <div v-if="message" class="alert alert-success alert-dismissible fade show mt-3">
+<div v-if="message" class="alert alert-success alert-dismissible fade show mt-3">
           <span>{{ message }}</span>
           <button type="button" class="btn-close" @click="message = ''"></button>
         </div>
@@ -491,7 +491,7 @@ export default {
 
 .bg-overlay {
   background: rgba(255, 255, 255, 0.101);
-  min-height: 100vh;
+min-height: 100vh;
   width: 100vw;
   position: fixed;
   top: 0;

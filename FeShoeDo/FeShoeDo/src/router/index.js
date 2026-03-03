@@ -15,7 +15,7 @@ const routes = [
   {
     path: '/customer/index',
     name: 'CustomerIndex',
-    component: () => import('@/components/customer/KH_Index.vue'),
+    component: () => import('@/components/customer/KH_index.vue'),
     meta: { requiresAuth: true, role: 'CUSTOMER' }
   },
   {
@@ -28,6 +28,18 @@ const routes = [
     path: '/customer/cart',
     name: 'Cart',
     component: () => import('@/components/customer/KH_GioHang.vue'),
+    meta: { requiresAuth: true, role: 'CUSTOMER' }
+  },
+    {
+    path: '/customer/chinhsach',
+    name: 'ChinhSach',
+    component: () => import('@/components/customer/KH_ChinhSach.vue'),
+    meta: { requiresAuth: true, role: 'CUSTOMER' }
+  },
+    {
+    path: '/customer/sanpham',
+    name: 'Sanpham',
+    component: () => import('@/components/customer/KH_SanPham.vue'),
     meta: { requiresAuth: true, role: 'CUSTOMER' }
   },
   {
@@ -58,20 +70,20 @@ const routes = [
   {
     path: '/employee/dashboard',
     name: 'EmployeeDashboard',
-    component: () => import('@/components/employee/NV_Index.vue'),
+    component: () => import('@/components/employee/NV_ThongKe.vue'),
     meta: { requiresAuth: true, roles: ['ADMIN', 'EMPLOYEE'] }
   },
   {
     path: '/employee/products',
     name: 'ProductManagement',
-    component: () => import('@/components/employee/NV_QLSanPham.vue'),
-    meta: { requiresAuth: true, role: 'EMPLOYEE' }
+    component: () => import('@/components/employee/NV_QLSP.vue'),
+    meta: { requiresAuth: true, roles: 'EMPLOYEE' }
   },
   {
     path: '/employee/orders',
     name: 'OrderManagement',
     component: () => import('@/components/employee/NV_QLDonHang.vue'),
-    meta: { requiresAuth: true, role: 'EMPLOYEE' }
+    meta: { requiresAuth: true, roles: 'EMPLOYEE' }
   },
   {
     path: '/employee/users',
@@ -83,7 +95,7 @@ const routes = [
     path: '/employee/import',
     name: 'ImportStock',
     component: () => import('@/components/employee/NV_NhapKho.vue'),
-    meta: { requiresAuth: true, role: 'EMPLOYEE' }
+    meta: { requiresAuth: true, roles: ['ADMIN', 'EMPLOYEE'] }
   },
   
 ];
@@ -101,7 +113,7 @@ router.beforeEach(async (to, from, next) => {
   
   // Cho phép truy cập công khai các trang này
   const publicPaths = [
-    '/',
+'/',
     '/customer/index',
     '/customer/detail-product/:id?',
     '/auth/login'

@@ -70,7 +70,7 @@ public class ProfileController {
     @PutMapping("/profile")
     public ResponseEntity<Map<String, Object>> updateProfile(@RequestBody Map<String, String> request) {
         try {
-            Users currentUser = authService.getCurrentUser();
+Users currentUser = authService.getCurrentUser();
             if (currentUser == null) {
                 return ResponseEntity.status(401).body(Map.of("success", false, "message", "Chưa đăng nhập"));
             }
@@ -128,8 +128,7 @@ public class ProfileController {
             customer.setUser(currentUser);        
 
             khachHangDAO.save(customer);
-
-            Map<String, Object> response = new HashMap<>();
+Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("message", "Cập nhật thông tin thành công!");
             
@@ -190,8 +189,7 @@ public class ProfileController {
             if (customer == null) {
                 return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Không tìm thấy thông tin khách hàng"));
             }
-            
-            List<DiaChi> addresses = diaChiDAO.findByKhachHang_MaKH(customer.getMaKH());
+List<DiaChi> addresses = diaChiDAO.findByKhachHang_MaKH(customer.getMaKH());
             addresses.sort((a, b) -> Boolean.compare(b.getMacDinh(), a.getMacDinh()));
             
             return ResponseEntity.ok(Map.of("success", true, "addresses", addresses));
@@ -251,8 +249,7 @@ public class ProfileController {
             newAddress.setMacDinh(macDinh);
             
             diaChiDAO.save(newAddress);
-            
-            return ResponseEntity.ok(Map.of("success", true, "message", "Thêm địa chỉ thành công!"));
+return ResponseEntity.ok(Map.of("success", true, "message", "Thêm địa chỉ thành công!"));
             
         } catch (Exception e) {
             e.printStackTrace();
@@ -315,7 +312,7 @@ public class ProfileController {
     }
     
     @DeleteMapping("/address/{id}")
-    public ResponseEntity<Map<String, Object>> deleteAddress(@PathVariable Integer id) {
+public ResponseEntity<Map<String, Object>> deleteAddress(@PathVariable Integer id) {
         try {
             Optional<DiaChi> optionalAddress = diaChiDAO.findById(id);
             if (!optionalAddress.isPresent()) {

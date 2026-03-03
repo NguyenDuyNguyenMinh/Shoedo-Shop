@@ -59,7 +59,7 @@
                 
                 <div class="text-end">
                   <button type="submit" class="btn btn-success" :disabled="profileLoading">
-                    <span v-if="profileLoading" class="spinner-border spinner-border-sm me-1"></span>
+<span v-if="profileLoading" class="spinner-border spinner-border-sm me-1"></span>
                     <i v-else class="fas fa-save me-1"></i> Lưu thay đổi
                   </button>
                 </div>
@@ -183,7 +183,7 @@
                 </label>
               </div>
             </div>
-            <div class="modal-footer">
+<div class="modal-footer">
               <button type="submit" class="btn btn-primary" :disabled="addressLoading">
                 <span v-if="addressLoading" class="spinner-border spinner-border-sm me-1"></span>
                 {{ editingAddress ? 'Cập nhật' : 'Thêm địa chỉ' }}
@@ -293,7 +293,7 @@ export default {
       
       try {
         const response = await api.updateProfile({
-          userName: user.value.userName,
+userName: user.value.userName,
           fullname: customer.value.tenKH,
           phone: customer.value.sdt
         });
@@ -524,7 +524,6 @@ export default {
   border-color: #000000;
   color: #000000;
 }
-
 .btn-secondary:hover {
   background-color: #f0f0f0;
   border-color: #000000;

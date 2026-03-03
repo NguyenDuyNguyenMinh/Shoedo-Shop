@@ -63,14 +63,14 @@
               <div class="col-md-8">
                 <div class="d-flex justify-content-end align-items-center gap-2">
                   <span class="text-muted me-3">
-                    Đã chọn: <strong class="text-primary">2</strong> / 120 sản phẩm
+                    Đã chọn: <strong class="text-primary">0</strong> / {{ products.length }} sản phẩm
                   </span>
                   <button class="btn btn-outline-secondary">
                     <i class="bi bi-x-circle me-2"></i>Bỏ chọn tất cả
                   </button>
                   <button class="btn btn-success">
                     <i class="bi bi-box-arrow-in-down me-2"></i>
-                    Nhập 2 sản phẩm
+                    Nhập hàng loạt
                   </button>
                 </div>
               </div>
@@ -95,109 +95,47 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr>
-                    <td>
-                      <div class="form-check">
-                        <input class="form-check-input" type="checkbox" checked>
-                      </div>
-                    </td>
-                    <td style="width: 72px;">
-                      <img src="https://placehold.co/80x80" alt="Product" style="width: 48px; height: 48px; object-fit: cover; border-radius: 8px;">
-                    </td>
-                    <td>
-                      <strong>Sneaker Classic 01</strong>
-                      <div class="text-muted small">Mã SP: SP001</div>
-                    </td>
-                    <td>
-                      <span class="badge bg-info text-dark">Trắng - Size 42</span>
-                    </td>
-                    <td class="text-end">1.290.000 ₫</td>
-                    <td class="text-end">
-                      <span class="text-success fw-bold">120</span>
-                    </td>
-                    <td>
-                      <span class="badge bg-success">Còn hàng</span>
-                    </td>
-                    <td>
-                      <div class="d-flex align-items-center gap-2">
-                        <div class="input-group" style="min-width: 150px;">
-                          <input type="number" class="form-control" min="1" placeholder="Số lượng" value="50" style="padding: 10px; font-size: 14px;">
-                          <button class="btn btn-outline-success">
-                            <i class="bi bi-arrow-down-circle me-1"></i>Nhập
-                          </button>
-                        </div>
-                      </div>
-                    </td>
-                  </tr>
-
-                  <tr class="table-active">
-                    <td>
-                      <div class="form-check">
-                        <input class="form-check-input" type="checkbox" checked>
-                      </div>
-                    </td>
-                    <td style="width: 72px;">
-                      <img src="https://placehold.co/80x80" alt="Product" style="width: 48px; height: 48px; object-fit: cover; border-radius: 8px;">
-                    </td>
-                    <td>
-                      <strong>Runner Pro 2.0</strong>
-                      <div class="text-muted small">Mã SP: SP002</div>
-                    </td>
-                    <td>
-                      <span class="badge bg-info text-dark">Đen - Size 41</span>
-                    </td>
-                    <td class="text-end">1.990.000 ₫</td>
-                    <td class="text-end">
-                      <span class="text-warning fw-bold">5</span>
-                    </td>
-                    <td>
-                      <span class="badge bg-warning text-dark">Sắp hết</span>
-                    </td>
-                    <td>
-                      <div class="d-flex align-items-center gap-2">
-                        <div class="input-group" style="min-width: 150px;">
-                          <input type="number" class="form-control" min="1" placeholder="Số lượng" value="10" style="padding: 10px; font-size: 14px;">
-                          <button class="btn btn-outline-success">
-                            <i class="bi bi-arrow-down-circle me-1"></i>Nhập
-                          </button>
-                        </div>
-                      </div>
-                    </td>
-                  </tr>
-
-                  <tr>
+                  <tr v-for="item in products" :key="item.maSKU">
                     <td>
                       <div class="form-check">
                         <input class="form-check-input" type="checkbox">
                       </div>
                     </td>
                     <td style="width: 72px;">
-                      <img src="https://placehold.co/80x80" alt="Product" style="width: 48px; height: 48px; object-fit: cover; border-radius: 8px;">
+                      <img :src="item.hinhAnh ? `/images/${item.hinhAnh}` : 'https://placehold.co/80x80'" 
+                           alt="Product" style="width: 48px; height: 48px; object-fit: cover; border-radius: 8px;">
                     </td>
                     <td>
-                      <strong>Office Leather 88</strong>
-                      <div class="text-muted small">Mã SP: SP003</div>
+                      <strong>{{ item.sanPham?.tenSP }}</strong>
+                      <div class="text-muted small">Mã SKU: {{ item.maSKU }}</div>
                     </td>
                     <td>
-                      <span class="badge bg-info text-dark">Nâu - Size 40</span>
+                      <span class="badge bg-info text-dark">{{ item.tenMau }} - Size {{ item.size?.coGiay }}</span>
                     </td>
-                    <td class="text-end">2.490.000 ₫</td>
+                    <td class="text-end">{{ item.donGia?.toLocaleString('vi-VN') }} ₫</td>
                     <td class="text-end">
-                      <span class="text-danger fw-bold">0</span>
+                      <span :class="['fw-bold', item.soLuong > 10 ? 'text-success' : (item.soLuong > 0 ? 'text-warning' : 'text-danger')]">
+                        {{ item.soLuong }}
+                      </span>
                     </td>
                     <td>
-                      <span class="badge bg-danger">Hết hàng</span>
+                      <span :class="['badge', item.soLuong > 10 ? 'bg-success' : (item.soLuong > 0 ? 'bg-warning text-dark' : 'bg-danger')]">
+                        {{ item.soLuong > 0 ? 'Còn hàng' : 'Hết hàng' }}
+                      </span>
                     </td>
                     <td>
                       <div class="d-flex align-items-center gap-2">
                         <div class="input-group" style="min-width: 150px;">
-                          <input type="number" class="form-control" min="1" placeholder="Số lượng" style="padding: 10px; font-size: 14px;">
-                          <button class="btn btn-outline-success">
+                          <input type="number" v-model="item.soLuongNhap" class="form-control" min="1" placeholder="Số lượng" style="padding: 10px; font-size: 14px;">
+                          <button @click="handleImportSingle(item)" class="btn btn-outline-success">
                             <i class="bi bi-arrow-down-circle me-1"></i>Nhập
                           </button>
                         </div>
                       </div>
                     </td>
+                  </tr>
+                  <tr v-if="products.length === 0">
+                    <td colspan="8" class="text-center py-4 text-muted">Đang tải dữ liệu sản phẩm...</td>
                   </tr>
                 </tbody>
               </table>
@@ -234,74 +172,39 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr>
-                    <td class="text-center fw-bold text-primary">NK00124</td>
+                  <tr v-for="log in history" :key="log.maNK">
+                    <td class="text-center fw-bold text-primary">NK{{ log.maNK }}</td>
                     <td>
-                      <strong>Sneaker Classic 01</strong>
-                      <div class="text-muted small">Mã SP: SP001</div>
+                      <strong>{{ log.sanPhamChiTiet?.sanPham?.tenSP }}</strong>
+                      <div class="text-muted small">Mã SKU: {{ log.sanPhamChiTiet?.maSKU }}</div>
                     </td>
                     <td>
-                      <span class="badge bg-secondary">Giày sneaker</span>
+                      <span class="badge bg-secondary">Danh mục SP</span>
                     </td>
                     <td>
-                      <span class="badge bg-info text-dark">Trắng - Size 42</span>
+                      <span class="badge bg-info text-dark">{{ log.sanPhamChiTiet?.tenMau }} - Size {{ log.sanPhamChiTiet?.size?.coGiay }}</span>
                     </td>
                     <td>
-                      <span class="badge bg-success">+50</span>
+                      <span class="badge bg-success">+{{ log.soLuong }}</span>
                     </td>
-                    <td>24/02/2026 08:30</td>
+                    <td>{{ formatDate(log.ngayNhap) }}</td>
                   </tr>
-
-                  <tr>
-                    <td class="text-center fw-bold text-primary">NK00123</td>
-                    <td>
-                      <strong>Runner Pro 2.0</strong>
-                      <div class="text-muted small">Mã SP: SP002</div>
-                    </td>
-                    <td>
-                      <span class="badge bg-secondary">Giày thể thao</span>
-                    </td>
-                    <td>
-                      <span class="badge bg-info text-dark">Đen - Size 41</span>
-                    </td>
-                    <td>
-                      <span class="badge bg-success">+100</span>
-                    </td>
-                    <td>20/02/2026 14:15</td>
-                  </tr>
-                  
-                  <tr>
-                    <td class="text-center fw-bold text-primary">NK00122</td>
-                    <td>
-                      <strong>Office Leather 88</strong>
-                      <div class="text-muted small">Mã SP: SP003</div>
-                    </td>
-                    <td>
-                      <span class="badge bg-secondary">Giày công sở</span>
-                    </td>
-                    <td>
-                      <span class="badge bg-info text-dark">Nâu - Size 40</span>
-                    </td>
-                    <td>
-                      <span class="badge bg-success">+20</span>
-                    </td>
-                    <td>15/02/2026 09:00</td>
+                  <tr v-if="history.length === 0">
+                    <td colspan="6" class="text-center py-4 text-muted">Chưa có lịch sử nhập kho nào.</td>
                   </tr>
                 </tbody>
               </table>
             </div>
 
-            <nav aria-label="Page navigation">
+            <nav aria-label="Page navigation" v-if="history.length > 0">
               <ul class="pagination justify-content-center">
                 <li class="page-item disabled"><button class="page-link">Trước</button></li>
                 <li class="page-item active"><button class="page-link">1</button></li>
-                <li class="page-item"><button class="page-link">2</button></li>
-                <li class="page-item"><button class="page-link">3</button></li>
                 <li class="page-item"><button class="page-link">Sau</button></li>
               </ul>
             </nav>
-            <div class="text-muted text-center mt-2">
-              Trang 1 / 3 • Tổng 24 bản ghi
+            <div class="text-muted text-center mt-2" v-if="history.length > 0">
+              Tổng {{ history.length }} bản ghi
             </div>
           </div>
         </div>
@@ -311,11 +214,77 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted, watch } from 'vue';
+import axios from 'axios';
 import NV_Sidebar from '@/components/Shared/NV_Sidebar.vue';
 
-// Chỉ giữ lại đúng biến này để bấm chuyển Tab cho giao diện có tương tác nhẹ
 const activeTab = ref('import');
+
+// Biến chứa dữ liệu
+const products = ref([]);
+const history = ref([]);
+
+// Hàm lấy danh sách sản phẩm (Tab 1)
+const fetchProducts = async () => {
+  try {
+    const response = await axios.get('http://localhost:8080/api/nhapkho/sanpham');
+    // Thêm trường soLuongNhap = 1 mặc định cho giao diện input
+    products.value = response.data.map(item => ({
+      ...item,
+      soLuongNhap: 1
+    }));
+  } catch (error) {
+    console.error("Lỗi lấy danh sách sản phẩm:", error);
+  }
+};
+
+// Hàm lấy lịch sử (Tab 2)
+const fetchHistory = async () => {
+  try {
+    const response = await axios.get('http://localhost:8080/api/nhapkho/lichsu');
+    history.value = response.data;
+  } catch (error) {
+    console.error("Lỗi lấy lịch sử:", error);
+  }
+};
+
+// Hàm xử lý khi bấm nút "Nhập" trên từng dòng
+const handleImportSingle = async (item) => {
+  if (!item.soLuongNhap || item.soLuongNhap < 1) {
+    alert("Số lượng nhập phải lớn hơn 0");
+    return;
+  }
+  
+  try {
+    await axios.post('http://localhost:8080/api/nhapkho/nhap', {
+      maSKU: item.maSKU,
+      soLuongNhap: item.soLuongNhap
+    });
+    alert("Nhập kho thành công!");
+    await fetchProducts(); // Load lại để cập nhật cột SL tồn
+  } catch (error) {
+    alert("Có lỗi xảy ra khi nhập kho!");
+    console.error(error);
+  }
+};
+
+// Hàm format ngày tháng để hiển thị ở tab lịch sử
+const formatDate = (dateString) => {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  return date.toLocaleDateString('vi-VN') + ' ' + date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+};
+
+// Lắng nghe khi chuyển tab để fetch dữ liệu phù hợp
+watch(activeTab, (newVal) => {
+  if (newVal === 'import') fetchProducts();
+  if (newVal === 'history') fetchHistory();
+});
+
+// Chạy lần đầu khi load component
+onMounted(() => {
+  fetchProducts();
+});
 </script>
 
 <style scoped>
