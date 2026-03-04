@@ -34,10 +34,11 @@ public class SanPham {
     @Column(name = "IsActive")
     private Boolean isActive;
 
-    @OneToMany(mappedBy = "sanPham", fetch = FetchType.LAZY)
-    @JsonIgnore
+    @OneToMany(mappedBy = "sanPham", fetch = FetchType.EAGER)
+    @JsonIgnoreProperties("sanPham") 
     private List<SanPhamDanhMuc> sanPhamDanhMucs;
 
+    // Cái này không liên quan đến lọc danh mục, cứ giữ LAZY và JsonIgnore cho nhẹ máy
     @OneToMany(mappedBy = "sanPham", fetch = FetchType.LAZY)
     @JsonIgnore
     private List<SanPhamChiTiet> sanPhamChiTiets;
