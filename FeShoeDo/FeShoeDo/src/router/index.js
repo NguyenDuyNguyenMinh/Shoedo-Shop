@@ -83,7 +83,7 @@ const routes = [
     path: '/employee/orders',
     name: 'OrderManagement',
     component: () => import('@/components/employee/NV_QLDonHang.vue'),
-    meta: { requiresAuth: true, roles: 'EMPLOYEE' }
+    meta: { requiresAuth: true, role: 'EMPLOYEE' }
   },
   {
     path: '/employee/users',
@@ -95,7 +95,7 @@ const routes = [
     path: '/employee/import',
     name: 'ImportStock',
     component: () => import('@/components/employee/NV_NhapKho.vue'),
-    meta: { requiresAuth: true, roles: ['ADMIN', 'EMPLOYEE'] }
+    meta: { requiresAuth: true, role: 'EMPLOYEE' }
   },
   
 ];
@@ -139,14 +139,12 @@ router.beforeEach(async (to, from, next) => {
     if (!authStore.isAuthenticated) {
       // Thử lấy user từ server
       try {
-        await authStore.fetchCurrentUser();
-        
-        if (!authStore.isAuthenticated) {
+        const success = await authStore.fetchCurrentUser();
+        if (!success) {
           next('/auth/login');
           return;
         }
       } catch (error) {
-        console.error('Auth check error:', error);
         next('/auth/login');
         return;
       }
