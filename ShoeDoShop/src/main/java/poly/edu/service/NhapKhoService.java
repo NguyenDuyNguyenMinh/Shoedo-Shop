@@ -51,4 +51,12 @@ public class NhapKhoService {
         
         return nhapKhoDAO.save(lichSu);
     }
+ // THÊM HÀM NÀY: Xử lý nhập kho hàng loạt
+    @Transactional
+    public List<NhapKho> thucHienNhapKhoHangLoat(List<NhapKhoDTO> requests) {
+        // Dùng vòng lặp gọi lại hàm nhập đơn lẻ cho từng item
+        return requests.stream()
+                .map(this::thucHienNhapKho)
+                .toList();
+    }
 }

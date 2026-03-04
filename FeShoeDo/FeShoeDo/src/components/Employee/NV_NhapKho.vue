@@ -1,20 +1,27 @@
 <template>
   <div class="employee-layout">
     <NV_Sidebar />
-    
+
     <main class="main-content">
       <div class="page-container">
-
         <ul class="nav nav-tabs" role="tablist">
           <li class="nav-item" role="presentation">
-            <a class="nav-link" :class="{ active: activeTab === 'import' }" 
-               @click="activeTab = 'import'" style="cursor: pointer;">
+            <a
+              class="nav-link"
+              :class="{ active: activeTab === 'import' }"
+              @click="activeTab = 'import'"
+              style="cursor: pointer"
+            >
               <i class="bi bi-box-seam me-2"></i>Nhập kho
             </a>
           </li>
           <li class="nav-item" role="presentation">
-            <a class="nav-link" :class="{ active: activeTab === 'history' }" 
-               @click="activeTab = 'history'" style="cursor: pointer;">
+            <a
+              class="nav-link"
+              :class="{ active: activeTab === 'history' }"
+              @click="activeTab = 'history'"
+              style="cursor: pointer"
+            >
               <i class="bi bi-clock-history me-2"></i>Lịch sử nhập kho
             </a>
           </li>
@@ -24,26 +31,35 @@
           <div v-show="activeTab === 'import'" class="tab-pane show active">
             <div class="row g-2 mb-3">
               <div class="col-md-3">
-                <input type="text" placeholder="Tìm theo tên sản phẩm..." class="form-control">
+                <input
+                  type="text"
+                  v-model="filterKeyword"
+                  placeholder="Tìm theo tên sản phẩm..."
+                  class="form-control"
+                />
               </div>
               <div class="col-md-2">
-                <select class="form-select">
+                <select v-model="filterCategory" class="form-select">
                   <option value="">Tất cả danh mục</option>
-                  <option value="1">Giày sneaker</option>
-                  <option value="2">Giày thể thao</option>
-                  <option value="3">Giày công sở</option>
+                  <option
+                    v-for="cat in categories"
+                    :key="cat.maDM"
+                    :value="cat.maDM"
+                  >
+                    {{ cat.tenDM }}
+                  </option>
                 </select>
               </div>
               <div class="col-md-2">
-                <select class="form-select">
+                <select v-model="filterStatus" class="form-select">
                   <option value="">Tất cả trạng thái</option>
-                  <option value="Còn hàng">Còn hàng</option>
-                  <option value="Sắp hết">Sắp hết</option>
-                  <option value="Hết hàng">Hết hàng</option>
+                  <option value="Còn hàng">Còn hàng (SL > 10)</option>
+                  <option value="Sắp hết">Sắp hết (SL 1-10)</option>
+                  <option value="Hết hàng">Hết hàng (SL = 0)</option>
                 </select>
               </div>
               <div class="col-md-2">
-                <button class="btn btn-secondary">
+                <button @click="resetFilters" class="btn btn-secondary">
                   <i class="bi bi-arrow-clockwise me-2"></i>Reset
                 </button>
               </div>
@@ -52,23 +68,38 @@
             <div class="row g-2 mb-3 align-items-center">
               <div class="col-md-4">
                 <div class="input-group">
-                  <span class="input-group-text bg-light fw-bold">Số lượng chung</span>
-                  <input type="number" min="1" class="form-control form-control-lg" placeholder="Nhập số lượng" value="10">
-                  <button class="btn btn-success">
+                  <span class="input-group-text bg-light fw-bold"
+                    >Số lượng chung</span
+                  >
+                  <input
+                    type="number"
+                    v-model="bulkQuantity"
+                    min="1"
+                    class="form-control form-control-lg"
+                    placeholder="Nhập số lượng"
+                  />
+                  <button @click="applyBulkQuantity" class="btn btn-success">
                     <i class="bi bi-check-lg me-2"></i>Áp dụng
                   </button>
                 </div>
               </div>
-              
+
               <div class="col-md-8">
-                <div class="d-flex justify-content-end align-items-center gap-2">
+                <div
+                  class="d-flex justify-content-end align-items-center gap-2"
+                >
                   <span class="text-muted me-3">
-                    Đã chọn: <strong class="text-primary">0</strong> / {{ products.length }} sản phẩm
+                    Đã chọn:
+                    <strong class="text-primary">{{ selectedCount }}</strong> /
+                    {{ filteredProducts.length }} sản phẩm
                   </span>
-                  <button class="btn btn-outline-secondary">
+                  <button
+                    @click="unselectAll"
+                    class="btn btn-outline-secondary"
+                  >
                     <i class="bi bi-x-circle me-2"></i>Bỏ chọn tất cả
                   </button>
-                  <button class="btn btn-success">
+                  <button @click="handleBulkImport" class="btn btn-success">
                     <i class="bi bi-box-arrow-in-down me-2"></i>
                     Nhập hàng loạt
                   </button>
@@ -82,7 +113,11 @@
                   <tr>
                     <th>
                       <div class="form-check">
-                        <input class="form-check-input" type="checkbox">
+                        <input
+                          class="form-check-input"
+                          type="checkbox"
+                          v-model="isAllSelected"
+                        />
                       </div>
                     </th>
                     <th>Hình</th>
@@ -91,51 +126,103 @@
                     <th>Giá</th>
                     <th>SL tồn</th>
                     <th>Trạng thái</th>
-                    <th style="width: 180px;">Số lượng nhập</th>
+                    <th style="width: 180px">Số lượng nhập</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="item in products" :key="item.maSKU">
+                  <tr v-for="item in filteredProducts" :key="item.maSKU">
                     <td>
                       <div class="form-check">
-                        <input class="form-check-input" type="checkbox">
+                        <input
+                          class="form-check-input"
+                          type="checkbox"
+                          v-model="item.selected"
+                        />
                       </div>
                     </td>
-                    <td style="width: 72px;">
-                      <img :src="item.hinhAnh ? `/images/${item.hinhAnh}` : 'https://placehold.co/80x80'" 
-                           alt="Product" style="width: 48px; height: 48px; object-fit: cover; border-radius: 8px;">
+                    <td style="width: 72px">
+                      <img
+                        :src="
+                          item.hinhAnh
+                            ? `/images/${item.hinhAnh}`
+                            : 'https://placehold.co/80x80'
+                        "
+                        alt="Product"
+                        style="
+                          width: 48px;
+                          height: 48px;
+                          object-fit: cover;
+                          border-radius: 8px;
+                        "
+                      />
                     </td>
                     <td>
                       <strong>{{ item.sanPham?.tenSP }}</strong>
-                      <div class="text-muted small">Mã SKU: {{ item.maSKU }}</div>
+                      <div class="text-muted small">
+                        Mã SKU: {{ item.maSKU }}
+                      </div>
                     </td>
                     <td>
-                      <span class="badge bg-info text-dark">{{ item.tenMau }} - Size {{ item.size?.coGiay }}</span>
+                      <span class="badge bg-info text-dark"
+                        >{{ item.tenMau }} - Size {{ item.size?.coGiay }}</span
+                      >
                     </td>
-                    <td class="text-end">{{ item.donGia?.toLocaleString('vi-VN') }} ₫</td>
                     <td class="text-end">
-                      <span :class="['fw-bold', item.soLuong > 10 ? 'text-success' : (item.soLuong > 0 ? 'text-warning' : 'text-danger')]">
+                      {{ item.donGia?.toLocaleString("vi-VN") }} ₫
+                    </td>
+                    <td class="text-end">
+                      <span
+                        :class="[
+                          'fw-bold',
+                          item.soLuong > 10
+                            ? 'text-success'
+                            : item.soLuong > 0
+                            ? 'text-warning'
+                            : 'text-danger',
+                        ]"
+                      >
                         {{ item.soLuong }}
                       </span>
                     </td>
                     <td>
-                      <span :class="['badge', item.soLuong > 10 ? 'bg-success' : (item.soLuong > 0 ? 'bg-warning text-dark' : 'bg-danger')]">
-                        {{ item.soLuong > 0 ? 'Còn hàng' : 'Hết hàng' }}
+                      <span
+                        :class="[
+                          'badge',
+                          item.soLuong > 10
+                            ? 'bg-success'
+                            : item.soLuong > 0
+                            ? 'bg-warning text-dark'
+                            : 'bg-danger',
+                        ]"
+                      >
+                        {{ item.soLuong > 0 ? "Còn hàng" : "Hết hàng" }}
                       </span>
                     </td>
                     <td>
                       <div class="d-flex align-items-center gap-2">
-                        <div class="input-group" style="min-width: 150px;">
-                          <input type="number" v-model="item.soLuongNhap" class="form-control" min="1" placeholder="Số lượng" style="padding: 10px; font-size: 14px;">
-                          <button @click="handleImportSingle(item)" class="btn btn-outline-success">
+                        <div class="input-group" style="min-width: 150px">
+                          <input
+                            type="number"
+                            v-model="item.soLuongNhap"
+                            class="form-control"
+                            min="1"
+                            placeholder="Số lượng"
+                            style="padding: 10px; font-size: 14px"
+                          />
+                          <button
+                            @click="handleImportSingle(item)"
+                            class="btn btn-outline-success"
+                          >
                             <i class="bi bi-arrow-down-circle me-1"></i>Nhập
                           </button>
                         </div>
                       </div>
                     </td>
                   </tr>
-                  <tr v-if="products.length === 0">
-                    <td colspan="8" class="text-center py-4 text-muted">Đang tải dữ liệu sản phẩm...</td>
+                  <tr v-if="filteredProducts.length === 0">
+                    <td colspan="8" class="text-center py-4 text-muted">
+                      Không tìm thấy sản phẩm nào phù hợp.
+                    </td>
                   </tr>
                 </tbody>
               </table>
@@ -143,17 +230,22 @@
           </div>
 
           <div v-show="activeTab === 'history'" class="tab-pane show active">
+            
             <div class="row g-2 mb-3">
-              <div class="col-md-6">
+              <div class="col-md-5">
                 <div class="input-group">
-                  <span class="input-group-text">
-                    <i class="bi bi-search"></i>
-                  </span>
-                  <input type="text" placeholder="Tìm theo tên sản phẩm..." class="form-control">
+                  <span class="input-group-text"><i class="bi bi-search"></i></span>
+                  <input type="text" v-model="historyKeyword" placeholder="Tìm theo tên sản phẩm..." class="form-control">
                 </div>
               </div>
-              <div class="col-md-2">
-                <button class="btn btn-secondary w-100">
+              <div class="col-md-4">
+                <div class="input-group">
+                  <span class="input-group-text fw-bold">Lọc theo ngày</span>
+                  <input type="date" v-model="historyDate" class="form-control">
+                </div>
+              </div>
+              <div class="col-md-3">
+                <button @click="resetHistoryFilters" class="btn btn-secondary w-100">
                   <i class="bi bi-arrow-clockwise me-2"></i>Reset
                 </button>
               </div>
@@ -172,14 +264,14 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="log in history" :key="log.maNK">
+                  <tr v-for="log in filteredHistory" :key="log.maNK">
                     <td class="text-center fw-bold text-primary">NK{{ log.maNK }}</td>
                     <td>
                       <strong>{{ log.sanPhamChiTiet?.sanPham?.tenSP }}</strong>
                       <div class="text-muted small">Mã SKU: {{ log.sanPhamChiTiet?.maSKU }}</div>
                     </td>
                     <td>
-                      <span class="badge bg-secondary">Danh mục SP</span>
+                      <span class="badge bg-secondary">Lịch sử</span>
                     </td>
                     <td>
                       <span class="badge bg-info text-dark">{{ log.sanPhamChiTiet?.tenMau }} - Size {{ log.sanPhamChiTiet?.size?.coGiay }}</span>
@@ -189,22 +281,15 @@
                     </td>
                     <td>{{ formatDate(log.ngayNhap) }}</td>
                   </tr>
-                  <tr v-if="history.length === 0">
-                    <td colspan="6" class="text-center py-4 text-muted">Chưa có lịch sử nhập kho nào.</td>
+                  <tr v-if="filteredHistory.length === 0">
+                    <td colspan="6" class="text-center py-4 text-muted">Không tìm thấy lịch sử phù hợp.</td>
                   </tr>
                 </tbody>
               </table>
             </div>
 
-            <nav aria-label="Page navigation" v-if="history.length > 0">
-              <ul class="pagination justify-content-center">
-                <li class="page-item disabled"><button class="page-link">Trước</button></li>
-                <li class="page-item active"><button class="page-link">1</button></li>
-                <li class="page-item"><button class="page-link">Sau</button></li>
-              </ul>
-            </nav>
-            <div class="text-muted text-center mt-2" v-if="history.length > 0">
-              Tổng {{ history.length }} bản ghi
+            <div class="text-muted text-center mt-2" v-if="filteredHistory.length > 0">
+              Tổng <strong>{{ filteredHistory.length }}</strong> bản ghi
             </div>
           </div>
         </div>
@@ -214,77 +299,240 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue';
-import axios from 'axios';
-import NV_Sidebar from '@/components/Shared/NV_Sidebar.vue';
+import { ref, onMounted, watch, computed } from "vue";
+import axios from "axios";
+import NV_Sidebar from "@/components/Shared/NV_Sidebar.vue";
 
-const activeTab = ref('import');
+axios.defaults.withCredentials = true;
 
-// Biến chứa dữ liệu
+const activeTab = ref("import");
 const products = ref([]);
 const history = ref([]);
+const bulkQuantity = ref(10);
 
-// Hàm lấy danh sách sản phẩm (Tab 1)
+// --- STATE CHO BỘ LỌC ---
+const categories = ref([]);
+const filterKeyword = ref("");
+const filterCategory = ref("");
+const filterStatus = ref("");
+
+// Hàm lấy danh sách Danh Mục
+const fetchCategories = async () => {
+  try {
+    const response = await axios.get(
+      "http://localhost:8080/api/nhapkho/danhmuc"
+    );
+    categories.value = response.data;
+  } catch (error) {
+    console.error("Lỗi lấy danh mục:", error);
+  }
+};
+
+// Hàm lấy danh sách Sản Phẩm
 const fetchProducts = async () => {
   try {
-    const response = await axios.get('http://localhost:8080/api/nhapkho/sanpham');
-    // Thêm trường soLuongNhap = 1 mặc định cho giao diện input
-    products.value = response.data.map(item => ({
+    const response = await axios.get(
+      "http://localhost:8080/api/nhapkho/sanpham"
+    );
+    products.value = response.data.map((item) => ({
       ...item,
-      soLuongNhap: 1
+      soLuongNhap: 1,
+      selected: false,
     }));
   } catch (error) {
     console.error("Lỗi lấy danh sách sản phẩm:", error);
   }
 };
 
-// Hàm lấy lịch sử (Tab 2)
 const fetchHistory = async () => {
   try {
-    const response = await axios.get('http://localhost:8080/api/nhapkho/lichsu');
+    const response = await axios.get(
+      "http://localhost:8080/api/nhapkho/lichsu"
+    );
     history.value = response.data;
   } catch (error) {
     console.error("Lỗi lấy lịch sử:", error);
   }
 };
 
-// Hàm xử lý khi bấm nút "Nhập" trên từng dòng
+// --- LOGIC LỌC SẢN PHẨM (COMPUTED) ---
+const filteredProducts = computed(() => {
+  return products.value.filter((item) => {
+    // 1. Lọc theo tên sản phẩm
+    const matchKeyword =
+      !filterKeyword.value ||
+      item.sanPham?.tenSP
+        ?.toLowerCase()
+        .includes(filterKeyword.value.toLowerCase());
+
+    // 2. Lọc theo trạng thái
+    let matchStatus = true;
+    if (filterStatus.value === "Còn hàng") {
+      matchStatus = item.soLuong > 10;
+    } else if (filterStatus.value === "Sắp hết") {
+      matchStatus = item.soLuong > 0 && item.soLuong <= 10;
+    } else if (filterStatus.value === "Hết hàng") {
+      matchStatus = item.soLuong === 0;
+    }
+
+    // 3. Lọc theo danh mục
+    let matchCategory = true;
+    if (filterCategory.value) {
+      // Vì dữ liệu API của bạn đang ẩn List danh mục (do @JsonIgnore ở Entity),
+      // logic này sẽ hoạt động ngay khi backend mở trả danh sách danh mục về.
+      if (item.sanPham?.sanPhamDanhMucs) {
+        matchCategory = item.sanPham.sanPhamDanhMucs.some(
+          (dm) =>
+            dm.danhMuc?.maDM === filterCategory.value ||
+            dm.maDM === filterCategory.value
+        );
+      }
+    }
+
+    return matchKeyword && matchStatus && matchCategory;
+  });
+});
+
+// Hàm Reset bộ lọc
+const resetFilters = () => {
+  filterKeyword.value = "";
+  filterCategory.value = "";
+  filterStatus.value = "";
+};
+
+// --- LOGIC CHO NHẬP HÀNG LOẠT ---
+
+// Cập nhật lại: Đếm số lượng chọn dựa trên danh sách đang hiển thị
+const selectedCount = computed(
+  () => filteredProducts.value.filter((p) => p.selected).length
+);
+
+// Cập nhật lại: Nút chọn tất cả chỉ áp dụng cho danh sách đang hiển thị
+const isAllSelected = computed({
+  get: () =>
+    filteredProducts.value.length > 0 &&
+    filteredProducts.value.every((p) => p.selected),
+  set: (val) => filteredProducts.value.forEach((p) => (p.selected = val)),
+});
+
+const unselectAll = () => {
+  products.value.forEach((p) => (p.selected = false));
+};
+
+const applyBulkQuantity = () => {
+  if (bulkQuantity.value < 1) {
+    alert("Số lượng phải lớn hơn 0");
+    return;
+  }
+  // Chỉ áp dụng cho sản phẩm đang lọc và được tick
+  filteredProducts.value.forEach((p) => {
+    if (p.selected) p.soLuongNhap = bulkQuantity.value;
+  });
+};
+
+const handleBulkImport = async () => {
+  const selectedItems = products.value.filter((p) => p.selected);
+  if (selectedItems.length === 0) {
+    alert("Vui lòng tích chọn ít nhất 1 sản phẩm để nhập kho!");
+    return;
+  }
+
+  const payload = selectedItems.map((item) => ({
+    maSKU: item.maSKU,
+    soLuongNhap: item.soLuongNhap,
+  }));
+
+  try {
+    await axios.post(
+      "http://localhost:8080/api/nhapkho/nhap-hang-loat",
+      payload
+    );
+    alert(`Đã nhập kho thành công ${selectedItems.length} sản phẩm!`);
+    unselectAll(); // Xóa tick sau khi nhập xong
+    await fetchProducts();
+  } catch (error) {
+    alert("Có lỗi xảy ra khi nhập kho hàng loạt!");
+    console.error(error);
+  }
+};
+
 const handleImportSingle = async (item) => {
   if (!item.soLuongNhap || item.soLuongNhap < 1) {
     alert("Số lượng nhập phải lớn hơn 0");
     return;
   }
-  
   try {
-    await axios.post('http://localhost:8080/api/nhapkho/nhap', {
+    await axios.post("http://localhost:8080/api/nhapkho/nhap", {
       maSKU: item.maSKU,
-      soLuongNhap: item.soLuongNhap
+      soLuongNhap: item.soLuongNhap,
     });
     alert("Nhập kho thành công!");
-    await fetchProducts(); // Load lại để cập nhật cột SL tồn
+    await fetchProducts();
   } catch (error) {
-    alert("Có lỗi xảy ra khi nhập kho!");
+    alert("Có lỗi xảy ra!");
     console.error(error);
   }
 };
 
-// Hàm format ngày tháng để hiển thị ở tab lịch sử
 const formatDate = (dateString) => {
-  if (!dateString) return '';
+  if (!dateString) return "";
   const date = new Date(dateString);
-  return date.toLocaleDateString('vi-VN') + ' ' + date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+  return date.toLocaleDateString("vi-VN");
 };
 
-// Lắng nghe khi chuyển tab để fetch dữ liệu phù hợp
 watch(activeTab, (newVal) => {
-  if (newVal === 'import') fetchProducts();
-  if (newVal === 'history') fetchHistory();
+  if (newVal === "import") {
+    fetchProducts();
+    fetchCategories();
+  }
+  if (newVal === "history") fetchHistory();
 });
 
-// Chạy lần đầu khi load component
 onMounted(() => {
   fetchProducts();
+  fetchCategories();
 });
+
+// --- STATE CHO BỘ LỌC LỊCH SỬ (TAB 2) ---
+const historyKeyword = ref("");
+const historyDate = ref("");
+
+// --- LOGIC LỌC VÀ SẮP XẾP LỊCH SỬ ---
+const filteredHistory = computed(() => {
+  let result = history.value;
+
+  // 1. Lọc theo tên sản phẩm
+  if (historyKeyword.value) {
+    const keyword = historyKeyword.value.toLowerCase();
+    result = result.filter((log) =>
+      log.sanPhamChiTiet?.sanPham?.tenSP?.toLowerCase().includes(keyword)
+    );
+  }
+
+  // 2. Lọc theo ngày nhập
+  if (historyDate.value) {
+    result = result.filter((log) => {
+      if (!log.ngayNhap) return false;
+      // Format ngày từ database sang định dạng YYYY-MM-DD chuẩn của ô input type="date"
+      const d = new Date(log.ngayNhap);
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      const formattedDate = `${year}-${month}-${day}`;
+
+      return formattedDate === historyDate.value;
+    });
+  }
+
+  // 3. Sắp xếp mới nhất lên đầu (Mã Nhập Kho giảm dần)
+  return result.slice().sort((a, b) => b.maNK - a.maNK);
+});
+
+// Hàm làm mới bộ lọc lịch sử
+const resetHistoryFilters = () => {
+  historyKeyword.value = "";
+  historyDate.value = "";
+};
 </script>
 
 <style scoped>
@@ -292,17 +540,14 @@ onMounted(() => {
   margin-left: 260px;
   min-height: 100vh;
 }
-
 .page-container {
   padding: 30px;
   background: #f7f7f9;
   min-height: 100vh;
 }
-
 .nav-tabs {
   border-bottom: 2px solid #dee2e6;
 }
-
 .nav-tabs .nav-link {
   color: #666;
   font-weight: 500;
@@ -312,44 +557,36 @@ onMounted(() => {
   transition: all 0.3s;
   cursor: pointer;
 }
-
 .nav-tabs .nav-link:hover {
   color: #00b7ffc7;
   border-color: transparent;
 }
-
 .nav-tabs .nav-link.active {
   color: #00b7ff;
   background: transparent;
   border-color: #00b7ff;
 }
-
 .tab-content {
   background: white;
   padding: 25px;
   border-radius: 0 0 12px 12px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
 }
-
 .input-group .form-control-lg {
   font-size: 16px;
 }
-
 td .input-group {
   min-width: 180px;
 }
-
 td .form-control {
   height: 38px;
   padding: 8px 12px;
   font-size: 14px;
 }
-
 td .btn-outline-success {
   padding: 8px 16px;
   height: 38px;
 }
-
 .input-group-text {
   background-color: #f8f9fa;
   border-color: #dee2e6;

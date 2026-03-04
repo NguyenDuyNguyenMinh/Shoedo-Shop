@@ -11,13 +11,15 @@ import poly.edu.service.NhapKhoService;
 
 import java.util.List;
 
-@CrossOrigin("*") 
+
 @RestController
 @RequestMapping("/api/nhapkho")
 public class NhapKhoController {
 
     @Autowired
     private NhapKhoService nhapKhoService;
+    @Autowired
+    private poly.edu.dao.DanhMucDAO danhMucDAO;
 
     @GetMapping("/sanpham")
     public ResponseEntity<List<SanPhamChiTiet>> getSanPhamForImport() {
@@ -37,5 +39,19 @@ public class NhapKhoController {
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
+    }
+ // THÊM API NÀY: Nhận mảng dữ liệu từ Vue.js
+    @PostMapping("/nhap-hang-loat")
+    public ResponseEntity<?> nhapKhoHangLoat(@RequestBody List<NhapKhoDTO> requests) {
+        try {
+            List<NhapKho> result = nhapKhoService.thucHienNhapKhoHangLoat(requests);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+    @GetMapping("/danhmuc")
+    public ResponseEntity<?> getAllDanhMuc() {
+        return ResponseEntity.ok(danhMucDAO.findAll());
     }
 }

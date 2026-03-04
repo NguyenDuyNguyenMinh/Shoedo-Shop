@@ -1,6 +1,9 @@
 <script setup>
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 import logoUrl from '@/assets/Logoc.png'
+
+const router = useRouter()
 
 // Biến trạng thái để ẩn/hiện popup lịch sử tìm kiếm
 const isSearchFocused = ref(false)
@@ -15,11 +18,18 @@ const searchHistory = ref([
 
 // Hàm xử lý khi click ra ngoài ô tìm kiếm
 const hideSearchHistory = () => {
-  // Dùng setTimeout một chút để nếu người dùng click vào chữ trong lịch sử 
-  // thì nó vẫn kịp nhận diện sự kiện click trước khi menu bị đóng lại
   setTimeout(() => {
     isSearchFocused.value = false
   }, 200)
+}
+
+// Hàm xử lý đăng xuất
+const handleLogout = () => {
+  // Thực hiện các logic đăng xuất ở đây (ví dụ: xóa token, gọi API Spring Boot...)
+  console.log('Đã đăng xuất!')
+  
+  // Chuyển hướng người dùng về trang đăng nhập hoặc trang chủ
+  router.push('/auth/login')
 }
 </script>
 
@@ -83,11 +93,31 @@ const hideSearchHistory = () => {
           </span>
         </router-link>
 
-        <router-link to="/customer/profile" class="user-box d-flex align-items-center gap-2 px-3 py-2 rounded-0 cursor-pointer text-white">
-          <i class="bi bi-person fs-5"></i>
-          <span class="fw-light">Tài Khoản</span>
-          <i class="bi bi-chevron-down" style="font-size: 0.7rem;"></i>
-        </router-link>
+        <div class="dropdown">
+          <button class="user-box d-flex align-items-center gap-2 px-3 py-2 rounded-0 cursor-pointer text-white bg-transparent" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="bi bi-person fs-5"></i>
+            <span class="fw-light">Tài Khoản</span>
+            <i class="bi bi-chevron-down" style="font-size: 0.7rem;"></i>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end shadow border-white mt-2">
+            <li>
+              <router-link class="dropdown-item d-flex align-items-center gap-2" to="/customer/profile">
+                <i class="bi bi-person-gear"></i> Quản lý tài khoản
+              </router-link>
+            </li>
+            <li>
+              <router-link class="dropdown-item d-flex align-items-center gap-2" to="/customer/orders">
+                <i class="bi bi-box-seam"></i> Đơn hàng của tôi
+              </router-link>
+            </li>
+            <li><hr class="dropdown-divider border-secondary"></li>
+            <li>
+              <button class="dropdown-item d-flex align-items-center gap-2 text-danger" @click="handleLogout">
+                <i class="bi bi-box-arrow-right"></i> Đăng xuất
+              </button>
+            </li>
+          </ul>
+        </div>
 
         <button class="navbar-toggler border-white" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
           <span class="navbar-toggler-icon"></span>
@@ -158,7 +188,7 @@ const hideSearchHistory = () => {
 /* 3. Search Bar Container */
 .search-wrapper {
   width: 320px;
-  z-index: 100; /* Đảm bảo wrapper nổi lên để popup hiển thị đúng */
+  z-index: 100;
 }
 
 .search-wrapper .input-group {
@@ -167,11 +197,9 @@ const hideSearchHistory = () => {
   overflow: hidden; 
   height: 44px; 
   background-color: #000;
-  /* Thêm transition để nếu có popup thì bo góc dưới mất đi cho liền mạch */
   transition: border-radius 0.2s;
 }
 
-/* Đổi màu viền khi ô tìm kiếm được chọn (focus-within) */
 .search-wrapper:focus-within .input-group {
   border-bottom-left-radius: 0;
   border-bottom-right-radius: 0;
@@ -197,12 +225,12 @@ input:focus {
 /* --- CSS CHO POPUP LỊCH SỬ TÌM KIẾM --- */
 .search-history-dropdown {
   position: absolute;
-  top: 100%; /* Canh sát ngay dưới input group */
+  top: 100%;
   left: 0;
   width: 100%;
   background-color: #000000;
   border: 1px solid #ffffff;
-  border-top: none; /* Bỏ viền trên để liền khối với thanh tìm kiếm */
+  border-top: none; 
   border-bottom-left-radius: 8px;
   border-bottom-right-radius: 8px;
   z-index: 1050;
@@ -217,7 +245,7 @@ input:focus {
 }
 
 .history-item:hover {
-  background-color: #222222; /* Sáng lên nhẹ khi di chuột */
+  background-color: #222222; 
 }
 
 .clear-history {
@@ -262,7 +290,7 @@ input:focus {
   box-shadow: 0 8px 18px rgba(0,0,0,0.45);
 }
 
-/* 5. User Box */
+/* 5. User Box (Dropdown Toggle) */
 .user-box {
   border: 1px solid #ffffff;
   border-radius: 8px !important; 
@@ -271,8 +299,8 @@ input:focus {
   align-items: center;
 }
 
-.user-box:hover {
-  background-color: #fff;
+.user-box:hover, .user-box[aria-expanded="true"] {
+  background-color: #fff !important;
   color: #000 !important;
 }
 
@@ -280,7 +308,30 @@ input:focus {
   font-weight: 700 !important;
 }
 
-/* 6. Cart Badge */
+/* 6. User Dropdown Menu */
+.dropdown-menu-dark {
+  background-color: #000000;
+  border-radius: 8px;
+}
+
+.dropdown-menu-dark .dropdown-item {
+  color: #ffffff;
+  font-size: 0.95rem;
+  padding: 10px 20px;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.dropdown-menu-dark .dropdown-item:hover {
+  background-color: #222222;
+}
+
+/* Hiệu ứng rê chuột riêng cho nút Đăng xuất */
+.dropdown-menu-dark .dropdown-item.text-danger:hover {
+  background-color: #2b0000;
+  color: #ff6b6b !important;
+}
+
+/* 7. Cart Badge */
 .cart-badge {
   top: -6px;            
   right: -6px;          
