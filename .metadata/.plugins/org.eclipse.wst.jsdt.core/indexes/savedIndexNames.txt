@@ -1,6 +1,0 @@
-INDEX VERSION 1.4+E:\Java7_DuAnTotNghiep\AGitHUB\Shoedo-Shop\.metadata\.plugins\org.eclipse.wst.jsdt.core\indexes
-2015525529.index
-3252617775.index
-2800049242.index
-2360459103.index
-51007591.index
