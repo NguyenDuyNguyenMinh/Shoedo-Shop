@@ -95,7 +95,7 @@ const routes = [
     path: '/employee/import',
     name: 'ImportStock',
     component: () => import('@/components/employee/NV_NhapKho.vue'),
-    meta: { requiresAuth: true, roles: ['ADMIN', 'EMPLOYEE'] }
+    meta: { requiresAuth: true, roles: 'EMPLOYEE' }
   },
   
 ];

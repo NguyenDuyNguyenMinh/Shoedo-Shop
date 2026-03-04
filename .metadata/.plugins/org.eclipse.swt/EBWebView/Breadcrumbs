@@ -1,0 +1,88 @@
+0:48:40 Tab5 PageLoad
+0:48:40 Tab5 FinishNav19
+0:48:40 Tab5 PageLoad
+0:48:41 Tab5 StartNav20 #typed
+0:48:41 Tab5 FinishNav20
+0:48:41 Tab5 PageLoad
+0:48:42 Tab5 StartNav21 #typed
+0:48:42 Tab5 FinishNav21
+0:48:42 Tab5 PageLoad
+0:48:49 Tab5 StartNav22 #typed
+0:48:49 Tab5 FinishNav22
+0:48:49 Tab5 PageLoad
+0:49:00 Tab5 StartNav23 #typed
+0:49:00 Tab5 FinishNav23
+0:49:00 Tab5 PageLoad
+0:49:01 Tab5 StartNav24 #typed
+0:49:01 Tab5 FinishNav24
+0:49:01 Tab5 PageLoad
+0:49:01 Tab5 StartNav25 #typed
+0:49:01 Tab5 FinishNav25
+0:49:01 Tab5 PageLoad
+0:49:07 Tab5 StartNav26 #typed
+0:49:07 Tab5 FinishNav26
+0:49:07 Tab5 PageLoad
+0:49:10 Tab5 StartNav27 #typed
+0:49:10 Tab5 FinishNav27
+0:49:10 Tab5 PageLoad
+0:49:15 Tab5 StartNav28 #typed
+0:49:15 Tab5 FinishNav28
+0:49:15 Tab5 PageLoad
+0:49:17 Tab5 StartNav29 #typed
+0:49:17 Tab5 FinishNav29
+0:49:17 Tab5 PageLoad
+0:49:34 Tab5 StartNav30 #typed
+0:49:34 Tab5 FinishNav30
+0:49:34 Tab5 PageLoad
+0:49:34 Tab5 StartNav31 #typed
+0:49:34 Tab5 FinishNav31
+0:49:34 Tab5 PageLoad
+0:49:41 Microsoft.NewBrowser_Popup
+0:49:41 Microsoft.BrowserList.AddBrowser
+0:49:41 Browser6 Insert active Tab6 at 0
+0:49:41 Tab6 StartNav32 #auto_toplevel
+0:49:41 Tab6 StartNav33 #typed
+0:49:41 Tab6 FinishNav32
+0:49:41 Tab6 PageLoad
+0:49:41 Tab6 FinishNav33
+0:49:41 Tab6 PageLoad
+0:49:42 Tab6 StartNav34 #typed
+0:49:42 Tab6 FinishNav34
+0:49:42 Tab6 PageLoad
+0:49:43 Tab6 StartNav35 #typed
+0:49:43 Tab6 FinishNav35
+0:49:43 Tab6 PageLoad
+0:49:45 Tab6 StartNav36 #typed
+0:49:45 Tab6 FinishNav36
+0:49:45 Tab6 PageLoad
+0:49:46 Tab6 StartNav37 #typed
+0:49:46 Tab6 FinishNav37
+0:49:46 Tab6 PageLoad
+0:49:47 Tab6 StartNav38 #typed
+0:49:47 Tab6 FinishNav38
+0:49:47 Tab6 PageLoad
+0:49:52 Tab3 StartNav39 #typed
+0:49:52 Tab3 FinishNav39
+0:49:52 Tab3 PageLoad
+0:49:54 Tab3 StartNav40 #typed
+0:49:54 Tab3 FinishNav40
+0:49:54 Tab3 PageLoad
+0:49:55 Tab3 StartNav41 #typed
+0:49:55 Tab3 FinishNav41
+0:49:55 Tab3 PageLoad
+0:49:58 Tab3 StartNav42 #typed
+0:49:59 Tab3 FinishNav42
+0:49:59 Tab3 PageLoad
+0:50:13 Tab3 StartNav43 #typed
+0:50:13 Tab3 FinishNav43
+0:50:13 Tab3 PageLoad
+0:50:35 Tab3 StartNav44 #typed
+0:50:35 Tab3 FinishNav44
+0:50:35 Tab3 PageLoad
+0:50:36 Tab3 StartNav45 #typed
+0:50:36 Tab3 FinishNav45
+0:50:36 Tab3 PageLoad
+0:50:37 Tab3 StartNav46 #typed
+0:50:37 Tab3 FinishNav46
+0:50:37 Tab3 PageLoad
+1:05:57 Microsoft.UnloadController.IsUnclosableApp_IsNotWebApp

@@ -121,12 +121,17 @@ public class AuthService {
         
         if (cookieValue != null && !cookieValue.isEmpty()) {
             try {
-                Users user = getUserFromRememberCookie(cookieValue);
+                byte[] decodedBytes = Base64.getDecoder().decode(cookieValue);
+                String userData = new String(decodedBytes);
                 
-                if (user != null && user.getIsActive()) {
-                    boolean success = performAutoLogin(user);
-                    if (success) {
-                        return true;
+                String[] parts = userData.split(":");
+                if (parts.length >= 2) {
+                    Integer userId = Integer.parseInt(parts[0]);
+                    String email = parts[1];
+                    Users user = usersDAO.findById(userId).orElse(null);
+                    
+                    if (user != null && user.getMail().equals(email) && user.getIsActive()) {
+                        return performAutoLogin(user);
                     }
                 }
                 cookieService.remove("rememberMe");
@@ -136,6 +141,7 @@ public class AuthService {
                 cookieService.remove("rememberMe");
             }
         }
+        
         return false;
     }
     
@@ -411,4 +417,5 @@ public class AuthService {
         return sessionService.get("isGoogleUser") != null && 
                (boolean) sessionService.get("isGoogleUser");
     }
+    
 }

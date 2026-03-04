@@ -3,7 +3,7 @@ import api from '@/services/api';
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
-    user: JSON.parse(localStorage.getItem('user')) || null,
+    user: null,
     token: localStorage.getItem('auth_token') || null,
     isLoading: false,
     error: null,
@@ -31,7 +31,11 @@ export const useAuthStore = defineStore('auth', {
         
         if (response.data.success) {
           this.user = response.data.user;
-          localStorage.setItem('user', JSON.stringify(this.user));
+          const token = btoa(JSON.stringify({
+            maUser: response.data.user.maUser,
+            exp: Date.now() + 24 * 60 * 60 * 1000
+          }));
+          localStorage.setItem('auth_token', token);
           return { success: true };
         } else {
           this.error = response.data.message;
@@ -62,7 +66,11 @@ export const useAuthStore = defineStore('auth', {
         
         if (response.data.success) {
           this.user = response.data.user;
-          localStorage.setItem('user', JSON.stringify(this.user));
+          const token = btoa(JSON.stringify({
+            maUser: response.data.user.maUser,
+            exp: Date.now() + 24 * 60 * 60 * 1000
+          }));
+          localStorage.setItem('auth_token', token);
           return { success: true };
         } else {
           this.error = response.data.message;
@@ -93,7 +101,11 @@ export const useAuthStore = defineStore('auth', {
         const response = await api.getCurrentUser();
         if (response.data.success) {
           this.user = response.data.user;
-          localStorage.setItem('user', JSON.stringify(this.user));
+          const token = btoa(JSON.stringify({
+            maUser: response.data.user.maUser,
+            exp: Date.now() + 24 * 60 * 60 * 1000
+          }));
+          localStorage.setItem('auth_token', token);
           return true;
         }
       } catch (error) {
@@ -101,7 +113,29 @@ export const useAuthStore = defineStore('auth', {
       }
       return false;
     },
-    
+
+    async loadUserFromToken() {
+      if (!this.token) return false;
+      
+      try {
+        const tokenData = JSON.parse(atob(this.token));
+        
+        if (tokenData.exp < Date.now()) {
+          this.clearAuth();
+          return false;
+        }
+
+        const response = await api.getCurrentUser();
+        if (response.data.success) {
+          this.user = response.data.user;
+          return true;
+        }
+      } catch (error) {
+        this.clearAuth();
+      }
+      return false;
+    },
+
     clearAuth() {
       this.user = null;
       this.token = null;
