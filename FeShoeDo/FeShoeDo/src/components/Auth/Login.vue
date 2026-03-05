@@ -1,5 +1,5 @@
 <template>
-  <div class="auth-page" :style="{ backgroundImage: `url(${backgroundImage})` }">
+  <div class="auth-page">
     <div class="bg-overlay"></div>
     <!-- Forgot Password Modal -->
     <div class="modal fade" id="forgotPasswordModal" tabindex="-1" aria-hidden="true">
@@ -22,7 +22,7 @@
           </div>
 
           <div class="modal-footer">
-            <button type="button" class="btn btn-primary">Xác nhận</button>
+            <button type="button" class="btn btn-primary" @click="handleForgotPassword">Xác nhận</button>
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
           </div>
 
@@ -71,7 +71,7 @@
         </ul>
 
         <!-- Hiển thị thông báo -->
-        <div v-if="message" class="alert alert-success alert-dismissible fade show mt-3">
+<div v-if="message" class="alert alert-success alert-dismissible fade show mt-3">
           <span>{{ message }}</span>
           <button type="button" class="btn-close" @click="message = ''"></button>
         </div>
@@ -84,7 +84,7 @@
         <div class="tab-content form-section" id="authTabsContent">
           <!-- LOGIN -->
           <div class="tab-pane fade show active" id="login" role="tabpanel" aria-labelledby="login-tab">
-            <form @submit.prevent>
+            <form @submit.prevent="handleLogin">
               <div class="mt-3 mb-3">
                 <label for="loginIdentifier">Tài khoản</label>
                 <input 
@@ -116,8 +116,9 @@
                  <a href="#" data-bs-toggle="modal" data-bs-target="#forgotPasswordModal">Quên mật khẩu?</a>
               </div>
               <div class="d-grid">
-                <button type="submit" class="btn btn-dark">
-                  Đăng nhập
+                <button type="submit" class="btn btn-dark" :disabled="loading">
+                  <span v-if="loading" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                  {{ loading ? 'Đang xử lý...' : 'Đăng nhập' }}
                 </button>
               </div>
               <br>
@@ -127,9 +128,10 @@
                    Hoặc
                 </span>
               </div>
-              <a href="#" class="btn btn-outline-dark d-flex align-items-center justify-content-center gap-2 mx-auto"
+              <a href="http://localhost:8080/oauth2/authorization/google" 
+                class="btn btn-outline-dark d-flex align-items-center justify-content-center gap-2 mx-auto"
                 style="width: 210px; border-radius: 50px;">
-                <img :src="googleLogo" alt="Google Logo" style="width: 20px; height: 20px;">
+                <img :src="getImageUrl('anh/logo GG.png')" alt="Google Logo" style="width: 20px; height: 20px;">
                 <span>Sign in with Google</span>
               </a>
             </form>
@@ -137,7 +139,7 @@
 
           <!-- REGISTER -->
           <div class="tab-pane fade" id="register" role="tabpanel" aria-labelledby="register-tab">
-            <form @submit.prevent>
+            <form @submit.prevent="handleRegister">
               <div class="mt-3 mb-3">
                 <label for="regMail">Email</label>
                 <input type="email" class="form-control" id="regMail" v-model="registerForm.mail" required>
@@ -164,8 +166,9 @@
               </div>
               
               <div class="d-grid">
-                <button type="submit" class="btn btn-dark">
-                  Đăng ký
+                <button type="submit" class="btn btn-dark" :disabled="loading">
+                  <span v-if="loading" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                  {{ loading ? 'Đang xử lý...' : 'Đăng ký' }}
                 </button>
               </div>
             </form>
@@ -177,8 +180,8 @@
 </template>
 
 <script>
-import googleLogoImg from '@/assets/anh/logo GG.png'
-import backgroundImg from '@/assets/anh/login2.jpg'
+import { useAuthStore } from '@/stores/auth';
+
 export default {
   name: 'Login',
   data() {
@@ -199,18 +202,276 @@ export default {
       forgotPasswordEmail: '',
       showForgotPasswordModal: false,
       showTermsModal: false,
-      message: 'Chào mừng bạn đến với ShoeDo Shop!',
+      loading: false,
+      message: '',
       error: '',
       accountLocked: false,
-      accountLockedMessage: 'Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên.'
+      accountLockedMessage: ''
     };
   },
-  computed: {
-    googleLogo() {
-      return googleLogoImg; // Dùng ảnh đã import
+
+  mounted() {
+    this.handleGoogleCallback();
+    const authStore = useAuthStore();
+    if (authStore.isAuthenticated) {
+      this.redirectByRole(authStore);
+    }
+  },
+
+  methods: {
+    getImageUrl(imagePath) {
+      return `http://localhost:8080/${imagePath}`;
     },
-    backgroundImage() {
-      return backgroundImg; // Dùng ảnh đã import
+    
+    async handleLogin() {
+      this.loading = true;
+      this.error = '';
+      this.message = '';
+      this.accountLocked = false;
+      this.accountLockedMessage = '';
+      
+      const authStore = useAuthStore();
+      
+      try {
+        const result = await authStore.login(this.loginForm);
+        
+        if (result.success) {
+          this.message = 'Đăng nhập thành công!';
+          
+          setTimeout(() => {
+            if (authStore.isCustomer) {
+              this.$router.push('/customer/index');
+            } else if (authStore.isAdmin) {
+              this.$router.push('/employee/dashboard');
+            } else if (authStore.isEmployee) {
+              this.$router.push('/employee/products');
+            } else {
+              this.$router.push('/customer/index');
+            }
+          }, 1000);
+        } else {
+          this.error = result.message || 'Đăng nhập thất bại';
+          
+          if (result.message && result.message.includes('bị khóa')) {
+            this.accountLocked = true;
+            this.accountLockedMessage = result.message;
+
+            setTimeout(() => {
+              this.accountLockedMessage += ' Vui lòng liên hệ quản trị viên qua email: admin@shoedoshop.com';
+            }, 100);
+          }
+          
+          console.error('Login failed:', result.message);
+        }
+      } catch (error) {
+        console.error('Login error:', error);
+        this.error = 'Đăng nhập thất bại. Vui lòng thử lại sau.';
+      } finally {
+        this.loading = false;
+      }
+    },
+    
+    async handleRegister() {
+      this.loading = true;
+      this.error = '';
+      this.message = '';
+
+      if (!this.registerForm.terms) {
+        this.error = 'Vui lòng đồng ý với điều khoản sử dụng';
+        this.loading = false;
+        return;
+      }
+      const authStore = useAuthStore();
+      const result = await authStore.register(this.registerForm);
+      
+      if (result.success) {
+        this.message = 'Đăng ký thành công!';
+
+        setTimeout(() => {
+          this.redirectByRole(authStore);
+        }, 1000);
+      } else {
+        this.error = result.message || 'Đăng ký thất bại';
+      }
+      
+      this.loading = false;
+    },
+    
+    redirectByRole(authStore) {
+      if (authStore.isCustomer) {
+        this.$router.push('/customer/index');
+      } else if (authStore.isEmployee) {
+        this.$router.push('/employee/dashboard');
+      } else if (authStore.isAdmin) {
+        this.$router.push('/employee/dashboard');
+      } else {
+        this.$router.push('/customer/index');
+      }
+    },
+    
+    async handleGoogleCallback() {
+      try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const googleSuccess = urlParams.get('googleSuccess');
+        const email = urlParams.get('email');
+        const name = urlParams.get('name');
+        
+        if (googleSuccess === 'true' && email) {
+           const response = await fetch('/api/oauth2/google/callback?email=' + encodeURIComponent(email) + '&name=' + encodeURIComponent(name || ''), {
+            credentials: 'include'
+          });
+          
+          const data = await response.json();
+          
+          if (data.success) {
+            if (data.requirePassword) {
+              this.showPasswordPrompt(data.email, data.name);
+            } else {
+              await this.completeGoogleLogin(data.email, data.name);
+            }
+          } else {
+            this.error = data.message || 'Đăng nhập Google thất bại';
+            if (data.message && data.message.includes('bị khóa')) {
+              this.accountLocked = true;
+              this.accountLockedMessage = data.message + ' Vui lòng liên hệ quản trị viên.';
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Google callback error:', error);
+        this.error = 'Lỗi xử lý đăng nhập Google';
+      }
+    },
+
+    showPasswordPrompt(email, name) {
+      const password = prompt(
+        `🔐 TÀI KHOẢN GOOGLE\n\n` +
+        `Email: ${email}\n` +
+        `Tên: ${name || 'Google User'}\n\n` +
+        `Vui lòng nhập mật khẩu bạn muốn đặt cho tài khoản này:`,
+        ''
+      );
+      
+      if (password && password.trim() !== '') {
+        this.completeGoogleLoginNewUser(email, name, password);
+      } else if (password !== null) {
+        alert('Vui lòng nhập mật khẩu để tiếp tục!');
+        this.showPasswordPrompt(email, name);
+      }
+    },
+
+     async completeGoogleLoginNewUser(email, name, password) {
+      this.loading = true;
+      try {
+        const response = await fetch('/api/oauth2/google-login-newuesr', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify({ email, name, password })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          console.log('Google login with password successful');
+          
+          const authStore = useAuthStore();
+          authStore.user = data.user;
+          localStorage.setItem('user', JSON.stringify(data.user));
+          
+          window.history.replaceState({}, document.title, window.location.pathname);
+          
+          this.message = 'Đăng nhập Google thành công!';
+          
+          setTimeout(() => {
+            this.$router.push('/customer/index');
+          }, 1000);
+        } else {
+          this.error = data.message || 'Đăng nhập Google thất bại';
+          console.error('Google login failed:', data.message);
+        }
+      } catch (error) {
+        console.error('Google login error:', error);
+        this.error = 'Lỗi xử lý đăng nhập Google';
+      } finally {
+        this.loading = false;
+      }
+    },
+    
+    async completeGoogleLogin(email, name) {
+      this.loading = true;
+      try {
+        const response = await fetch('/api/oauth2/google-login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify({ email, name })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          console.log('Google login successful');
+          
+          const authStore = useAuthStore();
+          authStore.user = data.user;
+          localStorage.setItem('user', JSON.stringify(data.user));
+          
+          window.history.replaceState({}, document.title, window.location.pathname);
+          
+          this.message = 'Đăng nhập Google thành công!';
+          
+          setTimeout(() => {
+            this.$router.push('/customer/index');
+          }, 1000);
+        } else {
+          this.error = data.message || 'Đăng nhập Google thất bại';
+          console.error('Google login failed:', data.message);
+        }
+      } catch (error) {
+        console.error('Google login error:', error);
+        this.error = 'Lỗi xử lý đăng nhập Google';
+      } finally {
+        this.loading = false;
+      }
+    },
+    
+
+    async handleForgotPassword() {
+      if (!this.forgotPasswordEmail) {
+        this.error = 'Vui lòng nhập email';
+        return;
+      }
+      
+      this.loading = true;
+      try {
+        const response = await fetch('/api/auth/forgot-password', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify({ email: this.forgotPasswordEmail })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          this.message = 'Mật khẩu mới đã được gửi đến email của bạn';
+          this.showForgotPasswordModal = false;
+          this.forgotPasswordEmail = '';
+        } else {
+          this.error = data.message || 'Có lỗi xảy ra';
+        }
+      } catch (error) {
+        this.error = 'Có lỗi xảy ra. Vui lòng thử lại sau';
+      } finally {
+        this.loading = false;
+      }
     }
   }
 };
@@ -224,12 +485,13 @@ export default {
   display: flex;
   justify-content: center;
   align-items: center;
+  background: url('http://localhost:8080/anh/login2.jpg') no-repeat center center fixed;
   background-size: cover;
 }
 
 .bg-overlay {
   background: rgba(255, 255, 255, 0.101);
-  min-height: 100vh;
+min-height: 100vh;
   width: 100vw;
   position: fixed;
   top: 0;
@@ -239,8 +501,8 @@ export default {
 
 .auth-wrapper {
   display: flex;
-  width: 750px; 
-  height: 550px;
+  width: 750px; /* Tăng nhẹ để chứa nội dung */
+  height: 550px; /* Tăng nhẹ để chứa nội dung */
   box-shadow: 0 0 40px rgba(0, 0, 0, 0.35);
   border-radius: 24px;
   overflow: hidden;
@@ -290,7 +552,7 @@ export default {
   width: 55%;
   padding: 25px;
   background-color: white;
-  overflow-y: auto;
+  overflow-y: auto; /* Cho phép scroll nếu nội dung dài */
 }
 
 .nav-tabs .nav-link {

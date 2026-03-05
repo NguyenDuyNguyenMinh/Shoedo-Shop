@@ -82,8 +82,6 @@ public class ProfileController {
             if (userName != null) {
             	
                 userName = userName.trim();
-                currentUser.setUserName(userName);
-                usersDAO.save(currentUser);
                 
                 if (userName.isEmpty()) {
                     return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Tên đăng nhập không được để trống"));
@@ -94,7 +92,7 @@ public class ProfileController {
 
                 Users existingUser = usersDAO.findByUserName(userName);
                 if (existingUser != null && !existingUser.getMaUser().equals(currentUser.getMaUser())) {
-                    return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Tên đăng nhập đã được sử dụng"));
+                    return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Tên đăng nhập đã được sử dụng bởi tài khoản khác"));
                 }
                 currentUser.setUserName(userName);
             }
@@ -124,9 +122,9 @@ public class ProfileController {
             }
 
             customer.setTenKH(fullname);  
-            customer.setSdt(phone);        
-            customer.setUser(currentUser);        
+            customer.setSdt(phone);            
 
+            usersDAO.save(currentUser);
             khachHangDAO.save(customer);
 
             Map<String, Object> response = new HashMap<>();

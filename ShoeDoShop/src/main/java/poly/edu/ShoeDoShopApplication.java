@@ -8,6 +8,6 @@ public class ShoeDoShopApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(ShoeDoShopApplication.class, args);
-	}
+	} 
 
 }

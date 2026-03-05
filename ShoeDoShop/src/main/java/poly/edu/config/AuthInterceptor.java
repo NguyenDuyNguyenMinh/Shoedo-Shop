@@ -17,6 +17,8 @@ public class AuthInterceptor implements HandlerInterceptor {
         
         if (uri.startsWith("/auth/") || 
             uri.startsWith("/api/auth/") ||
+            uri.startsWith("/api/nhapkho/") ||
+            uri.startsWith("/error") ||
             uri.startsWith("/api/oauth2/") ||
             uri.startsWith("/oauth2/") ||
             uri.startsWith("/images/") ||
@@ -29,7 +31,11 @@ public class AuthInterceptor implements HandlerInterceptor {
         if (req.getSession().getAttribute("user") == null) {
             boolean autoLoggedIn = authService.autoLoginFromCookie();
             if (!autoLoggedIn) {
-                res.sendRedirect("/auth/login");
+            	if (uri.startsWith("/api/")) {
+                    res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                } else {
+                    res.sendRedirect("/auth/login");
+                }
                 return false;
             }
         }
@@ -52,7 +58,8 @@ public class AuthInterceptor implements HandlerInterceptor {
                 return false;
             }
             
-            if (uri.equals("/employee/dashboard") && !authService.isAdmin()) {
+            if ((uri.equals("/employee/dashboard") || uri.startsWith("/employee/dashboard/")) 
+                    && !authService.isAdmin()) {
                 res.sendRedirect("/employee/products");
                 return false;
             }

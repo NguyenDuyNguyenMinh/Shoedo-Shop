@@ -14,14 +14,16 @@ public class SanPhamDanhMuc {
     @EmbeddedId
     private SanPhamDanhMucId id;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "MaSP", insertable = false, updatable = false)
-    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "sanPhamDanhMucs"})
+    @ManyToOne
+    // Thêm insertable = false, updatable = false vào đây
+    @JoinColumn(name = "MaSP", insertable = false, updatable = false) 
+    @JsonIgnoreProperties("sanPhamDanhMucs")
     private SanPham sanPham;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "MaDM", insertable = false, updatable = false)
-    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "sanPhamDanhMucs"})
+    @ManyToOne
+    // Thêm insertable = false, updatable = false vào đây
+    @JoinColumn(name = "MaDM", insertable = false, updatable = false) 
+    @JsonIgnoreProperties("sanPhamDanhMucs") 
     private DanhMuc danhMuc;
 
     @Embeddable
