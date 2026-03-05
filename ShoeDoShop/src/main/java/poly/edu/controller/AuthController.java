@@ -50,6 +50,13 @@ public class AuthController {
         try {
             Users user = authService.getCurrentUser();
             
+            if (user == null) {
+                boolean autoLoggedIn = authService.autoLoginFromCookie();
+                if (autoLoggedIn) {
+                    user = authService.getCurrentUser();
+                }
+            }
+            
             if (user != null) {
                 response.put("success", true);
                 
@@ -188,19 +195,35 @@ public class AuthController {
     }
     
     @GetMapping("/current-user")
-    public ResponseEntity<Map<String, Object>> getCurrentUser() {
-        Map<String, Object> response = new HashMap<>();
-        Users currentUser = authService.getCurrentUser();
+    public ResponseEntity<Map<String, Object>> getCurrentUser(HttpServletRequest request, HttpServletResponse response) {
+        Map<String, Object> responseMap = new HashMap<>();
         
-        if (currentUser == null) {
-            response.put("success", false);
-            response.put("message", "Chưa đăng nhập");
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        try {
+            Users currentUser = authService.getCurrentUser();
+
+            if (currentUser == null) {
+                boolean autoLoggedIn = authService.autoLoginFromCookie();
+                if (autoLoggedIn) {
+                    currentUser = authService.getCurrentUser();
+                }
+            }
+            
+            if (currentUser != null) {
+                responseMap.put("success", true);
+                responseMap.put("user", getUserInfo(currentUser));
+                return ResponseEntity.ok(responseMap);
+            } else {
+                responseMap.put("success", false);
+                responseMap.put("message", "Chưa đăng nhập");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseMap);
+            }
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+            responseMap.put("success", false);
+            responseMap.put("message", "Lỗi: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseMap);
         }
-        
-        response.put("success", true);
-        response.put("user", getUserInfo(currentUser));
-        return ResponseEntity.ok(response);
     }
     
     @PostMapping("/logout")

@@ -1,38 +1,3 @@
-<script setup>
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
-import logoUrl from '@/assets/Logoc.png'
-
-const router = useRouter()
-
-// Biến trạng thái để ẩn/hiện popup lịch sử tìm kiếm
-const isSearchFocused = ref(false)
-
-// Dữ liệu mẫu (Mock data) cho lịch sử tìm kiếm
-const searchHistory = ref([
-  'Giày chạy bộ nam',
-  'Sneaker trắng',
-  'Giày thể thao Nike',
-  'Adidas Ultraboost'
-])
-
-// Hàm xử lý khi click ra ngoài ô tìm kiếm
-const hideSearchHistory = () => {
-  setTimeout(() => {
-    isSearchFocused.value = false
-  }, 200)
-}
-
-// Hàm xử lý đăng xuất
-const handleLogout = () => {
-  // Thực hiện các logic đăng xuất ở đây (ví dụ: xóa token, gọi API Spring Boot...)
-  console.log('Đã đăng xuất!')
-  
-  // Chuyển hướng người dùng về trang đăng nhập hoặc trang chủ
-  router.push('/auth/login')
-}
-</script>
-
 <template>
   <nav class="navbar navbar-expand-lg bg-black py-3 sticky-top" data-bs-theme="dark">
     <div class="container-fluid px-4 px-lg-5 d-flex align-items-center justify-content-between">
@@ -112,8 +77,8 @@ const handleLogout = () => {
             </li>
             <li><hr class="dropdown-divider border-secondary"></li>
             <li>
-              <button class="dropdown-item d-flex align-items-center gap-2 text-danger" @click="handleLogout">
-                <i class="bi bi-box-arrow-right"></i> Đăng xuất
+              <button class="dropdown-item d-flex align-items-center gap-2 text-danger" @click.prevent="logout">
+                <i class="bi bi-box-arrow-right"></i> Đăng Xuất
               </button>
             </li>
           </ul>
@@ -127,6 +92,44 @@ const handleLogout = () => {
     </div>
   </nav>
 </template>
+
+<script setup>
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
+import logoUrl from '@/assets/Logoc.png'
+
+const router = useRouter()
+const authStore = useAuthStore()
+
+// Biến trạng thái để ẩn/hiện popup lịch sử tìm kiếm
+const isSearchFocused = ref(false)
+
+// Dữ liệu mẫu (Mock data) cho lịch sử tìm kiếm
+const searchHistory = ref([
+  'Giày chạy bộ nam',
+  'Sneaker trắng',
+  'Giày thể thao Nike',
+  'Adidas Ultraboost'
+])
+
+// Hàm xử lý khi click ra ngoài ô tìm kiếm
+const hideSearchHistory = () => {
+  setTimeout(() => {
+    isSearchFocused.value = false
+  }, 200)
+}
+
+// Hàm xử lý đăng xuất
+  const logout = async () => {
+  try {
+    await authStore.logout()
+    router.push('/auth/login')
+  } catch (error) {
+    console.error('Logout error:', error)
+  }
+}
+</script>
 
 <style scoped>
 /* --- DARK LUXURY THEME CSS --- */

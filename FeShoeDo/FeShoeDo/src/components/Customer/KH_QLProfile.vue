@@ -123,7 +123,7 @@
               </div>
               <div class="text-end">
                 <button v-if="address.macDinh" class="btn btn-sm btn-outline-danger me-2" disabled>
-<i class="fas fa-check"></i> Mặc định
+                  <i class="fas fa-check"></i> Mặc định
                 </button>
                 <button v-else class="btn btn-sm btn-outline-success me-2" 
                         @click="setDefaultAddress(address.maDC)">
@@ -386,7 +386,7 @@ userName: user.value.userName,
           await fetchProfile();
           closeModal();
         } else {
-error.value = response.data.message;
+          error.value = response.data.message;
         }
       } catch (err) {
         error.value = err.response?.data?.message || 'Lỗi kết nối máy chủ';

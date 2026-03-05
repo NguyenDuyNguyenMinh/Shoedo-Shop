@@ -1,6 +1,7 @@
 package poly.edu.dao;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import poly.edu.entity.SanPhamChiTiet;
@@ -11,4 +12,14 @@ public interface SanPhamChiTietDAO extends JpaRepository<SanPhamChiTiet, Integer
 	// Thêm dòng này vào trong interface
     List<SanPhamChiTiet> findBySanPham_MaSP(Integer maSP);
 
+	  @Modifying
+	  @Query("UPDATE SanPhamChiTiet sp SET sp.soLuong = sp.soLuong - :soLuong WHERE sp.maSKU = :maSKU AND sp.soLuong >= :soLuong")
+	  int truSoLuong(@Param("maSKU") Integer maSKU, @Param("soLuong") Integer soLuong);
+	    
+	  @Modifying
+	  @Query("UPDATE SanPhamChiTiet sp SET sp.soLuong = sp.soLuong + :soLuong WHERE sp.maSKU = :maSKU")
+	  int congSoLuong(@Param("maSKU") Integer maSKU, @Param("soLuong") Integer soLuong);
+	    
+	  @Query("SELECT sp.soLuong FROM SanPhamChiTiet sp WHERE sp.maSKU = :maSKU")
+	  Integer getSoLuong(@Param("maSKU") Integer maSKU);
 }

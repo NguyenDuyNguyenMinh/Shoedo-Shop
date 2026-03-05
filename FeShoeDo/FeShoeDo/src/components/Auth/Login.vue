@@ -128,7 +128,7 @@
                    Hoặc
                 </span>
               </div>
-<a href="http://localhost:8080/oauth2/authorization/google" 
+              <a href="http://localhost:8080/oauth2/authorization/google" 
                 class="btn btn-outline-dark d-flex align-items-center justify-content-center gap-2 mx-auto"
                 style="width: 210px; border-radius: 50px;">
                 <img :src="getImageUrl('anh/logo GG.png')" alt="Google Logo" style="width: 20px; height: 20px;">
@@ -201,7 +201,7 @@ export default {
       },
       forgotPasswordEmail: '',
       showForgotPasswordModal: false,
-showTermsModal: false,
+      showTermsModal: false,
       loading: false,
       message: '',
       error: '',
@@ -304,7 +304,7 @@ showTermsModal: false,
         this.$router.push('/employee/dashboard');
       } else if (authStore.isAdmin) {
         this.$router.push('/employee/dashboard');
-} else {
+      } else {
         this.$router.push('/customer/index');
       }
     },
@@ -389,7 +389,7 @@ showTermsModal: false,
             this.$router.push('/customer/index');
           }, 1000);
         } else {
-this.error = data.message || 'Đăng nhập Google thất bại';
+          this.error = data.message || 'Đăng nhập Google thất bại';
           console.error('Google login failed:', data.message);
         }
       } catch (error) {
