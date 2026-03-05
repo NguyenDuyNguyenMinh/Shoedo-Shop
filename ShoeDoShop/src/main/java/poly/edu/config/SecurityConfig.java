@@ -53,7 +53,8 @@ public class SecurityConfig {
                     "/images/**",
                     "/anh/**", 
                     "/oauth2/**",
-                    "/login/oauth2/**"
+                    "/login/oauth2/**",
+                    "/error"
                 ).permitAll()
                 .anyRequest().authenticated()
             )
