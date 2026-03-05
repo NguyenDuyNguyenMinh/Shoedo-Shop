@@ -39,9 +39,13 @@ public class HoaDon {
     @Column(name = "GhiChu", columnDefinition = "nvarchar(max)")
     private String ghiChu;
 
-    @Column(name = "NgayMua")
+    @Column(name = "NgayDat")
     @Temporal(TemporalType.TIMESTAMP)
-    private Date ngayMua;
+    private Date ngayDat;
+
+    @Column(name = "NgayNhan")
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date ngayNhan;
 
     @OneToMany(mappedBy = "hoaDon", fetch = FetchType.LAZY)
     @JsonIgnore

@@ -121,7 +121,8 @@ CREATE TABLE HoaDon (
     DiaChiJson NVARCHAR(MAX), 
     TrangThai NVARCHAR(50) CHECK (TrangThai IN (N'Đang xử lý', N'Đang giao', N'Hoàn tất', N'Đã từ chối', N'Báo lỗi', N'Hoàn hàng/trả hàng')),
     GhiChu NVARCHAR(MAX),
-    NgayMua DATETIME DEFAULT GETDATE(),
+    NgayDat DATETIME DEFAULT GETDATE(),
+    NgayNhan DATETIME DEFAULT
     CONSTRAINT FK_HoaDon_KhachHang FOREIGN KEY (MaKH) REFERENCES KhachHang(MaKH),
     CONSTRAINT FK_HoaDon_QuanTri FOREIGN KEY (MaQT) REFERENCES QuanTri(MaQT)
 );
@@ -416,56 +417,56 @@ INSERT INTO GioHang (MaKH, MaSKU, SoLuong) VALUES
 (4, 10, 2);  -- Sneaker xanh 43
 
 -- 13. Dữ liệu mẫu cho bảng Hóa Đơn
-INSERT INTO HoaDon (MaKH, MaQT, PhuongThucTT, DiaChiJson, TrangThai, GhiChu, NgayMua) VALUES
+INSERT INTO HoaDon (MaKH, MaQT, PhuongThucTT, DiaChiJson, TrangThai, GhiChu, NgayDat, NgayNhan) VALUES
 -- HD 1
 (1, 1, N'COD', 
 N'{"DiemGiao":"123 Nguyễn Huệ A, Q1","TenNN":"Nguyễn Văn A","SDT":"0901234567"}', 
-N'Đã từ chối', N'Đơn hàng đặt số lượng quá lớn nhân viên miễn cưỡng từ chối vì gọi không ghe máy', '2025-01-10'),
+N'Đã từ chối', N'Đơn hàng đặt số lượng quá lớn nhân viên miễn cưỡng từ chối vì gọi không ghe máy', '2025-01-10', NULL),
 
 -- HD 2
 (2, NULL, N'Chuyển khoản', 
 N'{"DiemGiao":"789 Cách Mạng Tháng 8Z, Tân Bình","TenNN":"Trần Thị Hi A","SDT":"0912345678"}', 
-N'Đang xử lý', NULL, '2025-01-11'),
+N'Đang xử lý', NULL, '2025-01-11', NULL),
 
 -- HD 3
 (3, 1, N'COD', 
 N'{"DiemGiao":"456 Lê Lợi A, Q1","TenNN":"Nguyễn Văn A","SDT":"0901234567"}', 
-N'Đang giao', NULL, '2025-01-12'),
+N'Đang giao', NULL, '2025-01-12', NULL),
 
 -- HD 4
 (4, 1, N'COD', 
 N'{"DiemGiao":"Quận Cam A","TenNN":"Nguyễn Văn A","SDT":"0901234567"}', 
-N'Hoàn tất', NULL, '2025-01-13'),
+N'Hoàn tất', NULL, '2025-01-13', '2025-01-15'),
 
 -- HD 5
 (1, 1, N'COD', 
 N'{"DiemGiao":"123 Nguyễn Huệ B","TenNN":"Nguyễn Văn A-B","SDT":"0901234567"}', 
-N'Đã từ chối', N'Khách hủy đơn', '2025-01-14'),
+N'Đã từ chối', N'Khách hủy đơn', '2025-01-14', NULL),
 
 -- HD 6
 (2, 1, N'Chuyển khoản', 
 N'{"DiemGiao":"789 Cách Mạng Tháng 8Y","TenNN":"Trần Thị Hi B","SDT":"0912345678"}', 
-N'Báo lỗi', N'Khách hàng không nhận được hàng', '2025-01-15'),
+N'Báo lỗi', N'Khách hàng không nhận được hàng', '2025-01-15', NULL),
 
 -- HD 7
 (3, 1, N'COD', 
 N'{"DiemGiao":"456 Lê Lợi B","TenNN":"Nguyễn Văn A-B","SDT":"0901234567"}', 
-N'Hoàn hàng/trả hàng', N'Sản phẩm không đúng mô tả', '2025-01-16'),
+N'Hoàn hàng/trả hàng', N'Sản phẩm không đúng mô tả', '2025-01-16', '2025-01-17'),
 
 -- HD 8
 (4, 1, N'COD', 
 N'{"DiemGiao":"Quận Cam B","TenNN":"Nguyễn Văn B","SDT":"0901234567"}', 
-N'Đang giao', NULL, '2025-01-17'),
+N'Đang giao', NULL, '2025-01-17', NULL),
 
 -- HD 9
 (1, NULL, N'COD', 
 N'{"DiemGiao":"123 Nguyễn Huệ C","TenNN":"Nguyễn Văn A-C","SDT":"0901234567"}', 
-N'Đang xử lý', NULL, '2025-01-18'),
+N'Đang xử lý', NULL, '2025-01-18', NULL),
 
 -- HD 10
 (2, 1, N'Chuyển khoản', 
 N'{"DiemGiao":"789 Cách Mạng Tháng 8Z","TenNN":"Trần Thị Hi A","SDT":"0912345678"}', 
-N'Hoàn tất', NULL, '2025-01-19');
+N'Hoàn tất', NULL, '2025-01-19', '2025-01-20');
 
 -- 14. Dữ liệu mẫu cho bảng Hóa Đơn Chi Tiết
 INSERT INTO HoaDonCT (MaHD, MaSKU, SoLuong, DonGia) VALUES
