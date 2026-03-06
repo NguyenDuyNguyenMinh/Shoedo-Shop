@@ -77,13 +77,13 @@ const routes = [
     path: '/employee/products',
     name: 'ProductManagement',
     component: () => import('@/components/employee/NV_QLSP.vue'),
-    meta: { requiresAuth: true, roles: 'EMPLOYEE' }
+    meta: { requiresAuth: true, role: 'EMPLOYEE' }
   },
   {
     path: '/employee/orders',
     name: 'OrderManagement',
-    component: () => import('@/components/employee/NV_QLDonHang.vue'),
-    meta: { requiresAuth: true, roles: 'EMPLOYEE' }
+    component: () => import('@/components/employee/NV_QLHoaDon.vue'),
+    meta: { requiresAuth: true, role: 'EMPLOYEE' }
   },
   {
     path: '/employee/users',

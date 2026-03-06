@@ -31,11 +31,7 @@ public class AuthInterceptor implements HandlerInterceptor {
         if (req.getSession().getAttribute("user") == null) {
             boolean autoLoggedIn = authService.autoLoginFromCookie();
             if (!autoLoggedIn) {
-            	if (uri.startsWith("/api/")) {
-                    res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                } else {
-                    res.sendRedirect("/auth/login");
-                }
+                res.sendRedirect("/auth/login");
                 return false;
             }
         }

@@ -20,4 +20,5 @@ public interface HoaDonDAO extends JpaRepository<HoaDon, Integer> {
     @Modifying
     @Query("UPDATE HoaDon h SET h.trangThai = :trangThaiMoi WHERE h.maHD = :maHD")
     void updateTrangThai(@Param("maHD") Integer maHD, @Param("trangThaiMoi") String trangThaiMoi);
+    
 }

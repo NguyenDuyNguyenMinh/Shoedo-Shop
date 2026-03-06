@@ -9,5 +9,5 @@ import java.util.List;
 import java.util.Optional;
 
 public interface GioHangDAO extends JpaRepository<GioHang, Integer> {
-
+	List<GioHang> findByKhachHang_MaKH(Integer maKH);
 }

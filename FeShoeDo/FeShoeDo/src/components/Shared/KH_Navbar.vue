@@ -2,10 +2,12 @@
   <nav class="navbar navbar-expand-lg bg-black py-3 sticky-top" data-bs-theme="dark">
     <div class="container-fluid px-4 px-lg-5 d-flex align-items-center justify-content-between">
       
+      <!-- Logo -->
       <router-link to="/customer/index" class="navbar-brand logo-box d-flex align-items-center justify-content-center">
         <img :src="logoUrl" alt="Shoedo" class="logo-img">
       </router-link>
 
+      <!-- Menu chính -->
       <div class="collapse navbar-collapse flex-grow-0 mx-auto d-none d-lg-block" id="navbarNav">
         <ul class="navbar-nav gap-5"> 
           <li class="nav-item">
@@ -22,6 +24,7 @@
 
       <div class="d-flex align-items-center gap-3 right-actions">
         
+        <!-- Search -->
         <div class="search-wrapper d-none d-md-block position-relative">
           <div class="input-group">
             <input 
@@ -51,36 +54,69 @@
           </div>
         </div>
 
+        <!-- Giỏ hàng -->
         <router-link to="/customer/cart" class="btn btn-icon position-relative text-white">
           <i class="bi bi-cart3 fs-5"></i>
-          <span class="position-absolute badge rounded-pill bg-danger cart-badge">
-            3
+          <span v-if="isAuthenticated && cartCount > 0" class="position-absolute badge rounded-pill bg-danger cart-badge">
+            {{ cartCount }}
           </span>
         </router-link>
 
-        <div class="dropdown">
-          <button class="user-box d-flex align-items-center gap-2 px-3 py-2 rounded-0 cursor-pointer text-white bg-transparent" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+        <!-- Account Dropdown -->
+        <div class="dropdown" ref="dropdown">
+          <button
+            class="user-box d-flex align-items-center gap-2 px-3 py-2 rounded-0 cursor-pointer text-white bg-transparent"
+            @click.prevent="toggleDropdown"
+            type="button"
+          >
             <i class="bi bi-person fs-5"></i>
             <span class="fw-light">Tài Khoản</span>
             <i class="bi bi-chevron-down" style="font-size: 0.7rem;"></i>
           </button>
-          <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end shadow border-white mt-2">
-            <li>
-              <router-link class="dropdown-item d-flex align-items-center gap-2" to="/customer/profile">
-                <i class="bi bi-person-gear"></i> Quản lý tài khoản
-              </router-link>
-            </li>
-            <li>
-              <router-link class="dropdown-item d-flex align-items-center gap-2" to="/customer/orders">
-                <i class="bi bi-box-seam"></i> Đơn hàng của tôi
-              </router-link>
-            </li>
-            <li><hr class="dropdown-divider border-secondary"></li>
-            <li>
-              <button class="dropdown-item d-flex align-items-center gap-2 text-danger" @click.prevent="logout">
-                <i class="bi bi-box-arrow-right"></i> Đăng Xuất
-              </button>
-            </li>
+
+          <ul
+            class="dropdown-menu dropdown-menu-dark dropdown-menu-end shadow mt-2"
+            :class="{ show: showDropdown }"
+            v-show="showDropdown"
+          >
+            <template v-if="!isAuthenticated">
+              <li>
+                <router-link class="dropdown-item d-flex align-items-center gap-2" to="/auth/login">
+                  <i class="bi bi-box-arrow-in-right"></i> Đăng nhập
+                </router-link>
+              </li>
+              <li>
+                <router-link class="dropdown-item d-flex align-items-center gap-2" to="/auth/login#register">
+                  <i class="bi bi-person-plus"></i> Đăng ký
+                </router-link>
+              </li>
+            </template>
+
+            <template v-else>
+              <li>
+                <span class="dropdown-item-text">
+                  Xin chào,
+                  <span class="fw-bold" id="userLastName">{{ lastName }}</span>
+                </span>
+              </li>
+              <li><hr class="dropdown-divider border-secondary"></li>
+              <li>
+                <router-link class="dropdown-item d-flex align-items-center gap-2" to="/customer/profile">
+                  <i class="bi bi-person-gear"></i> Quản lý tài khoản
+                </router-link>
+              </li>
+              <li>
+                <router-link class="dropdown-item d-flex align-items-center gap-2" to="/customer/orders">
+                  <i class="bi bi-box-seam"></i> Đơn hàng của tôi
+                </router-link>
+              </li>
+              <li><hr class="dropdown-divider border-secondary"></li>
+              <li>
+                <a class="dropdown-item d-flex align-items-center gap-2 text-danger" href="#" @click.prevent="logout">
+                  <i class="bi bi-box-arrow-right"></i> Đăng Xuất
+                </a>
+              </li>
+            </template>
           </ul>
         </div>
 
@@ -94,18 +130,49 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import axios from 'axios'
 import logoUrl from '@/assets/Logoc.png'
 
 const router = useRouter()
+const route = useRoute()
 const authStore = useAuthStore()
 
-// Biến trạng thái để ẩn/hiện popup lịch sử tìm kiếm
 const isSearchFocused = ref(false)
+const cartCount = ref(0)
+const showDropdown = ref(false)
+const dropdown = ref(null)
 
-// Dữ liệu mẫu (Mock data) cho lịch sử tìm kiếm
+const isAuthenticated = computed(() => authStore.isAuthenticated)
+const lastName = computed(() => {
+  const name = authStore.user?.name || ''
+  if (!name || name.trim() === '') return 'User'
+  const names = name.trim().split(/\s+/)
+  return names[names.length - 1]
+})
+
+const fetchCartCount = async () => {
+  if (!isAuthenticated.value) {
+    cartCount.value = 0
+    return
+  }
+  
+  try {
+    const response = await axios.get('/api/auth/cart-count', {
+      withCredentials: true
+    })
+    if (response.data.success) {
+      cartCount.value = response.data.count || 0
+    }
+  } catch (error) {
+    console.error('Lỗi lấy số lượng giỏ hàng:', error)
+    cartCount.value = 0
+  }
+}
+
+
 const searchHistory = ref([
   'Giày chạy bộ nam',
   'Sneaker trắng',
@@ -113,32 +180,58 @@ const searchHistory = ref([
   'Adidas Ultraboost'
 ])
 
-// Hàm xử lý khi click ra ngoài ô tìm kiếm
 const hideSearchHistory = () => {
   setTimeout(() => {
     isSearchFocused.value = false
   }, 200)
 }
 
-// Hàm xử lý đăng xuất
-  const logout = async () => {
+const toggleDropdown = async (e) => {
+  e.preventDefault()
+  showDropdown.value = !showDropdown.value
+}
+
+const logout = async () => {
   try {
     await authStore.logout()
+    cartCount.value = 0
+    showDropdown.value = false
     router.push('/auth/login')
   } catch (error) {
     console.error('Logout error:', error)
   }
 }
+const handleClickOutside = (event) => {
+  if (dropdown.value && !dropdown.value.contains(event.target)) {
+    showDropdown.value = false
+  }
+}
+
+watch(isAuthenticated, (newVal) => {
+  if (newVal) {
+    fetchCartCount()
+  } else {
+    cartCount.value = 0
+  }
+})
+
+onMounted(() => {
+  if (isAuthenticated.value) {
+    fetchCartCount()
+  }
+  document.addEventListener('click', handleClickOutside)
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener('click', handleClickOutside)
+})
 </script>
 
 <style scoped>
-/* --- DARK LUXURY THEME CSS --- */
-
 .bg-black {
   background-color: #000000 !important;
 }
 
-/* 1. Logo Box */
 .logo-box {
   width: 120px;  
   height: 48px; 
@@ -159,7 +252,6 @@ const hideSearchHistory = () => {
   border-color: #fff;
 }
 
-/* 2. Navigation Links */
 .nav-link {
   font-size: 0.9rem;
   letter-spacing: 1.5px; 
@@ -188,7 +280,6 @@ const hideSearchHistory = () => {
   width: 100%;
 }
 
-/* 3. Search Bar Container */
 .search-wrapper {
   width: 320px;
   z-index: 100;
@@ -261,6 +352,7 @@ input:focus {
   text-decoration: underline;
 }
 
+
 /* 4. Cart Icon Box */
 .btn-icon {
   padding: 0 14px;
@@ -311,6 +403,11 @@ input:focus {
   font-weight: 700 !important;
 }
 
+.dropdown-menu-dark {
+  background-color: #000000;
+  border-radius: 8px;
+}
+
 /* 6. User Dropdown Menu */
 .dropdown-menu-dark {
   background-color: #000000;
@@ -328,7 +425,6 @@ input:focus {
   background-color: #222222;
 }
 
-/* Hiệu ứng rê chuột riêng cho nút Đăng xuất */
 .dropdown-menu-dark .dropdown-item.text-danger:hover {
   background-color: #2b0000;
   color: #ff6b6b !important;
@@ -349,7 +445,6 @@ input:focus {
   border-color: #ffffff;
 }
 
-/* Responsive */
 @media (max-width: 991px) {
   .search-wrapper {
     display: none;

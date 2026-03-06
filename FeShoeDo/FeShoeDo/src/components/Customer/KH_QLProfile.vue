@@ -82,8 +82,7 @@
                 </div>
                 <div class="mb-3">
                   <label class="form-label fw-bold">Mật khẩu mới</label>
-                  <input type="password" class="form-control" v-model="password.newPassword" required
-                         minlength="6">
+                  <input type="password" class="form-control" v-model="password.newPassword" required>
                 </div>
                 <div class="mb-3">
                   <label class="form-label fw-bold">Xác nhận mật khẩu mới</label>
@@ -199,283 +198,196 @@
 </template>
 
 <script>
-import { ref, onMounted } from 'vue';
-import api from '@/services/api';
-import KH_Navbar from '@/components/shared/KH_Navbar.vue';
-import Footer from '@/components/shared/Footer.vue';
+import { ref, onMounted } from 'vue'
+import axios from 'axios'
+import KH_Navbar from '@/components/shared/KH_Navbar.vue'
+import Footer from '@/components/shared/Footer.vue'
 
 export default {
   name: 'QLProfile',
-  components: {
-    KH_Navbar,
-    Footer
-  },
+  components: { KH_Navbar, Footer },
   setup() {
-    const user = ref({
-      maUser: null,
-      userName: '',
-      mail: '',
-      createAt: ''
-    });
+    const user = ref({ userName: '', mail: '', createAt: '' })
+    const customer = ref({ tenKH: '', sdt: '' })
+    const addresses = ref([])
+    const password = ref({ currentPassword: '', newPassword: '', confirmPassword: '' })
     
-    const customer = ref({
-      maKH: null,
-      tenKH: '',
-      sdt: ''
-    });
-    
-    const addresses = ref([]);
-    const password = ref({
-      currentPassword: '',
-      newPassword: '',
-      confirmPassword: ''
-    });
-    
-    const profileLoading = ref(false);
-    const passwordLoading = ref(false);
-    const addressLoading = ref(false);
-    const message = ref('');
-    const error = ref('');
-    
-    const showAddModal = ref(false);
-    const editingAddress = ref(null);
-    const addressForm = ref({
-      maDC: null,
-      tenNN: '',
-      sdt: '',
-      diemGiao: '',
-      macDinh: false
-    });
+    const loading = ref({ profile: false, password: false, address: false })
+    const message = ref('')
+    const error = ref('')
+    const showAddModal = ref(false)
+    const editingAddress = ref(null)
+    const addressForm = ref({ maDC: null, tenNN: '', sdt: '', diemGiao: '', macDinh: false })
 
     const fetchProfile = async () => {
       try {
-        const response = await api.getProfile();
-        if (response.data.success) {
-          user.value = response.data.user;
-          customer.value = response.data.customer;
-          addresses.value = response.data.addresses || [];
-
-          addresses.value.sort((a, b) => {
-            if (a.macDinh && !b.macDinh) return -1;
-            if (!a.macDinh && b.macDinh) return 1;
-            return 0;
-          });
+        const { data } = await axios.get('/api/customer/profile')
+        if (data.success) {
+          user.value = data.user
+          customer.value = data.customer
+          addresses.value = (data.addresses || []).sort((a, b) => 
+            b.macDinh - a.macDinh
+          )
         }
       } catch (err) {
-        error.value = 'Không thể tải thông tin hồ sơ';
-        console.error('Error fetching profile:', err);
+        error.value = 'Không thể tải thông tin'
       }
-    };
+    }
 
     const updateProfile = async () => {
-      user.value.userName = user.value.userName.trim();
-      customer.value.tenKH = customer.value.tenKH.trim();
-      customer.value.sdt = customer.value.sdt.trim();
-
-      if (!/^[0-9]{9,11}$/.test(customer.value.sdt)) {
-        error.value = 'Số điện thoại không hợp lệ (9-11 số)';
-        return;
-      }
-
-      if (!user.value.userName || user.value.userName.length < 3) {
-        error.value = 'Tên đăng nhập phải có ít nhất 3 ký tự';
-        return;
-      }
-
-      if (!customer.value.tenKH) {
-        error.value = 'Họ và tên không được để trống';
-        return;
-      }
-
-      profileLoading.value = true;
-      error.value = '';
-      message.value = '';
+      if (!validateProfile()) return
+      
+      loading.value.profile = true
+      clearMessages()
       
       try {
-        const response = await api.updateProfile({
-userName: user.value.userName,
-          fullname: customer.value.tenKH,
-          phone: customer.value.sdt
-        });
+        const { data } = await axios.put('/api/customer/profile', {
+          userName: user.value.userName.trim(),
+          fullname: customer.value.tenKH.trim(),
+          phone: customer.value.sdt.trim()
+        })
         
-        if (response.data.success) {
-          message.value = response.data.message;
-
-          if (response.data.user) {
-            user.value.userName = response.data.user.userName;
+        if (data.success) {
+          message.value = data.message
+          if (data.user) user.value.userName = data.user.userName
+          if (data.customer) {
+            customer.value.tenKH = data.customer.tenKH
+            customer.value.sdt = data.customer.sdt
           }
-          if (response.data.customer) {
-            customer.value.tenKH = response.data.customer.tenKH;
-            customer.value.sdt = response.data.customer.sdt;
-          }
-        } else {
-          error.value = response.data.message;
-        }
+        } else error.value = data.message
       } catch (err) {
-        error.value = err.response?.data?.message || 'Lỗi kết nối máy chủ';
+        error.value = err.response?.data?.message || 'Lỗi kết nối'
       } finally {
-        profileLoading.value = false;
+        loading.value.profile = false
       }
-    };
+    }
 
     const changePassword = async () => {
-      if (password.value.newPassword !== password.value.confirmPassword) {
-        error.value = 'Mật khẩu mới và xác nhận mật khẩu không khớp';
-        return;
-      }
+      if (!validatePassword()) return
       
-      if (password.value.newPassword.length < 6) {
-        error.value = 'Mật khẩu mới phải có ít nhất 6 ký tự';
-        return;
-      }
-      
-      if (password.value.currentPassword === password.value.newPassword) {
-        error.value = 'Mật khẩu mới không được trùng với mật khẩu hiện tại';
-        return;
-      }
-
-      passwordLoading.value = true;
-      error.value = '';
-      message.value = '';
+      loading.value.password = true
+      clearMessages()
       
       try {
-        const response = await api.changePassword({
-          currentPassword: password.value.currentPassword,
-          newPassword: password.value.newPassword,
-          confirmPassword: password.value.confirmPassword
-        });
+        const { data } = await axios.put('/api/customer/change-password', password.value)
         
-        if (response.data.success) {
-          message.value = response.data.message;
-          password.value = { currentPassword: '', newPassword: '', confirmPassword: '' };
-        } else {
-          error.value = response.data.message;
-        }
+        if (data.success) {
+          message.value = data.message
+          password.value = { currentPassword: '', newPassword: '', confirmPassword: '' }
+        } else error.value = data.message
       } catch (err) {
-        error.value = err.response?.data?.message || 'Mật khẩu hiện tại không đúng';
+        error.value = err.response?.data?.message || 'Mật khẩu hiện tại không đúng'
       } finally {
-        passwordLoading.value = false;
+        loading.value.password = false
       }
-    };
+    }
 
     const saveAddress = async () => {
-
-      addressForm.value.tenNN = addressForm.value.tenNN.trim();
-      addressForm.value.sdt = addressForm.value.sdt.trim();
-      addressForm.value.diemGiao = addressForm.value.diemGiao.trim();
-
-      if (!/^[0-9]{9,11}$/.test(addressForm.value.sdt)) {
-        error.value = 'Số điện thoại không hợp lệ (9-11 số)';
-        return;
-      }
-
-      addressLoading.value = true;
-      error.value = '';
-      message.value = '';
-
-      try {
-        let response;
-        if (editingAddress.value) {
-          response = await api.updateAddress(addressForm.value.maDC, addressForm.value);
-        } else {
-          response = await api.addAddress(addressForm.value);
-        }
-        
-        if (response.data.success) {
-          message.value = response.data.message;
-          await fetchProfile();
-          closeModal();
-        } else {
-          error.value = response.data.message;
-        }
-      } catch (err) {
-        error.value = err.response?.data?.message || 'Lỗi kết nối máy chủ';
-      } finally {
-        addressLoading.value = false;
-      }
-    };
-
-    const deleteAddress = async (maDC) => {
-      if (!confirm('Bạn có chắc muốn xóa địa chỉ này?')) return;
+      if (!validateAddress()) return
+      
+      loading.value.address = true
+      clearMessages()
       
       try {
-        const response = await api.deleteAddress(maDC);
-        if (response.data.success) {
-          message.value = response.data.message;
-          await fetchProfile();
-        } else {
-          error.value = response.data.message;
-        }
+        const url = editingAddress.value 
+          ? `/api/customer/address/${addressForm.value.maDC}`
+          : '/api/customer/address'
+        
+        const method = editingAddress.value ? 'put' : 'post'
+        const { data } = await axios[method](url, addressForm.value)
+        
+        if (data.success) {
+          message.value = data.message
+          await fetchProfile()
+          closeModal()
+        } else error.value = data.message
       } catch (err) {
-        error.value = err.response?.data?.message || 'Lỗi kết nối máy chủ';
+        error.value = err.response?.data?.message || 'Lỗi kết nối'
+      } finally {
+        loading.value.address = false
       }
-    };
+    }
+
+    const deleteAddress = async (maDC) => {
+      if (!confirm('Bạn có chắc muốn xóa địa chỉ này?')) return
+      
+      try {
+        const { data } = await axios.delete(`/api/customer/address/${maDC}`)
+        if (data.success) {
+          message.value = data.message
+          await fetchProfile()
+        } else error.value = data.message
+      } catch (err) {
+        error.value = err.response?.data?.message || 'Lỗi kết nối'
+      }
+    }
 
     const setDefaultAddress = async (maDC) => {
       try {
-        const response = await api.setDefaultAddress(maDC);
-        if (response.data.success) {
-          message.value = response.data.message;
-          await fetchProfile();
-        } else {
-          error.value = response.data.message;
-        }
+        const { data } = await axios.post(`/api/customer/address/${maDC}/set-default`)
+        if (data.success) {
+          message.value = data.message
+          await fetchProfile()
+        } else error.value = data.message
       } catch (err) {
-        error.value = err.response?.data?.message || 'Lỗi kết nối máy chủ';
+        error.value = err.response?.data?.message || 'Lỗi kết nối'
       }
-    };
+    }
 
+    // Helper functions
+    const validateProfile = () => {
+      const { userName, tenKH, sdt } = { 
+        userName: user.value.userName.trim(), 
+        tenKH: customer.value.tenKH.trim(), 
+        sdt: customer.value.sdt.trim() 
+      }
+      
+      if (!/^\d{9,11}$/.test(sdt)) return setError('Số điện thoại không hợp lệ')
+      if (userName.length < 3) return setError('Tên đăng nhập phải có ít nhất 3 ký tự')
+      if (!tenKH) return setError('Họ và tên không được để trống')
+      return true
+    }
+
+    const validatePassword = () => {
+      if (password.value.newPassword !== password.value.confirmPassword) 
+        return setError('Mật khẩu mới không khớp')
+      if (password.value.currentPassword === password.value.newPassword) 
+        return setError('Mật khẩu mới không được trùng với mật khẩu hiện tại')
+      return true
+    }
+
+    const validateAddress = () => {
+      const { tenNN, sdt } = addressForm.value
+      if (!tenNN.trim()) return setError('Vui lòng nhập tên người nhận')
+      if (!/^\d{9,11}$/.test(sdt.trim())) return setError('Số điện thoại không hợp lệ')
+      return true
+    }
+
+    const setError = (msg) => { error.value = msg; return false }
+    const clearMessages = () => { message.value = ''; error.value = '' }
+    
     const editAddress = (address) => {
-      editingAddress.value = address;
-      addressForm.value = {
-        maDC: address.maDC,
-        tenNN: address.tenNN,
-        sdt: address.sdt,
-        diemGiao: address.diemGiao,
-        macDinh: address.macDinh
-      };
-      showAddModal.value = true;
-    };
+      editingAddress.value = address
+      addressForm.value = { ...address }
+      showAddModal.value = true
+    }
 
     const closeModal = () => {
-      showAddModal.value = false;
-      editingAddress.value = null;
-      addressForm.value = {
-        maDC: null,
-        tenNN: '',
-        sdt: '',
-        diemGiao: '',
-        macDinh: false
-      };
-    };
+      showAddModal.value = false
+      editingAddress.value = null
+      addressForm.value = { maDC: null, tenNN: '', sdt: '', diemGiao: '', macDinh: false }
+    }
 
-    onMounted(() => {
-      fetchProfile();
-    });
+    onMounted(fetchProfile)
 
     return {
-      user,
-      customer,
-      addresses,
-      password,
-      profileLoading,
-      passwordLoading,
-      addressLoading,
-      message,
-      error,
-      showAddModal,
-      editingAddress,
-      addressForm,
-      updateProfile,
-      changePassword,
-      saveAddress,
-      deleteAddress,
-      setDefaultAddress,
-      editAddress,
-      closeModal
-    };
+      user, customer, addresses, password,
+      loading, message, error, showAddModal, editingAddress, addressForm,
+      updateProfile, changePassword, saveAddress, deleteAddress,
+      setDefaultAddress, editAddress, closeModal
+    }
   }
-};
+}
 </script>
 
 <style scoped>
