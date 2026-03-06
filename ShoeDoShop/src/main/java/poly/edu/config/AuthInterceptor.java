@@ -17,8 +17,6 @@ public class AuthInterceptor implements HandlerInterceptor {
         
         if (uri.startsWith("/auth/") || 
             uri.startsWith("/api/auth/") ||
-            uri.startsWith("/api/nhapkho/") ||
-            uri.startsWith("/error") ||
             uri.startsWith("/api/oauth2/") ||
             uri.startsWith("/oauth2/") ||
             uri.startsWith("/images/") ||
