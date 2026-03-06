@@ -1,16 +1,18 @@
 package poly.edu.dto;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
+
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class DiaChiJsonDTO {
+
+    @JsonProperty("TenNN")
     private String tenNN;
+
+    @JsonProperty("SDT")
     private String sdt;
+
+    @JsonProperty("DiemGiao")
     private String diemGiao;
 }

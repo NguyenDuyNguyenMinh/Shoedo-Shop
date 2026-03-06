@@ -13,245 +13,259 @@ import poly.edu.entity.*;
 
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
 public class AuthService {
 
-    @Autowired UsersDAO usersDAO;
-    @Autowired QuanTriDAO quanTriDAO;
-    @Autowired KhachHangDAO khachHangDAO;
-    @Autowired HttpSession session;
-    @Autowired CookieService cookieService;
-    @Autowired SessionService sessionService;
-    @Autowired
-    private EmailService emailService;
+    @Autowired private UsersDAO usersDAO;
+    @Autowired private QuanTriDAO quanTriDAO;
+    @Autowired private KhachHangDAO khachHangDAO;
+    @Autowired private SessionService sessionService;
+    @Autowired private CookieService cookieService;
+    @Autowired private EmailService emailService;
     @Autowired private PasswordEncoder passwordEncoder;
-
-    public String loginWithIdentifier(String identifier, String pass, boolean remember) {
-        Users user = null;
+    @Autowired private GioHangDAO gioHangDAO;
+    // ==================== LOGIN ====================
+    public Map<String, Object> login(Map<String, String> request) {
+        String identifier = request.get("identifier");
+        String pass = request.get("pass");
+        boolean remember = Boolean.parseBoolean(request.get("remember"));
         
-        if (identifier.contains("@")) {
-            user = usersDAO.findByMail(identifier);
-        } else {
-            user = usersDAO.findByUserName(identifier);
-        }
+        Users user = identifier.contains("@") ? 
+            usersDAO.findByMail(identifier) : 
+            usersDAO.findByUserName(identifier);
+        
+        if (user == null) return error("Sai tài khoản hoặc mật khẩu");
+        if (!user.getIsActive()) return error("Tài khoản đã bị khóa");
+        if (!passwordEncoder.matches(pass, user.getPassWord())) return error("Sai tài khoản hoặc mật khẩu");
+        
+        return success(doLogin(user, remember));
+    }
 
+    public Map<String, Object> autoLogin() {
+        Users user = getCurrentUser();
         if (user == null) {
-            return "Sai tài khoản hoặc mật khẩu";
+            autoLoginFromCookie();
+            user = getCurrentUser();
         }
-
-        if (user.getIsActive() == null || !user.getIsActive()) {
-            return "Tài khoản đã bị khóa. Vui lòng liên hệ quản trị viên";
-        }
-        
-        if (!passwordEncoder.matches(pass, user.getPassWord())) {
-            return "Sai tài khoản hoặc mật khẩu";
-        }
-
-        QuanTri qt = quanTriDAO.findByUser_MaUser(user.getMaUser());
-        KhachHang kh = khachHangDAO.findByUser_MaUser(user.getMaUser());
-
-        if (qt != null) {
-            String role = qt.getRole() ? "ADMIN" : "EMPLOYEE";
-            sessionService.set("userRole", role);
-            sessionService.set("userName", qt.getTenQT());
-        } else if (kh != null) {
-            sessionService.set("userRole", "CUSTOMER");
-            sessionService.set("userName", kh.getTenKH());
-        } else {
-            return "Tài khoản chưa được phân quyền";
-        }
-        
-        sessionService.set("user", user);
-        sessionService.set("userMail", user.getMail());
-        sessionService.set("userName", user.getUserName());
-
-        if (remember) {            
-        	saveRememberMeCookie(user);
-        } else {           
-        	cookieService.remove("rememberMe");
-        }
-
-        return "OK";
+        return user != null ? success(getUserInfo(user)) : error("Không thể tự động đăng nhập");
     }
 
-    private void saveRememberMeCookie(Users user) {
-        try {            
-            String userData = user.getMaUser() + ":" + user.getMail() + ":" + System.currentTimeMillis();
-            String encodedData = Base64.getEncoder().encodeToString(userData.getBytes());
+    public Map<String, Object> checkSession() {
+        Users user = getCurrentUser();
+        if (user == null) autoLoginFromCookie();
+        user = getCurrentUser();
+        return user != null ? success(getUserInfo(user)) : error("No valid session");
+    }
+
+    public Map<String, Object> getCurrentUserInfo() {
+        Users user = getCurrentUser();
+        if (user == null) autoLoginFromCookie();
+        user = getCurrentUser();
+        if (user != null) {
+            Map<String, Object> userInfo = getUserInfo(user);
             
-            cookieService.add("rememberMe", encodedData, 24 * 7);
-        } catch (Exception e) {
-            e.printStackTrace();
+            Integer cartCount = getCartCount(user);
+            userInfo.put("cartCount", cartCount);
+            
+            return success(userInfo);
         }
+        return user != null ? success(getUserInfo(user)) : error("Chưa đăng nhập");
     }
     
-    
-    private Users getUserFromRememberCookie(String cookieValue) {
-        try {
-            
-            byte[] decodedBytes = Base64.getDecoder().decode(cookieValue);
-            String userData = new String(decodedBytes);
-            
-            String[] parts = userData.split(":");
-            if (parts.length >= 2) {
-                Integer userId = Integer.parseInt(parts[0]);
-                String email = parts[1];
-
-                Users user = usersDAO.findById(userId).orElse(null);
-
-                if (user != null && user.getMail().equals(email) && user.getIsActive()) {
-                    return user;
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return null;
+    public Integer getCartCount(Users user) {
+        if (user == null) return 0;
+        
+        KhachHang khachHang = khachHangDAO.findByUser_MaUser(user.getMaUser());
+        if (khachHang == null) return 0;
+        
+        List<GioHang> cartItems = gioHangDAO.findByKhachHang_MaKH(khachHang.getMaKH());
+        
+        return cartItems.size();
     }
     
-    public boolean autoLoginFromCookie() {
-        if (sessionService.get("user") != null) {
-            return true;
-        }
-        
-        String cookieValue = cookieService.getValue("rememberMe");
-        
-        if (cookieValue != null && !cookieValue.isEmpty()) {
-            try {
-                byte[] decodedBytes = Base64.getDecoder().decode(cookieValue);
-                String userData = new String(decodedBytes);
-                
-                String[] parts = userData.split(":");
-                if (parts.length >= 2) {
-                    Integer userId = Integer.parseInt(parts[0]);
-                    String email = parts[1];
-                    Users user = usersDAO.findById(userId).orElse(null);
-                    
-                    if (user != null && user.getMail().equals(email) && user.getIsActive()) {
-                        return performAutoLogin(user);
-                    }
-                }
-                cookieService.remove("rememberMe");
-                
-            } catch (Exception e) {
-                e.printStackTrace();
-                cookieService.remove("rememberMe");
-            }
-        }
-        
-        return false;
-    }
-    
-    private boolean performAutoLogin(Users user) {
-        try {
-            if (user.getIsActive() == null || !user.getIsActive()) {
-                return false;
-            }
-            
-            QuanTri qt = quanTriDAO.findByUser_MaUser(user.getMaUser());
-            KhachHang kh = khachHangDAO.findByUser_MaUser(user.getMaUser());
+    // ==================== REGISTER ====================
+    public Map<String, Object> register(Map<String, String> request) {
+        String mail = request.get("mail");
+        String pass = request.get("pass");
+        String fullname = request.get("fullname");
+        String phone = request.get("phone");
+        boolean remember = Boolean.parseBoolean(request.get("remember"));
 
-            if (qt != null) {
-                String role = qt.getRole() ? "ADMIN" : "EMPLOYEE";
-                sessionService.set("userRole", role);
-                sessionService.set("userName", qt.getTenQT());
-            } else if (kh != null) {
-                sessionService.set("userRole", "CUSTOMER");
-                sessionService.set("userName", kh.getTenKH());
-            } else {
-                return false;
-            }
-            
-            sessionService.set("user", user);
-            sessionService.set("userMail", user.getMail());
+        if (usersDAO.findByMail(mail) != null) return error("Email đã tồn tại!");
 
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
-    }
-
-    public String register(Users user, KhachHang khachHang) {
-        if (usersDAO.findByMail(user.getMail()) != null) {
-            return "Email đã tồn tại";
-        }
-
+        Users user = new Users();
+        user.setMail(mail);
+        user.setUserName(mail.split("@")[0]);
+        user.setPassWord(passwordEncoder.encode(pass));
         user.setIsActive(true);
         user.setCreateAt(new Date());
-        user.setPassWord(passwordEncoder.encode(user.getPassWord()));
-        
-        Users savedUser = usersDAO.save(user);
+        user = usersDAO.save(user);
 
-        khachHang.setUser(savedUser);
-        khachHangDAO.save(khachHang);
-        
-        return "OK";
+        KhachHang kh = new KhachHang();
+        kh.setTenKH(fullname);
+        kh.setSdt(phone);
+        kh.setUser(user);
+        khachHangDAO.save(kh);
+
+        return success(doLogin(user, remember));
     }
 
-    public void logout() {
-    	
-    	cookieService.remove("rememberMe");
+    // ==================== GOOGLE ====================
+    public Map<String, Object> handleGoogleCallback(String email, String name) {
+        Users user = usersDAO.findByMail(email);
+        
+        if (user == null) {
+            return Map.of("success", true, "requirePassword", true, "email", email, "name", name != null ? name : "Google User");
+        }
+        
+        if (!user.getIsActive()) return error("Tài khoản đã bị khóa");
+        
+        return success(doLogin(user, false));
+    }
+
+    public Map<String, Object> googleLogin(Map<String, String> request) {
+        String email = request.get("email");
+        String name = request.get("name");
+        
+        Users user = usersDAO.findByMail(email);
+        if (user == null || !user.getIsActive()) return error("Đăng nhập thất bại");
+        
+        return success(doLogin(user, false));
+    }
+
+    public Map<String, Object> googleLoginNew(Map<String, String> request) {
+        String email = request.get("email");
+        String name = request.get("name");
+        String password = request.get("password");
+        
+        Users user = usersDAO.findByMail(email);
+        
+        if (user == null) {
+            user = new Users();
+            user.setMail(email);
+            user.setUserName(email.split("@")[0]);
+            user.setPassWord(passwordEncoder.encode(password));
+            user.setIsActive(true);
+            user.setCreateAt(new Date());
+            user = usersDAO.save(user);
+
+            KhachHang kh = new KhachHang();
+            kh.setTenKH(name != null ? name : "Google User");
+            kh.setSdt("N/A");
+            kh.setUser(user);
+            khachHangDAO.save(kh);
+        }
+        
+        return success(doLogin(user, false));
+    }
+
+    // ==================== PASSWORD ====================
+    public Map<String, Object> forgotPassword(Map<String, String> request) {
+        String email = request.get("email");
+        Users user = usersDAO.findByMail(email);
+        
+        if (user == null) return error("Email không tồn tại");
+        
+        String newPass = generateRandomPassword();
+        user.setPassWord(passwordEncoder.encode(newPass));
+        usersDAO.save(user);
+        
+        String fullname = Optional.ofNullable(khachHangDAO.findByUser_MaUser(user.getMaUser()))
+            .map(KhachHang::getTenKH).orElse("Quý khách");
+        
+        sendPasswordResetEmail(email, fullname, newPass);
+        
+        return success("Mật khẩu mới đã được gửi đến email");
+    }
+
+    public Map<String, Object> changePassword(Map<String, String> request) {
+        String email = request.get("email");
+        String current = request.get("currentPassword");
+        String newPass = request.get("newPassword");
+        String confirm = request.get("confirmPassword");
+        
+        Users user = usersDAO.findByMail(email);
+        if (user == null) return error("Email không tồn tại");
+        if (!passwordEncoder.matches(current, user.getPassWord())) return error("Mật khẩu hiện tại không đúng");
+        if (!newPass.equals(confirm)) return error("Mật khẩu mới không khớp");
+        
+        user.setPassWord(passwordEncoder.encode(newPass));
+        usersDAO.save(user);
+        
+        return success("Đổi mật khẩu thành công");
+    }
+
+    // ==================== LOGOUT ====================
+    public Map<String, Object> logout() {
+        cookieService.remove("rememberMe");
         sessionService.remove("userRole");
         sessionService.remove("userName");
         sessionService.remove("user");
         sessionService.remove("userMail");
-     
-        session.invalidate();
-    }
-    
-    public boolean isEmployee() {
-        String role = sessionService.get("userRole");
-        return role != null && (role.equals("ADMIN") || role.equals("EMPLOYEE"));
+        sessionService.remove("isGoogleUser");
+        return success("Đăng xuất thành công");
     }
 
-    public boolean isAdmin() {
-        String role = sessionService.get("userRole");
-        return role != null && role.equals("ADMIN");
-    }
+    // ==================== PRIVATE METHODS ====================
+    private Map<String, Object> doLogin(Users user, boolean remember) {
+        QuanTri qt = quanTriDAO.findByUser_MaUser(user.getMaUser());
+        KhachHang kh = khachHangDAO.findByUser_MaUser(user.getMaUser());
 
-    public boolean isCustomer() {
-        String role = sessionService.get("userRole");
-        return role != null && role.equals("CUSTOMER");
-    }
-    
-    public String getCurrentUserRole() {
-        return sessionService.get("userRole");
-    }
-    
-    public String getCurrentUserMail() {
-        return sessionService.get("userMail");
-    }
-
-    public Users getCurrentUser() {
-        return sessionService.get("user");
-    }
-    
-    public String forgotPassword(String email) {
-        try {
-            Users user = usersDAO.findByMail(email);
-            if (user == null) {
-                return "Email không tồn tại trong hệ thống";
-            }
-
-            String newPassword = generateRandomPassword();
-            user.setPassWord(passwordEncoder.encode(newPassword));
-            usersDAO.save(user);
-
-            KhachHang khachHang = khachHangDAO.findByUser_MaUser(user.getMaUser());
-            String fullname = (khachHang != null) ? khachHang.getTenKH() : "Quý khách";
-
-            sendPasswordResetEmail(email, fullname, newPassword);
-
-            return "OK";
-        } catch (Exception e) {
-            e.printStackTrace();
-            return "Có lỗi xảy ra. Vui lòng thử lại sau.";
+        if (qt != null) {
+            sessionService.set("userRole", qt.getRole() ? "ADMIN" : "EMPLOYEE");
+            sessionService.set("userName", qt.getTenQT());
+        } else if (kh != null) {
+            sessionService.set("userRole", "CUSTOMER");
+            sessionService.set("userName", kh.getTenKH());
         }
+        
+        sessionService.set("user", user);
+        sessionService.set("userMail", user.getMail());
+
+        if (remember) saveRememberMe(user);
+        
+        return getUserInfo(user);
     }
 
+    private void saveRememberMe(Users user) {
+        String data = Base64.getEncoder().encodeToString(
+            (user.getMaUser() + ":" + user.getMail()).getBytes()
+        );
+        cookieService.add("rememberMe", data, 24 * 7);
+    }
+
+    private Map<String, Object> getUserInfo(Users user) {
+        Map<String, Object> info = new HashMap<>();
+        info.put("maUser", user.getMaUser());
+        info.put("mail", user.getMail());
+        info.put("userName", user.getUserName());
+        info.put("isActive", user.getIsActive());
+
+        KhachHang kh = khachHangDAO.findByUser_MaUser(user.getMaUser());
+        if (kh != null) {
+            info.put("role", "CUSTOMER");
+            info.put("name", kh.getTenKH());
+            info.put("maKH", kh.getMaKH());
+            info.put("sdt", kh.getSdt());
+            return info;
+        }
+
+        QuanTri qt = quanTriDAO.findByUser_MaUser(user.getMaUser());
+        if (qt != null) {
+            info.put("role", qt.getRole() ? "ADMIN" : "EMPLOYEE");
+            info.put("name", qt.getTenQT());
+            info.put("maQT", qt.getMaQT());
+            info.put("vaiTro", qt.getRole() ? "Admin" : "Nhân viên");
+        }
+        return info;
+    }
+    
     private String generateRandomPassword() {
         String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
         StringBuilder password = new StringBuilder();
@@ -313,109 +327,83 @@ public class AuthService {
         }
     }
     
-    public String changePassword(String email, String currentPassword, String newPassword, String confirmPassword) {
-        try {
-            Users user = usersDAO.findByMail(email);
-            if (user == null) {
-                return "Email không tồn tại trong hệ thống";
-            }
-
-            if (!passwordEncoder.matches(currentPassword, user.getPassWord())) {
-                return "Mật khẩu hiện tại không đúng";
-            }
-
-            if (!newPassword.equals(confirmPassword)) {
-                return "Mật khẩu mới và xác nhận mật khẩu không khớp";
-            }
-
-            user.setPassWord(passwordEncoder.encode(newPassword));
-            usersDAO.save(user);
-
-            return "OK";
-        } catch (Exception e) {
-            e.printStackTrace();
-            return "Có lỗi xảy ra. Vui lòng thử lại sau.";
-        }
-    }
-
-    
-    public String processGoogleLogin(String email, String name) {
-        try {
-            Users user = usersDAO.findByMail(email);
-            
-            if (user == null) {
-                return "Tài khoản Google không tồn tại. Vui lòng đăng ký trước khi đăng nhập.";
-            }
-            
-            if (user.getIsActive() == null || !user.getIsActive()) {
-                return "Tài khoản Google đã bị khóa";
-            }
-            
-            return this.autoLoginGoogleUser(user, name);
-            
-        } catch (Exception e) {
-            e.printStackTrace();
-            return "Lỗi xử lý đăng nhập Google: " + e.getMessage();
-        }
+    // ==================== GETTERS ====================
+    public Users getCurrentUser() {
+        return sessionService.get("user");
     }
     
-    public String processGoogleLoginNewUser(String email, String name, String password) {
-        try {
-            Users user = usersDAO.findByMail(email);
-            
-            if (user != null) {
-                if (user.getIsActive() == null || !user.getIsActive()) {
-                    return "Tài khoản Google đã bị khóa";
-                }
-                return this.autoLoginGoogleUser(user, name);
-            }
-            
-            user = new Users();
-            user.setMail(email);
-            user.setUserName(email.split("@")[0]);
-            user.setPassWord(passwordEncoder.encode(password)); 
-            user.setIsActive(true);
-            user.setCreateAt(new Date());
-            user = usersDAO.save(user);
+    public boolean isEmployee() {
+        String role = sessionService.get("userRole");
+        return role != null && (role.equals("ADMIN") || role.equals("EMPLOYEE"));
+    }
 
-            KhachHang khachHang = new KhachHang();
-            khachHang.setTenKH(name);
-            khachHang.setSdt("N/A");
-            khachHang.setUser(user);
-            khachHangDAO.save(khachHang);
-            
-            return this.autoLoginGoogleUser(user, name);
+    public boolean isAdmin() {
+        String role = sessionService.get("userRole");
+        return role != null && role.equals("ADMIN");
+    }
 
-        } catch (Exception e) {
-            e.printStackTrace();
-            return "Lỗi xử lý đăng nhập Google: " + e.getMessage();
-        }
+    public boolean isCustomer() {
+        String role = sessionService.get("userRole");
+        return role != null && role.equals("CUSTOMER");
     }
     
-    
-    private String autoLoginGoogleUser(Users user, String name) {
-        try {
-            KhachHang kh = khachHangDAO.findByUser_MaUser(user.getMaUser());
-
-            sessionService.set("userRole", "CUSTOMER");
-            sessionService.set("userName", kh != null ? kh.getTenKH() : name);
-            sessionService.set("user", user);
-            sessionService.set("userMail", user.getMail());
-            sessionService.set("isGoogleUser", true);
-           
-            saveRememberMeCookie(user);
-            
-            return "OK";
-            
-        } catch (Exception e) {
-            e.printStackTrace();
-            return "Lỗi đăng nhập tự động: " + e.getMessage();
-        }
+    public String getCurrentUserRole() {
+        return sessionService.get("userRole");
     }
     
+    public String getCurrentUserMail() {
+        return sessionService.get("userMail");
+    }
+
     public boolean isGoogleUser() {
         return sessionService.get("isGoogleUser") != null && 
                (boolean) sessionService.get("isGoogleUser");
+    }
+    
+    // ==================== UTILS ====================
+    private Map<String, Object> success(Object data) {
+        return Map.of("success", true, "user", data);
+    }
+    
+    private Map<String, Object> success(String message) {
+        return Map.of("success", true, "message", message);
+    }
+    
+    private Map<String, Object> error(String message) {
+        return Map.of("success", false, "message", message);
+    }
+    
+    
+    // ==================== PUBLIC ====================
+    public boolean autoLoginFromCookie() {
+        String cookie = cookieService.getValue("rememberMe");
+        if (cookie == null) return false;
+        
+        try {
+            String[] parts = new String(Base64.getDecoder().decode(cookie)).split(":");
+            if (parts.length < 2) return false;
+            
+            Users user = usersDAO.findById(Integer.parseInt(parts[0])).orElse(null);
+            if (user != null && user.getMail().equals(parts[1]) && user.getIsActive()) {
+                doLogin(user, false);
+                return true;
+            }
+        } catch (Exception e) {
+            cookieService.remove("rememberMe");
+        }
+        return false;
+    }
+
+    public String changePassword(String email, String currentPassword, String newPassword, String confirmPassword) {
+        Users user = usersDAO.findByMail(email);
+        if (user == null) return "Email không tồn tại";
+        if (!passwordEncoder.matches(currentPassword, user.getPassWord())) return "Mật khẩu hiện tại không đúng";
+        if (!newPassword.equals(confirmPassword)) return "Mật khẩu mới không khớp";
+        
+        user.setPassWord(passwordEncoder.encode(newPassword));
+        usersDAO.save(user);
+        
+        return "OK";
     }
     
 }
