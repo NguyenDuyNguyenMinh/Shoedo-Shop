@@ -163,14 +163,14 @@ GO
 
 -- 1. Dữ liệu mẫu cho bảng [User]
 INSERT INTO Users (UserName, Mail, PassWord, IsActive) VALUES
-('admin', 'admin@shop.com', 'PasswordEncoder', 1),
-('nv1', 'nhanvien1@gmail.com', 'PasswordEncoder', 1),
-('nv2', 'nhanvien2@gmail.com', 'PasswordEncoder', 1),
-('nv3', 'nhanvien3@gmail.com', 'PasswordEncoder', 1),
-('user1', 'user1@gmail.com', 'PasswordEncoder', 1),
-('user2', 'user2@gmail.com', 'PasswordEncoder', 1),
-('user3', 'user3@gmail.com', 'PasswordEncoder', 1),
-('QuanTesteremail', 'nguyenhoangminhquan786@gmail.com', 'PasswordEncoder', 1);
+('admin', 'admin@shop.com', '$2a$10$FQi/T2Pcgc1UaMkS/8mf0uSLMzLUtjNn0Ja4YRsCj2aRDdxWBCf4K', 1),
+('nv1', 'nhanvien1@gmail.com', '$2a$10$FQi/T2Pcgc1UaMkS/8mf0uSLMzLUtjNn0Ja4YRsCj2aRDdxWBCf4K', 1),
+('nv2', 'nhanvien2@gmail.com', '$2a$10$FQi/T2Pcgc1UaMkS/8mf0uSLMzLUtjNn0Ja4YRsCj2aRDdxWBCf4K', 1),
+('nv3', 'nhanvien3@gmail.com', '$2a$10$FQi/T2Pcgc1UaMkS/8mf0uSLMzLUtjNn0Ja4YRsCj2aRDdxWBCf4K', 1),
+('user1', 'user1@gmail.com', '$2a$10$FQi/T2Pcgc1UaMkS/8mf0uSLMzLUtjNn0Ja4YRsCj2aRDdxWBCf4K', 1),
+('user2', 'user2@gmail.com', '$2a$10$FQi/T2Pcgc1UaMkS/8mf0uSLMzLUtjNn0Ja4YRsCj2aRDdxWBCf4K', 1),
+('user3', 'user3@gmail.com', '$2a$10$FQi/T2Pcgc1UaMkS/8mf0uSLMzLUtjNn0Ja4YRsCj2aRDdxWBCf4K', 1),
+('QuanTesteremail', 'nguyenhoangminhquan786@gmail.com', '$2a$10$FQi/T2Pcgc1UaMkS/8mf0uSLMzLUtjNn0Ja4YRsCj2aRDdxWBCf4K', 1);
 
 -- 2. Dữ liệu mẫu cho bảng Khách Hàng (MaUser 5, 6, 7, 8)
 INSERT INTO KhachHang (TenKH, SDT, MaUser) VALUES
@@ -433,7 +433,7 @@ INSERT INTO HoaDon (MaKH, MaQT, PhuongThucTT, DiaChiJson, TrangThai, GhiChu, Nga
 -- HD 4
 (4, 1, N'COD',
  N'{"DiemGiao":"Quận Cam A","TenNN":"Nguyễn Văn A","SDT":"0901234567"}',
- N'Hoàn tất', NULL, '2026-01-13', '2026-01-18'),
+ N'Hoàn tất', NULL, '2026-01-13', '2026-03-25'),
 
 -- HD 5
 (1, 1, N'COD',

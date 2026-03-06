@@ -130,7 +130,7 @@ export default {
   updateProfile(data) {
     return apiClient.put('/customer/profile', data);
   },
-  
+
   getOrders() {
     return apiClient.get('/customer/orders');
   },
@@ -139,8 +139,12 @@ export default {
     return apiClient.get(`/customer/orders/${id}`);
   },
 
-  updateOrderStatus(id, status) {
-    return apiClient.put(`/customer/orders/${id}/status?status=${status}`);
+  updateCustomerOrderStatus(id, status) {
+    return apiClient.put(`/customer/orders/${id}/status?status=${encodeURIComponent(status)}`);
+  },
+
+  requestReturn(data) {
+    return apiClient.post('/customer/orders/return', data);
   },
 
   getAddresses() {
