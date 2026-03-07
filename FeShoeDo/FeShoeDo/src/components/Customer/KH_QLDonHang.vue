@@ -217,6 +217,7 @@
 
     <Footer />
   </div>
+
 </template>
 
 <script>
