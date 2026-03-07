@@ -28,10 +28,25 @@ public class AuthController {
     public ResponseEntity<Map<String, Object>> login(@RequestBody Map<String, String> request) {
         return ResponseEntity.ok(authService.login(request));
     }
+        
+    @PostMapping("/send-register")
+    public ResponseEntity<Map<String, Object>> sendRegister(@RequestBody Map<String, String> request) {
+        return ResponseEntity.ok(authService.sendRegister(request));
+    }
+
+    @PostMapping("/complete-register")
+    public ResponseEntity<Map<String, Object>> completeRegister(@RequestBody Map<String, String> request) {
+        return ResponseEntity.ok(authService.completeRegister(request));
+    }
+  
+    @PostMapping("/send-fg-pass")
+    public ResponseEntity<Map<String, Object>> sendForgotPass(@RequestBody Map<String, String> request) {
+        return ResponseEntity.ok(authService.sendForgotPass(request));
+    }
     
-    @PostMapping("/register")
-    public ResponseEntity<Map<String, Object>> register(@RequestBody Map<String, String> request) {
-        return ResponseEntity.ok(authService.register(request));
+    @PostMapping("/confirm-fg-pass")
+    public ResponseEntity<Map<String, Object>> confirmForgotPass(@RequestBody Map<String, String> request) {
+        return ResponseEntity.ok(authService.confirmForgotPass(request));
     }
     
     @GetMapping("/current-user")
@@ -42,11 +57,6 @@ public class AuthController {
     @PostMapping("/logout")
     public ResponseEntity<Map<String, Object>> logout() {
         return ResponseEntity.ok(authService.logout());
-    }
-    
-    @PostMapping("/forgot-password")
-    public ResponseEntity<Map<String, Object>> forgotPassword(@RequestBody Map<String, String> request) {
-        return ResponseEntity.ok(authService.forgotPassword(request));
     }
     
     @PostMapping("/change-password")
