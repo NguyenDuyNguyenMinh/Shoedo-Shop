@@ -71,19 +71,19 @@ const routes = [
     path: '/employee/dashboard',
     name: 'EmployeeDashboard',
     component: () => import('@/components/employee/NV_ThongKe.vue'),
-    meta: { requiresAuth: true, roles: ['ADMIN', 'EMPLOYEE'] }
+    meta: { requiresAuth: true, role: 'ADMIN'}
   },
   {
     path: '/employee/products',
     name: 'ProductManagement',
     component: () => import('@/components/employee/NV_QLSP.vue'),
-    meta: { requiresAuth: true, role: 'EMPLOYEE' }
+    meta: { requiresAuth: true, roles: ['ADMIN', 'EMPLOYEE'] }
   },
   {
     path: '/employee/orders',
     name: 'OrderManagement',
     component: () => import('@/components/employee/NV_QLHoaDon.vue'),
-    meta: { requiresAuth: true, role: 'EMPLOYEE' }
+    meta: { requiresAuth: true, roles: ['ADMIN', 'EMPLOYEE'] }
   },
   {
     path: '/employee/users',
@@ -95,7 +95,7 @@ const routes = [
     path: '/employee/import',
     name: 'ImportStock',
     component: () => import('@/components/employee/NV_NhapKho.vue'),
-    meta: { requiresAuth: true, roles: 'EMPLOYEE' }
+    meta: { requiresAuth: true, roles: ['ADMIN', 'EMPLOYEE'] }
   },
   
 ];

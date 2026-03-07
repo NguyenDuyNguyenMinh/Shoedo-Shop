@@ -30,6 +30,10 @@ public class AuthService {
     @Autowired private EmailService emailService;
     @Autowired private PasswordEncoder passwordEncoder;
     @Autowired private GioHangDAO gioHangDAO;
+    
+    private Map<String, RegistrationInfo> registrationConfirmations = new HashMap<>();
+    private Map<String, ForgotPasswordInfo> forgotPasswordConfirmations = new HashMap<>();
+    
     // ==================== LOGIN ====================
     public Map<String, Object> login(Map<String, String> request) {
         String identifier = request.get("identifier");
@@ -88,34 +92,72 @@ public class AuthService {
         
         return cartItems.size();
     }
-    
-    // ==================== REGISTER ====================
-    public Map<String, Object> register(Map<String, String> request) {
+
+    // ==================== REGISTER WITH EMAIL CONFIRMATION ====================
+    public Map<String, Object> sendRegister(Map<String, String> request) {
         String mail = request.get("mail");
         String pass = request.get("pass");
         String fullname = request.get("fullname");
         String phone = request.get("phone");
-        boolean remember = Boolean.parseBoolean(request.get("remember"));
+        
+        if (usersDAO.findByMail(mail) != null) {
+            return error("Email đã tồn tại trong hệ thống!");
+        }
 
-        if (usersDAO.findByMail(mail) != null) return error("Email đã tồn tại!");
+        String confirmationCode = generateRandomCode(6);
+        
+        RegistrationInfo info = new RegistrationInfo();
+        info.setMail(mail);
+        info.setPass(pass);
+        info.setFullname(fullname);
+        info.setPhone(phone);
+        info.setConfirmationCode(confirmationCode);
+        info.setExpiryTime(System.currentTimeMillis() + 10 * 60 * 1000); 
+        
+        registrationConfirmations.put(mail, info);
+        sendRegistrationConfirmationEmail(mail, fullname, confirmationCode);
+        
+        return success("Mã xác nhận đã được gửi đến email của bạn. Vui lòng kiểm tra email.");
+    }
+    
+    public Map<String, Object> completeRegister(Map<String, String> request) {
+        String mail = request.get("mail");
+        String confirmationCode = request.get("confirmationCode");
+
+        RegistrationInfo info = registrationConfirmations.get(mail);
+        
+        if (info == null) {
+            return error("Không tìm thấy yêu cầu đăng ký. Vui lòng đăng ký lại.");
+        }
+        
+        if (System.currentTimeMillis() > info.getExpiryTime()) {
+            registrationConfirmations.remove(mail);
+            return error("Mã xác nhận đã hết hạn. Vui lòng đăng ký lại.");
+        }
+        
+        if (!info.getConfirmationCode().equals(confirmationCode)) {
+            return error("Mã xác nhận không chính xác. Vui lòng kiểm tra lại.");
+        }
 
         Users user = new Users();
-        user.setMail(mail);
-        user.setUserName(mail.split("@")[0]);
-        user.setPassWord(passwordEncoder.encode(pass));
+        user.setMail(info.getMail());
+        user.setUserName(info.getMail().split("@")[0]);
+        user.setPassWord(passwordEncoder.encode(info.getPass()));
         user.setIsActive(true);
         user.setCreateAt(new Date());
         user = usersDAO.save(user);
-
+        
         KhachHang kh = new KhachHang();
-        kh.setTenKH(fullname);
-        kh.setSdt(phone);
+        kh.setTenKH(info.getFullname());
+        kh.setSdt(info.getPhone());
         kh.setUser(user);
         khachHangDAO.save(kh);
-
-        return success(doLogin(user, remember));
+        
+        registrationConfirmations.remove(mail);
+        
+        return success("Đăng ký tài khoản thành công!");
     }
-
+    
     // ==================== GOOGLE ====================
     public Map<String, Object> handleGoogleCallback(String email, String name) {
         Users user = usersDAO.findByMail(email);
@@ -130,12 +172,15 @@ public class AuthService {
     }
 
     public Map<String, Object> googleLogin(Map<String, String> request) {
-        String email = request.get("email");
+    	String email = request.get("email");
         String name = request.get("name");
         
         Users user = usersDAO.findByMail(email);
-        if (user == null || !user.getIsActive()) return error("Đăng nhập thất bại");
         
+        if (user == null || !user.getIsActive()) {
+            return error("Tài khoản đã bị khóa");
+        }
+                  
         return success(doLogin(user, false));
     }
 
@@ -165,24 +210,70 @@ public class AuthService {
         return success(doLogin(user, false));
     }
 
-    // ==================== PASSWORD ====================
-    public Map<String, Object> forgotPassword(Map<String, String> request) {
+    // ==================== FORGOT PASSWORD WITH EMAIL CONFIRMATION ====================
+    public Map<String, Object> sendForgotPass(Map<String, String> request) {
         String email = request.get("email");
+        
         Users user = usersDAO.findByMail(email);
+        if (user == null) {
+            return error("Email không tồn tại trong hệ thống!");
+        }
+
+        String confirmationCode = generateRandomCode(6);
+        String newPassword = generateRandomPassword();
+        String encodedPassword = passwordEncoder.encode(newPassword);
+
+        ForgotPasswordInfo info = new ForgotPasswordInfo();
+        info.setEmail(email);
+        info.setConfirmationCode(confirmationCode);
+        info.setNewPassword(encodedPassword);
+        info.setNewPasswordRaw(newPassword);
+        info.setExpiryTime(System.currentTimeMillis() + 10 * 60 * 1000);
         
-        if (user == null) return error("Email không tồn tại");
-        
-        String newPass = generateRandomPassword();
-        user.setPassWord(passwordEncoder.encode(newPass));
-        usersDAO.save(user);
-        
+        forgotPasswordConfirmations.put(email, info);
+
         String fullname = Optional.ofNullable(khachHangDAO.findByUser_MaUser(user.getMaUser()))
             .map(KhachHang::getTenKH).orElse("Quý khách");
         
-        sendPasswordResetEmail(email, fullname, newPass);
+        sendForgotPasswordConfirmationEmail(email, fullname, confirmationCode);
         
-        return success("Mật khẩu mới đã được gửi đến email");
+        return success("Mã xác nhận đã được gửi đến email của bạn. Vui lòng kiểm tra email.");
     }
+    
+    public Map<String, Object> confirmForgotPass(Map<String, String> request) {
+        String email = request.get("email");
+        String confirmationCode = request.get("confirmationCode");
+
+        ForgotPasswordInfo info = forgotPasswordConfirmations.get(email);
+        
+        if (info == null) {
+            return error("Không tìm thấy yêu cầu khôi phục mật khẩu. Vui lòng thử lại.");
+        }
+        
+        if (System.currentTimeMillis() > info.getExpiryTime()) {
+            registrationConfirmations.remove("FORGOT_" + email);
+            return error("Mã xác nhận đã hết hạn. Vui lòng thử lại.");
+        }
+        
+        if (!info.getConfirmationCode().equals(confirmationCode)) {
+            return error("Mã xác nhận không chính xác. Vui lòng kiểm tra lại.");
+        }
+        Users user = usersDAO.findByMail(email);
+        if (user == null) {
+            return error("Email không tồn tại trong hệ thống!");
+        }
+        
+        user.setPassWord(info.getNewPassword());
+        usersDAO.save(user);
+        String fullname = Optional.ofNullable(khachHangDAO.findByUser_MaUser(user.getMaUser()))
+            .map(KhachHang::getTenKH).orElse("Quý khách");
+        
+        sendPasswordResetEmail(email, fullname, info.getNewPasswordRaw());
+        registrationConfirmations.remove("FORGOT_" + email);
+        
+        return success("Mật khẩu mới đã được gửi đến email của bạn. Vui lòng kiểm tra email.");
+    }
+    // ==================== PASSWORD ====================
 
     public Map<String, Object> changePassword(Map<String, String> request) {
         String email = request.get("email");
@@ -214,23 +305,32 @@ public class AuthService {
 
     // ==================== PRIVATE METHODS ====================
     private Map<String, Object> doLogin(Users user, boolean remember) {
-        QuanTri qt = quanTriDAO.findByUser_MaUser(user.getMaUser());
-        KhachHang kh = khachHangDAO.findByUser_MaUser(user.getMaUser());
-
-        if (qt != null) {
-            sessionService.set("userRole", qt.getRole() ? "ADMIN" : "EMPLOYEE");
-            sessionService.set("userName", qt.getTenQT());
-        } else if (kh != null) {
-            sessionService.set("userRole", "CUSTOMER");
-            sessionService.set("userName", kh.getTenKH());
-        }
-        
-        sessionService.set("user", user);
-        sessionService.set("userMail", user.getMail());
-
-        if (remember) saveRememberMe(user);
-        
-        return getUserInfo(user);
+    	try { 
+	        QuanTri qt = quanTriDAO.findByUser_MaUser(user.getMaUser());
+	        KhachHang kh = khachHangDAO.findByUser_MaUser(user.getMaUser());
+	
+	        if (qt != null) {
+	            sessionService.set("userRole", qt.getRole() ? "ADMIN" : "EMPLOYEE");
+	            sessionService.set("userName", qt.getTenQT());
+	            sessionService.set("user", user);
+	            sessionService.set("isGoogleUser", true);
+	        } else if (kh != null) {
+	            sessionService.set("userRole", "CUSTOMER");
+	            sessionService.set("userName", kh.getTenKH());
+	            sessionService.set("user", user);
+	            sessionService.set("isGoogleUser", true);
+	        }
+	        
+	        sessionService.set("user", user);
+	        sessionService.set("userMail", user.getMail());
+	        
+	        if (remember) saveRememberMe(user);
+	        
+	        return getUserInfo(user);
+    	}catch (Exception e){
+    		e.printStackTrace();
+    	}      
+    	return null;  
     }
 
     private void saveRememberMe(Users user) {
@@ -264,6 +364,17 @@ public class AuthService {
             info.put("vaiTro", qt.getRole() ? "Admin" : "Nhân viên");
         }
         return info;
+    }
+    
+    private String generateRandomCode(int length) {
+        String chars = "0123456789";
+        StringBuilder code = new StringBuilder();
+        java.util.Random random = new java.util.Random();
+        
+        for (int i = 0; i < length; i++) {
+            code.append(chars.charAt(random.nextInt(chars.length())));
+        }
+        return code.toString();
     }
     
     private String generateRandomPassword() {
@@ -316,7 +427,7 @@ public class AuthService {
                     + "</div>"
                     + "<div class='footer'>"
                     + "<p>Email này được gửi tự động từ hệ thống ShoeDo Shop.</p>"
-                    + "<p>© 2025 ShoeDo Shop. All rights reserved.</p>"
+                    + "<p>© 2026 ShoeDo Shop. All rights reserved.</p>"
                     + "</div>"
                     + "</div>"
                     + "</body>"
@@ -405,5 +516,154 @@ public class AuthService {
         
         return "OK";
     }
+    // ==================== EMAIL SENDING METHODS ====================
+    private void sendRegistrationConfirmationEmail(String email, String fullname, String confirmationCode) {
+        try {
+            String subject = "SHOEDO SHOP - Xác nhận đăng ký tài khoản";
+            
+            String htmlContent = "<!DOCTYPE html>"
+                    + "<html>"
+                    + "<head>"
+                    + "<meta charset='UTF-8'>"
+                    + "<style>"
+                    + "body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }"
+                    + ".container { max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px; }"
+                    + ".header { background: #000; color: #fff; padding: 20px; text-align: center; border-radius: 10px 10px 0 0; }"
+                    + ".content { padding: 20px; background: #f9f9f9; }"
+                    + ".code-box { background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 5px; text-align: center; margin: 20px 0; font-size: 24px; font-weight: bold; letter-spacing: 2px;  }"
+                    + ".footer { text-align: center; padding: 20px; font-size: 12px; color: #666; }"
+                    + ".warning { background: #f8d7da; color: #721c24; padding: 10px; border-radius: 5px; margin: 15px 0; }"
+                    + "</style>"
+                    + "</head>"
+                    + "<body>"
+                    + "<div class='container'>"
+                    + "<div class='header'>"
+                    + "<h2>ShoeDo Shop - Xác nhận đăng ký tài khoản</h2>"
+                    + "</div>"
+                    + "<div class='content'>"
+                    + "<p>Xin chào <strong>" + fullname + "</strong>,</p>"
+                    + "<p>Cảm ơn bạn đã đăng ký tài khoản tại ShoeDo Shop.</p>"
+                    + "<p>Vui lòng nhập mã xác nhận bên dưới để hoàn tất quá trình đăng ký:</p>"
+                    + "<div class='code-box'>"
+                    + confirmationCode
+                    + "</div>"
+                    + "<p>Mã xác nhận này có hiệu lực trong <strong>10 phút</strong>.</p>"
+                    + "<div class='warning'>"
+                    + "<p><strong>Lưu ý:</strong> Nếu bạn không yêu cầu đăng ký tài khoản, vui lòng bỏ qua email này.</p>"
+                    + "</div>"
+                    + "</div>"
+                    + "<div class='footer'>"
+                    + "<p>Email này được gửi tự động từ hệ thống ShoeDo Shop.</p>"
+                    + "<p>© 2026 ShoeDo Shop. All rights reserved.</p>"
+                    + "</div>"
+                    + "</div>"
+                    + "</body>"
+                    + "</html>";
+            
+            emailService.sendHtmlEmail(email, subject, htmlContent);
+        } catch (Exception e) {
+            throw new RuntimeException("Lỗi khi gửi email xác nhận: " + e.getMessage());
+        }
+    }
     
+    private void sendForgotPasswordConfirmationEmail(String email, String fullname, String confirmationCode) {
+        try {
+            String subject = "SHOEDO SHOP - Xác nhận khôi phục mật khẩu";
+            
+            String htmlContent = "<!DOCTYPE html>"
+                    + "<html>"
+                    + "<head>"
+                    + "<meta charset='UTF-8'>"
+                    + "<style>"
+                    + "body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }"
+                    + ".container { max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px; }"
+                    + ".header { background: #000; color: #fff; padding: 20px; text-align: center; border-radius: 10px 10px 0 0; }"
+                    + ".content { padding: 20px; background: #f9f9f9; }"
+                    + ".code-box { background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 5px; text-align: center; margin: 20px 0; font-size: 24px; font-weight: bold; letter-spacing: 2px;  }"
+                    + ".footer { text-align: center; padding: 20px; font-size: 12px; color: #666; }"
+                    + ".warning { background: #f8d7da; color: #721c24; padding: 10px; border-radius: 5px; margin: 15px 0; }"
+                    + "</style>"
+                    + "</head>"
+                    + "<body>"
+                    + "<div class='container'>"
+                    + "<div class='header'>"
+                    + "<h2>ShoeDo Shop - Khôi phục mật khẩu</h2>"
+                    + "</div>"
+                    + "<div class='content'>"
+                    + "<p>Xin chào <strong>" + fullname + "</strong>,</p>"
+                    + "<p>Chúng tôi đã nhận được yêu cầu khôi phục mật khẩu cho tài khoản của bạn.</p>"
+                    + "<p>Vui lòng nhập mã xác nhận bên dưới để xác nhận yêu cầu:</p>"
+                    + "<div class='code-box'>"
+                    + confirmationCode
+                    + "</div>"
+                    + "<p>Mã xác nhận này có hiệu lực trong <strong>10 phút</strong>.</p>"
+                    + "<div class='warning'>"
+                    + "<p><strong>Lưu ý:</strong> Nếu bạn không yêu cầu khôi phục mật khẩu, vui lòng bỏ qua email này.</p>"
+                    + "</div>"
+                    + "</div>"
+                    + "<div class='footer'>"
+                    + "<p>Email này được gửi tự động từ hệ thống ShoeDo Shop.</p>"
+                    + "<p>© 2026 ShoeDo Shop. All rights reserved.</p>"
+                    + "</div>"
+                    + "</div>"
+                    + "</body>"
+                    + "</html>";
+            
+            emailService.sendHtmlEmail(email, subject, htmlContent);
+        } catch (Exception e) {
+            throw new RuntimeException("Lỗi khi gửi email xác nhận: " + e.getMessage());
+        }
+    }
+    
+    
+    // ==================== HELPER CLASSES ====================
+    public static class RegistrationInfo {
+        private String mail;
+        private String pass;
+        private String fullname;
+        private String phone;
+        private String confirmationCode;
+        private long expiryTime;
+        
+        public String getMail() { return mail; }
+        public void setMail(String mail) { this.mail = mail; }
+        
+        public String getPass() { return pass; }
+        public void setPass(String pass) { this.pass = pass; }
+        
+        public String getFullname() { return fullname; }
+        public void setFullname(String fullname) { this.fullname = fullname; }
+        
+        public String getPhone() { return phone; }
+        public void setPhone(String phone) { this.phone = phone; }
+        
+        public String getConfirmationCode() { return confirmationCode; }
+        public void setConfirmationCode(String confirmationCode) { this.confirmationCode = confirmationCode; }
+        
+        public long getExpiryTime() { return expiryTime; }
+        public void setExpiryTime(long expiryTime) { this.expiryTime = expiryTime; }
+    }
+    
+    public static class ForgotPasswordInfo {
+        private String email;
+        private String confirmationCode;
+        private String newPassword;
+        private String newPasswordRaw;
+        private long expiryTime;
+        
+        public String getEmail() { return email; }
+        public void setEmail(String email) { this.email = email; }
+        
+        public String getConfirmationCode() { return confirmationCode; }
+        public void setConfirmationCode(String confirmationCode) { this.confirmationCode = confirmationCode; }
+        
+        public String getNewPassword() { return newPassword; }
+        public void setNewPassword(String newPassword) { this.newPassword = newPassword; }
+        
+        public String getNewPasswordRaw() { return newPasswordRaw; }
+        public void setNewPasswordRaw(String newPasswordRaw) { this.newPasswordRaw = newPasswordRaw; }
+        
+        public long getExpiryTime() { return expiryTime; }
+        public void setExpiryTime(long expiryTime) { this.expiryTime = expiryTime; }
+    }
 }

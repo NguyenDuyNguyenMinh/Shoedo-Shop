@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import axios from 'axios'
+import axios from 'axios';
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
@@ -30,76 +30,7 @@ export const useAuthStore = defineStore('auth', {
   },
   
   actions: {
-    async login(credentials) {
-      this.isLoading = true;
-      this.error = null;
-      
-      try {
-        const response = await axios.post('/api/auth/login', credentials, {
-          withCredentials: true
-        });
-        
-        if (response.data.success) {
-          this.user = response.data.user;
-          this.cartCount = response.data.user.cartCount || 0;
-          
-          const token = btoa(JSON.stringify({
-            maUser: response.data.user.maUser,
-            exp: Date.now() + 24 * 60 * 60 * 1000
-          }));
-          localStorage.setItem('auth_token', token);
-          return { success: true };
-        } else {
-          this.error = response.data.message;
-          return { success: false, message: response.data.message };
-        }
-      } catch (error) {
-        this.error = error.response?.data?.message || 'Đăng nhập thất bại';
-        return { success: false, message: this.error };
-      } finally {
-        this.isLoading = false;
-      }
-    },
-    
-    async register(credentials) {
-      this.isLoading = true;
-      this.error = null;
-      
-      try {
-        const registerData = {
-          mail: credentials.mail,
-          pass: credentials.pass,
-          fullname: credentials.fullname,
-          phone: credentials.phone,
-          remember: credentials.remember || false
-        };
-        
-        const response = await axios.post('/api/auth/register', registerData, {
-          withCredentials: true
-        });
-        
-        if (response.data.success) {
-          this.user = response.data.user;
-          this.cartCount = response.data.user.cartCount || 0;
-          
-          const token = btoa(JSON.stringify({
-            maUser: response.data.user.maUser,
-            exp: Date.now() + 24 * 60 * 60 * 1000
-          }));
-          localStorage.setItem('auth_token', token);
-          return { success: true };
-        } else {
-          this.error = response.data.message;
-          return { success: false, message: response.data.message };
-        }
-      } catch (error) {
-        this.error = error.response?.data?.message || 'Đăng ký thất bại';
-        return { success: false, message: this.error };
-      } finally {
-        this.isLoading = false;
-      }
-    },
-    
+  
     async logout() {
       try {
         await axios.post('/api/auth/logout', {}, {
