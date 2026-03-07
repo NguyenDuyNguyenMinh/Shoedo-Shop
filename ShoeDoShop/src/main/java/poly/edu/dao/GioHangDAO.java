@@ -10,4 +10,8 @@ import java.util.Optional;
 
 public interface GioHangDAO extends JpaRepository<GioHang, Integer> {
 
+    List<GioHang> findByKhachHangMaKH(Integer maKH);
+
+    Optional<GioHang> findByKhachHangMaKHAndSanPhamChiTietMaSKU(Integer maKH, Integer maSKU);
+
 }
