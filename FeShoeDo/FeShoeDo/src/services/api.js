@@ -191,7 +191,7 @@ export default {
   },
 
   getUserDetails(id) {
-    return apiClient.get(`/employee/user-details/${id}`);
+    return apiClient.get(`/employee/users/${id}`);
   },
 
   createUser(data) {
@@ -202,8 +202,12 @@ export default {
     return apiClient.put(`/employee/users/${id}`, data);
   },
 
-  deleteUser(id) {
-    return apiClient.delete(`/employee/users/${id}`);
+  toggleUserStatus(id) {
+    return apiClient.put(`/employee/users/${id}/toggle-status`);
+  },
+
+  resetPassword(id) {
+    return apiClient.post(`/employee/users/${id}/reset-password`);
   },
 
   // Employee Stock Import
