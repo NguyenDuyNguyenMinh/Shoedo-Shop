@@ -63,29 +63,20 @@ CREATE TABLE Size (
     CoGiay INT UNIQUE -- 39, 40, 41
 );
 
--- 9. Bảng Sản phẩm - Màu sắc (Biến thể hình ảnh)
-CREATE TABLE MauSac (
-    MaMau INT IDENTITY(1,1) PRIMARY KEY,
-    MaSP INT NOT NULL,
-    TenMau NVARCHAR(50),
-    HinhAnh NVARCHAR(MAX),
-    CONSTRAINT UQ_SP_TenMau UNIQUE (MaSP, TenMau),
-    CONSTRAINT FK_MauSac_SanPham FOREIGN KEY (MaSP) REFERENCES SanPham(MaSP)
-);
-
 -- 10. Bảng Chi tiết sản phẩm (SKU - Kho hàng - Giá)
 CREATE TABLE SanPham_ChiTiet (
     MaSKU INT IDENTITY(1,1) PRIMARY KEY,
-    MaMau INT, -- Link tới bảng Màu (đã có ảnh)
+    MaSP INT NOT NULL,
+    TenMau NVARCHAR(50), 
+    HinhAnh NVARCHAR(MAX),
     MaSize INT, 
     TrangThai NVARCHAR(50),
     SoLuong INT DEFAULT 0 CHECK (SoLuong >= 0),
     DonGia DECIMAL(18,2) CHECK (DonGia > 0),
-    -- Ràng buộc: 1 màu + 1 size = 1 SKU duy nhất
-    CONSTRAINT UQ_SKU UNIQUE (MaMau, MaSize),
-
-    CONSTRAINT FK_ChiTiet_Size FOREIGN KEY (MaSize) REFERENCES Size(MaSize),
-    CONSTRAINT FK_ChiTiet_Mau FOREIGN KEY (MaMau) REFERENCES MauSac(MaMau)
+    -- Ràng buộc: 1 sản phẩm + 1 màu + 1 size = 1 SKU duy nhất
+    CONSTRAINT UQ_SP_Mau_Size UNIQUE (MaSP, TenMau, MaSize),
+    CONSTRAINT FK_ChiTiet_SanPham FOREIGN KEY (MaSP) REFERENCES SanPham(MaSP),
+    CONSTRAINT FK_ChiTiet_Size FOREIGN KEY (MaSize) REFERENCES Size(MaSize)
 );
 
 -- 11. Bảng Nhập Kho
@@ -131,6 +122,7 @@ CREATE TABLE HoaDon (
     TrangThai NVARCHAR(50) CHECK (TrangThai IN (N'Đang xử lý', N'Đang giao', N'Hoàn tất', N'Đã từ chối', N'Báo lỗi', N'Hoàn hàng/trả hàng')),
     GhiChu NVARCHAR(MAX),
     NgayMua DATETIME DEFAULT GETDATE(),
+    NgayDen DATETIME DEFAULT GETDATE(),
     CONSTRAINT FK_HoaDon_KhachHang FOREIGN KEY (MaKH) REFERENCES KhachHang(MaKH),
     CONSTRAINT FK_HoaDon_QuanTri FOREIGN KEY (MaQT) REFERENCES QuanTri(MaQT)
 );
@@ -275,101 +267,77 @@ INSERT INTO Size (CoGiay) VALUES
 (42), -- ID 7: Size 42
 (43); -- ID 8: Size 43
 
--- 8. Dữ liệu Sản phẩm
-Màu sắc INSERT INTO MauSac (MaSP, TenMau, HinhAnh) VALUES
-(1, N'Trắng', 'sp1_trang_40.jpg'), -- 1
-(1, N'Đen', 'sp1_den_41.jpg'),   -- 2
-(2, N'Đen', 'sp2_den_38.jpg'),   -- 3
-(2, N'Xám', 'sp2_xam_39.jpg'),   -- 4
-(3, N'Đỏ', 'sp3_do_37.jpg'),    -- 5
-(3, N'Đen', 'sp3_den_38.jpg'),   -- 6
-(4, N'Trắng', 'sp4_trang_41.jpg'), -- 7
-(4, N'Xám', 'sp4_xam_42.jpg'),   -- 8
-(5, N'Đen', 'sp5_den_42.jpg'),   -- 9
-(5, N'Xanh biển', 'sp5_xanhbien_43.jpg'),  -- 10
-(6, N'Xanh Lá', 'sp6_xanh_40.jpg'),  -- 11
-(6, N'Cam', 'sp6_cam_41.jpg'),   -- 12
-(7, N'Nâu', 'sp7_nau_40.jpg'),   -- 13
-(7, N'Đen', 'sp7_den_41.jpg'),   -- 14
-(8, N'Đen', 'sp8_den_41.jpg'),   -- 15
-(8, N'Nâu', 'sp8_nau_42.jpg'),   -- 16
-(9, N'Đen bóng', 'sp9_den_41.jpg'),   -- 17
-(9, N'Nâu đậm', 'sp9_nau_42.jpg'),  -- 18
-(10, N'Trắng', 'pk_vottt1.jpg'),   -- 19
-(11, N'Đen', 'pk_vottt2.jpg'),   -- 20
-(12, N'Xám', 'pk_vottt3.jpg'),   -- 21
-(13, N'Đa màu', 'pk_daygiay.jpg'); -- 22
-
 -- 9.Note: Cột MaSize bây giờ điền ID của bảng Size ở trên (Ví dụ: ID 5 là size 40, ID 6 là size 41)
-INSERT INTO SanPham_ChiTiet (MaMau, MaSize, TrangThai, SoLuong, DonGia) VALUES
+-- 8. Dữ liệu Chi tiết sản phẩm (đã gộp màu sắc)
+INSERT INTO SanPham_ChiTiet (MaSP, TenMau, HinhAnh, MaSize, TrangThai, SoLuong, DonGia) VALUES
 -- =======================
 -- Giày da (MaSP 1,2,3)
 -- =======================
 -- SP 1: ShoeDo - SP1 - GD
-(1, 5, N'Còn hàng', 50, 2500000), --N'Trắng', 'sp1_trang_40.jpg' -- Size 40 (ID 5) 
-(2, 6, N'Còn hàng', 30, 2500000), --N'Đen', 'sp1_den_41.jpg' -- Size 41 (ID 6)
+(1, N'Trắng', 'sp1_trang_40.jpg', 5, N'Còn hàng', 50, 2500000), -- Size 40 (ID 5) 
+(1, N'Đen', 'sp1_den_41.jpg', 6, N'Còn hàng', 30, 2500000), -- Size 41 (ID 6)
 
 -- SP 2: ShoeDo - SP2 - GD (Nữ) 
-(3, 3, N'Còn hàng', 20, 3200000), --N'Đen', 'sp2_den_38.jpg' -- Size 38 (ID 3)
-(4, 4, N'Còn hàng', 15, 3200000), --N'Xám', 'sp2_xam_39.jpg' -- Size 39 (ID 4)
+(2, N'Đen', 'sp2_den_38.jpg', 3, N'Còn hàng', 20, 3200000), -- Size 38 (ID 3)
+(2, N'Xám', 'sp2_xam_39.jpg', 4, N'Còn hàng', 15, 3200000), -- Size 39 (ID 4)
 
 -- SP 3: ShoeDo - SP3 - GD (Cao gót)
-(5, 2, N'Còn hàng', 10, 4500000),  -- N'Đỏ', 'sp3_do_37.jpg' -- Size 37 (ID 2)
-(6, 3, N'Còn hàng', 12, 4500000),  -- N'Đen', 'sp3_den_38.jpg' -- Size 38 (ID 3)
+(3, N'Đỏ', 'sp3_do_37.jpg', 2, N'Còn hàng', 10, 4500000), -- Size 37 (ID 2)
+(3, N'Đen', 'sp3_den_38.jpg', 3, N'Còn hàng', 12, 4500000), -- Size 38 (ID 3)
 
 -- =======================
 -- Giày sneaker (MaSP 4,5)
 -- =======================
 -- SP 4: ShoeDo - SP1 - GSK
-(7, 6, N'Còn hàng', 40, 2800000), -- N'Trắng',   'sp4_trang_41.jpg' -- Size 41 (ID 6)
-(8, 7, N'Còn hàng', 35, 2800000), -- N'Xám',     'sp4_xam_42.jpg' -- Size 42 (ID 7)
+(4, N'Trắng', 'sp4_trang_41.jpg', 6, N'Còn hàng', 40, 2800000), -- Size 41 (ID 6)
+(4, N'Xám', 'sp4_xam_42.jpg', 7, N'Còn hàng', 35, 2800000), -- Size 42 (ID 7)
 
 -- SP 5: ShoeDo - SP2 - GSK
-(9, 7, N'Còn hàng', 25, 3000000), -- N'Đen',     'sp5_den_42.jpg' -- Size 42 (ID 7)
-(10, 8, N'Còn hàng', 20, 3000000), -- N'Xanh',   'sp5_xanh_43.jpg' -- Size 43 (ID 8)
+(5, N'Đen', 'sp5_den_42.jpg', 7, N'Còn hàng', 25, 3000000), -- Size 42 (ID 7)
+(5, N'Xanh biển', 'sp5_xanhbien_43.jpg', 8, N'Còn hàng', 20, 3000000), -- Size 43 (ID 8)
 
 -- =======================
 -- Giày bóng đá (MaSP 6)
 -- =======================
 -- SP 6: ShoeDo - SP1 - GBD
-(11, 5, N'Còn hàng', 30, 2200000), -- N'Xanh lá', 'sp6_xanh_40.jpg' -- Size 40 (ID 5)
-(12, 6, N'Còn hàng', 25, 2200000), -- N'Cam',     'sp6_cam_41.jpg' -- Size 41 (ID 6)
+(6, N'Xanh Lá', 'sp6_xanh_40.jpg', 5, N'Còn hàng', 30, 2200000), -- Size 40 (ID 5)
+(6, N'Cam', 'sp6_cam_41.jpg', 6, N'Còn hàng', 25, 2200000), -- Size 41 (ID 6)
 
 -- =======================
 -- Giày sandal (MaSP 7)
 -- =======================
 -- SP 7: ShoeDo - SP1 - GSD
-(13, 5, N'Còn hàng', 20, 1800000), -- N'Nâu',    'sp7_nau_40.jpg' -- Size 40 (ID 5)
-(14, 6, N'Còn hàng', 15, 1800000), -- N'Đen',    'sp7_den_41.jpg' -- Size 41 (ID 6)
+(7, N'Nâu', 'sp7_nau_40.jpg', 5, N'Còn hàng', 20, 1800000), -- Size 40 (ID 5)
+(7, N'Đen', 'sp7_den_41.jpg', 6, N'Còn hàng', 15, 1800000), -- Size 41 (ID 6)
 
 -- =======================
 -- Giày boot (MaSP 8)
 -- =======================
 -- SP 8: ShoeDo - SP1 - GBT
-(15, 6, N'Còn hàng', 18, 3500000), -- N'Đen',    'sp8_den_41.jpg' -- Size 41 (ID 6)
-(16, 7, N'Còn hàng', 12, 3500000), -- N'Nâu',    'sp8_nau_42.jpg' -- Size 42 (ID 7)
+(8, N'Đen', 'sp8_den_41.jpg', 6, N'Còn hàng', 18, 3500000), -- Size 41 (ID 6)
+(8, N'Nâu', 'sp8_nau_42.jpg', 7, N'Còn hàng', 12, 3500000), -- Size 42 (ID 7)
 
 -- =======================
 -- Giày boot + da (MaSP 9)
 -- =======================
 -- SP 9: ShoeDo - SP1 - GBT&GD
-(17, 6, N'Còn hàng', 10, 4200000), -- N'Đen bóng', 'sp9_den_41.jpg' -- Size 41 (ID 6)
-(18, 7, N'Còn hàng', 8,  4200000), -- N'Nâu đậm',  'sp9_nau_42.jpg' -- Size 42 (ID 7)
+(9, N'Đen bóng', 'sp9_den_41.jpg', 6, N'Còn hàng', 10, 4200000), -- Size 41 (ID 6)
+(9, N'Nâu đậm', 'sp9_nau_42.jpg', 7, N'Còn hàng', 8, 4200000), -- Size 42 (ID 7)
 
 -- =======================
 -- Phụ kiện (MaSP 10 → 13)
 -- =======================
 -- SP 10: Vớ thể thao (Dùng ID 1 = FreeSize)
-(19, 1, N'Còn hàng', 100, 150000), -- N'Trắng',  'pk_vottt1.jpg' -- Free size (ID 1)
+(10, N'Trắng', 'pk_vottt1.jpg', 1, N'Còn hàng', 100, 150000), -- Free size (ID 1)
 
 -- SP 11: Vớ cổ cao
-(20, 1, N'Còn hàng', 80, 170000),  -- N'Đen',    'pk_vottt2.jpg'-- Free size (ID 1)
+(11, N'Đen', 'pk_vottt2.jpg', 1, N'Còn hàng', 80, 170000), -- Free size (ID 1)
 
 -- SP 12: Vớ trung bình
-(21, 1, N'Còn hàng', 90, 160000),  -- N'Xám',    'pk_vottt3.jpg' -- Free size (ID 1)
+(12, N'Xám', 'pk_vottt3.jpg', 1, N'Còn hàng', 90, 160000), -- Free size (ID 1)
 
 -- SP 13: Dây giày
-(22, 1, N'Còn hàng', 200, 120000); -- N'Đa màu',  'pk_daygiay.jpg'-- Free size (ID 1)
+(13, N'Đa màu', 'pk_daygiay.jpg', 1, N'Còn hàng', 200, 120000); -- Free size (ID 1)
 
 -- 10. Dữ liệu mẫu cho bảng Nhập Kho
 INSERT INTO NhapKho (MaSKU, SoLuong, NgayNhap) VALUES 
@@ -449,56 +417,56 @@ INSERT INTO GioHang (MaKH, MaSKU, SoLuong) VALUES
 (4, 10, 2);  -- Sneaker xanh 43
 
 -- 13. Dữ liệu mẫu cho bảng Hóa Đơn
-INSERT INTO HoaDon (MaKH, MaQT, PhuongThucTT, DiaChiJson, TrangThai, GhiChu, NgayMua) VALUES
+INSERT INTO HoaDon (MaKH, MaQT, PhuongThucTT, DiaChiJson, TrangThai, GhiChu, NgayMua, NgayDen) VALUES
 -- HD 1
 (1, 1, N'COD', 
 N'{"DiemGiao":"123 Nguyễn Huệ A, Q1","TenNN":"Nguyễn Văn A","SDT":"0901234567"}', 
-N'Đã từ chối', N'Đơn hàng đặt số lượng quá lớn nhân viên miễn cưỡng từ chối vì gọi không ghe máy', '2025-01-10'),
+N'Đã từ chối', N'Đơn hàng đặt số lượng quá lớn nhân viên miễn cưỡng từ chối vì gọi không ghe máy', '2025-01-10', NULL),
 
 -- HD 2
 (2, NULL, N'Chuyển khoản', 
 N'{"DiemGiao":"789 Cách Mạng Tháng 8Z, Tân Bình","TenNN":"Trần Thị Hi A","SDT":"0912345678"}', 
-N'Đang xử lý', NULL, '2025-01-11'),
+N'Đang xử lý', NULL, '2026-01-11', NULL),
 
 -- HD 3
 (3, 1, N'COD', 
 N'{"DiemGiao":"456 Lê Lợi A, Q1","TenNN":"Nguyễn Văn A","SDT":"0901234567"}', 
-N'Đang giao', NULL, '2025-01-12'),
+N'Đang giao', NULL, '2026-01-12', NULL),
 
 -- HD 4
 (4, 1, N'COD', 
 N'{"DiemGiao":"Quận Cam A","TenNN":"Nguyễn Văn A","SDT":"0901234567"}', 
-N'Hoàn tất', NULL, '2025-01-13'),
+N'Hoàn tất', NULL, '2026-01-13', '2026-01-18'),
 
 -- HD 5
 (1, 1, N'COD', 
 N'{"DiemGiao":"123 Nguyễn Huệ B","TenNN":"Nguyễn Văn A-B","SDT":"0901234567"}', 
-N'Đã từ chối', N'Khách hủy đơn', '2025-01-14'),
+N'Đã từ chối', N'Khách hủy đơn', '2026-01-14', NULL),
 
 -- HD 6
 (2, 1, N'Chuyển khoản', 
 N'{"DiemGiao":"789 Cách Mạng Tháng 8Y","TenNN":"Trần Thị Hi B","SDT":"0912345678"}', 
-N'Báo lỗi', N'Khách hàng không nhận được hàng', '2025-01-15'),
+N'Báo lỗi', N'Khách hàng không nhận được hàng', '2026-01-15', '2026-01-19'),
 
 -- HD 7
 (3, 1, N'COD', 
 N'{"DiemGiao":"456 Lê Lợi B","TenNN":"Nguyễn Văn A-B","SDT":"0901234567"}', 
-N'Hoàn hàng/trả hàng', N'Sản phẩm không đúng mô tả', '2025-01-16'),
+N'Hoàn hàng/trả hàng', N'Sản phẩm không đúng mô tả', '2026-01-16', '2026-01-20'),
 
 -- HD 8
 (4, 1, N'COD', 
 N'{"DiemGiao":"Quận Cam B","TenNN":"Nguyễn Văn B","SDT":"0901234567"}', 
-N'Đang giao', NULL, '2025-01-17'),
+N'Đang giao', NULL, '2026-01-17', NULL),
 
 -- HD 9
 (1, NULL, N'COD', 
 N'{"DiemGiao":"123 Nguyễn Huệ C","TenNN":"Nguyễn Văn A-C","SDT":"0901234567"}', 
-N'Đang xử lý', NULL, '2025-01-18'),
+N'Đang xử lý', NULL, '2026-01-18', NULL),
 
 -- HD 10
 (2, 1, N'Chuyển khoản', 
 N'{"DiemGiao":"789 Cách Mạng Tháng 8Z","TenNN":"Trần Thị Hi A","SDT":"0912345678"}', 
-N'Hoàn tất', NULL, '2025-01-19');
+N'Hoàn tất', NULL, '2026-01-19', '2026-01-24');
 
 -- 14. Dữ liệu mẫu cho bảng Hóa Đơn Chi Tiết
 INSERT INTO HoaDonCT (MaHD, MaSKU, SoLuong, DonGia) VALUES

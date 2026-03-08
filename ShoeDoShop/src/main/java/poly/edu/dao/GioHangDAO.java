@@ -14,4 +14,5 @@ public interface GioHangDAO extends JpaRepository<GioHang, Integer> {
 
     Optional<GioHang> findByKhachHangMaKHAndSanPhamChiTietMaSKU(Integer maKH, Integer maSKU);
 
+	List<GioHang> findByKhachHang_MaKH(Integer maKH);
 }

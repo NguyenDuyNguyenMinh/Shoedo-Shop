@@ -1,52 +1,30 @@
-<script setup>
-import { ref } from 'vue'
-import logoUrl from '@/assets/Logoc.png'
-
-// Biến trạng thái để ẩn/hiện popup lịch sử tìm kiếm
-const isSearchFocused = ref(false)
-
-// Dữ liệu mẫu (Mock data) cho lịch sử tìm kiếm
-const searchHistory = ref([
-  'Giày chạy bộ nam',
-  'Sneaker trắng',
-  'Giày thể thao Nike',
-  'Adidas Ultraboost'
-])
-
-// Hàm xử lý khi click ra ngoài ô tìm kiếm
-const hideSearchHistory = () => {
-  // Dùng setTimeout một chút để nếu người dùng click vào chữ trong lịch sử 
-  // thì nó vẫn kịp nhận diện sự kiện click trước khi menu bị đóng lại
-  setTimeout(() => {
-    isSearchFocused.value = false
-  }, 200)
-}
-</script>
-
 <template>
   <nav class="navbar navbar-expand-lg bg-black py-3 sticky-top" data-bs-theme="dark">
     <div class="container-fluid px-4 px-lg-5 d-flex align-items-center justify-content-between">
       
-      <a class="navbar-brand logo-box d-flex align-items-center justify-content-center" href="#">
+      <!-- Logo -->
+      <router-link to="/customer/index" class="navbar-brand logo-box d-flex align-items-center justify-content-center">
         <img :src="logoUrl" alt="Shoedo" class="logo-img">
-      </a>
+      </router-link>
 
+      <!-- Menu chính -->
       <div class="collapse navbar-collapse flex-grow-0 mx-auto d-none d-lg-block" id="navbarNav">
         <ul class="navbar-nav gap-5"> 
           <li class="nav-item">
-            <a class="nav-link text-uppercase text-white fw-light" href="#">Trang Chủ</a>
+            <router-link class="nav-link text-uppercase text-white fw-light" to="/customer/index">Trang Chủ</router-link>
           </li>
           <li class="nav-item">
-            <a class="nav-link text-uppercase text-white fw-light" href="#">Sản Phẩm</a>
+            <router-link class="nav-link text-uppercase text-white fw-light" to="/customer/sanpham">Sản Phẩm</router-link>
           </li>
           <li class="nav-item">
-            <a class="nav-link text-uppercase text-white fw-light" href="#">Chính Sách</a>
+            <router-link class="nav-link text-uppercase text-white fw-light" to="/customer/chinhsach">Chính Sách</router-link>
           </li>
         </ul>
       </div>
 
       <div class="d-flex align-items-center gap-3 right-actions">
         
+        <!-- Search -->
         <div class="search-wrapper d-none d-md-block position-relative">
           <div class="input-group">
             <input 
@@ -76,17 +54,70 @@ const hideSearchHistory = () => {
           </div>
         </div>
 
-        <a href="#" class="btn btn-icon position-relative text-white">
+        <!-- Giỏ hàng -->
+        <router-link to="/customer/cart" class="btn btn-icon position-relative text-white">
           <i class="bi bi-cart3 fs-5"></i>
-          <span class="position-absolute badge rounded-pill bg-danger cart-badge">
-            3
+          <span v-if="isAuthenticated && cartCount > 0" class="position-absolute badge rounded-pill bg-danger cart-badge">
+            {{ cartCount }}
           </span>
-        </a>
+        </router-link>
 
-        <div class="user-box d-flex align-items-center gap-2 px-3 py-2 rounded-0 cursor-pointer text-white">
-          <i class="bi bi-person fs-5"></i>
-          <span class="fw-light">Tài Khoản</span>
-          <i class="bi bi-chevron-down" style="font-size: 0.7rem;"></i>
+        <!-- Account Dropdown -->
+        <div class="dropdown" ref="dropdown">
+          <button
+            class="user-box d-flex align-items-center gap-2 px-3 py-2 rounded-0 cursor-pointer text-white bg-transparent"
+            @click.prevent="toggleDropdown"
+            type="button"
+          >
+            <i class="bi bi-person fs-5"></i>
+            <span class="fw-light">Tài Khoản</span>
+            <i class="bi bi-chevron-down" style="font-size: 0.7rem;"></i>
+          </button>
+
+          <ul
+            class="dropdown-menu dropdown-menu-dark dropdown-menu-end shadow mt-2"
+            :class="{ show: showDropdown }"
+            v-show="showDropdown"
+          >
+            <template v-if="!isAuthenticated">
+              <li>
+                <router-link class="dropdown-item d-flex align-items-center gap-2" to="/auth/login">
+                  <i class="bi bi-box-arrow-in-right"></i> Đăng nhập
+                </router-link>
+              </li>
+              <li>
+                <router-link class="dropdown-item d-flex align-items-center gap-2" to="/auth/login#register">
+                  <i class="bi bi-person-plus"></i> Đăng ký
+                </router-link>
+              </li>
+            </template>
+
+            <template v-else>
+              <li>
+                <span class="dropdown-item-text">
+                  Xin chào,
+                  <span class="fw-bold" id="userLastName">{{ lastName }}</span>
+                </span>
+              </li>
+              <li><hr class="dropdown-divider border-secondary"></li>
+              <li>
+                <router-link class="dropdown-item d-flex align-items-center gap-2" to="/customer/profile">
+                  <i class="bi bi-person-gear"></i> Quản lý tài khoản
+                </router-link>
+              </li>
+              <li>
+                <router-link class="dropdown-item d-flex align-items-center gap-2" to="/customer/orders">
+                  <i class="bi bi-box-seam"></i> Đơn hàng của tôi
+                </router-link>
+              </li>
+              <li><hr class="dropdown-divider border-secondary"></li>
+              <li>
+                <a class="dropdown-item d-flex align-items-center gap-2 text-danger" href="#" @click.prevent="logout">
+                  <i class="bi bi-box-arrow-right"></i> Đăng Xuất
+                </a>
+              </li>
+            </template>
+          </ul>
         </div>
 
         <button class="navbar-toggler border-white" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -98,14 +129,109 @@ const hideSearchHistory = () => {
   </nav>
 </template>
 
-<style scoped>
-/* --- DARK LUXURY THEME CSS --- */
+<script setup>
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
+import axios from 'axios'
+import logoUrl from '@/assets/Logoc.png'
 
+const router = useRouter()
+const route = useRoute()
+const authStore = useAuthStore()
+
+const isSearchFocused = ref(false)
+const cartCount = ref(0)
+const showDropdown = ref(false)
+const dropdown = ref(null)
+
+const isAuthenticated = computed(() => authStore.isAuthenticated)
+const lastName = computed(() => {
+  const name = authStore.user?.name || ''
+  if (!name || name.trim() === '') return 'User'
+  const names = name.trim().split(/\s+/)
+  return names[names.length - 1]
+})
+
+const fetchCartCount = async () => {
+  if (!isAuthenticated.value) {
+    cartCount.value = 0
+    return
+  }
+  
+  try {
+    const response = await axios.get('/api/auth/cart-count', {
+      withCredentials: true
+    })
+    if (response.data.success) {
+      cartCount.value = response.data.count || 0
+    }
+  } catch (error) {
+    console.error('Lỗi lấy số lượng giỏ hàng:', error)
+    cartCount.value = 0
+  }
+}
+
+
+const searchHistory = ref([
+  'Giày chạy bộ nam',
+  'Sneaker trắng',
+  'Giày thể thao Nike',
+  'Adidas Ultraboost'
+])
+
+const hideSearchHistory = () => {
+  setTimeout(() => {
+    isSearchFocused.value = false
+  }, 200)
+}
+
+const toggleDropdown = async (e) => {
+  e.preventDefault()
+  showDropdown.value = !showDropdown.value
+}
+
+const logout = async () => {
+  try {
+    await authStore.logout()
+    cartCount.value = 0
+    showDropdown.value = false
+    router.push('/auth/login')
+  } catch (error) {
+    console.error('Logout error:', error)
+  }
+}
+const handleClickOutside = (event) => {
+  if (dropdown.value && !dropdown.value.contains(event.target)) {
+    showDropdown.value = false
+  }
+}
+
+watch(isAuthenticated, (newVal) => {
+  if (newVal) {
+    fetchCartCount()
+  } else {
+    cartCount.value = 0
+  }
+})
+
+onMounted(() => {
+  if (isAuthenticated.value) {
+    fetchCartCount()
+  }
+  document.addEventListener('click', handleClickOutside)
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener('click', handleClickOutside)
+})
+</script>
+
+<style scoped>
 .bg-black {
   background-color: #000000 !important;
 }
 
-/* 1. Logo Box */
 .logo-box {
   width: 120px;  
   height: 48px; 
@@ -126,7 +252,6 @@ const hideSearchHistory = () => {
   border-color: #fff;
 }
 
-/* 2. Navigation Links */
 .nav-link {
   font-size: 0.9rem;
   letter-spacing: 1.5px; 
@@ -155,10 +280,9 @@ const hideSearchHistory = () => {
   width: 100%;
 }
 
-/* 3. Search Bar Container */
 .search-wrapper {
   width: 320px;
-  z-index: 100; /* Đảm bảo wrapper nổi lên để popup hiển thị đúng */
+  z-index: 100;
 }
 
 .search-wrapper .input-group {
@@ -167,11 +291,9 @@ const hideSearchHistory = () => {
   overflow: hidden; 
   height: 44px; 
   background-color: #000;
-  /* Thêm transition để nếu có popup thì bo góc dưới mất đi cho liền mạch */
   transition: border-radius 0.2s;
 }
 
-/* Đổi màu viền khi ô tìm kiếm được chọn (focus-within) */
 .search-wrapper:focus-within .input-group {
   border-bottom-left-radius: 0;
   border-bottom-right-radius: 0;
@@ -197,12 +319,12 @@ input:focus {
 /* --- CSS CHO POPUP LỊCH SỬ TÌM KIẾM --- */
 .search-history-dropdown {
   position: absolute;
-  top: 100%; /* Canh sát ngay dưới input group */
+  top: 100%;
   left: 0;
   width: 100%;
   background-color: #000000;
   border: 1px solid #ffffff;
-  border-top: none; /* Bỏ viền trên để liền khối với thanh tìm kiếm */
+  border-top: none; 
   border-bottom-left-radius: 8px;
   border-bottom-right-radius: 8px;
   z-index: 1050;
@@ -217,7 +339,7 @@ input:focus {
 }
 
 .history-item:hover {
-  background-color: #222222; /* Sáng lên nhẹ khi di chuột */
+  background-color: #222222; 
 }
 
 .clear-history {
@@ -229,6 +351,7 @@ input:focus {
   color: #ffffff !important;
   text-decoration: underline;
 }
+
 
 /* 4. Cart Icon Box */
 .btn-icon {
@@ -262,7 +385,7 @@ input:focus {
   box-shadow: 0 8px 18px rgba(0,0,0,0.45);
 }
 
-/* 5. User Box */
+/* 5. User Box (Dropdown Toggle) */
 .user-box {
   border: 1px solid #ffffff;
   border-radius: 8px !important; 
@@ -271,8 +394,8 @@ input:focus {
   align-items: center;
 }
 
-.user-box:hover {
-  background-color: #fff;
+.user-box:hover, .user-box[aria-expanded="true"] {
+  background-color: #fff !important;
   color: #000 !important;
 }
 
@@ -280,7 +403,34 @@ input:focus {
   font-weight: 700 !important;
 }
 
-/* 6. Cart Badge */
+.dropdown-menu-dark {
+  background-color: #000000;
+  border-radius: 8px;
+}
+
+/* 6. User Dropdown Menu */
+.dropdown-menu-dark {
+  background-color: #000000;
+  border-radius: 8px;
+}
+
+.dropdown-menu-dark .dropdown-item {
+  color: #ffffff;
+  font-size: 0.95rem;
+  padding: 10px 20px;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.dropdown-menu-dark .dropdown-item:hover {
+  background-color: #222222;
+}
+
+.dropdown-menu-dark .dropdown-item.text-danger:hover {
+  background-color: #2b0000;
+  color: #ff6b6b !important;
+}
+
+/* 7. Cart Badge */
 .cart-badge {
   top: -6px;            
   right: -6px;          
@@ -295,7 +445,6 @@ input:focus {
   border-color: #ffffff;
 }
 
-/* Responsive */
 @media (max-width: 991px) {
   .search-wrapper {
     display: none;

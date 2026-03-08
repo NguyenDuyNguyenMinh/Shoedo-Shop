@@ -1,484 +1,332 @@
+<script setup>
+import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
+import KH_Navbar from '@/components/Shared/KH_Navbar.vue'
+import Footer from '@/components/Shared/Footer.vue'
+
+const router = useRouter()
+
+// ── BANNER CAROUSEL ──
+const currentSlide = ref(0)
+const slides = ref([
+  { id: 1, bg: '#111',    line1: 'SALE', line2: 'GIÀY XỊN' },
+  { id: 2, bg: '#0d1b2a', line1: 'NEW',  line2: 'ARRIVALS' },
+  { id: 3, bg: '#1a0a0a', line1: 'HOT',  line2: 'DEALS'    },
+])
+const prevSlide = () => {
+  currentSlide.value = (currentSlide.value - 1 + slides.value.length) % slides.value.length
+}
+const nextSlide = () => {
+  currentSlide.value = (currentSlide.value + 1) % slides.value.length
+}
+
+// ── DANH SÁCH SẢN PHẨM (Mock data) ──
+const products = ref([
+  { id: 1,  name: 'Nike Air Max 270',       price: '2.890.000 đ', stock: 20, image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=300&q=80' },
+  { id: 2,  name: 'Adidas Ultraboost 23',   price: '3.490.000 đ', stock: 15, image: 'https://images.unsplash.com/photo-1608231387042-66d1773070a5?w=300&q=80' },
+  { id: 3,  name: 'Air Jordan 1 Retro High OG Chicago', price: '4.190.000 đ', stock: 8,  image: 'https://images.unsplash.com/photo-1600185365926-3a2ce3cdb9eb?w=300&q=80' },
+  { id: 4,  name: 'Vans Old Skool Classic', price: '1.290.000 đ', stock: 50, image: 'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=300&q=80' },
+  { id: 5,  name: 'Converse Chuck 70 Hi',   price: '1.590.000 đ', stock: 35, image: 'https://images.unsplash.com/photo-1460353581641-37baddab0fa2?w=300&q=80' },
+  { id: 6,  name: 'New Balance 574 Core',   price: '1.990.000 đ', stock: 18, image: 'https://images.unsplash.com/photo-1584735175315-9d5df23be620?w=300&q=80' },
+  { id: 7,  name: 'Nike React Infinity',    price: '2.690.000 đ', stock: 12, image: 'https://images.unsplash.com/photo-1539185441755-769473a23570?w=300&q=80' },
+  { id: 8,  name: 'Puma RS-X Reinvention',  price: '1.650.000 đ', stock: 25, image: 'https://images.unsplash.com/photo-1491553895911-0055eca6402d?w=300&q=80' },
+  { id: 9,  name: 'Reebok Classic Leather', price: '1.190.000 đ', stock: 30, image: 'https://images.unsplash.com/photo-1556906781-9a412961a28c?w=300&q=80' },
+  { id: 10, name: 'Balenciaga Triple S',    price: '5.990.000 đ', stock: 5,  image: 'https://images.unsplash.com/photo-1512374382149-233c42b6a83b?w=300&q=80' },
+])
+
+// Lấy 5 sản phẩm mỗi hàng cho đẹp layout
+const flashSales = computed(() => products.value.slice(0, 5))
+const featuredProducts = computed(() => products.value.slice(5, 10))
+const bestSellers = computed(() => [...products.value].reverse().slice(0, 5))
+
+const goToDetail = (id) => {
+  router.push({ name: 'DetailProduct', params: { id } })
+}
+
+const viewAll = (category) => {
+  console.log('Chuyển đến trang xem tất cả của:', category)
+}
+</script>
+
 <template>
-  <div class="customer-layout">
+  <div class="kh-index">
+
     <KH_Navbar />
-    
-    <main class="container">
 
-      <div class="row mt-4 g-3">
-        <div class="col-lg-8">
-          <div id="mainCarousel" class="carousel slide" data-bs-ride="carousel">
-            <div class="carousel-inner">
-              <div class="carousel-item active">
-                <img src="https://hoanghamobile.com/tin-tuc/wp-content/uploads/2024/02/black-friday.jpg" 
-                     class="d-block w-100" 
-                     alt="Banner 1"
-                     style="height: 300px; object-fit: cover;">
-              </div>
-              <div class="carousel-item">
-                <img src="https://img.freepik.com/premium-vector/special-sale-editable-text_404732-78.jpg" 
-                     class="d-block w-100" 
-                     alt="Banner 2"
-                     style="height: 300px; object-fit: cover;">
-              </div>
-            </div>
-            <button class="carousel-control-prev" type="button" data-bs-target="#mainCarousel" data-bs-slide="prev">
-              <span class="carousel-control-prev-icon"></span>
-            </button>
-            <button class="carousel-control-next" type="button" data-bs-target="#mainCarousel" data-bs-slide="next">
-              <span class="carousel-control-next-icon"></span>
-            </button>
-          </div>
+    <div class="hero-wrap">
+      <div class="hero-main" :style="{ background: slides[currentSlide].bg }">
+        <div class="banner-bg"></div>
+        <button class="arrow-btn left" @click="prevSlide">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        
+        <div class="banner-text">
+          Carousel Mẫu<br />
+          <span>{{ slides[currentSlide].line1 }} {{ slides[currentSlide].line2 }}</span>
         </div>
-        <div class="col-lg-4">
-          <div class="side-banner mb-3 text-center p-4">
-            <h5>MIỄN PHÍ SHIP</h5>
-          </div>
-          <div class="side-banner text-center p-4">
-            <h5>VOUCHER 100K</h5>
-          </div>
-        </div>
+
+        <button class="arrow-btn right" @click="nextSlide">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+        </button>
       </div>
+    </div>
 
-      <div class="flash-sale mt-4">
-        <h2 class="section-title">
-          Tất Cả Sản Phẩm
-          <small class="text-muted ms-2 fs-6">
-            ({{ resultCount }} sản phẩm)
-          </small>
-        </h2>
-        
-        <div v-if="loading" class="text-center py-5">
-          <div class="spinner-border text-dark" role="status">
-            <span class="visually-hidden">Loading...</span>
-          </div>
-          <p class="mt-2">Đang tải sản phẩm...</p>
+    <div class="sections-container">
+      
+      <section class="product-section">
+        <div class="section-header">
+          <h2 class="section-title">Flash Sales</h2>
+          <button class="view-all-btn" @click="viewAll('flash-sales')">Xem tất cả</button>
         </div>
-        
-        <div v-else class="row g-3">
-          <div class="col-6 col-lg-2" v-for="sp in sanPhams" :key="sp.maSP">
-            <div class="product-card">
-              <div class="product-image" style="height:200px">
-                <router-link :to="`/customer/detail-product/${sp.maSP}`">
-                  <img :src="sp.hinh" 
-                       :alt="sp.tenSP"
-                       @error="handleImageError"
-                       class="product-image" style="max-width: 150px;">
-                </router-link>
-                <span class="product-badge" v-if="sp.trangThai === 'Mới'">{{ sp.trangThai }}</span>
-              </div>
-              <div class="product-info">
-                <h5 class="product-name">{{ sp.tenSP }}</h5>
-                <div class="mb-2">
-                  <span class="price-current">{{ formatPrice(sp.donGia) }}</span>
-                </div>
-                <div class="product-sold">
-                  <i class="bi bi-box me-1"></i>
-                  Kho: <span>{{ sp.soLuong }}</span>
-                </div>
-                <div class="product-category mt-2">
-                  <i class="bi bi-tag me-1"></i>
-                  <small>{{ getCategoryName(sp.danhMuc) }}</small>
-                </div>
-              </div>
+        <div class="product-grid">
+          <div v-for="product in flashSales" :key="product.id" class="pcard" @click="goToDetail(product.id)">
+            <div class="pcard-img-wrap">
+              <img :src="product.image" :alt="product.name" class="pcard-img" />
+            </div>
+            <div class="pcard-body">
+              <div class="pcard-name" :title="product.name">{{ product.name }}</div>
+              <div class="pcard-price">{{ product.price }}</div>
             </div>
           </div>
         </div>
+      </section>
 
-      </div>
-    </main>
-    
+      <section class="product-section">
+        <div class="section-header">
+          <h2 class="section-title">Nổi Bật</h2>
+          <button class="view-all-btn" @click="viewAll('featured')">Xem tất cả</button>
+        </div>
+        <div class="product-grid">
+          <div v-for="product in featuredProducts" :key="product.id" class="pcard" @click="goToDetail(product.id)">
+            <div class="pcard-img-wrap">
+              <img :src="product.image" :alt="product.name" class="pcard-img" />
+            </div>
+            <div class="pcard-body">
+              <div class="pcard-name" :title="product.name">{{ product.name }}</div>
+              <div class="pcard-price">{{ product.price }}</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="product-section">
+        <div class="section-header">
+          <h2 class="section-title">Bán Chạy</h2>
+          <button class="view-all-btn" @click="viewAll('best-sellers')">Xem tất cả</button>
+        </div>
+        <div class="product-grid">
+          <div v-for="product in bestSellers" :key="product.id" class="pcard" @click="goToDetail(product.id)">
+            <div class="pcard-img-wrap">
+              <img :src="product.image" :alt="product.name" class="pcard-img" />
+            </div>
+            <div class="pcard-body">
+              <div class="pcard-name" :title="product.name">{{ product.name }}</div>
+              <div class="pcard-price">{{ product.price }}</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
     <Footer />
+
   </div>
 </template>
 
-<script>
-import { ref, onMounted } from 'vue';
-import KH_Navbar from '@/components/shared/KH_Navbar.vue';
-import Footer from '@/components/shared/Footer.vue';
-
-export default {
-  name: 'CustomerIndex',
-  components: {
-    KH_Navbar,
-    Footer
-  },
-  setup() {
-    // Khởi tạo các biến chứa dữ liệu mẫu
-    const sanPhams = ref([]);
-    const loading = ref(true);
-    const resultCount = ref(0);
-
-    // Xử lý tiền tệ
-    const formatPrice = (price) => {
-      return new Intl.NumberFormat('vi-VN', {
-        style: 'currency',
-        currency: 'VND'
-      }).format(price);
-    };
-
-    // Lấy tên danh mục
-    const getCategoryName = (danhMuc) => {
-      return danhMuc?.tenDM || 'Không phân loại';
-    };
-
-    // Xử lý lỗi ảnh (Ảnh dự phòng)
-    const handleImageError = (event) => {
-      event.target.src = 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=400&fit=crop';
-    };
-
-    // Giả lập load dữ liệu khi trang vừa mở
-    onMounted(() => {
-      // Dùng setTimeout để tạo cảm giác đang load data (0.5 giây)
-      setTimeout(() => {
-        sanPhams.value = [
-          {
-            maSP: 1,
-            tenSP: 'Nike Air Force 1 07',
-            hinh: 'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=400&h=400&fit=crop',
-            donGia: 2900000,
-            soLuong: 45,
-            trangThai: 'Mới',
-            danhMuc: { tenDM: 'Sneaker' }
-          },
-          {
-            maSP: 2,
-            tenSP: 'Adidas Ultraboost Light',
-            hinh: 'https://images.unsplash.com/photo-1584735174965-48c48d4daf27?w=400&h=400&fit=crop',
-            donGia: 4500000,
-            soLuong: 12,
-            trangThai: '',
-            danhMuc: { tenDM: 'Giày Chạy Bộ' }
-          },
-          {
-            maSP: 3,
-            tenSP: 'Puma RS-X3 Puzzle',
-            hinh: 'https://images.unsplash.com/photo-1608231387042-66d1773070a5?w=400&h=400&fit=crop',
-            donGia: 2800000,
-            soLuong: 8,
-            trangThai: 'Mới',
-            danhMuc: { tenDM: 'Giày Thể Thao' }
-          },
-          {
-            maSP: 4,
-            tenSP: 'New Balance 550 White',
-            hinh: 'https://images.unsplash.com/photo-1539185441755-769473a23570?w=400&h=400&fit=crop',
-            donGia: 3100000,
-            soLuong: 20,
-            trangThai: '',
-            danhMuc: { tenDM: 'Sneaker' }
-          },
-          {
-            maSP: 5,
-            tenSP: 'Converse Chuck 70 Vintage',
-            hinh: 'https://images.unsplash.com/photo-1607522370275-ba12051bed92?w=400&h=400&fit=crop',
-            donGia: 1800000,
-            soLuong: 55,
-            trangThai: '',
-            danhMuc: { tenDM: 'Classic' }
-          },
-          {
-            maSP: 6,
-            tenSP: 'Vans Old Skool Black',
-            hinh: 'https://images.unsplash.com/photo-1525966222134-fcfa99b8ae77?w=400&h=400&fit=crop',
-            donGia: 1650000,
-            soLuong: 30,
-            trangThai: 'Mới',
-            danhMuc: { tenDM: 'Skate' }
-          }
-        ];
-        resultCount.value = sanPhams.value.length;
-        loading.value = false;
-      }, 500); // Đợi 500ms rồi hiện data
-    });
-
-    return {
-      sanPhams,
-      loading,
-      resultCount,
-      handleImageError,
-      formatPrice,
-      getCategoryName
-    };
-  }
-};
-</script>
-
 <style scoped>
-:root {
-  --pine-primary: #333333;
-  --pine-secondary: #666666;
-  --pine-green: #000000;
-  --pine-dark: #111111;
-  --pine-light: #f8f9fa;
-}
-
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background: #ffffff;
-  color: #000000;
+.kh-index {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: #fafafa;
   min-height: 100vh;
 }
 
-/* Categories */
-.categories {
-  background: #ffffff;
-  padding: 35px 25px 40px 25px;
-  border-radius: 16px;
-  margin-top: 30px;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.13);
-  border: 2px solid #000000;
+/* ════════ HERO CAROUSEL ════════ */
+.hero-wrap {
+  width: 100%;
+  border-bottom: 1px solid #ddd;
 }
-
-.category-item {
-  text-align: center;
-  cursor: pointer;
-  padding: 18px 0 0 0;
-  transition: transform 0.25s, box-shadow 0.25s;
-  border-radius: 12px;
-  background: transparent;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
+.hero-main {
+  width: 100%;
+  height: 350px;
   position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.4s ease;
 }
-
-.category-item:hover {
-  transform: translateY(-8px) scale(1.10);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-  background: #f8f9fa;
+.banner-bg {
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at center, rgba(255,255,255,0.05) 0%, transparent 70%);
+}
+.banner-text {
+  font-size: 56px;
+  font-weight: bold;
+  color: #fff;
+  text-align: center;
   z-index: 2;
 }
-
-.category-icon {
-  width: 64px;
-  height: 64px;
-  margin: 0 auto 12px;
-  background: #000000;
-  border-radius: 20%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 32px;
-  color: #ffffff;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-  border: 2px solid #000000;
-  transition: background 0.2s, box-shadow 0.2s, color 0.2s;
+.banner-text span {
+  display: block;
+  font-size: 24px;
+  font-weight: normal;
+  margin-top: 10px;
 }
-
-.category-item:hover .category-icon {
-  background: #333333;
-  color: #ffffff;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-  border: 2px solid #333333;
-}
-
-.category-name {
-  font-size: 15px;
-  color: #000000;
-  font-weight: 600;
-  letter-spacing: 1px;
-  margin-top: 2px;
-}
-
-/* Carousel */
-.carousel-item img {
-  height: 300px;
-  object-fit: cover;
-  border-radius: 8px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
-}
-
-.carousel-control-prev-icon,
-.carousel-control-next-icon {
-  background-color: #000000;
-  border-radius: 50%;
-  padding: 20px;
-}
-
-/* Side Banners */
-.side-banner {
-  background: #000000;
-  height: 145px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #ffffff;
-  font-size: 18px;
-  font-weight: bold;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
-}
-
-/* Flash Sale */
-.flash-sale {
-  background: #ffffff;
-  padding: 25px;
-  border-radius: 8px;
-  margin-top: 20px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.09);
-  border: 2px solid #000000;
-}
-
-.flash-title {
-  font-size: 18px;
-  color: #000000;
-  font-weight: bold;
-}
-
-.flash-timer {
-  background: #000000;
-  color: white;
-  padding: 8px 15px;
-  border-radius: 8px;
-  font-size: 14px;
-}
-
-/* Product Card */
-.product-card {
-  background: #ffffff;
-  border: 2px solid #000000;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
-  margin-bottom: 15px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-}
-
-.product-card:hover {
-  transform: translateY(-2px) scale(1.03);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.13);
-}
-
-.product-image {
-  width: 100%;
-  background: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.product-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.3s
-}
-
-
-.product-card:hover .product-image img {
-  transform: scale(1.07);
-}
-
-.product-badge {
+.arrow-btn {
   position: absolute;
-  top: 5px;
-  left: 5px;
-  background: #000000;
-  color: #ffffff;
-  padding: 3px 8px;
-  font-size: 12px;
-  border-radius: 4px;
-  font-weight: bold;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  top: 50%; transform: translateY(-50%);
+  background: transparent;
+  border: none; color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; z-index: 5;
+  transition: transform 0.2s, opacity 0.2s;
+  opacity: 0.7;
+}
+.arrow-btn:hover { opacity: 1; transform: translateY(-50%) scale(1.2); }
+.arrow-btn.left  { left: 30px; }
+.arrow-btn.right { right: 30px; }
+
+/* ════════ SECTIONS & GRID ════════ */
+.sections-container {
+  /* Tăng max-width và set width lớn để lấp đầy khoảng trắng 2 bên */
+  max-width: 1400px;
+  width: 96%;
+  margin: 0 auto;
+  padding: 30px 0 60px;
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
 }
 
-.product-info {
-  padding: 12px;
+.product-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
-.product-name {
-  font-size: 15px;
-  color: #000000;
-  height: 40px;
-  overflow: hidden;
-  margin-bottom: 8px;
-  font-weight: 500;
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  border-bottom: 2px solid #333;
+  padding-bottom: 8px;
 }
 
-.price-current {
-  color: #000000;
-  font-size: 16px;
-  font-weight: 600;
-}
-
-.price-discount {
-  background: #000000;
-  color: #ffffff;
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-size: 12px;
-  margin-left: 5px;
-  font-weight: bold;
-}
-
-.product-sold {
-  font-size: 12px;
-  color: #666666;
-  margin-top: 8px;
-}
-
-/* Section Title */
 .section-title {
-  font-size: 26px;
-  color: #000000;
-  font-weight: bold;
-  text-align: center;
-  margin-bottom: 32px;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  border-bottom: 2px solid #000000;
-  display: inline-block;
-  padding-bottom: 6px;
+  font-size: 24px;
+  margin: 0;
+  color: #222;
 }
 
-/* Footer */
-.footer {
-  background: #ffffff;
-  margin-top: 40px;
-  padding: 40px 0 20px;
-  border-top: 4px solid #000000;
-  border-radius: 8px 8px 0 0;
-}
-
-.footer h5 {
+.view-all-btn {
+  background: #fff;
+  border: 1px solid #444;
+  padding: 6px 16px;
   font-size: 14px;
-  color: #000000;
-  margin-bottom: 15px;
-  text-transform: uppercase;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s;
 }
 
-.footer ul {
-  list-style: none;
-  padding: 0;
+.view-all-btn:hover {
+  background: #444;
+  color: #fff;
 }
 
-.footer li {
-  margin-bottom: 10px;
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr); /* 5 SẢN PHẨM TRÊN 1 DÒNG */
+  gap: 15px; /* Khoảng cách giữa các thẻ */
 }
 
-.footer a {
-  color: #000000;
-  text-decoration: none;
-  font-size: 13px;
+/* ════════ PRODUCT CARD ════════ */
+.pcard {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background: #fff;
+  overflow: hidden;
+  cursor: pointer;
+  transition: box-shadow 0.2s, transform 0.2s;
+  
+  /* Flexbox giúp các thẻ luôn cao bằng nhau */
+  display: flex;
+  flex-direction: column;
+  height: 100%; 
 }
 
-.footer a:hover {
-  color: #333333;
+.pcard:hover { 
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08); 
+  transform: translateY(-4px); 
 }
 
-.footer-bottom {
-  text-align: center;
-  padding-top: 20px;
-  border-top: 1px solid #000000;
-  color: #000000;
-  font-size: 12px;
+/* Ép khung ảnh thành hình vuông hoàn hảo không bao giờ tràn */
+.pcard-img-wrap { 
+  width: 100%; 
+  padding-top: 100%; /* Mẹo tạo hình vuông tỷ lệ 1:1 */
+  position: relative;
+  background: #f8f8f8; 
+  border-bottom: 1px solid #eee;
+  overflow: hidden;
 }
 
-.btn-primary {
-  background-color: #000000;
-  border-color: #000000;
+.pcard-img { 
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%; 
+  height: 100%; 
+  object-fit: cover; /* Cắt vừa vặn, không bị kéo dãn hay méo hình */
+  display: block; 
 }
 
-.btn-primary:hover {
-  background-color: #333333;
-  border-color: #333333;
+.pcard-body { 
+  padding: 12px; 
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between; /* Giữ giá sản phẩm luôn nằm dưới cùng */
+  flex-grow: 1; /* Lấp đầy khoảng trống còn lại của thẻ */
+  gap: 8px;
+}
+
+.pcard-name { 
+  font-size: 14px; 
+  font-weight: 500; 
+  color: #333; 
+  
+  /* Hiển thị tối đa 2 dòng nếu tên quá dài, sau đó có dấu ... */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp:2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.4;
+}
+
+.pcard-price { 
+  font-size: 15px; 
+  font-weight: 700; 
+  color: #d32f2f; 
+  margin-top: auto; /* Luôn đẩy giá xuống sát đáy */
+}
+
+/* ════════ RESPONSIVE ════════ */
+@media (max-width: 1200px) {
+  .product-grid { grid-template-columns: repeat(4, 1fr); }
+}
+@media (max-width: 992px) { 
+  .product-grid { grid-template-columns: repeat(3, 1fr); } 
+}
+@media (max-width: 768px) {
+  .product-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .hero-main { height: 250px; }
+  .banner-text { font-size: 40px; }
+}
+@media (max-width: 480px) {
+  .hero-main { height: 180px; }
+  .banner-text { font-size: 28px; }
+  .banner-text span { font-size: 14px; }
+  .section-title { font-size: 18px; }
+  .view-all-btn { padding: 4px 10px; font-size: 12px; }
 }
 </style>

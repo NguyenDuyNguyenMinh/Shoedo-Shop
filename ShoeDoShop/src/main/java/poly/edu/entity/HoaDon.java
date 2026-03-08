@@ -42,6 +42,10 @@ public class HoaDon {
     @Column(name = "NgayMua")
     @Temporal(TemporalType.TIMESTAMP)
     private Date ngayMua;
+    
+    @Column(name = "NgayDen")
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date ngayDen;
 
     @OneToMany(mappedBy = "hoaDon", fetch = FetchType.LAZY)
     @JsonIgnore

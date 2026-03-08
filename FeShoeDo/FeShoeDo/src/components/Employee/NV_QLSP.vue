@@ -4,33 +4,40 @@
 
     <main class="main-content">
       <div class="page-container">
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <div
+          class="alert alert-success alert-dismissible fade show"
+          role="alert"
+        >
           <span>Đã lưu sản phẩm thành công.</span>
-          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="alert"
+          ></button>
         </div>
 
         <div class="row g-3 mb-4">
           <div class="col-md-3">
             <div class="stats-mini bg-gradient-1">
-              <h4>128</h4>
+              <h4>{{ totalProducts }}</h4>
               <p>Tổng sản phẩm</p>
             </div>
           </div>
           <div class="col-md-3">
             <div class="stats-mini bg-gradient-2">
-              <h4>96</h4>
+              <h4>{{ activeProducts }}</h4>
               <p>Đang hoạt động</p>
             </div>
           </div>
           <div class="col-md-3">
             <div class="stats-mini bg-gradient-3">
-              <h4>12</h4>
+              <h4>{{ outOfStock }}</h4>
               <p>Hết hàng</p>
             </div>
           </div>
           <div class="col-md-3">
             <div class="stats-mini bg-gradient-4">
-              <h4>8</h4>
+              <h4>{{ lowStock }}</h4>
               <p>Sắp hết hàng</p>
             </div>
           </div>
@@ -40,100 +47,253 @@
           <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
               <h5 class="page-title">Danh sách sản phẩm</h5>
-              <p class="page-subtitle">Quản lý và chỉnh sửa thông tin sản phẩm</p>
+              <p class="page-subtitle">
+                Quản lý và chỉnh sửa thông tin sản phẩm
+              </p>
             </div>
-            <button class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#addProductModal">
+            <button
+              class="btn btn-dark"
+              data-bs-toggle="modal"
+              data-bs-target="#addProductModal"
+            >
               <i class="bi bi-plus-circle me-2"></i>Thêm sản phẩm mới
             </button>
           </div>
 
           <div class="filter-section">
             <div class="row g-3">
-              <div class="col-md-3">
+              <div class="col-md-4">
                 <div class="input-group">
                   <span class="input-group-text bg-light">
                     <i class="bi bi-search"></i>
                   </span>
-                  <input type="text" class="form-control" placeholder="Tìm tên sản phẩm...">
+                  <input
+                    type="text"
+                    v-model="filterKeyword"
+                    class="form-control"
+                    placeholder="Tìm tên sản phẩm..."
+                  />
                 </div>
               </div>
               <div class="col-md-2">
-                <select class="form-select">
-                  <option>Tất cả danh mục</option>
-                  <option>Giày sneaker</option>
-                  <option>Giày thể thao</option>
-                  <option>Giày công sở</option>
+                <select v-model="filterCategory" class="form-select">
+                  <option value="">Tất cả danh mục</option>
+                  <option
+                    v-for="cat in categories"
+                    :key="cat.maDM"
+                    :value="cat.tenDM"
+                  >
+                    {{ cat.tenDM }}
+                  </option>
                 </select>
               </div>
               <div class="col-md-2">
-                <select class="form-select">
-                  <option>Tất cả giới tính</option>
-                  <option>Nam</option>
-                  <option>Nữ</option>
-                  <option>Unisex</option>
+                <select v-model="filterGender" class="form-select">
+                  <option value="">Tất cả giới tính</option>
+                  <option value="Nam">Nam</option>
+                  <option value="Nữ">Nữ</option>
+                  <option value="Unisex">Unisex</option>
                 </select>
               </div>
               <div class="col-md-2">
-                <select class="form-select">
-                  <option>Trạng thái</option>
-                  <option>Còn hàng</option>
-                  <option>Hết hàng</option>
-                  <option>Sắp hết</option>
+                <select v-model="filterStatus" class="form-select">
+                  <option value="">Trạng thái</option>
+                  <option value="Còn hàng">Còn hàng</option>
+                  <option value="Hết hàng">Hết hàng</option>
+                  <option value="Sắp hết">Sắp hết</option>
                 </select>
               </div>
-              <div class="col-md-3">
-                <div class="d-flex gap-2">
-                  <button class="btn btn-dark flex-fill">
-                    <i class="bi bi-search me-2"></i>Tìm kiếm
-                  </button>
-                  <button class="btn btn-outline-secondary">
-                    <i class="bi bi-arrow-clockwise"></i>
-                  </button>
-                </div>
+              <div class="col-md-2">
+                <button
+                  @click="resetFilters"
+                  class="btn btn-outline-secondary w-100"
+                >
+                  <i class="bi bi-arrow-clockwise me-2"></i>Reset
+                </button>
               </div>
             </div>
           </div>
 
           <div class="products-list">
             <div class="row">
-              <div class="col-12">
-                <div class="product-card">
-                  <div class="row align-items-center" style="height: 100px;">
-                    <div class="col-md-1">
-                      <img src="https://placehold.co/80x80" alt="Sneaker Classic" class="product-image rounded">
+              <div
+                class="col-12"
+                v-for="item in filteredProducts"
+                :key="item.maSP"
+              >
+                <div
+                  class="product-card"
+                  :class="{ 'opacity-50': !item.isActive }"
+                >
+                <span
+                    class="status-badge-corner"
+                    :class="[
+                      'badge',
+                      item.trangThai === 'Còn hàng'
+                        ? 'bg-success'
+                        : item.trangThai === 'Sắp hết'
+                        ? 'bg-warning text-dark'
+                        : 'bg-danger',
+                    ]"
+                  >
+                    {{ item.trangThai }}
+                  </span>
+                  <div class="row align-items-center" style="height: 100px">
+                    <div class="col-md-1 me-3">
+                      <img
+                        :src="
+                          item.hinhAnhDaiDien
+                            ? `http://localhost:8080/images/${item.hinhAnhDaiDien}`
+                            : 'https://placehold.co/80x80'
+                        "
+                        alt="Product"
+                        class="product-image rounded"
+                        style="width: 80px; height: 80px; object-fit: cover"
+                      />
                     </div>
                     <div class="col-md-8 align-items-center">
                       <div class="d-flex">
-                        <h6 class="mb-1 me-2">Sneaker Classic 01</h6>
-                        <p class="text-muted small mb-1 d-flex align-items-center">
-                          || Giay sneaker <i class="bi bi-tag me-1"></i>
+                        <h6 class="mb-1 me-2">{{ item.tenSP }}</h6>
+                        <p
+                          class="text-muted small mb-1 d-flex align-items-center"
+                        >
+                          || {{ item.danhMucs || "Chưa phân loại" }}
+                          <i class="bi bi-tag me-1"></i>
                         </p>
                       </div>
                       <p class="text-muted small mb-1">
-                        <i class="bi bi-box me-1"></i> 3 phân loại
+                        <i class="bi bi-box me-1"></i>
+                        {{ item.soPhanLoai }} phân loại
                       </p>
                       <div class="mb-1">
-                        <span class="text-primary fw-bold">1.290.000 VND</span>
+                        <template
+                          v-if="!item.khuyenMai || item.khuyenMai === 0"
+                        >
+                          <span class="text-primary fw-bold">
+                            <template v-if="item.giaMin === item.giaMax">
+                              {{ item.giaMin?.toLocaleString("vi-VN") }} ₫
+                            </template>
+                            <template v-else>
+                              {{ item.giaMin?.toLocaleString("vi-VN") }} ₫ -
+                              {{ item.giaMax?.toLocaleString("vi-VN") }} ₫
+                            </template>
+                          </span>
+                        </template>
+
+                        <template v-else>
+                          <div
+                            class="d-flex align-items-center flex-wrap gap-2"
+                          >
+                            <span
+                              class="text-muted text-decoration-line-through small"
+                            >
+                              <template v-if="item.giaMin === item.giaMax">
+                                {{ item.giaMin?.toLocaleString("vi-VN") }} ₫
+                              </template>
+                              <template v-else>
+                                {{ item.giaMin?.toLocaleString("vi-VN") }} ₫ -
+                                {{ item.giaMax?.toLocaleString("vi-VN") }} ₫
+                              </template>
+                            </span>
+
+                            <span class="text-danger fw-bold">
+                              <template v-if="item.giaMin === item.giaMax">
+                                {{
+                                  (
+                                    item.giaMin -
+                                    (item.giaMin * item.khuyenMai) / 100
+                                  )?.toLocaleString("vi-VN")
+                                }}
+                                ₫
+                              </template>
+                              <template v-else>
+                                {{
+                                  (
+                                    item.giaMin -
+                                    (item.giaMin * item.khuyenMai) / 100
+                                  )?.toLocaleString("vi-VN")
+                                }}
+                                ₫ -
+                                {{
+                                  (
+                                    item.giaMax -
+                                    (item.giaMax * item.khuyenMai) / 100
+                                  )?.toLocaleString("vi-VN")
+                                }}
+                                ₫
+                              </template>
+                            </span>
+
+                            <span class="badge bg-danger"
+                              >-{{ item.khuyenMai }}%</span
+                            >
+                          </div>
+                        </template>
                       </div>
                       <div class="small">
-                        <span class="me-3">Tồn kho: <strong>120</strong></span>
+                        <span class="me-3"
+                          >Tồn kho tổng:
+                          <strong>{{ item.tongTonKho }}</strong></span
+                        >
+                        <span v-if="!item.isActive" class="text-danger"
+                          ><i class="bi bi-eye-slash"></i> Đã ẩn</span
+                        >
                       </div>
                     </div>
-                    <div class="col-md-1 align-items-center">
+                    <!-- <div class="col-md-1 align-items-center">
                       <div class="small">
-                        <span class="badge bg-success">Còn hàng</span>
+                        <span
+                          :class="[
+                            'badge',
+                            item.trangThai === 'Còn hàng'
+                              ? 'bg-success'
+                              : item.trangThai === 'Sắp hết'
+                              ? 'bg-warning text-dark'
+                              : 'bg-danger',
+                          ]"
+                        >
+                          {{ item.trangThai }}
+                        </span>
                       </div>
-                    </div>
+                    </div> -->
                     <div class="col-md-2 align-items-end">
                       <div class="action-buttons">
-                        <button class="btn btn-outline-primary btn-sm me-2" data-bs-toggle="modal" data-bs-target="#editProductModal" title="Chỉnh sửa">
+                        <button
+                          type="button"
+                          class="btn btn-outline-primary btn-sm me-2"
+                          @click="openEditModal(item.maSP)"
+                          data-bs-toggle="modal"
+                          data-bs-target="#editProductModal"
+                          title="Chỉnh sửa"
+                        >
                           <i class="bi bi-pencil"></i>
                         </button>
-                        <button class="btn btn-outline-secondary btn-sm me-2" data-bs-toggle="modal" data-bs-target="#variantsModal" title="Xem phân loại">
+                        <button
+                          class="btn btn-outline-secondary btn-sm me-2"
+                          data-bs-toggle="modal"
+                          data-bs-target="#variantsModal"
+                          title="Xem phân loại"
+                          @click="viewVariants(item)"
+                        >
                           <i class="bi bi-list-check"></i>
                         </button>
-                        <button class="btn btn-outline-danger btn-sm" title="Xóa">
-                          <i class="bi bi-trash"></i>
+                        <button
+                          type="button"
+                          class="btn btn-sm"
+                          :class="
+                            item.isActive
+                              ? 'btn-outline-danger'
+                              : 'btn-outline-success'
+                          "
+                          :title="
+                            item.isActive ? 'Ẩn sản phẩm' : 'Hiện sản phẩm'
+                          "
+                          @click="toggleProductStatus(item.maSP, item.isActive)"
+                        >
+                          <i
+                            class="bi"
+                            :class="item.isActive ? 'bi-trash' : 'bi-eye'"
+                          ></i>
                         </button>
                       </div>
                     </div>
@@ -141,166 +301,133 @@
                 </div>
               </div>
 
-              <div class="col-12">
-                <div class="product-card">
-                  <div class="row align-items-center" style="height: 100px;">
-                    <div class="col-md-1">
-                      <img src="https://placehold.co/80x80" alt="Runner Pro" class="product-image rounded">
-                    </div>
-                    <div class="col-md-8 align-items-center">
-                      <div class="d-flex">
-                        <h6 class="mb-1 me-2">Runner Pro 2.0</h6>
-                        <p class="text-muted small mb-1 d-flex align-items-center">
-                          || Giay the thao <i class="bi bi-tag me-1"></i>
-                        </p>
-                      </div>
-                      <p class="text-muted small mb-1">
-                        <i class="bi bi-box me-1"></i> 4 phân loại
-                      </p>
-                      <div class="mb-1">
-                        <span class="text-primary fw-bold">1.990.000 VND</span>
-                      </div>
-                      <div class="small">
-                        <span class="me-3">Tồn kho: <strong>12</strong></span>
-                      </div>
-                    </div>
-                    <div class="col-md-1 align-items-center">
-                      <div class="small">
-                        <span class="badge bg-warning text-dark">Sắp hết</span>
-                      </div>
-                    </div>
-                    <div class="col-md-2 align-items-end">
-                      <div class="action-buttons">
-                        <button class="btn btn-outline-primary btn-sm me-2" data-bs-toggle="modal" data-bs-target="#editProductModal" title="Chỉnh sửa">
-                          <i class="bi bi-pencil"></i>
-                        </button>
-                        <button class="btn btn-outline-secondary btn-sm me-2" data-bs-toggle="modal" data-bs-target="#variantsModal" title="Xem phân loại">
-                          <i class="bi bi-list-check"></i>
-                        </button>
-                        <button class="btn btn-outline-danger btn-sm" title="Xóa">
-                          <i class="bi bi-trash"></i>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+              <div
+                v-if="products.length === 0"
+                class="text-center py-5 text-muted"
+              >
+                Đang tải dữ liệu hoặc chưa có sản phẩm nào...
               </div>
-
-              <div class="col-12">
-                <div class="product-card">
-                  <div class="row align-items-center" style="height: 100px;">
-                    <div class="col-md-1">
-                      <img src="https://placehold.co/80x80" alt="Office Leather" class="product-image rounded">
-                    </div>
-                    <div class="col-md-8 align-items-center">
-                      <div class="d-flex">
-                        <h6 class="mb-1 me-2">Office Leather 88</h6>
-                        <p class="text-muted small mb-1 d-flex align-items-center">
-                          || Giay cong so <i class="bi bi-tag me-1"></i>
-                        </p>
-                      </div>
-                      <p class="text-muted small mb-1">
-                        <i class="bi bi-box me-1"></i> 2 phân loại
-                      </p>
-                      <div class="mb-1">
-                        <span class="text-primary fw-bold">2.490.000 VND</span>
-                      </div>
-                      <div class="small">
-                        <span class="me-3">Tồn kho: <strong>0</strong></span>
-                      </div>
-                    </div>
-                    <div class="col-md-1 align-items-center">
-                      <div class="small">
-                        <span class="badge bg-danger">Hết hàng</span>
-                      </div>
-                    </div>
-                    <div class="col-md-2 align-items-end">
-                      <div class="action-buttons">
-                        <button class="btn btn-outline-primary btn-sm me-2" data-bs-toggle="modal" data-bs-target="#editProductModal" title="Chỉnh sửa">
-                          <i class="bi bi-pencil"></i>
-                        </button>
-                        <button class="btn btn-outline-secondary btn-sm me-2" data-bs-toggle="modal" data-bs-target="#variantsModal" title="Xem phân loại">
-                          <i class="bi bi-list-check"></i>
-                        </button>
-                        <button class="btn btn-outline-danger btn-sm" title="Xóa">
-                          <i class="bi bi-trash"></i>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="mt-4">
-              <nav>
-                <ul class="pagination justify-content-center">
-                  <li class="page-item disabled">
-                    <button class="page-link">
-                      <i class="bi bi-chevron-left"></i>
-                    </button>
-                  </li>
-                  <li class="page-item active">
-                    <button class="page-link">1</button>
-                  </li>
-                  <li class="page-item">
-                    <button class="page-link">2</button>
-                  </li>
-                  <li class="page-item">
-                    <button class="page-link">3</button>
-                  </li>
-                  <li class="page-item">
-                    <button class="page-link">
-                      <i class="bi bi-chevron-right"></i>
-                    </button>
-                  </li>
-                </ul>
-              </nav>
             </div>
           </div>
         </div>
       </div>
     </main>
 
-    <div class="modal fade" id="addProductModal" tabindex="-1" aria-hidden="true">
+    <div
+      class="modal fade"
+      id="addCategoryModal"
+      tabindex="-1"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h6 class="modal-title">
+              <i class="bi bi-tags me-2"></i>Thêm danh mục mới
+            </h6>
+            <button
+              type="button"
+              class="btn-close"
+              id="closeCategoryModalBtn"
+              data-bs-dismiss="modal"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <input
+              type="text"
+              class="form-control"
+              v-model="newCategoryName"
+              placeholder="Nhập tên danh mục..."
+              @keyup.enter="saveNewCategory"
+            />
+          </div>
+          <div class="modal-footer p-2">
+            <button
+              type="button"
+              class="btn btn-sm btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Hủy
+            </button>
+            <button
+              type="button"
+              class="btn btn-sm btn-dark"
+              @click="saveNewCategory"
+            >
+              Lưu lại
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="modal fade"
+      id="addProductModal"
+      tabindex="-1"
+      aria-hidden="true"
+    >
       <div class="modal-dialog modal-lg">
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title">
               <i class="bi bi-plus-circle me-2"></i>Thêm sản phẩm mới
             </h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+            ></button>
           </div>
-          <form>
+          <form @submit.prevent="saveProduct">
             <div class="modal-body">
-              <h6 class="mb-3"><i class="bi bi-info-circle me-2"></i>Thông tin cơ bản</h6>
+              <h6 class="mb-3">
+                <i class="bi bi-info-circle me-2"></i>Thông tin cơ bản
+              </h6>
               <div class="row mb-3">
                 <div class="col-md-12">
                   <label class="form-label">Tên sản phẩm *</label>
-                  <input type="text" class="form-control" value="Street Sneaker Lite">
+                  <input
+                    type="text"
+                    class="form-control"
+                    v-model="newProduct.tenSP"
+                    required
+                  />
                 </div>
               </div>
 
-              <div class="row mb-3 align-items-start">
-                <div class="col-md-8">
-                  <label class="form-label">Danh mục * <small class="text-muted">(Có thể chọn nhiều)</small></label>
-                  <div class="d-flex flex-wrap gap-2 category-pills">
-                    <input type="checkbox" class="btn-check" id="cat-snk-add" checked>
-                    <label class="btn btn-outline-dark btn-sm rounded-pill px-3" for="cat-snk-add">Giày sneaker</label>
+              <div class="col-md-12">
+                <label class="form-label mb-2"
+                  >Danh mục *
+                  <small class="text-muted">(Có thể chọn nhiều)</small>
+                </label>
 
-                    <input type="checkbox" class="btn-check" id="cat-sport-add">
-                    <label class="btn btn-outline-dark btn-sm rounded-pill px-3" for="cat-sport-add">Giày thể thao</label>
-
-                    <input type="checkbox" class="btn-check" id="cat-office-add">
-                    <label class="btn btn-outline-dark btn-sm rounded-pill px-3" for="cat-office-add">Giày công sở</label>
-
-                    <input type="checkbox" class="btn-check" id="cat-leather-add">
-                    <label class="btn btn-outline-dark btn-sm rounded-pill px-3" for="cat-leather-add">Giày da</label>
+                <div
+                  class="d-flex flex-wrap gap-2 category-pills align-items-center"
+                >
+                  <div v-for="cat in categories" :key="cat.maDM">
+                    <input
+                      type="checkbox"
+                      class="btn-check"
+                      :id="'cat-' + cat.maDM"
+                      :value="cat.maDM"
+                      v-model="newProduct.categoryIds"
+                    />
+                    <label
+                      class="btn btn-outline-dark btn-sm rounded-pill px-3"
+                      :for="'cat-' + cat.maDM"
+                      >{{ cat.tenDM }}</label
+                    >
                   </div>
-                </div>
-                <div class="col-md-4 mt-4">
-                  <button type="button" class="btn btn-outline-dark w-100" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
-                    <i class="bi bi-plus-circle me-2"></i>Thêm danh mục
+
+                  <button
+                    type="button"
+                    class="btn btn-outline-dark btn-sm rounded-pill px-3 border-dashed"
+                    data-bs-toggle="modal"
+                    data-bs-target="#addCategoryModal"
+                    @click="prepareAddCategory('add')"
+                  >
+                    <i class="bi bi-plus"></i> Thêm mới
                   </button>
                 </div>
               </div>
@@ -308,18 +435,37 @@
               <div class="mb-3">
                 <label class="form-label">Giới tính *</label>
                 <div class="btn-group w-100 gender-group" role="group">
-                  <input type="radio" class="btn-check" name="gender-add" id="gender-male-add" value="male" checked>
-                  <label class="btn btn-outline-dark" for="gender-male-add">
+                  <input
+                    type="radio"
+                    class="btn-check"
+                    v-model="newProduct.gioiTinh"
+                    :value="true"
+                    id="g-male"
+                    name="g"
+                  />
+                  <label class="btn btn-outline-dark" for="g-male">
                     <i class="bi bi-gender-male me-1"></i> Nam
                   </label>
-                  
-                  <input type="radio" class="btn-check" name="gender-add" id="gender-female-add" value="female">
-                  <label class="btn btn-outline-dark" for="gender-female-add">
+                  <input
+                    type="radio"
+                    class="btn-check"
+                    v-model="newProduct.gioiTinh"
+                    :value="false"
+                    id="g-female"
+                    name="g"
+                  />
+                  <label class="btn btn-outline-dark" for="g-female">
                     <i class="bi bi-gender-female me-1"></i> Nữ
                   </label>
-                  
-                  <input type="radio" class="btn-check" name="gender-add" id="gender-unisex-add" value="unisex">
-                  <label class="btn btn-outline-dark" for="gender-unisex-add">
+                  <input
+                    type="radio"
+                    class="btn-check"
+                    v-model="newProduct.gioiTinh"
+                    :value="null"
+                    id="g-uni"
+                    name="g"
+                  />
+                  <label class="btn btn-outline-dark" for="g-uni">
                     <i class="bi bi-gender-ambiguous me-1"></i> Unisex
                   </label>
                 </div>
@@ -327,131 +473,142 @@
 
               <div class="mb-3">
                 <label class="form-label">Mô tả sản phẩm</label>
-                <textarea class="form-control" rows="5">Giay sneaker phong cach streetwear, phu hop di hoc va di choi.</textarea>
+                <textarea
+                  class="form-control"
+                  rows="3"
+                  v-model="newProduct.moTa"
+                ></textarea>
               </div>
-              <hr>
+
+              <hr />
               <h6 class="mb-3 mt-4">
-                <i class="bi bi-layers me-2"></i>Phân loại sản phẩm
+                <i class="bi bi-layers me-2"></i>Phân loại sản phẩm (Biến thể)
               </h6>
-              
-              <div class="mb-3">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                  <div class="fw-bold text-primary">#1</div>
-                  <button type="button" class="btn btn-outline-danger btn-sm d-flex align-items-center">
-                    <i class="bi bi-trash me-1"></i> Xóa
-                  </button>
-                </div>
 
-                <div class="card">
-                  <div class="card-body">
-                    <div class="row g-3">
-                      <div class="col-md-3">
-                        <label class="form-label">Màu sắc *</label>
-                        <input type="text" class="form-control" value="Trắng" placeholder="VD: Đen, Trắng">
-                      </div>
-                      <div class="col-md-3">
-                        <label class="form-label">Size *</label>
-                        <select class="form-select">
-                          <option value="">Chọn size</option>
-                          <option value="41">41</option>
-                          <option value="42" selected>42</option>
-                          <option value="43">43</option>
-                        </select>
-                      </div>
-                      <div class="col-md-6">
-                        <label class="form-label">Đơn giá (VND) *</label>
-                        <input type="number" class="form-control" value="1290000">
-                      </div>
-                      <div class="col-md-4">
-                        <label class="form-label">Số lượng *</label>
-                        <input type="number" class="form-control" value="50">
-                      </div>
-                      <div class="col-md-4">
-                        <label class="form-label">Trạng thái</label>
-                        <select class="form-select">
-                          <option selected>Còn hàng</option>
-                          <option>Hết hàng</option>
-                        </select>
-                      </div>
-                      <div class="col-md-4">
-                        <label class="form-label">Hình ảnh</label>
-                        <div class="input-group">
-                          <input type="text" class="form-control" value="sneaker-white-42.jpg">
-                          <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#imagePickerModal">
-                            <i class="bi bi-image"></i>
-                          </button>
-                        </div>
+              <div
+                v-for="(v, index) in newProduct.variants"
+                :key="index"
+                class="card mb-3 bg-light border-0 shadow-sm"
+              >
+                <div class="card-body">
+                  <div
+                    class="d-flex justify-content-between align-items-center mb-3"
+                  >
+                    <span class="badge bg-primary fs-6"
+                      >Phân loại #{{ index + 1 }}</span
+                    >
+                    <button
+                      type="button"
+                      class="btn btn-outline-danger btn-sm d-flex align-items-center"
+                      @click="removeVariant(index)"
+                      v-if="newProduct.variants.length > 1"
+                    >
+                      <i class="bi bi-trash me-1"></i> Xóa
+                    </button>
+                  </div>
+
+                  <div class="row g-3">
+                    <div class="col-md-3">
+                      <label class="form-label small">Màu sắc *</label>
+                      <input
+                        type="text"
+                        class="form-control"
+                        v-model="v.tenMau"
+                        placeholder="VD: Đen, Trắng"
+                        required
+                      />
+                    </div>
+                    <div class="col-md-3">
+                      <label class="form-label small">Size (Nhập ID) *</label>
+                      <select
+                        class="form-select form-control-sm"
+                        v-model="v.maSize"
+                        required
+                      >
+                        <option value="" disabled selected>Chọn Size</option>
+                        <option
+                          v-for="s in sizes"
+                          :key="s.maSize"
+                          :value="s.maSize"
+                        >
+                          {{
+                            s.coGiay === 0 ? "Freesize (Phụ kiện)" : s.coGiay
+                          }}
+                        </option>
+                      </select>
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label small">Đơn giá (VND) *</label>
+                      <input
+                        type="number"
+                        class="form-control"
+                        v-model="v.donGia"
+                        required
+                      />
+                    </div>
+                    <div class="col-md-4">
+                      <label class="form-label small">Số lượng *</label>
+                      <input
+                        type="number"
+                        class="form-control"
+                        v-model="v.soLuong"
+                        required
+                      />
+                    </div>
+                    <div class="col-md-4">
+                      <label class="form-label small">Trạng thái</label>
+                      <select class="form-select" v-model="v.trangThai">
+                        <option value="Còn hàng">Còn hàng</option>
+                        <option value="Hết hàng">Hết hàng</option>
+                        <option value="Sắp hết">Sắp hết</option>
+                      </select>
+                    </div>
+                    <div class="col-md-4">
+                      <label class="form-label small">Tên file ảnh</label>
+                      <div class="input-group">
+                        <input
+                          type="text"
+                          class="form-control"
+                          v-model="v.hinhAnh"
+                          placeholder="vd: giay1.jpg"
+                        />
+                        <button
+                          type="button"
+                          class="btn btn-outline-secondary"
+                          @click="
+                            openImagePicker(index, '#addProductModal', false)
+                          "
+                          data-bs-toggle="modal"
+                          data-bs-target="#imagePickerModal"
+                        >
+                          <i class="bi bi-image"></i>
+                        </button>
                       </div>
                     </div>
                   </div>
                 </div>
-                <hr>
-              </div>
-
-              <div class="mb-3">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                  <div class="fw-bold text-primary">#2</div>
-                  <button type="button" class="btn btn-outline-danger btn-sm d-flex align-items-center">
-                    <i class="bi bi-trash me-1"></i> Xóa
-                  </button>
-                </div>
-
-                <div class="card">
-                  <div class="card-body">
-                    <div class="row g-3">
-                      <div class="col-md-3">
-                        <label class="form-label">Màu sắc *</label>
-                        <input type="text" class="form-control" value="Den" placeholder="VD: Đen, Trắng">
-                      </div>
-                      <div class="col-md-3">
-                        <label class="form-label">Size *</label>
-                        <select class="form-select">
-                          <option value="">Chọn size</option>
-                          <option value="41" selected>41</option>
-                          <option value="42">42</option>
-                        </select>
-                      </div>
-                      <div class="col-md-6">
-                        <label class="form-label">Đơn giá (VND) *</label>
-                        <input type="number" class="form-control" value="1290000">
-                      </div>
-                      <div class="col-md-4">
-                        <label class="form-label">Số lượng *</label>
-                        <input type="number" class="form-control" value="36">
-                      </div>
-                      <div class="col-md-4">
-                        <label class="form-label">Trạng thái</label>
-                        <select class="form-select">
-                          <option selected>Còn hàng</option>
-                          <option>Hết hàng</option>
-                        </select>
-                      </div>
-                      <div class="col-md-4">
-                        <label class="form-label">Hình ảnh</label>
-                        <div class="input-group">
-                          <input type="text" class="form-control" value="sneaker-black-41.jpg">
-                          <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#imagePickerModal">
-                            <i class="bi bi-image"></i>
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <hr>
               </div>
 
               <div class="text-center mb-3">
-                <button type="button" class="btn btn-outline-primary border-dashed w-100 py-2">
+                <button
+                  type="button"
+                  class="btn btn-outline-primary border-dashed w-100 py-2"
+                  @click="addVariant"
+                >
                   <i class="bi bi-plus-circle me-2"></i>Thêm phân loại
                 </button>
               </div>
             </div>
+
             <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                data-bs-dismiss="modal"
+              >
                 <i class="bi bi-x-circle me-2"></i>Hủy
               </button>
-              <button type="button" class="btn btn-dark">
+              <button type="submit" class="btn btn-dark">
                 <i class="bi bi-check-circle me-2"></i>Lưu sản phẩm
               </button>
             </div>
@@ -460,133 +617,242 @@
       </div>
     </div>
 
-    <div class="modal fade" id="editProductModal" tabindex="-1" aria-hidden="true">
+    <div
+      class="modal fade"
+      id="editProductModal"
+      tabindex="-1"
+      aria-hidden="true"
+    >
       <div class="modal-dialog modal-lg">
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title">
               <i class="bi bi-pencil me-2"></i>Chỉnh sửa sản phẩm
             </h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+            ></button>
           </div>
-          <form>
+          <form @submit.prevent="saveEditProduct">
             <div class="modal-body">
-              <h6 class="mb-3"><i class="bi bi-info-circle me-2"></i>Thông tin cơ bản</h6>
               <div class="row mb-3">
                 <div class="col-md-12">
                   <label class="form-label">Tên sản phẩm *</label>
-                  <input type="text" class="form-control" value="Sneaker Classic 01">
+                  <input
+                    type="text"
+                    class="form-control"
+                    v-model="editProductData.tenSP"
+                    required
+                  />
                 </div>
               </div>
-              
-              <div class="row mb-3 align-items-start">
-                <div class="col-md-12">
-                  <label class="form-label">Danh mục * <small class="text-muted">(Có thể chọn nhiều)</small></label>
-                  <div class="d-flex flex-wrap gap-2 category-pills">
-                    <input type="checkbox" class="btn-check" id="cat-snk-edit" checked>
-                    <label class="btn btn-outline-dark btn-sm rounded-pill px-3" for="cat-snk-edit">Giày sneaker</label>
+              <div class="col-md-12">
+                <label class="form-label mb-2">Danh mục *</label>
 
-                    <input type="checkbox" class="btn-check" id="cat-sport-edit">
-                    <label class="btn btn-outline-dark btn-sm rounded-pill px-3" for="cat-sport-edit">Giày thể thao</label>
+                <div
+                  class="d-flex flex-wrap gap-2 category-pills align-items-center"
+                >
+                  <div v-for="cat in categories" :key="cat.maDM">
+                    <input
+                      type="checkbox"
+                      class="btn-check"
+                      :id="'edit-cat-' + cat.maDM"
+                      :value="cat.maDM"
+                      v-model="editProductData.categoryIds"
+                    />
+                    <label
+                      class="btn btn-outline-dark btn-sm rounded-pill px-3"
+                      :for="'edit-cat-' + cat.maDM"
+                      >{{ cat.tenDM }}</label
+                    >
+                  </div>
 
-                    <input type="checkbox" class="btn-check" id="cat-office-edit">
-                    <label class="btn btn-outline-dark btn-sm rounded-pill px-3" for="cat-office-edit">Giày công sở</label>
+                  <button
+                    type="button"
+                    class="btn btn-outline-dark btn-sm rounded-pill px-3 border-dashed"
+                    data-bs-toggle="modal"
+                    data-bs-target="#addCategoryModal"
+                    @click="prepareAddCategory('edit')"
+                  >
+                    <i class="bi bi-plus"></i> Thêm mới
+                  </button>
+                </div>
+              </div>
+              <div class="row mb-3">
+                <div class="col-md-6">
+                  <label class="form-label">Giới tính *</label>
+                  <div class="btn-group w-100 gender-group">
+                    <input
+                      type="radio"
+                      class="btn-check"
+                      v-model="editProductData.gioiTinh"
+                      :value="true"
+                      id="edit-g-male"
+                    />
+                    <label class="btn btn-outline-dark" for="edit-g-male"
+                      >Nam</label
+                    >
+                    <input
+                      type="radio"
+                      class="btn-check"
+                      v-model="editProductData.gioiTinh"
+                      :value="false"
+                      id="edit-g-female"
+                    />
+                    <label class="btn btn-outline-dark" for="edit-g-female"
+                      >Nữ</label
+                    >
+                    <input
+                      type="radio"
+                      class="btn-check"
+                      v-model="editProductData.gioiTinh"
+                      :value="null"
+                      id="edit-g-uni"
+                    />
+                    <label class="btn btn-outline-dark" for="edit-g-uni"
+                      >Unisex</label
+                    >
+                  </div>
+                </div>
+
+                <div class="col-md-6">
+                  <label class="form-label">Khuyến mãi (%)</label>
+                  <div class="input-group">
+                    <input
+                      type="number"
+                      class="form-control"
+                      v-model="editProductData.khuyenMai"
+                      min="0"
+                      max="100"
+                      placeholder="0 - 100"
+                    />
+                    <span class="input-group-text">%</span>
                   </div>
                 </div>
               </div>
-
               <div class="mb-3">
-                <label class="form-label">Giới tính *</label>
-                <div class="btn-group w-100 gender-group" role="group">
-                  <input type="radio" class="btn-check" name="gender-edit" id="gender-male-edit" value="male" checked>
-                  <label class="btn btn-outline-dark" for="gender-male-edit">
-                    <i class="bi bi-gender-male me-1"></i> Nam
-                  </label>
-                  
-                  <input type="radio" class="btn-check" name="gender-edit" id="gender-female-edit" value="female">
-                  <label class="btn btn-outline-dark" for="gender-female-edit">
-                    <i class="bi bi-gender-female me-1"></i> Nữ
-                  </label>
-                  
-                  <input type="radio" class="btn-check" name="gender-edit" id="gender-unisex-edit" value="unisex">
-                  <label class="btn btn-outline-dark" for="gender-unisex-edit">
-                    <i class="bi bi-gender-ambiguous me-1"></i> Unisex
-                  </label>
-                </div>
+                <label class="form-label">Mô tả</label>
+                <textarea
+                  class="form-control"
+                  rows="3"
+                  v-model="editProductData.moTa"
+                ></textarea>
               </div>
-
-              <div class="mb-3">
-                <label class="form-label">Mô tả sản phẩm</label>
-                <textarea class="form-control" rows="5">Sneaker phong cach co dien, de day, de mang va ben.</textarea>
-              </div>
-              <hr>
-              <h6 class="mb-3 mt-4"><i class="bi bi-layers me-2"></i>Phân loại sản phẩm</h6>
-              <div class="mb-3">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                  <div class="fw-bold text-primary">#1</div>
-                  <div class="fw-bold">
-                    <button type="button" class="btn btn-outline-danger btn-sm align-items-center">
-                      <i class="bi bi-trash me-1"></i>Xóa
+              <hr />
+              <h6>Phân loại sản phẩm (Biến thể)</h6>
+              <div
+                v-for="(v, index) in editProductData.variants"
+                :key="index"
+                class="card mb-3 bg-light"
+              >
+                <div class="card-body">
+                  <div class="d-flex justify-content-between mb-2">
+                    <span class="badge bg-primary"
+                      >Phân loại #{{ index + 1 }}</span
+                    >
+                    <button
+                      type="button"
+                      class="btn btn-outline-danger btn-sm"
+                      @click="removeEditVariant(index)"
+                      v-if="editProductData.variants.length > 1"
+                    >
+                      Xóa
                     </button>
                   </div>
-                </div>
-                <div class="card bg-light border-0">
-                  <div class="card-body">
-                    <div class="row g-3">
-                      <div class="col-md-3">
-                        <label class="form-label">Màu sắc *</label>
-                        <input type="text" class="form-control" value="Trắng" placeholder="VD: Đen, Trắng">
-                      </div>
-                      <div class="col-md-3">
-                        <label class="form-label">Size *</label>
-                        <select class="form-select">
-                          <option value="">Chọn size</option>
-                          <option value="42" selected>42</option>
-                        </select>
-                      </div>
-                      <div class="col-md-6">
-                        <label class="form-label">Đơn giá (VND) *</label>
-                        <input type="number" class="form-control" value="1290000">
-                      </div>
-                      <div class="col-md-4">
-                        <label class="form-label">Số lượng *</label>
-                        <input type="number" class="form-control" value="80">
-                      </div>
-                      <div class="col-md-4">
-                        <label class="form-label">Trạng thái</label>
-                        <select class="form-select">
-                          <option selected>Còn hàng</option>
-                          <option>Hết hàng</option>
-                        </select>
-                      </div>
-                      <div class="col-md-4">
-                        <label class="form-label">Hình ảnh</label>
-                        <div class="input-group">
-                          <input type="text" class="form-control" value="sneaker-white-42.jpg">
-                          <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#imagePickerModal">
-                            <i class="bi bi-image"></i>
-                          </button>
-                        </div>
+                  <div class="row g-2">
+                    <div class="col-md-3">
+                      <label class="form-label small">Màu *</label>
+                      <input
+                        type="text"
+                        class="form-control"
+                        v-model="v.tenMau"
+                        required
+                      />
+                    </div>
+                    <div class="col-md-3">
+                      <label class="form-label small">Size *</label>
+                      <select class="form-select" v-model="v.maSize" required>
+                        <option value="" disabled>Chọn Size</option>
+                        <option
+                          v-for="s in sizes"
+                          :key="s.maSize"
+                          :value="s.maSize"
+                        >
+                          {{
+                            s.coGiay === 0 ? "Freesize (Phụ kiện)" : s.coGiay
+                          }}
+                        </option>
+                      </select>
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label small">Đơn giá *</label>
+                      <input
+                        type="number"
+                        class="form-control"
+                        v-model="v.donGia"
+                        required
+                      />
+                    </div>
+                    <div class="col-md-4">
+                      <label class="form-label small">Số lượng *</label>
+                      <input
+                        type="number"
+                        class="form-control"
+                        v-model="v.soLuong"
+                        required
+                      />
+                    </div>
+                    <div class="col-md-4">
+                      <label class="form-label small">Trạng thái</label>
+                      <select class="form-select" v-model="v.trangThai">
+                        <option value="Còn hàng">Còn hàng</option>
+                        <option value="Hết hàng">Hết hàng</option>
+                        <option value="Sắp hết">Sắp hết</option>
+                      </select>
+                    </div>
+                    <div class="col-md-4">
+                      <label class="form-label small">Hình ảnh</label>
+                      <div class="input-group">
+                        <input
+                          type="text"
+                          class="form-control"
+                          v-model="v.hinhAnh"
+                        />
+                        <button
+                          type="button"
+                          class="btn btn-outline-secondary"
+                          @click="
+                            openImagePicker(index, '#editProductModal', true)
+                          "
+                          data-bs-toggle="modal"
+                          data-bs-target="#imagePickerModal"
+                        >
+                          <i class="bi bi-image"></i>
+                        </button>
                       </div>
                     </div>
                   </div>
                 </div>
-                <hr>
               </div>
-
-              <div class="text-center mb-3">
-                <button type="button" class="btn btn-outline-primary border-dashed w-100 py-2">
-                  <i class="bi bi-plus-circle me-2"></i>Thêm phân loại
-                </button>
-              </div>
+              <button
+                type="button"
+                class="btn btn-outline-primary w-100 border-dashed"
+                @click="addEditVariant"
+              >
+                + Thêm phân loại
+              </button>
             </div>
             <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                <i class="bi bi-x-circle me-2"></i>Hủy
+              <button
+                type="button"
+                class="btn btn-secondary"
+                data-bs-dismiss="modal"
+              >
+                Hủy
               </button>
-              <button type="button" class="btn btn-dark">
-                <i class="bi bi-check-circle me-2"></i>Cập nhật
-              </button>
+              <button type="submit" class="btn btn-dark">Lưu thay đổi</button>
             </div>
           </form>
         </div>
@@ -598,156 +864,195 @@
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title">
-              <i class="bi bi-list-check me-2"></i>Phân loại sản phẩm: Sneaker Classic 01
+              <i class="bi bi-list-check me-2"></i>Phân loại:
+              <span class="text-primary">{{ selectedProductName }}</span>
             </h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+            ></button>
           </div>
           <div class="modal-body">
             <div class="table-responsive">
-              <table class="table table-hover">
-                <thead>
+              <table class="table table-hover align-middle">
+                <thead class="table-light">
                   <tr>
                     <th>#</th>
-                    <th>Phân loại</th>
                     <th>Hình ảnh</th>
-                    <th>Số lượng</th>
+                    <th>Phân loại (Màu - Size)</th>
+                    <th>Số lượng kho</th>
                     <th>Đơn giá</th>
                     <th>Trạng thái</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr>
-                    <td>1</td>
-                    <td>Trắng - Size 42</td>
-                    <td>
-                      <img src="https://placehold.co/56x56" alt="Trắng - Size 42" class="variant-image">
-                    </td>
-                    <td>80</td>
-                    <td>1.290.000 VND</td>
-                    <td>
-                      <span class="badge bg-success">Còn hàng</span>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>2</td>
-                    <td>Den - Size 41</td>
-                    <td>
-                      <img src="https://placehold.co/56x56" alt="Den - Size 41" class="variant-image">
-                    </td>
-                    <td>40</td>
-                    <td>1.290.000 VND</td>
-                    <td>
-                      <span class="badge bg-warning text-dark">Sắp hết</span>
+                  <tr v-if="selectedVariants.length === 0">
+                    <td colspan="6" class="text-center py-4 text-muted">
+                      <div
+                        class="spinner-border spinner-border-sm me-2"
+                        role="status"
+                        v-if="selectedProductName"
+                      ></div>
+                      {{
+                        selectedProductName
+                          ? "Đang tải dữ liệu..."
+                          : "Chưa có dữ liệu phân loại"
+                      }}
                     </td>
                   </tr>
-                  <tr>
-                    <td>3</td>
-                    <td>Xanh - Size 43</td>
+
+                  <tr
+                    v-for="(v, index) in selectedVariants"
+                    :key="index"
+                    v-else
+                  >
+                    <td>{{ index + 1 }}</td>
                     <td>
-                      <img src="https://placehold.co/56x56" alt="Xanh - Size 43" class="variant-image">
+                      <img
+                        :src="
+                          v.hinhAnh
+                            ? `http://localhost:8080/images/${v.hinhAnh}`
+                            : 'https://placehold.co/50x50'
+                        "
+                        alt="Variant Image"
+                        class="rounded border"
+                        style="width: 50px; height: 50px; object-fit: cover"
+                      />
                     </td>
-                    <td>0</td>
-                    <td>1.290.000 VND</td>
                     <td>
-                      <span class="badge bg-danger">Hết hàng</span>
+                      <div class="fw-bold">{{ v.tenMau }}</div>
+                      <div class="small text-muted">
+                        Size: {{ getSizeName(v.maSize) }}
+                      </div>
+                    </td>
+                    <td>
+                      <span :class="{ 'text-danger fw-bold': v.soLuong === 0 }">
+                        {{ v.soLuong }}
+                      </span>
+                    </td>
+                    <td class="fw-bold text-dark">
+                      {{ v.donGia?.toLocaleString("vi-VN") }} ₫
+                    </td>
+                    <td>
+                      <span
+                        :class="[
+                          'badge',
+                          v.trangThai === 'Còn hàng'
+                            ? 'bg-success'
+                            : v.trangThai === 'Sắp hết'
+                            ? 'bg-warning text-dark'
+                            : 'bg-danger',
+                        ]"
+                      >
+                        {{ v.trangThai }}
+                      </span>
                     </td>
                   </tr>
                 </tbody>
               </table>
             </div>
           </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+          <div class="modal-footer text-end">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Đóng
+            </button>
           </div>
         </div>
       </div>
     </div>
 
-    <div class="modal fade" id="addCategoryModal" tabindex="-1" aria-hidden="true">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">
-              <i class="bi bi-plus-circle me-2"></i>Thêm danh mục mới
-            </h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-          </div>
-          <form>
-            <div class="modal-body">
-              <div class="mb-3">
-                <label class="form-label">Tên danh mục *</label>
-                <input type="text" class="form-control" value="Giay lifestyle">
-              </div>
-            </div>
-            <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                <i class="bi bi-x-circle me-2"></i>Hủy
-              </button>
-              <button type="button" class="btn btn-primary">
-                <i class="bi bi-check-circle me-2"></i>Thêm
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
-
-    <div class="modal fade" id="imagePickerModal" tabindex="-1" aria-hidden="true">
+    <div
+      class="modal fade"
+      id="imagePickerModal"
+      tabindex="-1"
+      aria-hidden="true"
+    >
       <div class="modal-dialog modal-xl">
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title">
               <i class="bi bi-image me-2"></i>Chọn hình ảnh
             </h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+            ></button>
           </div>
           <div class="modal-body">
             <div class="mb-4">
-              <div class="image-upload-area">
+              <label
+                for="uploadFileInput"
+                class="image-upload-area w-100 d-block"
+              >
                 <i class="bi bi-cloud-upload display-4 mb-3"></i>
-                <p class="mb-2"><strong>Kéo thả hoặc nhấp để tải ảnh lên</strong></p>
-                <p class="text-muted small mb-0">Hỗ trợ: JPG, PNG, JPEG, GIF, WEBP (Tối đa 5MB)</p>
-                <input type="file" accept="image/*" hidden>
-              </div>
+                <p class="mb-2">
+                  <strong>Nhấp để tải ảnh mới lên</strong>
+                </p>
+                <p class="text-muted small mb-0">
+                  Hỗ trợ: JPG, PNG, WEBP (Tối đa 5MB)
+                </p>
+                <input
+                  type="file"
+                  id="uploadFileInput"
+                  accept="image/*"
+                  class="d-none"
+                  @change="handleFileUpload"
+                />
+              </label>
             </div>
 
-            <h6 class="mb-3">Hình ảnh có sẵn</h6>
-            <div class="row g-3">
-              <div class="col-3 col-md-2">
-                <div class="image-thumbnail selected">
-                  <img src="https://placehold.co/120x120" alt="sneaker-white-42.jpg">
-                  <div class="image-name">sneaker-white-42.jpg</div>
+            <h6 class="mb-3">Hình ảnh có sẵn trên hệ thống</h6>
+            <div class="row g-3" style="max-height: 400px; overflow-y: auto">
+              <div
+                class="col-6 col-sm-4 col-md-3 col-lg-2"
+                v-for="img in availableImages"
+                :key="img"
+              >
+                <div
+                  class="image-thumbnail"
+                  :class="{ selected: selectedImageName === img }"
+                  @click="selectImage(img)"
+                >
+                  <img
+                    :src="`http://localhost:8080/images/${img}`"
+                    :alt="img"
+                  />
+                  <div class="image-name" :title="img">{{ img }}</div>
                 </div>
               </div>
-              <div class="col-3 col-md-2">
-                <div class="image-thumbnail">
-                  <img src="https://placehold.co/120x120" alt="sneaker-black-41.jpg">
-                  <div class="image-name">sneaker-black-41.jpg</div>
-                </div>
-              </div>
-              <div class="col-3 col-md-2">
-                <div class="image-thumbnail">
-                  <img src="https://placehold.co/120x120" alt="runner-pro-blue.jpg">
-                  <div class="image-name">runner-pro-blue.jpg</div>
-                </div>
-              </div>
-              <div class="col-3 col-md-2">
-                <div class="image-thumbnail">
-                  <img src="https://placehold.co/120x120" alt="office-leather-brown.jpg">
-                  <div class="image-name">office-leather-brown.jpg</div>
-                </div>
-              </div>
-              <div class="col-3 col-md-2">
-                <div class="image-thumbnail">
-                  <img src="https://placehold.co/120x120" alt="street-lite-white.jpg">
-                  <div class="image-name">street-lite-white.jpg</div>
-                </div>
+              <div
+                v-if="availableImages.length === 0"
+                class="text-center text-muted w-100 py-3"
+              >
+                Chưa có hình ảnh nào.
               </div>
             </div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-            <button type="button" class="btn btn-primary">Chọn ảnh</button>
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-toggle="modal"
+              :data-bs-target="parentModalSelector"
+            >
+              Hủy
+            </button>
+            <button
+              type="button"
+              class="btn btn-primary"
+              @click="confirmImageSelection"
+              data-bs-toggle="modal"
+              :data-bs-target="parentModalSelector"
+              :disabled="!selectedImageName"
+            >
+              Chọn ảnh này
+            </button>
           </div>
         </div>
       </div>
@@ -756,7 +1061,379 @@
 </template>
 
 <script setup>
-import NV_Sidebar from '@/components/Shared/NV_Sidebar.vue';
+import { ref, computed, onMounted } from "vue";
+import axios from "axios";
+import NV_Sidebar from "@/components/Shared/NV_Sidebar.vue";
+
+axios.defaults.withCredentials = true;
+
+const products = ref([]);
+const categories = ref([]);
+const sizes = ref([]);
+
+// Các biến state cho bộ lọc
+const filterKeyword = ref("");
+const filterCategory = ref("");
+const filterGender = ref("");
+const filterStatus = ref("");
+
+// 1. Gọi API Danh mục
+const fetchCategories = async () => {
+  try {
+    const response = await axios.get(
+      "http://localhost:8080/api/sanpham/danhmuc"
+    );
+    categories.value = response.data;
+  } catch (error) {
+    console.error("Lỗi lấy danh mục:", error);
+  }
+};
+//Size
+const fetchSizes = async () => {
+  try {
+    const response = await axios.get("http://localhost:8080/api/sanpham/sizes");
+    sizes.value = response.data;
+  } catch (error) {
+    console.error("Lỗi lấy sizes:", error);
+  }
+};
+
+// 2. Gọi API Sản phẩm
+const fetchProducts = async () => {
+  try {
+    const response = await axios.get("http://localhost:8080/api/sanpham/list");
+    products.value = response.data;
+  } catch (error) {
+    console.error("Lỗi lấy sản phẩm:", error);
+  }
+};
+
+// 3. Computed LỌC REAL-TIME TỔNG HỢP
+const filteredProducts = computed(() => {
+  return products.value.filter((item) => {
+    const matchKeyword =
+      !filterKeyword.value ||
+      item.tenSP.toLowerCase().includes(filterKeyword.value.toLowerCase());
+
+    const matchCategory =
+      !filterCategory.value ||
+      (item.danhMucs && item.danhMucs.includes(filterCategory.value));
+
+    let matchGender = true;
+    if (filterGender.value === "Nam") matchGender = item.gioiTinh === true;
+    else if (filterGender.value === "Nữ") matchGender = item.gioiTinh === false;
+    else if (filterGender.value === "Unisex")
+      matchGender = item.gioiTinh === null;
+
+    const matchStatus =
+      !filterStatus.value || item.trangThai === filterStatus.value;
+
+    return matchKeyword && matchCategory && matchGender && matchStatus;
+  });
+});
+
+// 4. Hàm làm mới bộ lọc
+const resetFilters = () => {
+  filterKeyword.value = "";
+  filterCategory.value = "";
+  filterGender.value = "";
+  filterStatus.value = "";
+};
+
+// 5. Thống kê số liệu (Tính trên danh sách TỔNG)
+const totalProducts = computed(() => products.value.length);
+const activeProducts = computed(
+  () => products.value.filter((p) => p.isActive).length
+);
+const outOfStock = computed(
+  () => products.value.filter((p) => p.trangThai === "Hết hàng").length
+);
+const lowStock = computed(
+  () => products.value.filter((p) => p.trangThai === "Sắp hết").length
+);
+
+// Biến dùng cho Modal Thêm Danh Mục
+const newCategoryName = ref("");
+const categoryMode = ref(""); // Lưu trạng thái đang mở ở modal 'add' hay 'edit'
+
+// Chuẩn bị mở modal
+const prepareAddCategory = (mode) => {
+  categoryMode.value = mode;
+  newCategoryName.value = ""; // Xóa trắng ô text mỗi lần mở
+};
+
+// Hàm lưu danh mục khi bấm nút trong Modal
+const saveNewCategory = async () => {
+  if (!newCategoryName.value || newCategoryName.value.trim() === "") {
+    alert("Vui lòng nhập tên danh mục!");
+    return;
+  }
+
+  try {
+    const response = await axios.post(
+      "http://localhost:8080/api/sanpham/danhmuc/create",
+      {
+        tenDM: newCategoryName.value.trim(),
+      }
+    );
+
+    if (response.data.success) {
+      // 1. Load lại danh sách
+      await fetchCategories();
+
+      // 2. Tự động tick chọn danh mục vừa tạo
+      const newCatId = response.data.data.maDM;
+      if (categoryMode.value === "edit") {
+        editProductData.value.categoryIds.push(newCatId);
+      } else {
+        newProduct.value.categoryIds.push(newCatId);
+      }
+
+      // 3. Tự động đóng modal Thêm danh mục bằng JS
+      document.getElementById("closeCategoryModalBtn").click();
+    }
+  } catch (error) {
+    console.error("Lỗi thêm danh mục:", error);
+    alert(error.response?.data?.message || "Có lỗi xảy ra khi thêm danh mục!");
+  }
+};
+
+// Khởi tạo Object cho sản phẩm mới
+const newProduct = ref({
+  tenSP: "",
+  moTa: "",
+  gioiTinh: null, // Mặc định Unisex
+  categoryIds: [],
+  variants: [
+    {
+      tenMau: "",
+      maSize: "",
+      donGia: 0,
+      soLuong: 0,
+      hinhAnh: "",
+      trangThai: "Còn hàng",
+    },
+  ],
+});
+
+// Thêm một dòng phân loại mới
+const addVariant = () => {
+  newProduct.value.variants.push({
+    tenMau: "",
+    maSize: "",
+    donGia: 0,
+    soLuong: 0,
+    hinhAnh: "",
+    trangThai: "Còn hàng",
+  });
+};
+
+// Xóa một dòng phân loại
+const removeVariant = (index) => {
+  if (newProduct.value.variants.length > 1) {
+    newProduct.value.variants.splice(index, 1);
+  }
+};
+
+// Hàm lưu sản phẩm thêm mới
+const saveProduct = async () => {
+  try {
+    const res = await axios.post(
+      "http://localhost:8080/api/sanpham/create",
+      newProduct.value
+    );
+    alert("Thêm sản phẩm thành công!");
+    location.reload();
+  } catch (error) {
+    console.error(error);
+    alert("Lỗi khi lưu sản phẩm!");
+  }
+};
+
+// --- LOGIC CHO MODAL CHỌN ẢNH VÀ EDIT ---
+const availableImages = ref([]);
+const currentVariantIndex = ref(-1);
+const selectedImageName = ref("");
+const parentModalSelector = ref("#addProductModal"); // Ghi nhớ modal gốc
+const isEditMode = ref(false); // Kiểm tra đang ở form Thêm hay Sửa
+
+const fetchImages = async () => {
+  try {
+    const res = await axios.get("http://localhost:8080/api/sanpham/images");
+    availableImages.value = res.data;
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+// Cập nhật hàm mở Modal ảnh
+const openImagePicker = (index, parentModal, isEdit) => {
+  currentVariantIndex.value = index;
+  parentModalSelector.value = parentModal;
+  isEditMode.value = isEdit;
+
+  let img = isEdit
+    ? editProductData.value.variants[index].hinhAnh
+    : newProduct.value.variants[index].hinhAnh;
+
+  selectedImageName.value = img || "";
+  fetchImages();
+};
+const selectImage = (imgName) => {
+  selectedImageName.value = imgName;
+};
+
+const confirmImageSelection = () => {
+  if (currentVariantIndex.value >= 0) {
+    if (isEditMode.value) {
+      editProductData.value.variants[currentVariantIndex.value].hinhAnh =
+        selectedImageName.value;
+    } else {
+      newProduct.value.variants[currentVariantIndex.value].hinhAnh =
+        selectedImageName.value;
+    }
+  }
+};
+
+// Hàm upload ảnh mới
+const handleFileUpload = async (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const formData = new FormData();
+  formData.append("file", file);
+
+  try {
+    const res = await axios.post(
+      "http://localhost:8080/api/sanpham/upload",
+      formData,
+      {
+        headers: { "Content-Type": "multipart/form-data" },
+      }
+    );
+    if (res.data.success) {
+      alert("Tải ảnh lên thành công!");
+      await fetchImages(); // Tải lại danh sách ảnh
+      selectedImageName.value = res.data.fileName; // Chọn luôn ảnh vừa tải
+    }
+  } catch (error) {
+    alert("Lỗi tải ảnh lên!");
+    console.error(error);
+  }
+};
+
+// Khởi tạo Object cho sản phẩm Đang Sửa
+const editProductData = ref({
+  maSP: null,
+  tenSP: "",
+  moTa: "",
+  gioiTinh: null,
+  khuyenMai: 0,
+  categoryIds: [],
+  variants: [],
+});
+
+// Khi ấn nút Cây Bút, load data vào Modal
+const openEditModal = async (maSP) => {
+  try {
+    const res = await axios.get(`http://localhost:8080/api/sanpham/${maSP}`);
+    editProductData.value = res.data;
+  } catch (error) {
+    alert("Lỗi tải thông tin sản phẩm!");
+  }
+};
+
+// Lưu thông tin chỉnh sửa
+const saveEditProduct = async () => {
+  try {
+    await axios.put(
+      "http://localhost:8080/api/sanpham/update",
+      editProductData.value
+    );
+    alert("Cập nhật sản phẩm thành công!");
+    location.reload();
+  } catch (error) {
+    alert("Lỗi cập nhật sản phẩm!");
+  }
+};
+
+const addEditVariant = () => {
+  editProductData.value.variants.push({
+    tenMau: "",
+    maSize: "",
+    donGia: 0,
+    soLuong: 0,
+    hinhAnh: "",
+    trangThai: "Còn hàng",
+  });
+};
+const removeEditVariant = (index) => {
+  if (editProductData.value.variants.length > 1)
+    editProductData.value.variants.splice(index, 1);
+};
+
+// Biến lưu trữ dữ liệu cho Modal Xem phân loại
+const selectedVariants = ref([]);
+const selectedProductName = ref("");
+
+// Hàm lấy tên Size từ maSize (Để hiển thị "Size 40" thay vì "ID 5")
+const getSizeName = (maSize) => {
+  if (!maSize) return "Chưa cập nhật";
+  const sizeObj = sizes.value.find((s) => s.maSize === maSize);
+  if (!sizeObj) return maSize;
+  return sizeObj.coGiay === 0 ? "Freesize (Phụ kiện)" : sizeObj.coGiay;
+};
+
+// Hàm gọi API lấy phân loại khi bấm nút "Xem phân loại"
+const viewVariants = async (item) => {
+  selectedProductName.value = item.tenSP;
+  selectedVariants.value = []; // Reset dữ liệu cũ trong lúc chờ tải
+
+  try {
+    // Tận dụng API getProductDetail đã viết sẵn cho chức năng Edit
+    const res = await axios.get(
+      `http://localhost:8080/api/sanpham/${item.maSP}`
+    );
+    selectedVariants.value = res.data.variants;
+  } catch (error) {
+    console.error("Lỗi lấy phân loại:", error);
+    alert("Không thể tải danh sách phân loại!");
+  }
+};
+
+// 6. Hàm đổi trạng thái Ẩn/Hiện sản phẩm (Xóa mềm)
+const toggleProductStatus = async (maSP, currentStatus) => {
+  const actionText = currentStatus ? "ẩn" : "hiện";
+
+  // Hỏi xác nhận trước khi làm
+  if (!confirm(`Bạn có chắc chắn muốn ${actionText} sản phẩm này không?`)) {
+    return;
+  }
+
+  try {
+    const res = await axios.put(
+      `http://localhost:8080/api/sanpham/toggle-status/${maSP}`
+    );
+
+    if (res.data.success) {
+      // Tìm và cập nhật lại trạng thái ngay trên mảng products để UI tự render lại
+      // Không cần reload cả trang web (location.reload())
+      const productIndex = products.value.findIndex((p) => p.maSP === maSP);
+      if (productIndex !== -1) {
+        products.value[productIndex].isActive = res.data.isActive;
+      }
+    }
+  } catch (error) {
+    console.error(error);
+    alert(`Lỗi khi ${actionText} sản phẩm!`);
+  }
+};
+
+onMounted(() => {
+  fetchCategories();
+  fetchProducts();
+  fetchSizes();
+});
 </script>
 
 <style scoped>
@@ -792,7 +1469,10 @@ import NV_Sidebar from '@/components/Shared/NV_Sidebar.vue';
   opacity: 0.9;
 }
 
-.bg-gradient-1, .bg-gradient-2, .bg-gradient-3, .bg-gradient-4 {
+.bg-gradient-1,
+.bg-gradient-2,
+.bg-gradient-3,
+.bg-gradient-4 {
   background: linear-gradient(135deg, #212529, #000000);
 }
 
@@ -833,6 +1513,18 @@ import NV_Sidebar from '@/components/Shared/NV_Sidebar.vue';
   padding: 20px;
   transition: all 0.3s;
   margin-bottom: 15px;
+  position: relative;
+}
+
+.status-badge-corner {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  font-size: 12px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  z-index: 2;
 }
 
 .product-card:hover {
@@ -922,7 +1614,7 @@ import NV_Sidebar from '@/components/Shared/NV_Sidebar.vue';
   background-color: #212529;
   color: white;
   border-color: #212529;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
 .category-pills .btn {
@@ -945,18 +1637,18 @@ import NV_Sidebar from '@/components/Shared/NV_Sidebar.vue';
   .main-content {
     margin-left: 0;
   }
-  
+
   .page-container {
     padding: 15px;
   }
-  
+
   .product-card .row {
     flex-direction: column;
   }
-  
+
   .action-buttons {
     justify-content: center;
     margin-top: 15px;
   }
 }
-</style>
+</style>  

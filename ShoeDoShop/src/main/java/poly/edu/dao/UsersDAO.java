@@ -12,6 +12,9 @@ public interface UsersDAO extends JpaRepository<Users, Integer> {
     Users findByMail(String mail);
     
     Users findByUserName(String userName);
+
+    boolean existsByMail(String mail);
+    boolean existsByUserName(String userName);
     
     @Query("SELECT u FROM Users u WHERE u.mail = :mail AND u.isActive = :isActive")
     Users findByMailAndIsActive(@Param("mail") String mail, @Param("isActive") Boolean isActive);
