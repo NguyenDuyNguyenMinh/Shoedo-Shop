@@ -28,14 +28,59 @@ public interface UsersDAO extends JpaRepository<Users, Integer> {
                                          @Param("isActive") Boolean isActive, 
                                          Pageable pageable);
 
-    @Query("SELECT u FROM Users u " +
-           "WHERE u.mail LIKE %:keyword% " +
-           "AND u.isActive = :isActive " +
-           "AND ( :roleFilter = '' OR " +
-           "      (:roleFilter = 'QT' AND EXISTS (SELECT qt FROM QuanTri qt WHERE qt.user = u)) OR " + 
-           "      (:roleFilter = 'KH' AND EXISTS (SELECT kh FROM KhachHang kh WHERE kh.user = u)) )")
-    Page<Users> findByFilter(@Param("keyword") String keyword, 
+    @Query("SELECT DISTINCT u FROM Users u " +
+            "LEFT JOIN u.khachHang kh " +
+            "LEFT JOIN u.quanTri qt " +
+            "WHERE (:keyword IS NULL OR :keyword = '' OR " +
+            "      u.mail LIKE %:keyword% OR " +
+            "      u.userName LIKE %:keyword% OR " +
+            "      kh.tenKH LIKE %:keyword% OR " +
+            "      kh.sdt LIKE %:keyword% OR " +
+            "      qt.tenQT LIKE %:keyword%) " +
+            "AND (:isActive IS NULL OR u.isActive = :isActive) " +
+            "AND (:roleFilter = '' OR " +
+            "      (:roleFilter = 'QT' AND qt IS NOT NULL) OR " +
+            "      (:roleFilter = 'KH' AND kh IS NOT NULL) )")
+    Page<Users> findByFilter(@Param("keyword") String keyword,
                              @Param("roleFilter") String roleFilter,
-                             @Param("isActive") Boolean isActive, 
+                             @Param("isActive") Boolean isActive,
                              Pageable pageable);
+
+    @Query("SELECT DISTINCT u FROM Users u " +
+            "JOIN u.quanTri qt " +
+            "WHERE (:keyword IS NULL OR :keyword = '' OR " +
+            "      u.mail LIKE %:keyword% OR " +
+            "      u.userName LIKE %:keyword% OR " +
+            "      qt.tenQT LIKE %:keyword%) " +
+            "AND (:isActive IS NULL OR u.isActive = :isActive) " +
+            "AND qt.role = true")
+    Page<Users> findByAdmin(@Param("keyword") String keyword,
+                            @Param("isActive") Boolean isActive,
+                            Pageable pageable);
+
+    // Lọc employee (qt IS NOT NULL AND qt.role = false)
+    @Query("SELECT DISTINCT u FROM Users u " +
+            "JOIN u.quanTri qt " +
+            "WHERE (:keyword IS NULL OR :keyword = '' OR " +
+            "      u.mail LIKE %:keyword% OR " +
+            "      u.userName LIKE %:keyword% OR " +
+            "      qt.tenQT LIKE %:keyword%) " +
+            "AND (:isActive IS NULL OR u.isActive = :isActive) " +
+            "AND qt.role = false")
+    Page<Users> findByEmployee(@Param("keyword") String keyword,
+                               @Param("isActive") Boolean isActive,
+                               Pageable pageable);
+
+    // Lọc customer (kh IS NOT NULL)
+    @Query("SELECT DISTINCT u FROM Users u " +
+            "JOIN u.khachHang kh " +
+            "WHERE (:keyword IS NULL OR :keyword = '' OR " +
+            "      u.mail LIKE %:keyword% OR " +
+            "      u.userName LIKE %:keyword% OR " +
+            "      kh.tenKH LIKE %:keyword% OR " +
+            "      kh.sdt LIKE %:keyword%) " +
+            "AND (:isActive IS NULL OR u.isActive = :isActive)")
+    Page<Users> findByCustomer(@Param("keyword") String keyword,
+                               @Param("isActive") Boolean isActive,
+                               Pageable pageable);
 }

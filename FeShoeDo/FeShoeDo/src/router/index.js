@@ -55,7 +55,7 @@ const routes = [
     meta: { requiresAuth: true, role: 'CUSTOMER' }
   },
   {
-    path: '/customer/order/:id',
+    path: '/customer/orders/:id',
     name: 'OrderDetail',
     component: () => import('@/components/customer/KH_CTDonHang.vue'),
     meta: { requiresAuth: true, role: 'CUSTOMER' }
