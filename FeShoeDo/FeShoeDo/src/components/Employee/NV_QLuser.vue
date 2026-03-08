@@ -630,7 +630,6 @@ const getCurrentUser = async () => {
 const loadUsers = async () => {
   loading.value = true;
   try {
-    // Xử lý sort
     let sortBy = 'maUser';
     let sortDir = 'desc';
 
@@ -642,7 +641,7 @@ const loadUsers = async () => {
 
     const params = {
       keyword: filters.keyword,
-      role: filters.role,
+      role: filters.role,      // Ví dụ: 'ADMIN', 'EMPLOYEE', 'CUSTOMER'
       status: filters.status,
       page: pagination.currentPage,
       size: pagination.pageSize,
@@ -650,7 +649,7 @@ const loadUsers = async () => {
       sortDir: sortDir
     };
 
-    console.log('Loading users with params:', params);
+    console.log('Loading users with params:', params); // Kiểm tra params
 
     const response = await api.getUsers(params);
     console.log('API Response:', response.data);
@@ -665,8 +664,6 @@ const loadUsers = async () => {
       pagination.currentPage = response.data.currentPage || 1;
       pagination.totalPages = response.data.totalPages || 1;
       pagination.totalItems = response.data.totalItems || 0;
-
-      console.log('Updated users:', users.value);
     } else {
       users.value = [];
       showErrorModal(response.data.message || 'Không thể tải danh sách người dùng');

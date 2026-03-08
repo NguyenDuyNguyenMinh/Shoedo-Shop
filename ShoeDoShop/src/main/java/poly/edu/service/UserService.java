@@ -138,6 +138,7 @@ public class UserService {
 
         if (user.getQuanTri() != null) {
             QuanTri qt = user.getQuanTri();
+            // Role = true là Admin, false là Employee
             map.put("role", qt.getRole() ? "ADMIN" : "EMPLOYEE");
             map.put("hoTen", qt.getTenQT());
             map.put("sdt", "");
@@ -236,11 +237,35 @@ public class UserService {
     // ==================== BUSINESS LOGIC ====================
 
     public Page<Users> getUsersByFilter(String keyword, String role, Boolean isActive, Pageable pageable, boolean isAdmin) {
-        if (isAdmin) {
-            return usersDAO.findByFilter(keyword, role, isActive, pageable);
+        String roleFilter = "";
+
+        // Chuyển đổi role từ frontend sang định dạng DAO hiểu
+        if ("ADMIN".equals(role)) {
+            roleFilter = "ADMIN"; // Filter admin
+        } else if ("EMPLOYEE".equals(role)) {
+            roleFilter = "EMPLOYEE"; // Filter employee
+        } else if ("CUSTOMER".equals(role)) {
+            roleFilter = "KH"; // KhachHang
         } else {
-            return usersDAO.findByFilter(keyword, "KH", isActive, pageable);
+            roleFilter = ""; // Tất cả
         }
+        Page<Users> result;
+        if (isAdmin) {
+            // Admin có thể xem tất cả
+            if ("ADMIN".equals(roleFilter)) {
+                result = usersDAO.findByAdmin(keyword, isActive, pageable);
+            } else if ("EMPLOYEE".equals(roleFilter)) {
+                result = usersDAO.findByEmployee(keyword, isActive, pageable);
+            } else if ("KH".equals(roleFilter)) {
+                result = usersDAO.findByCustomer(keyword, isActive, pageable);
+            } else {
+                result = usersDAO.findByFilter(keyword, "", isActive, pageable);
+            }
+        } else {
+            // Employee chỉ xem được customer
+            result = usersDAO.findByCustomer(keyword, isActive, pageable);
+        }
+        return result;
     }
 
     public Optional<Users> findById(Integer id) {
