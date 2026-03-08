@@ -3,9 +3,13 @@ package poly.edu.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import poly.edu.dao.QuanTriDAO;
+import poly.edu.dao.UsersDAO;
+import poly.edu.entity.QuanTri;
 import poly.edu.entity.Users;
 import poly.edu.service.AuthService;
 
+import java.util.Date;
 import java.util.Map;
 
 @RestController
@@ -13,6 +17,8 @@ import java.util.Map;
 public class AuthController {
     
     @Autowired private AuthService authService;
+    @Autowired private UsersDAO usersDAO;
+    @Autowired private QuanTriDAO quanTriDAO;
     
     @GetMapping("/auto-login")
     public ResponseEntity<Map<String, Object>> autoLogin() {
@@ -73,5 +79,44 @@ public class AuthController {
          
          Integer count = authService.getCartCount(currentUser);
          return ResponseEntity.ok(Map.of("success", true, "count", count));
+    }
+    
+    // Endpoint tạm thời để tạo tài khoản admin
+    @PostMapping("/create-admin")
+    public ResponseEntity<Map<String, Object>> createAdmin(@RequestBody Map<String, String> request) {
+        String username = request.get("username");
+        String password = request.get("password");
+        String email = request.get("email");
+        String fullname = request.get("fullname");
+        
+        if (username == null || password == null || email == null) {
+            return ResponseEntity.ok(Map.of("success", false, "message", "Thiếu thông tin bắt buộc"));
+        }
+        
+        // Kiểm tra user đã tồn tại chưa
+        if (usersDAO.findByUserName(username) != null) {
+            return ResponseEntity.ok(Map.of("success", false, "message", "Username đã tồn tại"));
+        }
+        if (usersDAO.findByMail(email) != null) {
+            return ResponseEntity.ok(Map.of("success", false, "message", "Email đã tồn tại"));
+        }
+        
+        // Tạo user mới
+        Users user = new Users();
+        user.setUserName(username);
+        user.setMail(email);
+        user.setPassWord(authService.getPasswordEncoder().encode(password));
+        user.setIsActive(true);
+        user.setCreateAt(new Date());
+        user = usersDAO.save(user);
+        
+        // Tạo bản ghi admin
+        QuanTri admin = new QuanTri();
+        admin.setTenQT(fullname != null ? fullname : "Admin");
+        admin.setRole(true); // true = ADMIN
+        admin.setUser(user);
+        quanTriDAO.save(admin);
+        
+        return ResponseEntity.ok(Map.of("success", true, "message", "Tạo tài khoản admin thành công!", "username", username));
     }
 }
