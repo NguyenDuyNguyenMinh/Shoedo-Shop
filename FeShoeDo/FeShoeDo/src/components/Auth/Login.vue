@@ -1,54 +1,154 @@
 <template>
   <div class="auth-page">
     <div class="bg-overlay"></div>
-    <!-- Forgot Password Modal -->
-    <div class="modal fade" id="forgotPasswordModal" tabindex="-1" aria-hidden="true">
+
+    <!-- Google Password Modal -->
+    <div class="modal fade" id="googlePasswordModal" tabindex="-1" aria-hidden="true">
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title">Quên mật khẩu</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            <h5 class="modal-title">
+              TÀI KHOẢN GOOGLE
+            </h5>
           </div>
-
           <div class="modal-body">
-            <div class="mb-3">
-              <label>Email</label>
-              <input v-model="forgotPasswordEmail" type="email" class="form-control" required>
+            <div class="mb-1">
+              <label class="fw-bold">Email: </label><label class="ms-1">{{ googleTemp.email }}</label>
             </div>
-
-            <div class="alert alert-info">
-              <small>Chúng tôi sẽ gửi mật khẩu mới đến email của bạn.</small>
+            <div class="mb-3" v-if="googleTemp.name">
+              <label class="fw-bold">Tên: </label><label class="ms-1"> {{ googleTemp.name || 'Google User' }}</label>
+            </div>
+            <div class="mb-2">
+              <label class="fw-bold">Vui lòng nhập mật khẩu cho tài khoản này:</label>
+              <input 
+                type="password" 
+                class="form-control" 
+                v-model="googlePassword" 
+                placeholder="Nhập mật khẩu bạn muốn đặt"
+                @keyup.enter="submitGooglePassword"
+                autofocus
+              >
             </div>
           </div>
-
           <div class="modal-footer">
-            <button type="button" class="btn btn-primary" @click="handleForgotPassword">Xác nhận</button>
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+            <button type="button" class="btn btn-primary" @click="submitGooglePassword" :disabled="!googlePassword">
+              Xác nhận
+            </button>
           </div>
-
         </div>
       </div>
     </div>
-    <!-- Điều khoản Modal -->
-    <div class="modal fade" id="about" tabindex="-1" aria-hidden="true">
-       <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Điều khoản sử dụng</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                  <div class="mb-3">
-                  	<label>Shoedo brand do nhóm dự án tốt nghiệp chúng tôi nghĩ ra nhằm cho phép mọi người mua những sản phẩm giày chất lượng nhưng giá cả phải chăng</label>
-                  </div>
-                </div>	
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-                </div>
+
+    <!-- Forgot Password OTP Modal -->
+    <div class="modal fade" id="forgotPasswordOtpModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Xác nhận quên mật khẩu</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" @click="resetForgotPasswordOtp"></button>
+          </div>
+          <div class="modal-body">
+            <!-- Step 1: Enter Email -->
+            <div v-if="forgotPasswordStep === 1">
+              <div class="mb-3">
+                <label>Email</label>
+                <input v-model="forgotPasswordEmail" type="email" class="form-control" placeholder="Nhập email của bạn" required>
+              </div>
+              <div class="alert alert-info">
+                <i class="bi bi-info-circle"></i>
+                Chúng tôi sẽ gửi mã OTP để xác nhận yêu cầu khôi phục mật khẩu.
+              </div>
             </div>
+            
+            <!-- Step 2: Enter OTP -->
+            <div v-if="forgotPasswordStep === 2">
+              <div class="mb-3">
+                <label>Mã OTP</label>
+                <div class="input-group">
+                  <input v-model="forgotPasswordOtp" type="text" class="form-control" 
+                         placeholder="Nhập mã OTP 6 số" maxlength="6" @keypress="onlyNumbers">
+                  <button class="btn btn-outline-secondary" type="button" @click="resendForgotPasswordOtp" 
+                          :disabled="resendDisabled">
+                    {{ resendCountdown > 0 ? `Gửi lại (${resendCountdown}s)` : 'Gửi lại' }}
+                  </button>
+                </div>
+                <small class="text-muted">Mã OTP đã được gửi đến email: {{ forgotPasswordEmail }}</small>
+              </div>
+              <div class="alert alert-warning">
+                <i class="bi bi-exclamation-triangle"></i>
+                Mã OTP có hiệu lực trong 10 phút
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-primary" @click="handleForgotPasswordOtp" :disabled="loading">
+              <span v-if="loading" class="spinner-border spinner-border-sm me-2"></span>
+              {{ forgotPasswordStep === 1 ? 'Gửi OTP' : 'Xác nhận OTP' }}
+            </button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @click="resetForgotPasswordOtp">Đóng</button>
+          </div>
         </div>
+      </div>
     </div>
 
+    <!-- Registration OTP Modal -->
+    <div class="modal fade" id="registerOtpModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Xác nhận đăng ký</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" @click="resetRegisterOtp"></button>
+          </div>
+          <div class="modal-body">
+            
+            <div class="mb-3">
+              <label>Mã OTP</label>
+              <div class="input-group">
+                <input v-model="registerOtp" type="text" class="form-control" 
+                      placeholder="Nhập mã OTP 6 số" maxlength="6" @keypress="onlyNumbers">
+                <button class="btn btn-outline-secondary" type="button" @click="resendRegisterOtp" 
+                        :disabled="resendDisabled">
+                  {{ resendCountdown > 0 ? `Gửi lại (${resendCountdown}s)` : 'Gửi lại' }}
+                </button>
+              </div>
+              <small class="text-muted">Mã OTP đã được gửi đến email: {{ registerForm.mail }}</small>
+            </div>
+            <div class="alert alert-warning">
+              <i class="bi bi-exclamation-triangle"></i>
+              Mã OTP có hiệu lực trong 10 phút
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-primary" @click="verifyRegisterOtp" :disabled="loading">
+              <span v-if="loading" class="spinner-border spinner-border-sm me-2"></span>
+              Xác nhận
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Terms Modal -->
+    <div class="modal fade" id="about" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Điều khoản sử dụng</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+              <label>Shoedo brand do nhóm dự án tốt nghiệp chúng tôi nghĩ ra nhằm cho phép mọi người mua những sản phẩm giày chất lượng nhưng giá cả phải chăng</label>
+            </div>
+          </div>	
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Auth Form -->
     <div class="auth-wrapper">
       <!-- Left section -->
       <div class="auth-left">
@@ -71,7 +171,7 @@
         </ul>
 
         <!-- Hiển thị thông báo -->
-<div v-if="message" class="alert alert-success alert-dismissible fade show mt-3">
+        <div v-if="message" class="alert alert-success alert-dismissible fade show mt-3">
           <span>{{ message }}</span>
           <button type="button" class="btn-close" @click="message = ''"></button>
         </div>
@@ -102,7 +202,6 @@
                 <input type="password" class="form-control" id="loginPassword" v-model="loginForm.pass" required>
               </div>
               
-              <!-- Hiển thị thông báo tài khoản bị khóa nếu có -->
               <div v-if="accountLocked" class="alert alert-warning alert-dismissible fade show mt-2 mb-2">
                 <i class="bi bi-exclamation-triangle-fill me-2"></i>
                 <span>{{ accountLockedMessage }}</span>
@@ -113,7 +212,7 @@
                   <input class="form-check-input" type="checkbox" id="rememberMe" v-model="loginForm.remember">
                   <label for="rememberMe">Ghi nhớ đăng nhập</label>
                 </div>
-                 <a href="#" data-bs-toggle="modal" data-bs-target="#forgotPasswordModal">Quên mật khẩu?</a>
+                <a href="#" data-bs-toggle="modal" data-bs-target="#forgotPasswordOtpModal">Quên mật khẩu?</a>
               </div>
               <div class="d-grid">
                 <button type="submit" class="btn btn-dark" :disabled="loading">
@@ -125,7 +224,7 @@
               <div class="position-relative text-center mb-3">
                 <hr class="position-absolute top-50 start-0 end-0 m-0">
                 <span class="px-3 bg-white text-muted position-relative" style="z-index: 1;">
-                   Hoặc
+                  Hoặc
                 </span>
               </div>
               <a href="http://localhost:8080/oauth2/authorization/google" 
@@ -181,6 +280,8 @@
 
 <script>
 import { useAuthStore } from '@/stores/auth';
+import * as bootstrap from 'bootstrap';
+import axios from 'axios';
 
 export default {
   name: 'Login',
@@ -199,14 +300,27 @@ export default {
         terms: false,
         remember: false
       },
+      googlePassword: '',
+      googleTemp: {
+        email: '',
+        name: ''
+      },
+
+      forgotPasswordStep: 1,
       forgotPasswordEmail: '',
-      showForgotPasswordModal: false,
-      showTermsModal: false,
+      forgotPasswordOtp: '',
+
+      registerOtp: '',
+      registerTempData: null,
+
       loading: false,
       message: '',
       error: '',
       accountLocked: false,
-      accountLockedMessage: ''
+      accountLockedMessage: '',
+      resendCountdown: 0,
+      resendDisabled: false,
+      countdownInterval: null
     };
   },
 
@@ -218,11 +332,63 @@ export default {
     }
   },
 
+  beforeUnmount() {
+    if (this.countdownInterval) {
+      clearInterval(this.countdownInterval);
+    }
+  },
+
   methods: {
     getImageUrl(imagePath) {
       return `http://localhost:8080/${imagePath}`;
     },
     
+    onlyNumbers(event) {
+      const char = String.fromCharCode(event.keyCode);
+      if (!/[0-9]/.test(char)) {
+        event.preventDefault();
+      }
+    },
+
+    startResendCountdown(seconds = 60) {
+      this.resendDisabled = true;
+      this.resendCountdown = seconds;
+      
+      if (this.countdownInterval) {
+        clearInterval(this.countdownInterval);
+      }
+      
+      this.countdownInterval = setInterval(() => {
+        if (this.resendCountdown > 0) {
+          this.resendCountdown--;
+        } else {
+          this.resendDisabled = false;
+          clearInterval(this.countdownInterval);
+        }
+      }, 1000);
+    },
+
+    resetForgotPasswordOtp() {
+      this.forgotPasswordStep = 1;
+      this.forgotPasswordEmail = '';
+      this.forgotPasswordOtp = '';
+      if (this.countdownInterval) {
+        clearInterval(this.countdownInterval);
+        this.resendDisabled = false;
+        this.resendCountdown = 0;
+      }
+    },
+
+    resetRegisterOtp() {
+      this.registerOtp = '';
+      this.registerTempData = null;
+      if (this.countdownInterval) {
+        clearInterval(this.countdownInterval);
+        this.resendDisabled = false;
+        this.resendCountdown = 0;
+      }
+    },
+
     async handleLogin() {
       this.loading = true;
       this.error = '';
@@ -230,12 +396,28 @@ export default {
       this.accountLocked = false;
       this.accountLockedMessage = '';
       
-      const authStore = useAuthStore();
-      
       try {
-        const result = await authStore.login(this.loginForm);
+        const response = await axios.post('/api/auth/login', {
+          identifier: this.loginForm.identifier,
+          pass: this.loginForm.pass,
+          remember: this.loginForm.remember
+        }, {
+          withCredentials: true
+        });
+
+        const data = response.data;
         
-        if (result.success) {
+        if (data.success) {
+          const authStore = useAuthStore();
+          authStore.user = data.user;
+          authStore.cartCount = data.user.cartCount || 0;
+          
+          const token = btoa(JSON.stringify({
+            maUser: data.user.maUser,
+            exp: Date.now() + 24 * 60 * 60 * 1000
+          }));
+          localStorage.setItem('auth_token', token);
+          
           this.message = 'Đăng nhập thành công!';
           
           setTimeout(() => {
@@ -250,53 +432,383 @@ export default {
             }
           }, 1000);
         } else {
-          this.error = result.message || 'Đăng nhập thất bại';
+          this.error = data.message || 'Đăng nhập thất bại';
           
-          if (result.message && result.message.includes('bị khóa')) {
+          if (data.message && data.message.includes('bị khóa')) {
             this.accountLocked = true;
-            this.accountLockedMessage = result.message;
+            this.accountLockedMessage = data.message;
 
             setTimeout(() => {
               this.accountLockedMessage += ' Vui lòng liên hệ quản trị viên qua email: admin@shoedoshop.com';
             }, 100);
           }
-          
-          console.error('Login failed:', result.message);
         }
       } catch (error) {
         console.error('Login error:', error);
-        this.error = 'Đăng nhập thất bại. Vui lòng thử lại sau.';
+        this.error = error.response?.data?.message || 'Đăng nhập thất bại. Vui lòng thử lại sau.';
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    async handleRegister() {
+      if (!this.registerForm.terms) {
+        this.error = 'Vui lòng đồng ý với điều khoản sử dụng';
+        return;
+      }
+
+      if (!/^\d{9,11}$/.test(this.registerForm.phone)) {
+        this.error = 'Số điện thoại phải từ 9-11 số';
+        return;
+      }
+
+      this.loading = true;
+      this.error = '';
+      
+      try {
+        const response = await axios.post('/api/auth/send-register', {
+          mail: this.registerForm.mail,
+          pass: this.registerForm.pass,
+          fullname: this.registerForm.fullname,
+          phone: this.registerForm.phone
+        }, {
+          withCredentials: true
+        });
+
+        const data = response.data;
+        
+        if (data.success) {
+          this.registerTempData = { ...this.registerForm };
+          this.message = 'Mã OTP đã được gửi đến email của bạn!';
+          
+          const modal = new bootstrap.Modal(document.getElementById('registerOtpModal'));
+          modal.show();
+          
+          this.startResendCountdown(60);
+        } else {
+          this.error = data.message || 'Có lỗi xảy ra khi gửi OTP';
+        }
+      } catch (error) {
+        this.error = error.response?.data?.message || 'Có lỗi xảy ra. Vui lòng thử lại sau.';
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    async verifyRegisterOtp() {
+      if (!this.registerOtp || this.registerOtp.length !== 6) {
+        this.error = 'Vui lòng nhập mã OTP 6 số';
+        return;
+      }
+
+      this.loading = true;
+      this.error = '';
+
+      const response = await axios.post('/api/auth/complete-register', {
+        mail: this.registerForm.mail,
+        confirmationCode: this.registerOtp
+      }, {
+        withCredentials: true
+      });
+
+      const data = response.data;
+      
+      if (data.success) {
+        const modal = bootstrap.Modal.getInstance(document.getElementById('registerOtpModal'));
+        modal.hide();
+
+        this.loginForm.identifier = this.registerForm.mail;
+        this.loginForm.pass = this.registerForm.pass;
+        this.loginForm.remember = true;
+
+        await this.handleLogin();
+                        
+        if (loginResult.success) {
+          this.message = 'Đăng ký và đăng nhập thành công!';
+
+          setTimeout(() => {
+            if (authStore.isCustomer) {
+              this.$router.push('/customer/index');
+            } else if (authStore.isAdmin) {
+              this.$router.push('/employee/dashboard');
+            } else if (authStore.isEmployee) {
+              this.$router.push('/employee/products');
+            } else {
+              this.$router.push('/customer/index');
+            }
+          }, 1000);
+          
+        }
+        this.message = 'Đăng ký và đăng nhập thành công!';
+      } else {
+        this.error = data.message || 'Mã OTP không chính xác';
+      }
+    },
+
+    async resendRegisterOtp() {
+      if (!this.registerTempData) return;
+
+      this.loading = true;
+      this.error = '';
+
+      try {
+        const response = await axios.post('/api/auth/send-register', {
+          mail: this.registerTempData.mail,
+          pass: this.registerTempData.pass,
+          fullname: this.registerTempData.fullname,
+          phone: this.registerTempData.phone
+        }, {
+          withCredentials: true
+        });
+
+        const data = response.data;
+        
+        if (data.success) {
+          this.message = 'Mã OTP mới đã được gửi!';
+          this.startResendCountdown(60);
+        } else {
+          this.error = data.message || 'Có lỗi xảy ra khi gửi lại OTP';
+        }
+      } catch (error) {
+        this.error = error.response?.data?.message || 'Có lỗi xảy ra. Vui lòng thử lại sau.';
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    async handleForgotPasswordOtp() {
+      if (this.forgotPasswordStep === 1) {
+        if (!this.forgotPasswordEmail) {
+          this.error = 'Vui lòng nhập email';
+          return;
+        }
+
+        this.loading = true;
+        this.error = '';
+
+        try {
+          const response = await axios.post('/api/auth/send-fg-pass', {
+            email: this.forgotPasswordEmail
+          }, {
+            withCredentials: true
+          });
+
+          const data = response.data;
+          
+          if (data.success) {
+            this.message = 'Mã OTP đã được gửi đến email của bạn!';
+            this.forgotPasswordStep = 2;
+            this.startResendCountdown(60);
+          } else {
+            this.error = data.message || 'Có lỗi xảy ra';
+          }
+        } catch (error) {
+          this.error = error.response?.data?.message || 'Có lỗi xảy ra. Vui lòng thử lại sau';
+        } finally {
+          this.loading = false;
+        }
+      } else {
+        if (!this.forgotPasswordOtp || this.forgotPasswordOtp.length !== 6) {
+          this.error = 'Vui lòng nhập mã OTP 6 số';
+          return;
+        }
+
+        this.loading = true;
+        this.error = '';
+
+        try {
+          const response = await axios.post('/api/auth/confirm-fg-pass', {
+            email: this.forgotPasswordEmail,
+            confirmationCode: this.forgotPasswordOtp
+          }, {
+            withCredentials: true
+          });
+
+          const data = response.data;
+          
+          if (data.success) {
+            this.message = 'Mật khẩu mới đã được gửi đến email của bạn!';
+            
+            this.resetForgotPasswordOtp();
+          } else {
+            this.error = data.message || 'Mã OTP không chính xác';
+          }
+        } catch (error) {
+          this.error = error.response?.data?.message || 'Có lỗi xảy ra. Vui lòng thử lại sau';
+        } finally {
+          this.loading = false;
+        }
+      }
+    },
+
+    async resendForgotPasswordOtp() {
+      this.loading = true;
+      this.error = '';
+
+      try {
+        const response = await axios.post('/api/auth/send-fg-pass', {
+          email: this.forgotPasswordEmail
+        }, {
+          withCredentials: true
+        });
+
+        const data = response.data;
+        
+        if (data.success) {
+          this.message = 'Mã OTP mới đã được gửi!';
+          this.startResendCountdown(60);
+        } else {
+          this.error = data.message || 'Có lỗi xảy ra';
+        }
+      } catch (error) {
+        this.error = error.response?.data?.message || 'Có lỗi xảy ra. Vui lòng thử lại sau';
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    async handleGoogleCallback() {
+      try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const googleSuccess = urlParams.get('googleSuccess');
+        const email = urlParams.get('email');
+        const name = urlParams.get('name');
+        
+        if (googleSuccess === 'true' && email) {
+          const response = await axios.get('/api/oauth2/google/callback', {
+            params: {
+              email: email,
+              name: name || ''
+            },
+            withCredentials: true
+          });
+          
+          const data = response.data;
+
+          if (data.success) {
+            if (data.requirePassword) {
+              this.showGooglePasswordModal(data.email || email, data.name || name);
+            } else {
+              await this.completeGoogleLogin(data.email || email, data.name || name);
+            }
+          } else {
+            this.error = data.message || 'Đăng nhập Google thất bại';
+            if (data.message && data.message.includes('bị khóa')) {
+              this.accountLocked = true;
+              this.accountLockedMessage = data.message + ' Vui lòng liên hệ quản trị viên để được khắc phục.';
+            }
+          }
+        }
+      } catch (error) {
+        this.error = error.response?.data?.message || 'Lỗi xử lý đăng nhập Google';
+      }
+    },
+
+    showGooglePasswordModal(email, name) {
+      this.googleTemp.email = email;
+      this.googleTemp.name = name || 'Google User';
+      this.googlePassword = '';
+
+      const modal = new bootstrap.Modal(document.getElementById('googlePasswordModal'));
+      modal.show();
+    },
+
+    submitGooglePassword() {
+      if (!this.googlePassword || this.googlePassword.trim() === '') {
+        alert('Vui lòng nhập mật khẩu để tiếp tục!');
+        return;
+      }
+
+      const modal = bootstrap.Modal.getInstance(document.getElementById('googlePasswordModal'));
+      modal.hide();
+
+      this.completeGoogleLoginNewUser(
+        this.googleTemp.email, 
+        this.googleTemp.name, 
+        this.googlePassword
+      );
+      this.googlePassword = '';
+      this.googleTemp.email = '';
+      this.googleTemp.name = '';
+    },
+
+    async completeGoogleLoginNewUser(email, name, password) {
+      this.loading = true;
+      try {
+        const response = await axios.post('/api/oauth2/google-login-newuser', {
+          email: email,
+          name: name,
+          password: password
+        }, {
+          withCredentials: true
+        });
+        
+        const data = response.data;
+        
+        if (data.success) {
+          const token = btoa(JSON.stringify({
+            maUser: data.user.maUser,
+            exp: Date.now() + 24 * 60 * 60 * 1000
+          }));
+          localStorage.setItem('auth_token', token);
+
+          const authStore = useAuthStore();
+          authStore.user = data.user;
+          window.history.replaceState({}, document.title, window.location.pathname);
+          
+          this.message = 'Đăng nhập Google thành công!';
+          
+          setTimeout(() => {
+            this.$router.push('/customer/index');
+          }, 1000);
+        } else {
+          this.error = data.message || 'Đăng nhập Google thất bại';
+        }
+      } catch (error) {
+        this.error = error.response?.data?.message || 'Lỗi xử lý đăng nhập Google';
       } finally {
         this.loading = false;
       }
     },
     
-    async handleRegister() {
+    async completeGoogleLogin(email, name) {
       this.loading = true;
-      this.error = '';
-      this.message = '';
+      try {
+        const response = await axios.post('/api/oauth2/google-login', {
+          email: email,
+          name: name
+        }, {
+          withCredentials: true
+        });
+        
+        const data = response.data;
+        
+        if (data.success) {
+          const token = btoa(JSON.stringify({
+            maUser: data.user.maUser,
+            exp: Date.now() + 24 * 60 * 60 * 1000
+          }));
+          localStorage.setItem('auth_token', token);
+          const authStore = useAuthStore();
+          authStore.user = data.user;
 
-      if (!this.registerForm.terms) {
-        this.error = 'Vui lòng đồng ý với điều khoản sử dụng';
+          window.history.replaceState({}, document.title, window.location.pathname);
+          
+          this.message = 'Đăng nhập Google thành công!';
+          
+          setTimeout(() => {
+            this.$router.push('/customer/index');
+          }, 1000);
+        } else {
+          this.error = data.message || 'Đăng nhập Google thất bại';
+        }
+      } catch (error) {
+        this.error = error.response?.data?.message || 'Lỗi xử lý đăng nhập Google';
+      } finally {
         this.loading = false;
-        return;
       }
-      const authStore = useAuthStore();
-      const result = await authStore.register(this.registerForm);
-      
-      if (result.success) {
-        this.message = 'Đăng ký thành công!';
-
-        setTimeout(() => {
-          this.redirectByRole(authStore);
-        }, 1000);
-      } else {
-        this.error = result.message || 'Đăng ký thất bại';
-      }
-      
-      this.loading = false;
     },
-    
+
     redirectByRole(authStore) {
       if (authStore.isCustomer) {
         this.$router.push('/customer/index');
@@ -307,177 +819,31 @@ export default {
       } else {
         this.$router.push('/customer/index');
       }
-    },
-    
-    async handleGoogleCallback() {
-      try {
-        const urlParams = new URLSearchParams(window.location.search);
-        const googleSuccess = urlParams.get('googleSuccess');
-        const email = urlParams.get('email');
-        const name = urlParams.get('name');
-        
-        if (googleSuccess === 'true' && email) {
-           const response = await fetch('/api/oauth2/google/callback?email=' + encodeURIComponent(email) + '&name=' + encodeURIComponent(name || ''), {
-            credentials: 'include'
-          });
-          
-          const data = await response.json();
-          
-          if (data.success) {
-            if (data.requirePassword) {
-              this.showPasswordPrompt(data.email, data.name);
-            } else {
-              await this.completeGoogleLogin(data.email, data.name);
-            }
-          } else {
-            this.error = data.message || 'Đăng nhập Google thất bại';
-            if (data.message && data.message.includes('bị khóa')) {
-              this.accountLocked = true;
-              this.accountLockedMessage = data.message + ' Vui lòng liên hệ quản trị viên.';
-            }
-          }
-        }
-      } catch (error) {
-        console.error('Google callback error:', error);
-        this.error = 'Lỗi xử lý đăng nhập Google';
-      }
-    },
-
-    showPasswordPrompt(email, name) {
-      const password = prompt(
-        `🔐 TÀI KHOẢN GOOGLE\n\n` +
-        `Email: ${email}\n` +
-        `Tên: ${name || 'Google User'}\n\n` +
-        `Vui lòng nhập mật khẩu bạn muốn đặt cho tài khoản này:`,
-        ''
-      );
-      
-      if (password && password.trim() !== '') {
-        this.completeGoogleLoginNewUser(email, name, password);
-      } else if (password !== null) {
-        alert('Vui lòng nhập mật khẩu để tiếp tục!');
-        this.showPasswordPrompt(email, name);
-      }
-    },
-
-     async completeGoogleLoginNewUser(email, name, password) {
-      this.loading = true;
-      try {
-        const response = await fetch('/api/oauth2/google-login-newuesr', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include',
-          body: JSON.stringify({ email, name, password })
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-          console.log('Google login with password successful');
-          
-          const authStore = useAuthStore();
-          authStore.user = data.user;
-          localStorage.setItem('user', JSON.stringify(data.user));
-          
-          window.history.replaceState({}, document.title, window.location.pathname);
-          
-          this.message = 'Đăng nhập Google thành công!';
-          
-          setTimeout(() => {
-            this.$router.push('/customer/index');
-          }, 1000);
-        } else {
-          this.error = data.message || 'Đăng nhập Google thất bại';
-          console.error('Google login failed:', data.message);
-        }
-      } catch (error) {
-        console.error('Google login error:', error);
-        this.error = 'Lỗi xử lý đăng nhập Google';
-      } finally {
-        this.loading = false;
-      }
-    },
-    
-    async completeGoogleLogin(email, name) {
-      this.loading = true;
-      try {
-        const response = await fetch('/api/oauth2/google-login', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include',
-          body: JSON.stringify({ email, name })
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-          console.log('Google login successful');
-          
-          const authStore = useAuthStore();
-          authStore.user = data.user;
-          localStorage.setItem('user', JSON.stringify(data.user));
-          
-          window.history.replaceState({}, document.title, window.location.pathname);
-          
-          this.message = 'Đăng nhập Google thành công!';
-          
-          setTimeout(() => {
-            this.$router.push('/customer/index');
-          }, 1000);
-        } else {
-          this.error = data.message || 'Đăng nhập Google thất bại';
-          console.error('Google login failed:', data.message);
-        }
-      } catch (error) {
-        console.error('Google login error:', error);
-        this.error = 'Lỗi xử lý đăng nhập Google';
-      } finally {
-        this.loading = false;
-      }
-    },
-    
-
-    async handleForgotPassword() {
-      if (!this.forgotPasswordEmail) {
-        this.error = 'Vui lòng nhập email';
-        return;
-      }
-      
-      this.loading = true;
-      try {
-        const response = await fetch('/api/auth/forgot-password', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include',
-          body: JSON.stringify({ email: this.forgotPasswordEmail })
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-          this.message = 'Mật khẩu mới đã được gửi đến email của bạn';
-          this.showForgotPasswordModal = false;
-          this.forgotPasswordEmail = '';
-        } else {
-          this.error = data.message || 'Có lỗi xảy ra';
-        }
-      } catch (error) {
-        this.error = 'Có lỗi xảy ra. Vui lòng thử lại sau';
-      } finally {
-        this.loading = false;
-      }
     }
   }
 };
 </script>
 
 <style scoped>
+
+input[type="text"].text-center {
+  font-size: 1.2rem;
+  letter-spacing: 2px;
+}
+
+.modal.fade .modal-dialog {
+  transition: transform 0.3s ease-out;
+}
+
+.modal.show .modal-dialog {
+  transform: none;
+}
+
+.btn-outline-secondary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .auth-page {
   font-family: 'Segoe UI', sans-serif;
   height: 100vh;
@@ -491,7 +857,7 @@ export default {
 
 .bg-overlay {
   background: rgba(255, 255, 255, 0.101);
-min-height: 100vh;
+  min-height: 100vh;
   width: 100vw;
   position: fixed;
   top: 0;
@@ -501,8 +867,8 @@ min-height: 100vh;
 
 .auth-wrapper {
   display: flex;
-  width: 750px; /* Tăng nhẹ để chứa nội dung */
-  height: 550px; /* Tăng nhẹ để chứa nội dung */
+  width: 750px;
+  height: 550px;
   box-shadow: 0 0 40px rgba(0, 0, 0, 0.35);
   border-radius: 24px;
   overflow: hidden;
@@ -552,7 +918,7 @@ min-height: 100vh;
   width: 55%;
   padding: 25px;
   background-color: white;
-  overflow-y: auto; /* Cho phép scroll nếu nội dung dài */
+  overflow-y: auto;
 }
 
 .nav-tabs .nav-link {
@@ -575,7 +941,6 @@ min-height: 100vh;
   margin-bottom: 10px;
 }
 
-/* Style cho thông báo tài khoản bị khóa */
 .alert-warning {
   background-color: #fff3cd;
   border-color: #ffeeba;
@@ -584,13 +949,11 @@ min-height: 100vh;
   padding: 10px;
 }
 
-/* Style cho input placeholder */
 ::placeholder {
   color: #999;
   font-size: 0.9rem;
 }
 
-/* Style cho small text */
 small {
   font-size: 0.8rem;
   color: #666;

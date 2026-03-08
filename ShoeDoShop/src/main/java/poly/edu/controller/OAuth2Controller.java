@@ -23,7 +23,7 @@ public class OAuth2Controller {
         return ResponseEntity.ok(authService.googleLogin(request));
     }
     
-    @PostMapping("/google-login-new")
+    @PostMapping("/google-login-newuser")
     public ResponseEntity<Map<String, Object>> googleLoginNew(@RequestBody Map<String, String> request) {
         return ResponseEntity.ok(authService.googleLoginNew(request));
     }
