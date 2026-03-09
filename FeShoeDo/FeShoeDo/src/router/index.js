@@ -110,19 +110,18 @@ router.beforeEach(async (to, from, next) => {
 
   console.log('📍 Route change:', to.path);
   console.log('🔐 Auth state:', authStore.isAuthenticated);
-  
-  // Cho phép truy cập công khai các trang này
+
   const publicPaths = [
-'/',
+    '/',
     '/customer/index',
     '/customer/detail-product/:id?',
+    '/customer/chinhsach',
+    '/customer/sanpham',
     '/auth/login'
   ];
-  
-  // Kiểm tra nếu route là public
+
   const isPublicPath = publicPaths.some(path => {
     if (path.includes(':')) {
-      // Kiểm tra pattern
       const pattern = new RegExp('^' + path.replace(/:\w+\?/g, '([^/]+)?').replace(/\//g, '\\/') + '$');
       return pattern.test(to.path);
     }
@@ -134,10 +133,8 @@ router.beforeEach(async (to, from, next) => {
     return;
   }
   
-  // Kiểm tra nếu route yêu cầu đăng nhập
   if (to.meta.requiresAuth) {
     if (!authStore.isAuthenticated) {
-      // Thử lấy user từ server
       try {
         await authStore.fetchCurrentUser();
         
@@ -151,13 +148,11 @@ router.beforeEach(async (to, from, next) => {
         return;
       }
     }
-    
-    // Kiểm tra quyền truy cập
+
     if (to.meta.role) {
       
       const userRole = authStore.userRole;
       if (userRole !== to.meta.role) {
-        // Redirect dựa trên role
         if (userRole === 'CUSTOMER') {
           next('/customer/index');
         } else if (userRole === 'ADMIN') {
@@ -171,8 +166,7 @@ router.beforeEach(async (to, from, next) => {
       }
     }
   }
-  
-  // Kiểm tra nếu route yêu cầu chưa đăng nhập
+
   if (to.meta.requiresGuest && authStore.isAuthenticated) {
     if (authStore.userRole === 'CUSTOMER') {
       next('/customer/index');
