@@ -12,211 +12,193 @@
         </ol>
       </nav>
 
-      <h2 class="page-title-main mb-4">
-        <i class="bi bi-credit-card me-2"></i>Thanh toán
-      </h2>
-
-      <div class="row g-4">
-        <!-- Left: Form đặt hàng -->
-        <div class="col-lg-7">
-
-          <!-- 1. Địa chỉ giao hàng -->
-          <div class="checkout-section">
-            <div class="section-header">
-              <h5><i class="bi bi-geo-alt me-2"></i>Địa chỉ giao hàng</h5>
-              <button class="btn btn-outline-dark btn-sm">
-                <i class="bi bi-plus-circle me-1"></i>Thêm địa chỉ mới
-              </button>
-            </div>
-
-            <!-- Địa chỉ 1 - Mặc định -->
-            <div class="address-option selected">
-              <div class="d-flex align-items-start gap-3">
-                <input class="form-check-input mt-1" type="radio" name="address" id="addr1" checked>
-                <label for="addr1" class="flex-fill">
-                  <div class="d-flex align-items-center gap-2 mb-1">
-                    <span class="fw-bold">Nguyễn Văn A</span>
-                    <span class="text-muted">|</span>
-                    <span class="text-muted">0901234567</span>
-                    <span class="badge bg-dark ms-1">Mặc định</span>
-                  </div>
-                  <div class="text-muted small">123 Nguyễn Huệ A, Quận 1, TP.HCM</div>
-                </label>
-              </div>
-            </div>
-
-            <!-- Địa chỉ 2 -->
-            <div class="address-option">
-              <div class="d-flex align-items-start gap-3">
-                <input class="form-check-input mt-1" type="radio" name="address" id="addr2">
-                <label for="addr2" class="flex-fill">
-                  <div class="d-flex align-items-center gap-2 mb-1">
-                    <span class="fw-bold">Nguyễn Văn A-B</span>
-                    <span class="text-muted">|</span>
-                    <span class="text-muted">0901234567</span>
-                  </div>
-                  <div class="text-muted small">123 Nguyễn Huệ B, Quận 1, TP.HCM</div>
-                </label>
-              </div>
-            </div>
-
-            <!-- Địa chỉ 3 -->
-            <div class="address-option">
-              <div class="d-flex align-items-start gap-3">
-                <input class="form-check-input mt-1" type="radio" name="address" id="addr3">
-                <label for="addr3" class="flex-fill">
-                  <div class="d-flex align-items-center gap-2 mb-1">
-                    <span class="fw-bold">Nguyễn Văn A-C</span>
-                    <span class="text-muted">|</span>
-                    <span class="text-muted">0901234567</span>
-                  </div>
-                  <div class="text-muted small">123 Nguyễn Huệ C, Quận 1, TP.HCM</div>
-                </label>
-              </div>
-            </div>
-          </div>
-
-          <!-- 2. Phương thức thanh toán -->
-          <div class="checkout-section">
-            <div class="section-header">
-              <h5><i class="bi bi-wallet2 me-2"></i>Phương thức thanh toán</h5>
-            </div>
-
-            <div class="payment-option selected">
-              <div class="d-flex align-items-center gap-3">
-                <input class="form-check-input" type="radio" name="payment" id="payCOD" checked>
-                <label for="payCOD" class="d-flex align-items-center gap-3 flex-fill">
-                  <div class="payment-icon">
-                    <i class="bi bi-cash-stack"></i>
-                  </div>
-                  <div>
-                    <div class="fw-bold">Thanh toán khi nhận hàng (COD)</div>
-                    <div class="text-muted small">Thanh toán bằng tiền mặt khi nhận hàng</div>
-                  </div>
-                </label>
-              </div>
-            </div>
-
-            <div class="payment-option">
-              <div class="d-flex align-items-center gap-3">
-                <input class="form-check-input" type="radio" name="payment" id="payTransfer">
-                <label for="payTransfer" class="d-flex align-items-center gap-3 flex-fill">
-                  <div class="payment-icon">
-                    <i class="bi bi-bank"></i>
-                  </div>
-                  <div>
-                    <div class="fw-bold">Chuyển khoản ngân hàng</div>
-                    <div class="text-muted small">Chuyển khoản qua tài khoản ngân hàng</div>
-                  </div>
-                </label>
-              </div>
-            </div>
-          </div>
-
-          <!-- 3. Ghi chú -->
-          <div class="checkout-section">
-            <div class="section-header">
-              <h5><i class="bi bi-chat-left-text me-2"></i>Ghi chú đơn hàng</h5>
-            </div>
-            <textarea class="form-control" rows="3" placeholder="Ghi chú cho người bán (ví dụ: giao giờ hành chính, gọi trước khi giao...)"></textarea>
-          </div>
+      <!-- Loading -->
+      <div v-if="loading" class="text-center py-5">
+        <div class="spinner-border" role="status">
+          <span class="visually-hidden">Loading...</span>
         </div>
+        <p class="mt-2 text-muted">Đang tải thông tin đặt hàng...</p>
+      </div>
 
-        <!-- Right: Tóm tắt đơn hàng -->
-        <div class="col-lg-5">
-          <div class="order-review sticky-top" style="top: 100px;">
-            <h5 class="review-title">Đơn hàng của bạn</h5>
+      <!-- No Items -->
+      <div v-else-if="checkoutItems.length === 0" class="text-center py-5">
+        <i class="bi bi-cart-x" style="font-size: 64px; color: #ccc;"></i>
+        <h4 class="mt-3">Không có sản phẩm nào để đặt hàng</h4>
+        <a href="/customer/cart" class="btn btn-dark px-4 py-2 mt-2">
+          <i class="bi bi-arrow-left me-2"></i>Quay lại giỏ hàng
+        </a>
+      </div>
 
-            <!-- Sản phẩm 1 -->
-            <div class="review-item">
-              <div class="d-flex gap-3">
-                <div class="review-item-image">
-                  <img src="https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=100&h=100&fit=crop" alt="">
-                  <span class="item-qty-badge">1</span>
-                </div>
-                <div class="flex-fill">
-                  <div class="review-item-name">SP001-ShoeDo - SP1 - GD</div>
-                  <div class="review-item-variant">Trắng / Size 40</div>
-                </div>
-                <div class="review-item-price">2.500.000₫</div>
-              </div>
-            </div>
-
-            <!-- Sản phẩm 2 -->
-            <div class="review-item">
-              <div class="d-flex gap-3">
-                <div class="review-item-image">
-                  <img src="https://images.unsplash.com/photo-1539185441755-769473a23570?w=100&h=100&fit=crop" alt="">
-                  <span class="item-qty-badge">2</span>
-                </div>
-                <div class="flex-fill">
-                  <div class="review-item-name">SP003-ShoeDo - SP3 - GD</div>
-                  <div class="review-item-variant">Đỏ / Size 37</div>
-                </div>
-                <div class="review-item-price">9.000.000₫</div>
-              </div>
-            </div>
-
-            <!-- Sản phẩm 3 -->
-            <div class="review-item">
-              <div class="d-flex gap-3">
-                <div class="review-item-image">
-                  <img src="https://images.unsplash.com/photo-1608231387042-66d1773070a5?w=100&h=100&fit=crop" alt="">
-                  <span class="item-qty-badge">1</span>
-                </div>
-                <div class="flex-fill">
-                  <div class="review-item-name">SP008-ShoeDo - SP1 - GBT</div>
-                  <div class="review-item-variant">Đen / Size 41</div>
-                </div>
-                <div class="review-item-price">3.500.000₫</div>
-              </div>
-            </div>
-
-            <hr>
-
-            <!-- Voucher -->
-            <div class="mb-3">
-              <div class="input-group">
-                <input type="text" class="form-control" placeholder="Nhập mã giảm giá">
-                <button class="btn btn-outline-dark">Áp dụng</button>
-              </div>
-            </div>
-
-            <hr>
-
-            <!-- Tổng -->
-            <div class="summary-line">
-              <span>Tạm tính</span>
-              <span class="fw-semibold">15.000.000₫</span>
-            </div>
-            <div class="summary-line">
-              <span>Phí vận chuyển</span>
-              <span class="text-success fw-semibold">Miễn phí</span>
-            </div>
-            <div class="summary-line">
-              <span>Giảm giá</span>
-              <span class="text-success fw-semibold">-0₫</span>
-            </div>
-
-            <hr>
-
-            <div class="summary-line total-line">
-              <span>Tổng thanh toán</span>
-              <span>15.000.000₫</span>
-            </div>
-
-            <button class="btn btn-dark w-100 mt-3 py-3 place-order-btn">
-              <i class="bi bi-bag-check me-2"></i>Đặt hàng
-            </button>
-
-            <p class="text-center text-muted small mt-3">
-              Bằng việc nhấn "Đặt hàng", bạn đồng ý với 
-              <a href="#" class="text-dark">Điều khoản dịch vụ</a> và 
-              <a href="#" class="text-dark">Chính sách bảo mật</a>
-            </p>
-          </div>
+      <!-- Order Success -->
+      <div v-else-if="orderSuccess" class="text-center py-5">
+        <i class="bi bi-check-circle-fill text-success" style="font-size: 80px;"></i>
+        <h3 class="mt-3 fw-bold">Đặt hàng thành công!</h3>
+        <p class="text-muted">Mã đơn hàng: <strong>HD{{ String(orderResult.maHD).padStart(4, '0') }}</strong></p>
+        <p class="text-muted">Tổng thanh toán: <strong>{{ formatCurrency(orderResult.tongTien) }}</strong></p>
+        <div class="mt-4 d-flex justify-content-center gap-3">
+          <a href="/customer/orders" class="btn btn-dark px-4 py-2">
+            <i class="bi bi-bag me-2"></i>Xem đơn hàng
+          </a>
+          <a href="/customer/index" class="btn btn-outline-dark px-4 py-2">
+            <i class="bi bi-arrow-left me-2"></i>Tiếp tục mua sắm
+          </a>
         </div>
       </div>
+
+      <!-- Checkout Form -->
+      <template v-else>
+        <h2 class="page-title-main mb-4">
+          <i class="bi bi-credit-card me-2"></i>Thanh toán
+        </h2>
+
+        <div class="row g-4">
+          <!-- Left: Form đặt hàng -->
+          <div class="col-lg-7">
+
+            <!-- 1. Địa chỉ giao hàng -->
+            <div class="checkout-section">
+              <div class="section-header">
+                <h5><i class="bi bi-geo-alt me-2"></i>Địa chỉ giao hàng</h5>
+              </div>
+
+              <div v-if="addresses.length === 0" class="text-muted text-center py-3">
+                Chưa có địa chỉ nào. Vui lòng thêm địa chỉ trong phần Hồ sơ.
+              </div>
+
+              <div v-for="addr in addresses" :key="addr.maDC" 
+                   class="address-option" 
+                   :class="{ selected: selectedAddress === addr.maDC }"
+                   @click="selectedAddress = addr.maDC">
+                <div class="d-flex align-items-start gap-3">
+                  <input class="form-check-input mt-1" type="radio" 
+                         name="address" :id="'addr' + addr.maDC"
+                         :checked="selectedAddress === addr.maDC"
+                         @change="selectedAddress = addr.maDC">
+                  <label :for="'addr' + addr.maDC" class="flex-fill">
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                      <span class="fw-bold">{{ addr.tenNN }}</span>
+                      <span class="text-muted">|</span>
+                      <span class="text-muted">{{ addr.sdt }}</span>
+                      <span v-if="addr.macDinh" class="badge bg-dark ms-1">Mặc định</span>
+                    </div>
+                    <div class="text-muted small">{{ addr.diemGiao }}</div>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- 2. Phương thức thanh toán -->
+            <div class="checkout-section">
+              <div class="section-header">
+                <h5><i class="bi bi-wallet2 me-2"></i>Phương thức thanh toán</h5>
+              </div>
+
+              <div class="payment-option" 
+                   :class="{ selected: paymentMethod === 'COD' }"
+                   @click="paymentMethod = 'COD'">
+                <div class="d-flex align-items-center gap-3">
+                  <input class="form-check-input" type="radio" name="payment" id="payCOD"
+                         :checked="paymentMethod === 'COD'" @change="paymentMethod = 'COD'">
+                  <label for="payCOD" class="d-flex align-items-center gap-3 flex-fill">
+                    <div class="payment-icon">
+                      <i class="bi bi-cash-stack"></i>
+                    </div>
+                    <div>
+                      <div class="fw-bold">Thanh toán khi nhận hàng (COD)</div>
+                      <div class="text-muted small">Thanh toán bằng tiền mặt khi nhận hàng</div>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              <div class="payment-option" 
+                   :class="{ selected: paymentMethod === 'Chuyển khoản' }"
+                   @click="paymentMethod = 'Chuyển khoản'">
+                <div class="d-flex align-items-center gap-3">
+                  <input class="form-check-input" type="radio" name="payment" id="payTransfer"
+                         :checked="paymentMethod === 'Chuyển khoản'" @change="paymentMethod = 'Chuyển khoản'">
+                  <label for="payTransfer" class="d-flex align-items-center gap-3 flex-fill">
+                    <div class="payment-icon">
+                      <i class="bi bi-bank"></i>
+                    </div>
+                    <div>
+                      <div class="fw-bold">Chuyển khoản ngân hàng</div>
+                      <div class="text-muted small">Chuyển khoản qua tài khoản ngân hàng</div>
+                    </div>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- 3. Ghi chú -->
+            <div class="checkout-section">
+              <div class="section-header">
+                <h5><i class="bi bi-chat-left-text me-2"></i>Ghi chú đơn hàng</h5>
+              </div>
+              <textarea class="form-control" rows="3" v-model="note"
+                        placeholder="Ghi chú cho người bán (ví dụ: giao giờ hành chính, gọi trước khi giao...)"></textarea>
+            </div>
+          </div>
+
+          <!-- Right: Tóm tắt đơn hàng -->
+          <div class="col-lg-5">
+            <div class="order-review sticky-top" style="top: 100px;">
+              <h5 class="review-title">Đơn hàng của bạn</h5>
+
+              <!-- Product items -->
+              <div v-for="item in checkoutItems" :key="item.maGH" class="review-item">
+                <div class="d-flex gap-3">
+                  <div class="review-item-image">
+                    <img :src="getImageUrl(item)" alt="" @error="handleImageError($event, item)">
+                    <span class="item-qty-badge">{{ item.soLuong }}</span>
+                  </div>
+                  <div class="flex-fill">
+                    <div class="review-item-name">{{ getProductName(item) }}</div>
+                    <div class="review-item-variant">{{ item.tenMau }} / Size {{ item.size }}</div>
+                  </div>
+                  <div class="review-item-price">{{ formatCurrency(item.thanhTien) }}</div>
+                </div>
+              </div>
+
+              <hr>
+
+              <!-- Tổng -->
+              <div class="summary-line">
+                <span>Tạm tính</span>
+                <span class="fw-semibold">{{ formatCurrency(totalAmount) }}</span>
+              </div>
+              <div class="summary-line">
+                <span>Phí vận chuyển</span>
+                <span class="text-success fw-semibold">Miễn phí</span>
+              </div>
+
+              <hr>
+
+              <div class="summary-line total-line">
+                <span>Tổng thanh toán</span>
+                <span>{{ formatCurrency(totalAmount) }}</span>
+              </div>
+
+              <button class="btn btn-dark w-100 mt-3 py-3 place-order-btn" 
+                      @click="placeOrder"
+                      :disabled="ordering || addresses.length === 0">
+                <span v-if="ordering">
+                  <span class="spinner-border spinner-border-sm me-2"></span>Đang xử lý...
+                </span>
+                <span v-else>
+                  <i class="bi bi-bag-check me-2"></i>Đặt hàng
+                </span>
+              </button>
+
+              <p class="text-center text-muted small mt-3">
+                Bằng việc nhấn "Đặt hàng", bạn đồng ý với 
+                <a href="/customer/chinhsach" class="text-dark">Điều khoản dịch vụ</a> và 
+                <a href="/customer/chinhsach" class="text-dark">Chính sách bảo mật</a>
+              </p>
+            </div>
+          </div>
+        </div>
+      </template>
     </main>
 
     <Footer />
@@ -226,10 +208,162 @@
 <script>
 import KH_Navbar from '@/components/shared/KH_Navbar.vue';
 import Footer from '@/components/shared/Footer.vue';
+import api from '@/services/api';
+import { useAuthStore } from '@/stores/auth';
 
 export default {
   name: 'KH_DatHang',
-  components: { KH_Navbar, Footer }
+  components: { KH_Navbar, Footer },
+  data() {
+    return {
+      checkoutItems: [],
+      checkoutItemIds: [],
+      addresses: [],
+      selectedAddress: null,
+      paymentMethod: 'COD',
+      note: '',
+      loading: true,
+      ordering: false,
+      orderSuccess: false,
+      orderResult: {},
+    };
+  },
+  computed: {
+    totalAmount() {
+      return this.checkoutItems.reduce((sum, item) => sum + (item.thanhTien || 0), 0);
+    },
+  },
+  methods: {
+    async loadData() {
+      this.loading = true;
+      try {
+        // Lấy items từ sessionStorage (từ cart page)
+        const storedItems = sessionStorage.getItem('checkoutItems');
+        const storedIds = sessionStorage.getItem('checkoutItemIds');
+        
+        if (storedItems) {
+          this.checkoutItems = JSON.parse(storedItems);
+        }
+        if (storedIds) {
+          this.checkoutItemIds = JSON.parse(storedIds);
+        }
+
+        // Nếu không có items, thử lấy toàn bộ cart
+        if (this.checkoutItems.length === 0) {
+          const cartResp = await api.getCart();
+          if (cartResp.data.success && cartResp.data.items) {
+            this.checkoutItems = cartResp.data.items;
+            this.checkoutItemIds = this.checkoutItems.map(item => item.maGH);
+          }
+        }
+
+        // Lấy danh sách địa chỉ
+        const addrResp = await api.getAddresses();
+        if (addrResp.data.success) {
+          this.addresses = addrResp.data.addresses || addrResp.data.data || [];
+        } else if (Array.isArray(addrResp.data)) {
+          this.addresses = addrResp.data;
+        }
+
+        // Chọn địa chỉ mặc định
+        const defaultAddr = this.addresses.find(a => a.macDinh);
+        if (defaultAddr) {
+          this.selectedAddress = defaultAddr.maDC;
+        } else if (this.addresses.length > 0) {
+          this.selectedAddress = this.addresses[0].maDC;
+        }
+
+      } catch (error) {
+        console.error('Error loading checkout data:', error);
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    getImageUrl(item) {
+      const hinhAnh = typeof item === 'string' ? item : item.hinhAnh;
+      if (!hinhAnh) return 'https://via.placeholder.com/100?text=No+Image';
+      if (hinhAnh.startsWith('http')) return hinhAnh;
+      return `http://localhost:8080/images/${hinhAnh}`;
+    },
+
+    handleImageError(event, item) {
+      const img = event.target;
+      const currentSrc = img.src;
+      const maSP = item.maSP;
+      const fallbacks = [
+        `http://localhost:8080/images/sp${maSP}.jpg`,
+        `http://localhost:8080/images/sp${maSP}_black.jpg`,
+        'https://via.placeholder.com/100?text=No+Image'
+      ];
+      if (currentSrc.includes('placeholder.com')) return;
+      const currentIndex = fallbacks.indexOf(currentSrc);
+      if (currentIndex === -1) {
+        img.src = fallbacks[0];
+      } else if (currentIndex + 1 < fallbacks.length) {
+        img.src = fallbacks[currentIndex + 1];
+      }
+    },
+
+    getProductName(item) {
+      if (item.moTa && item.moTa.trim() !== '') return item.moTa;
+      if (item.tenSP) {
+        const cleaned = item.tenSP.replace(/^SP\d+-ShoeDo\s*-\s*/, '');
+        return cleaned || item.tenSP;
+      }
+      return 'Sản phẩm';
+    },
+
+    formatCurrency(value) {
+      if (value == null) return '0₫';
+      return new Intl.NumberFormat('vi-VN').format(Math.round(value)) + '₫';
+    },
+
+    async placeOrder() {
+      if (this.addresses.length === 0) {
+        alert('Vui lòng thêm địa chỉ giao hàng trong phần Hồ sơ');
+        return;
+      }
+
+      if (!this.selectedAddress) {
+        alert('Vui lòng chọn địa chỉ giao hàng');
+        return;
+      }
+
+      this.ordering = true;
+      try {
+        const response = await api.checkout({
+          maDC: this.selectedAddress,
+          phuongThucTT: this.paymentMethod,
+          ghiChu: this.note,
+          cartItemIds: this.checkoutItemIds,
+        });
+
+        if (response.data.success) {
+          this.orderSuccess = true;
+          this.orderResult = response.data;
+          
+          // Clear sessionStorage
+          sessionStorage.removeItem('checkoutItems');
+          sessionStorage.removeItem('checkoutItemIds');
+
+          // Update cart count
+          const authStore = useAuthStore();
+          authStore.updateCartCount();
+        } else {
+          alert(response.data.message || 'Đặt hàng thất bại');
+        }
+      } catch (error) {
+        console.error('Checkout error:', error);
+        alert(error.response?.data?.message || 'Lỗi khi đặt hàng');
+      } finally {
+        this.ordering = false;
+      }
+    },
+  },
+  mounted() {
+    this.loadData();
+  },
 };
 </script>
 
@@ -447,10 +581,14 @@ export default {
   transition: all 0.3s;
 }
 
-.place-order-btn:hover {
+.place-order-btn:hover:not(:disabled) {
   background: #333;
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+}
+
+.place-order-btn:disabled {
+  opacity: 0.6;
 }
 
 /* Responsive */
