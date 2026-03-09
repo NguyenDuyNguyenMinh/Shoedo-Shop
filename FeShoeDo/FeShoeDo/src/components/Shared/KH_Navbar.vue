@@ -141,11 +141,11 @@ const route = useRoute()
 const authStore = useAuthStore()
 
 const isSearchFocused = ref(false)
-const cartCount = ref(0)
 const showDropdown = ref(false)
 const dropdown = ref(null)
 
 const isAuthenticated = computed(() => authStore.isAuthenticated)
+const cartCount = computed(() => authStore.cartCount || 0)
 const lastName = computed(() => {
   const name = authStore.user?.name || ''
   if (!name || name.trim() === '') return 'User'
@@ -154,21 +154,11 @@ const lastName = computed(() => {
 })
 
 const fetchCartCount = async () => {
-  if (!isAuthenticated.value) {
-    cartCount.value = 0
-    return
-  }
-  
+  if (!isAuthenticated.value) return
   try {
-    const response = await axios.get('/api/auth/cart-count', {
-      withCredentials: true
-    })
-    if (response.data.success) {
-      cartCount.value = response.data.count || 0
-    }
+    await authStore.updateCartCount()
   } catch (error) {
     console.error('Lỗi lấy số lượng giỏ hàng:', error)
-    cartCount.value = 0
   }
 }
 
@@ -194,7 +184,6 @@ const toggleDropdown = async (e) => {
 const logout = async () => {
   try {
     await authStore.logout()
-    cartCount.value = 0
     showDropdown.value = false
     router.push('/auth/login')
   } catch (error) {
@@ -210,8 +199,6 @@ const handleClickOutside = (event) => {
 watch(isAuthenticated, (newVal) => {
   if (newVal) {
     fetchCartCount()
-  } else {
-    cartCount.value = 0
   }
 })
 

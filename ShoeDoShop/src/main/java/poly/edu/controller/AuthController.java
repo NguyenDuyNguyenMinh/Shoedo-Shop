@@ -3,9 +3,13 @@ package poly.edu.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import poly.edu.dao.QuanTriDAO;
+import poly.edu.dao.UsersDAO;
+import poly.edu.entity.QuanTri;
 import poly.edu.entity.Users;
 import poly.edu.service.AuthService;
 
+import java.util.Date;
 import java.util.Map;
 
 @RestController
@@ -13,6 +17,8 @@ import java.util.Map;
 public class AuthController {
     
     @Autowired private AuthService authService;
+    @Autowired private UsersDAO usersDAO;
+    @Autowired private QuanTriDAO quanTriDAO;
     
     @GetMapping("/auto-login")
     public ResponseEntity<Map<String, Object>> autoLogin() {

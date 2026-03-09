@@ -471,6 +471,10 @@ public class AuthService {
                (boolean) sessionService.get("isGoogleUser");
     }
     
+    public PasswordEncoder getPasswordEncoder() {
+        return passwordEncoder;
+    }
+    
     // ==================== UTILS ====================
     private Map<String, Object> success(Object data) {
         return Map.of("success", true, "user", data);
