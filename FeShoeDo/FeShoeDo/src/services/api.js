@@ -389,4 +389,11 @@ export default {
       params: { startDate, endDate }
     });
   },
+
+  // Đơn hàng gần đây
+  getDonHangGanDay(limit = 5) {
+    return apiClient.get('/employee/thongke/don-hang-gan-day', {
+      params: { limit }
+    });
+  }
 };

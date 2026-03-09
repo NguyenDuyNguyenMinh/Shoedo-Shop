@@ -8,7 +8,6 @@ import poly.edu.dto.ThongKeDTO;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 public class ThongKeService {
@@ -209,7 +208,19 @@ public class ThongKeService {
         result.put("theoDanhMuc", thongKeTheoDanhMuc(startDate, endDate));
         result.put("topSanPham", topSanPhamBanChay(startDate, endDate, 10));
         result.put("topKhachHang", topKhachHang(startDate, endDate, 5));
+        result.put("donHangGanDay", getRecentOrders(5));
         
         return result;
+    }
+
+    /**
+     * Lấy danh sách đơn hàng gần đây
+     * 
+     * @param limit Số lượng đơn hàng cần lấy
+     * @return List<Map> danh sách đơn hàng gần đây
+     */
+    public List<Map<String, Object>> getRecentOrders(int limit) {
+        List<Object[]> results = thongKeDAO.getRecentOrders(limit);
+        return mapToListMap(results, new String[]{"maHD", "tenKH", "ngayMua", "tongTien", "trangThai"});
     }
 }
