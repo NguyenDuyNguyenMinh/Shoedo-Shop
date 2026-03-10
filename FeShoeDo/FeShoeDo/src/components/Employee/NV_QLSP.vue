@@ -5,14 +5,16 @@
     <main class="main-content">
       <div class="page-container">
         <div
-          class="alert alert-success alert-dismissible fade show"
+          v-if="successMessage"
+          class="alert alert-success alert-dismissible fade show shadow-sm"
           role="alert"
         >
-          <span>Đã lưu sản phẩm thành công.</span>
+          <i class="bi bi-check-circle-fill me-2"></i>
+          <span>{{ successMessage }}</span>
           <button
             type="button"
             class="btn-close"
-            data-bs-dismiss="alert"
+            @click="successMessage = ''"
           ></button>
         </div>
 
@@ -30,15 +32,15 @@
             </div>
           </div>
           <div class="col-md-3">
-            <div class="stats-mini bg-gradient-3">
-              <h4>{{ outOfStock }}</h4>
-              <p>Hết hàng</p>
-            </div>
-          </div>
-          <div class="col-md-3">
             <div class="stats-mini bg-gradient-4">
               <h4>{{ lowStock }}</h4>
               <p>Sắp hết hàng</p>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="stats-mini bg-gradient-3">
+              <h4>{{ outOfStock }}</h4>
+              <p>Hết hàng</p>
             </div>
           </div>
         </div>
@@ -125,7 +127,7 @@
                   class="product-card"
                   :class="{ 'opacity-50': !item.isActive }"
                 >
-                <span
+                  <span
                     class="status-badge-corner"
                     :class="[
                       'badge',
@@ -431,7 +433,7 @@
                   </button>
                 </div>
               </div>
-
+              <br />
               <div class="mb-3">
                 <label class="form-label">Giới tính *</label>
                 <div class="btn-group w-100 gender-group" role="group">
@@ -494,7 +496,7 @@
                   <div
                     class="d-flex justify-content-between align-items-center mb-3"
                   >
-                    <span class="badge bg-primary fs-6"
+                    <span class="badge bg-dark fs-6"
                       >Phân loại #{{ index + 1 }}</span
                     >
                     <button
@@ -518,24 +520,30 @@
                         required
                       />
                     </div>
-                    <div class="col-md-3">
-                      <label class="form-label small">Size (Nhập ID) *</label>
-                      <select
-                        class="form-select form-control-sm"
-                        v-model="v.maSize"
-                        required
-                      >
-                        <option value="" disabled selected>Chọn Size</option>
-                        <option
+                    <div class="col-md-12 mb-3">
+                      <label class="form-label small fw-bold text-dark">
+Chọn các Size cho màu này
+                      </label>
+                      <div class="d-flex flex-wrap gap-2">
+                        <div
                           v-for="s in sizes"
-                          :key="s.maSize"
-                          :value="s.maSize"
+                          :key="'var-' + index + '-size-' + s.maSize"
                         >
-                          {{
-                            s.coGiay === 0 ? "Freesize (Phụ kiện)" : s.coGiay
-                          }}
-                        </option>
-                      </select>
+                          <input
+                            type="checkbox"
+                            class="btn-check"
+                            :id="'var-' + index + '-size-' + s.maSize"
+                            :value="s.maSize"
+                            v-model="v.selectedSizes"
+                          />
+                          <label
+                            class="btn btn-outline-dark btn-sm rounded-pill px-3"
+                            :for="'var-' + index + '-size-' + s.maSize"
+                          >
+                            {{ s.coGiay === 0 ? "Freesize" : s.coGiay }}
+                          </label>
+                        </div>
+                      </div>
                     </div>
                     <div class="col-md-6">
                       <label class="form-label small">Đơn giá (VND) *</label>
@@ -592,7 +600,7 @@
               <div class="text-center mb-3">
                 <button
                   type="button"
-                  class="btn btn-outline-primary border-dashed w-100 py-2"
+                  class="btn btn-outline-dark border-dashed w-100 py-2"
                   @click="addVariant"
                 >
                   <i class="bi bi-plus-circle me-2"></i>Thêm phân loại
@@ -680,8 +688,9 @@
                   </button>
                 </div>
               </div>
+              <br />
               <div class="row mb-3">
-                <div class="col-md-6">
+                <div class="col-md-12">
                   <label class="form-label">Giới tính *</label>
                   <div class="btn-group w-100 gender-group">
                     <input
@@ -716,21 +725,6 @@
                     >
                   </div>
                 </div>
-
-                <div class="col-md-6">
-                  <label class="form-label">Khuyến mãi (%)</label>
-                  <div class="input-group">
-                    <input
-                      type="number"
-                      class="form-control"
-                      v-model="editProductData.khuyenMai"
-                      min="0"
-                      max="100"
-                      placeholder="0 - 100"
-                    />
-                    <span class="input-group-text">%</span>
-                  </div>
-                </div>
               </div>
               <div class="mb-3">
                 <label class="form-label">Mô tả</label>
@@ -749,7 +743,7 @@
               >
                 <div class="card-body">
                   <div class="d-flex justify-content-between mb-2">
-                    <span class="badge bg-primary"
+                    <span class="badge bg-dark"
                       >Phân loại #{{ index + 1 }}</span
                     >
                     <button
@@ -801,6 +795,7 @@
                         type="number"
                         class="form-control"
                         v-model="v.soLuong"
+                        @input="autoUpdateStatus(v)"
                         required
                       />
                     </div>
@@ -838,7 +833,7 @@
               </div>
               <button
                 type="button"
-                class="btn btn-outline-primary w-100 border-dashed"
+                class="btn btn-outline-dark w-100 border-dashed"
                 @click="addEditVariant"
               >
                 + Thêm phân loại
@@ -865,7 +860,7 @@
           <div class="modal-header">
             <h5 class="modal-title">
               <i class="bi bi-list-check me-2"></i>Phân loại:
-              <span class="text-primary">{{ selectedProductName }}</span>
+              <span class="text-dark">{{ selectedProductName }}</span>
             </h5>
             <button
               type="button"
@@ -1067,6 +1062,9 @@ import NV_Sidebar from "@/components/Shared/NV_Sidebar.vue";
 
 axios.defaults.withCredentials = true;
 
+// Biến lưu nội dung thông báo thành công
+const successMessage = ref("");
+
 const products = ref([]);
 const categories = ref([]);
 const sizes = ref([]);
@@ -1076,6 +1074,20 @@ const filterKeyword = ref("");
 const filterCategory = ref("");
 const filterGender = ref("");
 const filterStatus = ref("");
+
+// Thêm hàm này vào phần <script setup> của bạn
+const autoUpdateStatus = (variant) => {
+  // Ép kiểu về số nguyên để kiểm tra cho chắc chắn
+  const quantity = parseInt(variant.soLuong) || 0;
+
+  if (quantity <= 0) {
+    variant.soLuong = 0; // Tránh trường hợp người dùng nhập số âm
+    variant.trangThai = "Hết hàng";
+  } else if (quantity > 0 && variant.trangThai === "Hết hàng") {
+    // Nếu có nhập số lượng nhưng trạng thái đang kẹt ở 'Hết hàng' thì tự động đổi
+    variant.trangThai = "Còn hàng";
+  }
+};
 
 // 1. Gọi API Danh mục
 const fetchCategories = async () => {
@@ -1207,7 +1219,7 @@ const newProduct = ref({
   variants: [
     {
       tenMau: "",
-      maSize: "",
+      selectedSizes: [],
       donGia: 0,
       soLuong: 0,
       hinhAnh: "",
@@ -1220,7 +1232,7 @@ const newProduct = ref({
 const addVariant = () => {
   newProduct.value.variants.push({
     tenMau: "",
-    maSize: "",
+    selectedSizes: [],
     donGia: 0,
     soLuong: 0,
     hinhAnh: "",
@@ -1236,19 +1248,19 @@ const removeVariant = (index) => {
 };
 
 // Hàm lưu sản phẩm thêm mới
-const saveProduct = async () => {
-  try {
-    const res = await axios.post(
-      "http://localhost:8080/api/sanpham/create",
-      newProduct.value
-    );
-    alert("Thêm sản phẩm thành công!");
-    location.reload();
-  } catch (error) {
-    console.error(error);
-    alert("Lỗi khi lưu sản phẩm!");
-  }
-};
+// const saveProduct = async () => {
+//   try {
+//     const res = await axios.post(
+//       "http://localhost:8080/api/sanpham/create",
+//       newProduct.value
+//     );
+//     alert("Thêm sản phẩm thành công!");
+//     location.reload();
+//   } catch (error) {
+//     console.error(error);
+//     alert("Lỗi khi lưu sản phẩm!");
+//   }
+// };
 
 // --- LOGIC CHO MODAL CHỌN ẢNH VÀ EDIT ---
 const availableImages = ref([]);
@@ -1426,6 +1438,56 @@ const toggleProductStatus = async (maSP, currentStatus) => {
   } catch (error) {
     console.error(error);
     alert(`Lỗi khi ${actionText} sản phẩm!`);
+  }
+};
+
+// Hàm lưu sản phẩm thêm mới
+const saveProduct = async () => {
+  try {
+    // 1. Tạo bản sao của dữ liệu form
+    const payload = { ...newProduct.value };
+    const formattedVariants = [];
+
+    // 2. Duyệt qua từng nhóm Màu và tách ra thành các phân loại lẻ
+    for (const group of payload.variants) {
+      // Bắt lỗi nếu người dùng quên chọn size
+      if (!group.selectedSizes || group.selectedSizes.length === 0) {
+        alert(
+          `Vui lòng chọn ít nhất 1 size cho màu "${
+            group.tenMau || "chưa nhập tên"
+          }"`
+        );
+        return;
+      }
+
+      // Tách mỗi size được chọn thành một object variant riêng
+      group.selectedSizes.forEach((sizeId) => {
+        formattedVariants.push({
+          tenMau: group.tenMau,
+          maSize: sizeId,
+          donGia: group.donGia,
+          soLuong: group.soLuong,
+          hinhAnh: group.hinhAnh,
+          // Tích hợp luôn logic tự động set trạng thái Hết hàng ở đây
+          trangThai: group.soLuong <= 0 ? "Hết hàng" : "Còn hàng",
+        });
+      });
+    }
+
+    // 3. Ghi đè mảng variants đã được làm phẳng vào payload
+    payload.variants = formattedVariants;
+
+    // 4. Gửi payload đã xử lý xuống Backend
+    const res = await axios.post(
+      "http://localhost:8080/api/sanpham/create",
+      payload
+    );
+
+    alert("Thêm sản phẩm thành công!");
+    location.reload();
+  } catch (error) {
+    console.error(error);
+    alert("Lỗi khi lưu sản phẩm! Vui lòng kiểm tra lại console.");
   }
 };
 
