@@ -97,6 +97,12 @@ const routes = [
     component: () => import('@/components/employee/NV_NhapKho.vue'),
     meta: { requiresAuth: true, roles: ['ADMIN', 'EMPLOYEE'] }
   },
+    {
+    path: '/employee/flashsale',
+    name: 'FlashSaleStock',
+    component: () => import('@/components/employee/NV_KhuyenMai.vue'),
+    meta: { requiresAuth: true, roles: ['ADMIN', 'EMPLOYEE'] }
+  },
   
 ];
 
