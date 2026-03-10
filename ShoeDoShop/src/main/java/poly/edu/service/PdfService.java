@@ -119,7 +119,7 @@ public class PdfService {
         document.add(new Paragraph("\n"));
 
         if (hoaDon.getGhiChu() != null && !hoaDon.getGhiChu().isEmpty()) {
-            document.add(new Paragraph("Ghi chú: Đội ngũ ShoeDo Shop đã xử lý sự cố này và đã khắc phục thành công về sự cố" + hoaDon.getGhiChu()));
+            document.add(new Paragraph("Ghi chú:" + hoaDon.getGhiChu()));
         }
         
         document.close();

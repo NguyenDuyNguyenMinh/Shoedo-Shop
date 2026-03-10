@@ -34,7 +34,6 @@ public class QLHoaDonService {
         result.put("completed", mapList(filterByStatus(all, "Hoàn tất")));
         result.put("rejected", mapList(filterByStatus(all, "Đã từ chối")));
         result.put("error", mapList(filterByStatus(all, "Báo lỗi")));
-        result.put("return", mapList(filterByStatus(all, "Hoàn hàng/trả hàng")));
         
         return success("data", result);
     }
@@ -139,24 +138,6 @@ public class QLHoaDonService {
         }
 
         return success("Đã cập nhật giao hàng thành công. KH có 3 ngày để báo lỗi/hoàn hàng");
-    }
-
-    @Transactional
-    public Map<String, Object> confirmReturn(Integer id) {
-        HoaDon hd = findOrder(id);
-        checkStatus(hd, "Hoàn hàng/trả hàng", "Chỉ có thể xác nhận hoàn hàng cho đơn hàng đang chờ hoàn");
-
-        for (HoaDonCT ct : hd.getHoaDonCTs()) {
-            spctDAO.congSoLuong(ct.getSanPhamChiTiet().getMaSKU(), ct.getSoLuong());
-        }
-
-        hd.setTrangThai("Đã từ chối");
-        hd.setGhiChu((hd.getGhiChu() != null ? hd.getGhiChu() + " | " : "") + "Đã hoàn tất xử lý hoàn hàng");
-        hd.setQuanTri(getCurrentEmployee());
-        hd.setNgayDen(null);
-        hoaDonDAO.save(hd);
-
-        return success("Đã xác nhận hoàn hàng và cộng lại số lượng vào kho");
     }
 
     @Transactional
@@ -302,7 +283,7 @@ public class QLHoaDonService {
             String subject = "SHOEDO SHOP - Đơn hàng #HD" + String.format("%04d", hd.getMaHD()) + " đã giao thành công";
             String htmlContent = "<!DOCTYPE html>"
                     + "<html><head><meta charset='UTF-8'>"
-                    + "<style>body{font-family:Arial,sans-serif}.container{max-width:600px;margin:0 auto;padding:20px;border:1px solid #ddd;border-radius:10px}.header{background:#000;color:#fff;padding:20px;text-align:center;border-radius:10px 10px 0 0}.content{padding:20px}.warning{background:#fff3cd;padding:10px;border-radius:5px;margin:15px 0}</style>"
+                    + "<style>body{font-family:Arial,sans-serif}.container{max-width:600px;margin:0 auto;padding:20px;border:1px solid #ddd;border-radius:10px}.header{background:#000;color:#fff;padding:20px;text-align:center;border-radius:10px 10px 0 0}.content{ padding: 20px; background: #f9f9f9;}.warning{background:#fff3cd;padding:10px;border-radius:5px;margin:15px 0}</style>"
                     + "</head><body>"
                     + "<div class='container'>"
                     + "<div class='header'><h2>ShoeDo Shop - Giao hàng thành công</h2></div>"
@@ -340,7 +321,7 @@ public class QLHoaDonService {
             String subject = "SHOEDO SHOP - Xin lỗi về sự cố đơn hàng #HD" + String.format("%04d", hd.getMaHD());
             String htmlContent = "<!DOCTYPE html>"
                     + "<html><head><meta charset='UTF-8'>"
-                    + "<style>body{font-family:Arial,sans-serif}.container{max-width:600px;margin:0 auto;padding:20px;border:1px solid #ddd;border-radius:10px}.header{background:#000;color:#fff;padding:20px;text-align:center;border-radius:10px 10px 0 0}.content{padding:20px}.apology{background:#f8d7da;color:#721c24;padding:15px;border-radius:5px;margin:15px 0}</style>"
+                    + "<style>body{font-family:Arial,sans-serif}.container{max-width:600px;margin:0 auto;padding:20px;border:1px solid #ddd;border-radius:10px}.header{background:#000;color:#fff;padding:20px;text-align:center;border-radius:10px 10px 0 0}.content{ padding: 20px; background: #f9f9f9; }.apology{background:#f8d7da;color:#721c24;padding:15px;border-radius:5px;margin:15px 0}</style>"
                     + "</head><body>"
                     + "<div class='container'>"
                     + "<div class='header'><h2>ShoeDo Shop - Xin lỗi quý khách</h2></div>"

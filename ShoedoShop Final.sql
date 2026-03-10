@@ -118,7 +118,7 @@ MaKH INT,
 MaQT INT, -- Nhân viên duyệt đơn
 PhuongThucTT NVARCHAR(50),
 DiaChiJson NVARCHAR(MAX),
-TrangThai NVARCHAR(50) CHECK (TrangThai IN (N'Đang xử lý', N'Đang giao', N'Hoàn tất', N'Đã từ chối', N'Báo lỗi', N'Hoàn hàng/trả hàng')),
+TrangThai NVARCHAR(50) CHECK (TrangThai IN (N'Đang xử lý', N'Đang giao', N'Hoàn tất', N'Đã từ chối', N'Báo lỗi')),
 GhiChu NVARCHAR(MAX),
 NgayMua DATETIME DEFAULT GETDATE(),
 NgayDen DATETIME,
@@ -448,7 +448,7 @@ INSERT INTO HoaDon (MaKH, MaQT, PhuongThucTT, DiaChiJson, TrangThai, GhiChu, Nga
 -- HD 7
 (3, 1, N'COD',
  N'{"DiemGiao":"456 Lê Lợi B","TenNN":"Nguyễn Văn A-B","SDT":"0901234567"}',
- N'Hoàn hàng/trả hàng', N'Sản phẩm không đúng mô tả', '2026-01-16', '2026-01-20'),
+ N'Báo lỗi', N'Mũi giày bị móp', '2026-01-16', '2026-01-20'),
 
 -- HD 8
 (4, 1, N'COD',

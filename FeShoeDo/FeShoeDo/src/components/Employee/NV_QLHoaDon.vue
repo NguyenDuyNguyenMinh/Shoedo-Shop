@@ -17,53 +17,45 @@
 
         <!-- Thống kê nhanh -->
         <div class="row mb-4">
-          <div class="col-md-2">
-            <div class="card text-white" :class="getStatCardClass('pending')" @click="setActiveTab('pending')" style="cursor: pointer;">
+          <div class="col-md">
+            <div class="card text-white bg-dark" @click="setActiveTab('pending')" style="cursor: pointer;">
               <div class="card-body text-center">
                 <h5 class="card-title">Chờ duyệt</h5>
                 <h2 class="mb-0">{{ orderCounts.pending }}</h2>
               </div>
             </div>
           </div>
-          <div class="col-md-2">
-            <div class="card text-white" :class="getStatCardClass('delivering')" @click="setActiveTab('delivering')" style="cursor: pointer;">
+          <div class="col-md">
+            <div class="card text-white bg-dark" @click="setActiveTab('delivering')" style="cursor: pointer;">
               <div class="card-body text-center">
                 <h5 class="card-title">Đang giao</h5>
                 <h2 class="mb-0">{{ orderCounts.delivering }}</h2>
               </div>
             </div>
           </div>
-          <div class="col-md-2">
-            <div class="card text-white" :class="getStatCardClass('completed')" @click="setActiveTab('completed')" style="cursor: pointer;">
+          <div class="col-md">
+            <div class="card text-white bg-dark" @click="setActiveTab('completed')" style="cursor: pointer;">
               <div class="card-body text-center">
                 <h5 class="card-title">Hoàn tất</h5>
                 <h2 class="mb-0">{{ orderCounts.completed }}</h2>
               </div>
             </div>
           </div>
-          <div class="col-md-2">
-            <div class="card text-white" :class="getStatCardClass('rejected')" @click="setActiveTab('rejected')" style="cursor: pointer;">
+          <div class="col-md">
+            <div class="card text-white bg-dark" @click="setActiveTab('rejected')" style="cursor: pointer;">
               <div class="card-body text-center">
                 <h5 class="card-title">Từ chối</h5>
                 <h2 class="mb-0">{{ orderCounts.rejected }}</h2>
               </div>
             </div>
           </div>
-          <div class="col-md-2">
-            <div class="card text-white" :class="getStatCardClass('error')" @click="setActiveTab('error')" style="cursor: pointer;">
+          <div class="col-md">
+            <div class="card text-white bg-dark" @click="setActiveTab('error')" style="cursor: pointer;">
               <div class="card-body text-center">
                 <h5 class="card-title">Báo lỗi</h5>
                 <h2 class="mb-0">{{ orderCounts.error }}</h2>
               </div>
-            </div>
-          </div>
-          <div class="col-md-2">
-            <div class="card text-white" :class="getStatCardClass('return')" @click="setActiveTab('return')" style="cursor: pointer;">
-              <div class="card-body text-center">
-                <h5 class="card-title">Hoàn trả</h5>
-                <h2 class="mb-0">{{ orderCounts.return }}</h2>
-              </div>
-            </div>
+            </div>  
           </div>
         </div>
 
@@ -111,15 +103,6 @@
               Báo lỗi
               <span v-if="orderCounts.error > 0" class="badge bg-info ms-2">
                 {{ orderCounts.error }}
-              </span>
-            </button>
-          </li>
-          <li class="nav-item" role="presentation">
-            <button class="nav-link" :class="{ active: activeTab === 'return' }" 
-                    @click="setActiveTab('return')">
-              Hoàn trả
-              <span v-if="orderCounts.return > 0" class="badge bg-secondary ms-2">
-                {{ orderCounts.return }}
               </span>
             </button>
           </li>
@@ -291,7 +274,7 @@
                         <i class="fas fa-check-circle me-1"></i>Thành công
                       </button>
                     </div>
-                    <button class="btn btn-outline-primary btn-sm w-100" @click="showOrderDetail(order)">
+                    <button class="btn btn-outline-dark btn-sm w-100" @click="showOrderDetail(order)">
                       <i class="fas fa-eye me-1"></i>Xem chi tiết
                     </button>
                     <button class="btn btn-outline-primary btn-sm w-100 mt-2" @click="printOrder(order)">
@@ -362,7 +345,7 @@
                     </div>
                   </div>
                   <div class="card-footer bg-transparent">
-                    <button class="btn btn-outline-success btn-sm w-100" @click="showOrderDetail(order)">
+                    <button class="btn btn-outline-dark  btn-sm w-100" @click="showOrderDetail(order)">
                       <i class="fas fa-eye me-1"></i>Xem chi tiết
                     </button>
                     <button class="btn btn-outline-primary btn-sm w-100 mt-2" @click="printOrder(order)">
@@ -428,7 +411,7 @@
                     </div>
                   </div>
                   <div class="card-footer bg-transparent">
-                    <button class="btn btn-outline-danger btn-sm w-100" @click="showOrderDetail(order)">
+                    <button class="btn btn-outline-dark  btn-sm w-100" @click="showOrderDetail(order)">
                       <i class="fas fa-eye me-1"></i>Xem chi tiết
                     </button>
                     <button class="btn btn-outline-primary btn-sm w-100 mt-2" @click="printOrder(order)">
@@ -502,7 +485,7 @@
                     <button class="btn btn-info btn-sm w-100 mb-2" @click="sendApologyEmail(order.maHD)">
                       <i class="fas fa-envelope me-1"></i>Gửi email xin lỗi
                     </button>
-                    <button class="btn btn-outline-info btn-sm w-100" @click="showOrderDetail(order)">
+                    <button class="btn btn-outline-dark  btn-sm w-100" @click="showOrderDetail(order)">
                       <i class="fas fa-eye me-1"></i>Xem chi tiết
                     </button>
                     <button class="btn btn-outline-primary btn-sm w-100 mt-2" @click="printOrder(order)">
@@ -515,76 +498,6 @@
           </div>
 
           <!-- Tab Hoàn Trả -->
-          <div v-show="activeTab === 'return'">
-            <div v-if="filteredOrders.return.length === 0" class="text-center p-5 text-muted">
-              Không có đơn hàng hoàn trả
-            </div>
-            
-            <div v-else class="row g-3">
-              <div v-for="order in filteredOrders.return" :key="order.maHD" class="col-12 col-md-6 col-lg-4">
-                <div class="card h-100 border-dark">
-                  <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
-                    <strong>#HD{{ String(order.maHD).padStart(4, '0') }}</strong>
-                    <span class="badge bg-secondary text-white">Hoàn trả</span>
-                  </div>
-                  <div class="card-body">
-                    <div class="mb-2">
-                      <small class="text-muted d-block">Ngày đặt:</small>
-                      <strong>{{ formatDate(order.ngayMua) }}</strong>
-                    </div>
-                    <div class="mb-2">
-                      <small class="text-muted d-block">Ngày đến:</small>
-                      <strong>{{ formatDate(order.ngayDen) || 'Chưa cập nhật' }}</strong>
-                    </div>
-                    <div class="mb-2">
-                      <small class="text-muted d-block">Người nhận:</small>
-                      <strong>{{ order.tenNN || order.tenKH }}</strong>
-                    </div>
-                    
-                    <div class="mb-2">
-                      <small class="text-muted d-block">SĐT:</small>
-                      <strong>{{ order.sdt || order.sdtKH }}</strong>
-                    </div>
-                    
-                    <div class="mb-2">
-                      <small class="text-muted d-block">Thanh toán:</small>
-                      <span :class="order.phuongThucTT === 'COD' ? 'badge bg-info' : 'badge bg-success'">
-                        {{ order.phuongThucTT }}
-                      </span>
-                    </div>
-                    
-                    <div class="mb-3">
-                      <small class="text-muted d-block">Địa chỉ:</small>
-                      <small>{{ order.diemGiao }}</small>
-                    </div>
-                    
-                    <div class="mb-3">
-                      <small class="text-muted d-block">Ghi chú hoàn trả:</small>
-                      <small class="text-secondary fw-bold">{{ order.ghiChu }}</small>
-                    </div>
-                    
-                    <hr>
-                    
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                      <span class="text-muted">Tổng tiền:</span>
-                      <strong class="text-primary fs-5">{{ formatPrice(order.tongTien) }}</strong>
-                    </div>
-                  </div>
-                  <div class="card-footer bg-transparent">
-                    <button class="btn btn-secondary btn-sm w-100 mb-2" @click="confirmReturn(order.maHD)">
-                      <i class="fas fa-undo-alt me-1"></i>Hoàn tất trả hàng
-                    </button>
-                    <button class="btn btn-outline-secondary btn-sm w-100" @click="showOrderDetail(order)">
-                      <i class="fas fa-eye me-1"></i>Xem chi tiết
-                    </button>
-                    <button class="btn btn-outline-primary btn-sm w-100 mt-2" @click="printOrder(order)">
-                      <i class="fas fa-print me-1"></i>In hóa đơn
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </main>
@@ -810,8 +723,7 @@ export default {
       delivering: [],
       completed: [],
       rejected: [],
-      error: [],
-      return: []
+      error: []
     });
     
     const activeTab = ref('pending');
@@ -843,9 +755,16 @@ export default {
       delivering: orders.value.delivering.length,
       completed: orders.value.completed.length,
       rejected: orders.value.rejected.length,
-      error: orders.value.error.length,
-      return: orders.value.return.length
+      error: orders.value.error.length
     }));
+
+    const getSortedOrders = (ordersList, tabType) => {
+      if (tabType === 'completed' || tabType === 'rejected') {
+        return [...ordersList].sort((a, b) => new Date(b.ngayMua) - new Date(a.ngayMua));
+      } else {
+        return [...ordersList].sort((a, b) => new Date(a.ngayMua) - new Date(b.ngayMua));
+      }
+    };
 
     const filteredOrders = computed(() => {
       const keyword = searchKeyword.value.toLowerCase().trim();
@@ -874,13 +793,18 @@ export default {
         return true;
       };
 
+      const filteredPending = orders.value.pending.filter(filterFn);
+      const filteredDelivering = orders.value.delivering.filter(filterFn);
+      const filteredCompleted = orders.value.completed.filter(filterFn);
+      const filteredRejected = orders.value.rejected.filter(filterFn);
+      const filteredError = orders.value.error.filter(filterFn);
+
       return {
-        pending: orders.value.pending.filter(filterFn),
-        delivering: orders.value.delivering.filter(filterFn),
-        completed: orders.value.completed.filter(filterFn),
-        rejected: orders.value.rejected.filter(filterFn),
-        error: orders.value.error.filter(filterFn),
-        return: orders.value.return.filter(filterFn)
+        pending: getSortedOrders(filteredPending, 'pending'),
+        delivering: getSortedOrders(filteredDelivering, 'delivering'),
+        completed: getSortedOrders(filteredCompleted, 'completed'),
+        rejected: getSortedOrders(filteredRejected, 'rejected'),
+        error: getSortedOrders(filteredError, 'error')
       };
     });
 
@@ -999,22 +923,6 @@ export default {
       }
     };
 
-    const confirmReturn = async (orderId) => {
-      if (!confirm('Xác nhận đã nhận lại hàng và hoàn tiền cho khách? Số lượng sản phẩm sẽ được cộng lại vào kho.')) return;
-      processing.value = true;
-      try {
-        const response = await axios.post(`/api/employee/orders/${orderId}/confirm-return`);
-        if (response.data.success) {
-          message.value = response.data.message;
-          await loadOrders();
-        }
-      } catch (err) {
-        error.value = err.response?.data?.message || 'Lỗi khi xác nhận hoàn hàng';
-      } finally {
-        processing.value = false;
-      }
-    };
-
     const sendApologyEmail = async (orderId) => {
       if (!confirm('Đã xử lý xong thông tin báo lỗi? Gửi email xin lỗi kèm PDF.')) return;
       processing.value = true;
@@ -1054,18 +962,6 @@ export default {
       } finally {
         processing.value = false;
       }
-    };
-
-    const getStatCardClass = (tab) => {
-      const classes = {
-        pending: 'bg-warning',
-        delivering: 'bg-primary',
-        completed: 'bg-success',
-        rejected: 'bg-danger',
-        error: 'bg-info',
-        return: 'bg-secondary'
-      };
-      return classes[tab] || 'bg-dark';
     };
 
     const setActiveTab = (tab) => {
@@ -1113,8 +1009,7 @@ export default {
       const map = {
         'Đã từ chối': 'bg-danger bg-opacity-10 border-danger',
         'Báo lỗi': 'bg-info bg-opacity-10 border-info',
-        'Hoàn hàng/trả hàng': 'bg-secondary bg-opacity-10 border-secondary',
-        'Đang xử lý': 'bg-warning bg-opacity-10 border-warning'
+        'Hoàn tất': 'bg-success bg-opacity-10 border-success'
       };
       return map[status] || '';
     };
@@ -1156,7 +1051,6 @@ export default {
       filteredOrders,
       
       // Methods
-      getStatCardClass,
       setActiveTab,
       resetFilters,
       formatPrice,
@@ -1171,7 +1065,6 @@ export default {
       deliverySuccess,
       showDeliveryFailedModal,
       confirmDeliveryFailed,
-      confirmReturn,
       sendApologyEmail,
       printOrder
     };
@@ -1271,12 +1164,6 @@ export default {
   color: #fff;
 }
 
-.btn-secondary {
-  background-color: #6c757d;
-  border-color: #6c757d;
-  color: #fff;
-}
-
 .btn-outline-dark {
   border-color: #343a40;
   color: #343a40;
@@ -1297,52 +1184,4 @@ export default {
   color: #fff;
 }
 
-.btn-outline-success {
-  border-color: #28a745;
-  color: #28a745;
-}
-
-.btn-outline-success:hover {
-  background-color: #28a745;
-  color: #fff;
-}
-
-.btn-outline-danger {
-  border-color: #dc3545;
-  color: #dc3545;
-}
-
-.btn-outline-danger:hover {
-  background-color: #dc3545;
-  color: #fff;
-}
-
-.btn-outline-info {
-  border-color: #17a2b8;
-  color: #17a2b8;
-}
-
-.btn-outline-info:hover {
-  background-color: #17a2b8;
-  color: #fff;
-}
-
-.btn-outline-secondary {
-  border-color: #6c757d;
-  color: #6c757d;
-}
-
-.btn-outline-secondary:hover {
-  background-color: #6c757d;
-  color: #fff;
-}
-
-.fa-phone {
-  color: #28a745;
-  font-size: 1rem;
-}
-
-.fa-phone:hover {
-  color: #218838;
-}
 </style>
