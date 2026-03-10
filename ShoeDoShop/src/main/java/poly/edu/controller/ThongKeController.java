@@ -11,7 +11,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/employee/thongke")
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:5174"})
 public class ThongKeController {
 
     @Autowired
@@ -114,5 +114,15 @@ public class ThongKeController {
             @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Date startDate,
             @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Date endDate) {
         return ResponseEntity.ok(thongKeService.thongKeTheoTrangThai(startDate, endDate));
+    }
+
+    /**
+     * Đơn hàng gần đây
+     * GET /api/employee/thongke/don-hang-gan-day?limit=5
+     */
+    @GetMapping("/don-hang-gan-day")
+    public ResponseEntity<?> getDonHangGanDay(
+            @RequestParam(defaultValue = "5") Integer limit) {
+        return ResponseEntity.ok(thongKeService.getRecentOrders(limit));
     }
 }

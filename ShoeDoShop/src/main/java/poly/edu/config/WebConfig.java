@@ -20,6 +20,7 @@ public class WebConfig implements WebMvcConfigurer {
 	    
 	    config.setAllowCredentials(true);
 	    config.addAllowedOrigin("http://localhost:5173");
+	    config.addAllowedOrigin("http://localhost:5174");
 	    config.addAllowedOrigin("http://localhost:8080");
 	    config.addAllowedHeader("*");
 	    config.addAllowedMethod("*");
@@ -40,7 +41,7 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOrigins("http://localhost:5173", "http://localhost:8080")
+                .allowedOrigins("http://localhost:5173", "http://localhost:5174", "http://localhost:8080")
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
                 .allowCredentials(true)
