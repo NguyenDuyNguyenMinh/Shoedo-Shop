@@ -108,8 +108,10 @@ const router = createRouter({
 router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore();
 
-  console.log('📍 Route change:', to.path);
-  console.log('🔐 Auth state:', authStore.isAuthenticated);
+  if (!authStore.isInitialized) {
+    await authStore.initAuth();
+    authStore.isInitialized = true;
+  }
 
   const publicPaths = [
     '/',
@@ -119,7 +121,7 @@ router.beforeEach(async (to, from, next) => {
     '/customer/sanpham',
     '/auth/login'
   ];
-
+  
   const isPublicPath = publicPaths.some(path => {
     if (path.includes(':')) {
       const pattern = new RegExp('^' + path.replace(/:\w+\?/g, '([^/]+)?').replace(/\//g, '\\/') + '$');
@@ -143,7 +145,6 @@ router.beforeEach(async (to, from, next) => {
           return;
         }
       } catch (error) {
-        console.error('Auth check error:', error);
         next('/auth/login');
         return;
       }
@@ -181,4 +182,4 @@ router.beforeEach(async (to, from, next) => {
   next();
 });
 
-export default router;
+export default router;  

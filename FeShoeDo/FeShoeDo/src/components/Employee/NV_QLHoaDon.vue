@@ -496,8 +496,6 @@
               </div>
             </div>
           </div>
-
-          <!-- Tab Hoàn Trả -->
         </div>
       </div>
     </main>
@@ -879,7 +877,7 @@ export default {
     };
 
     const deliverySuccess = async (orderId) => {
-      if (!confirm('Đánh dấu giao thành công? KH có 3 ngày báo lỗi/trả hàng')) return;
+      if (!confirm('Đánh dấu giao thành công? KH có 1 tháng báo lỗi')) return;
       processing.value = true;
       try {
         const response = await axios.post(`/api/employee/orders/${orderId}/delivery-success`);
@@ -1000,7 +998,6 @@ export default {
         'Hoàn tất': 'bg-success',
         'Đã từ chối': 'bg-danger',
         'Báo lỗi': 'bg-info',
-        'Hoàn hàng/trả hàng': 'bg-secondary'
       };
       return map[status] || 'bg-secondary';
     };
