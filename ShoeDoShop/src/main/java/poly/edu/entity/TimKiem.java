@@ -1,29 +1,31 @@
 package poly.edu.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
-import lombok.Data;
-import java.util.Date;
+import lombok.*;
+import java.time.LocalDateTime;
 
 @Entity
-@Data
 @Table(name = "TimKiem")
-@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor
 public class TimKiem {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "MaTK")
     private Integer maTK;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "MaKH")
-    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "timKiems"})
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "MaKH", nullable = false)
     private KhachHang khachHang;
 
-    @Column(name = "NoiDungTimKiem", nullable = false)
+    @Column(name = "NoiDungTimKiem", nullable = false, length = 225)
     private String noiDungTimKiem;
 
     @Column(name = "ThoiGian")
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date thoiGian;
+    private LocalDateTime thoiGian;
+
+    @PrePersist
+    public void prePersist() {
+        if (thoiGian == null) thoiGian = LocalDateTime.now();
+    }
 }

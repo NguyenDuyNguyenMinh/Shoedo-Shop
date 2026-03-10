@@ -11,35 +11,35 @@ import java.util.List;
 @Table(name = "SanPham")
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class SanPham {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "MaSP")
     private Integer maSP;
 
-    @Column(name = "TenSP", nullable = false)
+    @Column(name = "TenSP", nullable = false, length = 200)
     private String tenSP;
 
     @Column(name = "GioiTinh")
     private Boolean gioiTinh;
 
-    @Column(name = "MoTa", columnDefinition = "nvarchar(max)")
+    @Column(name = "MoTa", columnDefinition = "NVARCHAR(MAX)")
     private String moTa;
 
     @Column(name = "KhuyenMai")
-    private Integer khuyenMai;
+    private Integer khuyenMai = 0;
 
     @Column(name = "DaBan")
-    private Integer daBan;
+    private Integer daBan = 0;
 
     @Column(name = "IsActive")
-    private Boolean isActive;
+    private Boolean isActive = true;
 
-    @OneToMany(mappedBy = "sanPham", fetch = FetchType.EAGER)
-    @JsonIgnoreProperties("sanPham") 
-    private List<SanPhamDanhMuc> sanPhamDanhMucs;
-
-    // Cái này không liên quan đến lọc danh mục, cứ giữ LAZY và JsonIgnore cho nhẹ máy
     @OneToMany(mappedBy = "sanPham", fetch = FetchType.LAZY)
     @JsonIgnore
-    private List<SanPhamChiTiet> sanPhamChiTiets;
+    private List<SanPhamChiTiet> chiTietList;
+
+    @OneToMany(mappedBy = "sanPham", fetch = FetchType.LAZY)
+    @JsonIgnore
+    private List<SanPhamDanhMuc> sanPhamDanhMucs;
 }
