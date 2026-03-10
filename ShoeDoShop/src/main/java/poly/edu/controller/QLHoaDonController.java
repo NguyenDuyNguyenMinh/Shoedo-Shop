@@ -53,11 +53,6 @@ public class QLHoaDonController {
         return ResponseEntity.ok(orderService.deliverySuccess(id));
     }
 
-    @PostMapping("/{id}/confirm-return")
-    public ResponseEntity<Map<String, Object>> confirmReturn(@PathVariable Integer id) {
-        return ResponseEntity.ok(orderService.confirmReturn(id));
-    }
-
     @PostMapping("/{id}/send-apology-email")
     public ResponseEntity<Map<String, Object>> sendApologyEmail(@PathVariable Integer id) {
         return ResponseEntity.ok(orderService.sendApologyEmail(id));

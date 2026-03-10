@@ -203,8 +203,13 @@ const router    = useRouter()
 const route     = useRoute()
 const authStore = useAuthStore()
 
-// ── Auth ───────────────────────────────────────────────────────
+const isSearchFocused = ref(false)
+const showDropdown = ref(false)
+const dropdown = ref(null)
+
 const isAuthenticated = computed(() => authStore.isAuthenticated)
+// Dùng cartCount từ store chuẩn của nhánh dev, bỏ cái ref(0) dư thừa
+const cartCount = computed(() => authStore.cartCount || 0) 
 const lastName = computed(() => {
   const name = authStore.user?.name || ''
   if (!name.trim()) return 'User'
@@ -212,17 +217,17 @@ const lastName = computed(() => {
 })
 const maKH = computed(() => authStore.user?.maKH ?? null)
 
-// ── Cart ───────────────────────────────────────────────────────
-const cartCount = ref(0)
+// ── Cart (Đã lấy theo logic chuẩn của nhánh dev) ───────────────
 const fetchCartCount = async () => {
-  if (!isAuthenticated.value) { cartCount.value = 0; return }
+  if (!isAuthenticated.value) return
   try {
-    const r = await api.getCartCount()
-    cartCount.value = r.data?.count || 0
-  } catch { cartCount.value = 0 }
+    await authStore.updateCartCount()
+  } catch (error) {
+    console.error('Lỗi lấy số lượng giỏ hàng:', error)
+  }
 }
 
-// ── Account dropdown ──────────────────────────────────────────
+// ── Account dropdown & Logout ─────────────────────────────────
 const showAccountDropdown = ref(false)
 const accountDropdown     = ref(null)
 const toggleAccountDropdown = () => { showAccountDropdown.value = !showAccountDropdown.value }
@@ -230,7 +235,6 @@ const toggleAccountDropdown = () => { showAccountDropdown.value = !showAccountDr
 const logout = async () => {
   try {
     await authStore.logout()
-    cartCount.value = 0
     showAccountDropdown.value = false
     historyList.value = []
     router.push('/auth/login')
@@ -238,7 +242,7 @@ const logout = async () => {
 }
 
 // ═══════════════════════════════════════════════════════════════
-//  SEARCH
+//  SEARCH (Giữ nguyên toàn bộ tính năng của feature/sp)
 // ═══════════════════════════════════════════════════════════════
 const searchQuery        = ref('')
 const showDropdownSearch = ref(false)
@@ -300,12 +304,13 @@ const doSearch = () => {
   performSearch(q)
 }
 
+// Đã gỡ bỏ cái hàm logout rác bị lồng vào giữa ở đây
 const performSearch = async (q) => {
   // 1. Lưu vào DB lịch sử (nếu đã login và có maKH)
   if (isAuthenticated.value && maKH.value) {
     try {
       await api.luuTimKiem(maKH.value, q)
-      // Cập nhật local history ngay (đưa lên đầu hoặc thêm mới)
+      // Cập nhật local history ngay
       const idx = historyList.value.findIndex(h => h.keyword.toLowerCase() === q.toLowerCase())
       if (idx !== -1) {
         const item = historyList.value.splice(idx, 1)[0]
@@ -348,7 +353,7 @@ watch(() => route.query.q, (q) => {
   else if (!q) searchQuery.value = ''
 }, { immediate: true })
 
-// ── Click ngoài → đóng cả 2 dropdown ────────────────────────
+// ── Click ngoài → đóng cả 2 dropdown (Đã gộp gọn gàng) ────────
 const handleClickOutside = (e) => {
   if (accountDropdown.value && !accountDropdown.value.contains(e.target)) {
     showAccountDropdown.value = false
@@ -361,7 +366,7 @@ const handleClickOutside = (e) => {
 // ── Watch auth change ────────────────────────────────────────
 watch(isAuthenticated, async (v) => {
   if (v) { await fetchCartCount(); await fetchHistory() }
-  else   { cartCount.value = 0; historyList.value = [] }
+  else   { historyList.value = [] }
 })
 
 // ── Lifecycle ────────────────────────────────────────────────

@@ -65,6 +65,12 @@
           <span>Nhập Kho</span>
         </router-link>
       </li>
+            <li>
+        <router-link to="/employee/flashsale" :class="{ active: $route.path === '/employee/' }">
+          <i class="fa-solid fa-tag"></i>
+          <span>Khuyến Mãi</span>
+        </router-link>
+      </li>
       <li>
         <a href="#" @click.prevent="logout">
           <i class="bi bi-box-arrow-right"></i>

@@ -97,6 +97,12 @@ const routes = [
     component: () => import('@/components/employee/NV_NhapKho.vue'),
     meta: { requiresAuth: true, roles: ['ADMIN', 'EMPLOYEE'] }
   },
+    {
+    path: '/employee/flashsale',
+    name: 'FlashSaleStock',
+    component: () => import('@/components/employee/NV_KhuyenMai.vue'),
+    meta: { requiresAuth: true, roles: ['ADMIN', 'EMPLOYEE'] }
+  },
   
 ];
 
@@ -108,21 +114,22 @@ const router = createRouter({
 router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore();
 
-  console.log('📍 Route change:', to.path);
-  console.log('🔐 Auth state:', authStore.isAuthenticated);
-  
-  // Cho phép truy cập công khai các trang này
+  if (!authStore.isInitialized) {
+    await authStore.initAuth();
+    authStore.isInitialized = true;
+  }
+
   const publicPaths = [
-'/',
+    '/',
     '/customer/index',
     '/customer/detail-product/:id?',
+    '/customer/chinhsach',
+    '/customer/sanpham',
     '/auth/login'
   ];
   
-  // Kiểm tra nếu route là public
   const isPublicPath = publicPaths.some(path => {
     if (path.includes(':')) {
-      // Kiểm tra pattern
       const pattern = new RegExp('^' + path.replace(/:\w+\?/g, '([^/]+)?').replace(/\//g, '\\/') + '$');
       return pattern.test(to.path);
     }
@@ -134,10 +141,8 @@ router.beforeEach(async (to, from, next) => {
     return;
   }
   
-  // Kiểm tra nếu route yêu cầu đăng nhập
   if (to.meta.requiresAuth) {
     if (!authStore.isAuthenticated) {
-      // Thử lấy user từ server
       try {
         await authStore.fetchCurrentUser();
         
@@ -146,18 +151,15 @@ router.beforeEach(async (to, from, next) => {
           return;
         }
       } catch (error) {
-        console.error('Auth check error:', error);
         next('/auth/login');
         return;
       }
     }
-    
-    // Kiểm tra quyền truy cập
+
     if (to.meta.role) {
       
       const userRole = authStore.userRole;
       if (userRole !== to.meta.role) {
-        // Redirect dựa trên role
         if (userRole === 'CUSTOMER') {
           next('/customer/index');
         } else if (userRole === 'ADMIN') {
@@ -171,8 +173,7 @@ router.beforeEach(async (to, from, next) => {
       }
     }
   }
-  
-  // Kiểm tra nếu route yêu cầu chưa đăng nhập
+
   if (to.meta.requiresGuest && authStore.isAuthenticated) {
     if (authStore.userRole === 'CUSTOMER') {
       next('/customer/index');
@@ -187,4 +188,4 @@ router.beforeEach(async (to, from, next) => {
   next();
 });
 
-export default router;
+export default router;  

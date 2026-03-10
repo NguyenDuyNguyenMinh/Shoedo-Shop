@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import KH_Navbar from '@/components/Shared/KH_Navbar.vue'
 import Footer from '@/components/Shared/Footer.vue'
 import api from '@/services/api.js'
+import { useAuthStore } from '@/stores/auth'
 
 const route  = useRoute()
 const router = useRouter()
@@ -193,13 +194,55 @@ const getRatingCount = (star) => thongKeSao.value[star] || 0
 const increaseQty = () => quantity.value++
 const decreaseQty = () => { if (quantity.value > 1) quantity.value-- }
 
-const addToCart = () => {
+const addToCart = async () => {
   if (!product.value?.isFreesize && !selectedSize.value) {
     alert('Vui lòng chọn size!'); return
   }
   if (!selectedColor.value) { alert('Vui lòng chọn màu sắc!'); return }
-  addedToCart.value = true
-  setTimeout(() => addedToCart.value = false, 2000)
+  try {
+    // Tìm maSKU phù hợp dựa trên sản phẩm hiện tại (dùng product.id làm maSKU)
+    const response = await api.addToCart({
+      maSKU: product.value.id,
+      soLuong: quantity.value
+    })
+    if (response.data.success) {
+      addedToCart.value = true
+      setTimeout(() => addedToCart.value = false, 2000)
+      // Update cart count in auth store
+      const authStore = useAuthStore()
+      if (response.data.cartCount != null) {
+        authStore.cartCount = response.data.cartCount
+      } else {
+        authStore.updateCartCount()
+      }
+    } else {
+      alert(response.data.message || 'Không thể thêm vào giỏ hàng')
+    }
+  } catch (error) {
+    console.error('Add to cart error:', error)
+    alert(error.response?.data?.message || 'Lỗi khi thêm vào giỏ hàng')
+  }
+}
+
+const buyNow = async () => {
+  if (!selectedSize.value) { alert('Vui lòng chọn size!'); return }
+  if (!selectedColor.value) { alert('Vui lòng chọn màu sắc!'); return }
+  try {
+    const response = await api.addToCart({
+      maSKU: product.value.id,
+      soLuong: quantity.value
+    })
+    if (response.data.success) {
+      const authStore = useAuthStore()
+      authStore.updateCartCount()
+      router.push('/customer/cart')
+    } else {
+      alert(response.data.message || 'Không thể thêm vào giỏ hàng')
+    }
+  } catch (error) {
+    console.error('Buy now error:', error)
+    alert(error.response?.data?.message || 'Lỗi khi mua ngay')
+  }
 }
 
 const goToDetail = (id) => {

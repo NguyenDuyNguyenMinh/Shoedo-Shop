@@ -52,6 +52,8 @@ public class AuthInterceptor implements HandlerInterceptor {
             || uri.startsWith("/login/oauth2/")
             || uri.startsWith("/images/")
             || uri.startsWith("/anh/")
+            || uri.equals("/customer/chinhsach")
+            || uri.equals("/customer/sanpham"))
             || uri.startsWith("/error");
     }
 

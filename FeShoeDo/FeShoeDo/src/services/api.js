@@ -176,4 +176,77 @@ export default {
     });
   },
   getProductDetail(id)               { return apiClient.get(`/employee/products/${id}`); },
+  
+  getProductDetail(id) {
+    return apiClient.get(`/employee/products/${id}`);
+  },
+
+  // ========== STATISTICS APIs ==========
+  // Thống kê mặc định - 30 ngày gần nhất
+  getThongKeMacDinh() {
+    return apiClient.get('/employee/thongke');
+  },
+
+  // Thống kê tổng quan
+  getThongKeTongQuan(startDate, endDate) {
+    return apiClient.get('/employee/thongke/tong-quan', {
+      params: { startDate, endDate }
+    });
+  },
+
+  // Thống kê theo ngày
+  getThongKeNgay(startDate, endDate) {
+    return apiClient.get('/employee/thongke/ngay', {
+      params: { startDate, endDate }
+    });
+  },
+
+  // Thống kê theo tháng
+  getThongKeThang(startDate, endDate) {
+    return apiClient.get('/employee/thongke/thang', {
+      params: { startDate, endDate }
+    });
+  },
+
+  // Thống kê theo năm
+  getThongKeNam(startDate, endDate) {
+    return apiClient.get('/employee/thongke/nam', {
+      params: { startDate, endDate }
+    });
+  },
+
+  // Thống kê theo danh mục
+  getThongKeDanhMuc(startDate, endDate) {
+    return apiClient.get('/employee/thongke/danh-muc', {
+      params: { startDate, endDate }
+    });
+  },
+
+  // Top sản phẩm bán chạy
+  getTopSanPham(startDate, endDate, limit = 10) {
+    return apiClient.get('/employee/thongke/top-san-pham', {
+      params: { startDate, endDate, limit }
+    });
+  },
+
+  // Top khách hàng
+  getTopKhachHang(startDate, endDate, limit = 5) {
+    return apiClient.get('/employee/thongke/top-khach-hang', {
+      params: { startDate, endDate, limit }
+    });
+  },
+
+  // Thống kê theo trạng thái
+  getThongKeTrangThai(startDate, endDate) {
+    return apiClient.get('/employee/thongke/trang-thai', {
+      params: { startDate, endDate }
+    });
+  },
+
+  // Đơn hàng gần đây
+  getDonHangGanDay(limit = 5) {
+    return apiClient.get('/employee/thongke/don-hang-gan-day', {
+      params: { limit }
+    });
+  }
 };

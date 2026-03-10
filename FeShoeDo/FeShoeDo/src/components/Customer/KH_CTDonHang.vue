@@ -364,22 +364,22 @@ export default {
 
       try {
         const orderId = route.params.id;
-        console.log('Fetching order detail for ID:', orderId);
+        //console.log('Fetching order detail for ID:', orderId);
 
         const response = await api.getOrderDetail(orderId);
-        console.log('Order detail response:', response.data);
+        //console.log('Order detail response:', response.data);
 
         if (response.data.success) {
           // Backend trả về order trong response.data.order
           order.value = response.data.order || response.data;
-          console.log('Order data:', order.value);
+          //console.log('Order data:', order.value);
 
           // Parse địa chỉ từ diaChiJson nếu có
           if (order.value.diaChiJson) {
             try {
               if (typeof order.value.diaChiJson === 'string') {
                 const parsed = JSON.parse(order.value.diaChiJson);
-                console.log('Raw parsed diaChi:', parsed);
+                //console.log('Raw parsed diaChi:', parsed);
 
                 // Chuyển đổi key từ viết hoa sang viết thường nếu cần
                 diaChi.value = {
@@ -387,7 +387,7 @@ export default {
                   sdt: parsed.SDT || parsed.sdt || '',
                   diemGiao: parsed.DiemGiao || parsed.diemGiao || ''
                 };
-                console.log('Processed diaChi:', diaChi.value);
+                //console.log('Processed diaChi:', diaChi.value);
               } else {
                 // Nếu đã là object
                 const parsed = order.value.diaChiJson;
@@ -398,7 +398,7 @@ export default {
                 };
               }
             } catch (e) {
-              console.error('Error parsing diaChiJson:', e);
+              //console.error('Error parsing diaChiJson:', e);
               diaChiError.value = 'Lỗi parse địa chỉ';
 
               // Thử hiển thị raw nếu parse lỗi
@@ -418,12 +418,12 @@ export default {
           }
 
           // Log để kiểm tra
-          console.log('Final diaChi:', diaChi.value);
+          //console.log('Final diaChi:', diaChi.value);
         } else {
           error.value = response.data.message || 'Không tìm thấy đơn hàng';
         }
       } catch (err) {
-        console.error('Error fetching order detail:', err);
+        //console.error('Error fetching order detail:', err);
         error.value = err.response?.data?.message || 'Lỗi khi tải chi tiết đơn hàng';
       } finally {
         loading.value = false;
@@ -456,10 +456,10 @@ export default {
       confirmingOrderId.value = orderId;
 
       try {
-        console.log('Updating order status:', orderId, 'to Hoàn tất');
+        //console.log('Updating order status:', orderId, 'to Hoàn tất');
 
         const response = await api.updateCustomerOrderStatus(orderId, 'Hoàn tất');
-        console.log('Update response:', response.data);
+        //console.log('Update response:', response.data);
 
         if (response.data.success) {
           if (order.value && order.value.maHD === orderId) {
@@ -477,7 +477,7 @@ export default {
           alert(response.data.message || 'Không thể cập nhật trạng thái');
         }
       } catch (err) {
-        console.error('Error updating order status:', err);
+        //console.error('Error updating order status:', err);
         alert(err.response?.data?.message || 'Lỗi khi cập nhật trạng thái');
       } finally {
         confirmingOrderId.value = null;
@@ -646,7 +646,7 @@ export default {
           showErrorModal.value = true;
         }
       } catch (err) {
-        console.error('Error submitting return request:', err);
+        //console.error('Error submitting return request:', err);
         errorMessage.value = err.response?.data?.message || 'Lỗi khi gửi yêu cầu trả hàng';
         showErrorModal.value = true;
       } finally {

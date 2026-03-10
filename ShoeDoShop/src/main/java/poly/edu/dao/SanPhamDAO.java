@@ -99,4 +99,9 @@ public interface SanPhamDAO extends JpaRepository<SanPham, Integer> {
            "  )" +
            ")")
     List<SanPham> findLienQuan(@Param("maSP") Integer maSP);
+    	@Query(value = "SELECT sp.MaSP, sp.TenSP, sp.DaBan, sp.KhuyenMai, " +
+            "(SELECT TOP 1 HinhAnh FROM SanPham_ChiTiet ct WHERE ct.MaSP = sp.MaSP) as hinhAnh, " +
+            "(SELECT MIN(DonGia) FROM SanPham_ChiTiet ct WHERE ct.MaSP = sp.MaSP) as donGia " +
+            "FROM SanPham sp", nativeQuery = true)
+List<Object[]> getDanhSachKhuyenMaiRaw();
 }

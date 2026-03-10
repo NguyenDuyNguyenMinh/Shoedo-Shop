@@ -78,7 +78,7 @@
                     class="form-control form-control-lg"
                     placeholder="Nhập số lượng"
                   />
-                  <button @click="applyBulkQuantity" class="btn btn-success">
+                  <button @click="applyBulkQuantity" class="btn btn-dark">
                     <i class="bi bi-check-lg me-2"></i>Áp dụng
                   </button>
                 </div>
@@ -91,7 +91,7 @@
                   <span class="text-muted me-3">
                     Đã chọn:
                     <strong class="text-primary">{{ selectedCount }}</strong> /
-                    {{ filteredProducts.length }} sản phẩm
+                    {{ filteredProducts.length }} phân loại
                   </span>
                   <button
                     @click="unselectAll"
@@ -99,7 +99,7 @@
                   >
                     <i class="bi bi-x-circle me-2"></i>Bỏ chọn tất cả
                   </button>
-                  <button @click="handleBulkImport" class="btn btn-success">
+                  <button @click="handleBulkImport" class="btn btn-dark">
                     <i class="bi bi-box-arrow-in-down me-2"></i>
                     Nhập hàng loạt
                   </button>
@@ -120,13 +120,13 @@
                         />
                       </div>
                     </th>
-                    <th>Hình</th>
-                    <th>Tên sản phẩm</th>
-                    <th>Phân loại</th>
-                    <th>Giá</th>
-                    <th>SL tồn</th>
-                    <th>Trạng thái</th>
-                    <th style="width: 180px">Số lượng nhập</th>
+                    <th class="text-center align-middle">Hình</th>
+                    <th class="text-center align-middle">Tên sản phẩm</th>
+                    <th class="text-center align-middle">Phân loại</th>
+                    <th class="text-center align-middle">Giá</th>
+                    <th class="text-center align-middle">SL tồn</th>
+                    <th class="text-center align-middle">Trạng thái</th>
+                    <th style="width: 180px" class="text-center align-middle">Số lượng nhập</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -211,7 +211,7 @@
                           />
                           <button
                             @click="handleImportSingle(item)"
-                            class="btn btn-outline-success"
+                            class="btn btn-outline-dark"
                           >
                             <i class="bi bi-arrow-down-circle me-1"></i>Nhập
                           </button>
