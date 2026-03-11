@@ -62,4 +62,8 @@ public class QLHoaDonController {
     public ResponseEntity<?> printInvoice(@PathVariable Integer id) {
         return orderService.printInvoice(id);
     }
+    @GetMapping("/listnv")
+    public ResponseEntity<Map<String, Object>> getAllEmployees() {
+        return ResponseEntity.ok(orderService.getAllEmployees());
+    }
 }

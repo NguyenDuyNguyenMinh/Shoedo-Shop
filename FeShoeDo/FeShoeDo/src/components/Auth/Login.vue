@@ -439,7 +439,7 @@ export default {
             this.accountLockedMessage = data.message;
 
             setTimeout(() => {
-              this.accountLockedMessage += ' Vui lòng liên hệ quản trị viên qua email: admin@shoedoshop.com';
+              this.accountLockedMessage += ' Vui lòng liên hệ quản trị viên qua Hotline: 1900 0001';
             }, 100);
           }
         }
@@ -695,7 +695,7 @@ export default {
             this.error = data.message || 'Đăng nhập Google thất bại';
             if (data.message && data.message.includes('bị khóa')) {
               this.accountLocked = true;
-              this.accountLockedMessage = data.message + ' Vui lòng liên hệ quản trị viên để được khắc phục.';
+              this.accountLockedMessage = data.message + 'Vui lòng liên hệ quản trị viên qua Hotline: 1900 0001 để được khắc phục.';
             }
           }
         }

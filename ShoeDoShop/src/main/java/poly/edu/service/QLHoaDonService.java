@@ -17,10 +17,13 @@ public class QLHoaDonService {
 
     @Autowired private HoaDonDAO hoaDonDAO;
     @Autowired private HoaDonCTDAO hoaDonCTDAO;
+    @Autowired private SanPhamDAO sanPhamDAO;
     @Autowired private SanPhamChiTietDAO spctDAO;
+    @Autowired private QuanTriDAO quanTriDAO;
     @Autowired private AuthService authService;
     @Autowired private EmailService emailService;
     @Autowired private PdfService pdfService;
+    
     
     private final ObjectMapper mapper = new ObjectMapper();
 
@@ -36,6 +39,28 @@ public class QLHoaDonService {
         result.put("error", mapList(filterByStatus(all, "Báo lỗi")));
         
         return success("data", result);
+    }
+    
+    public Map<String, Object> getAllEmployees() {
+        try {
+            List<QuanTri> employees = quanTriDAO.findAll();
+            
+            List<Map<String, Object>> result = employees.stream()
+                .filter(emp -> emp.getUser() != null && emp.getUser().getIsActive())
+                .map(emp -> {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("maQT", emp.getMaQT());
+                    map.put("tenQT", emp.getTenQT());
+                    map.put("email", emp.getUser() != null ? emp.getUser().getMail() : null);
+                    map.put("role", emp.getRole());
+                    return map;
+                })
+                .collect(Collectors.toList());
+            
+            return success("data", result);
+        } catch (Exception e) {
+            return error("Lỗi khi lấy danh sách nhân viên: " + e.getMessage());
+        }
     }
 
     public Map<String, Object> getOrdersByStatus(String status) {
@@ -73,7 +98,7 @@ public class QLHoaDonService {
         hd.setTrangThai("Đang giao");
         hoaDonDAO.save(hd);
 
-        return success("Đã xác nhận đơn hàng và trừ số lượng trong kho");
+        return success("Đã vận chuyển đơn hàng và trừ số lượng trong kho");
     }
 
     @Transactional
@@ -118,7 +143,7 @@ public class QLHoaDonService {
         hd.setQuanTri(getCurrentEmployee());
         hoaDonDAO.save(hd);
 
-        return success("Đã cập nhật giao thất bại và hoàn trả số lượng về kho");
+        return success("Đã cập nhật giao hàng thất bại và hoàn trả số lượng về kho");
     }
 
     @Transactional
@@ -129,6 +154,16 @@ public class QLHoaDonService {
         hd.setTrangThai("Hoàn tất");
         hd.setNgayDen(new Date());
         hd.setQuanTri(getCurrentEmployee());
+        for (HoaDonCT ct : hd.getHoaDonCTs()) {
+            SanPhamChiTiet spct = ct.getSanPhamChiTiet();
+            SanPham sp = spct.getSanPham();
+
+            int soLuongMoi = sp.getDaBan() + ct.getSoLuong();
+            sp.setDaBan(soLuongMoi);
+            
+            sanPhamDAO.save(sp);
+        }
+        
         hoaDonDAO.save(hd);
 
         try {
@@ -137,7 +172,7 @@ public class QLHoaDonService {
             System.err.println("Lỗi gửi email: " + e.getMessage());
         }
 
-        return success("Đã cập nhật giao hàng thành công. KH có 3 ngày để báo lỗi/hoàn hàng");
+        return success("Đã cập nhật giao hàng thành công. KH có 1 tháng để báo lỗi/bảo hành");
     }
 
     @Transactional
@@ -290,12 +325,10 @@ public class QLHoaDonService {
                     + "<div class='content'>"
                     + "<p>Xin chào <strong>" + tenKH + "</strong>,</p>"
                     + "<p>Đơn hàng <strong>#HD" + String.format("%04d", hd.getMaHD()) + "</strong> của bạn đã được giao thành công.</p>"
-                    + "<p>Vui lòng xem file hóa đơn đính kèm để kiểm tra chi tiết đơn hàng.</p>"
+                    + "<p>Bạn có thể xem chi tiết hóa đơn trong file đính kèm của email này.</p>"
                     + "<div class='warning'>"
-                    + "<p><strong>Lưu ý:</strong> Bạn có <strong>3 NGÀY</strong> để kiểm tra đơn hàng và:</p>"
-                    + "<p>• Báo lỗi nếu có vấn đề về sản phẩm</p>"
-                    + "<p>• Yêu cầu hoàn hàng nếu không hài lòng</p>"
-                    + "<p>Sau 3 ngày, đơn hàng sẽ được xác nhận hoàn tất và không thể thay đổi.</p>"
+                    + "<p><strong>Lưu ý:</strong> Bạn có <strong>1 THÁNG</strong> để báo lỗi/ bảo hành kể từ ngày đơn hàng được giao thành công</p>" + hd.getNgayDen()
+                    + "<p>Sau 1 tháng, đơn hàng sẽ được xác nhận hoàn tất và không thể thay đổi.</p>"
                     + "</div>"
                     + "<p>Cảm ơn bạn đã mua sắm tại ShoeDo Shop!</p>"
                     + "</div></div></body></html>";
@@ -332,7 +365,7 @@ public class QLHoaDonService {
                     + "<p><strong>Lỗi:</strong> " + (hd.getGhiChu() != null ? hd.getGhiChu() : "Không xác định") + "</p>"
                     + "</div>"
                     + "<p>Đội ngũ ShoeDo Shop đã xử lý sự cố này và đã khắc phục thành công. Vui lòng xem file hóa đơn đính kèm để kiểm tra chi tiết.</p>"
-                    + "<p>Nếu bạn cần hỗ trợ thêm, vui lòng liên hệ hotline 190001 của chúng tôi.</p>"
+                    + "<p>Nếu bạn cần hỗ trợ thêm, vui lòng liên hệ hotline 1900 0001 của chúng tôi.</p>"
                     + "<p>Một lần nữa, chúng tôi xin lỗi về sự bất tiện này và hy vọng sẽ phục vụ bạn tốt hơn trong tương lai.</p>"
                     + "</div></div></body></html>";
             

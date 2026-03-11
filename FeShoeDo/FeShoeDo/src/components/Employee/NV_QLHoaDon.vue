@@ -114,19 +114,27 @@
           <div class="row g-2 mb-3">
             <div class="col-md-4">
               <div class="input-group">
-                <span class="input-group-text bg-light">Tìm</span>
+                <span class="input-group-text bg-light"><i class="bi bi-search"></i></span>
                 <input type="text" v-model="searchKeyword" 
                        placeholder="Mã HD, tên KH, SĐT..." 
                        class="form-control">
               </div>
             </div>
             <div class="col-md-2">
-              <select v-model="filterPayment" class="form-select">
-                <option value="">Tất cả TT</option>
-                <option value="COD">COD</option>
-                <option value="Chuyển khoản">Chuyển khoản</option>
+              <select v-model="filterEmployee" class="form-select">
+                <option value="">Tất cả nhân viên</option>
+                <option v-for="emp in employees" :key="emp.maQT" :value="emp.maQT">
+                  #QT{{ String(emp.maQT).padStart(4, '0') }} - {{ emp.tenQT }}
+                </option>
               </select>
             </div>
+            <div class="col-md-2">
+              <select v-model="sortOrder" class="form-select">
+                <option value="desc">Mới nhất</option>
+                <option value="asc">Cũ nhất</option>
+              </select>
+            </div>
+            
             <div class="col-md-2">
               <input type="date" v-model="filterDate" class="form-control">
             </div>
@@ -155,13 +163,13 @@
                     </div>
                     
                     <div class="mb-2">
-                      <small class="text-muted d-block">Người nhận:</small>
-                      <strong>{{ order.tenNN || order.tenKH }}</strong>
+                      <small class="text-muted d-block">Người đặt:</small>
+                      <strong>{{ order.tenKH }}</strong>
                     </div>
                     
                     <div class="mb-2">
-                      <small class="text-muted d-block">SĐT:</small>
-                      <strong>{{ order.sdt || order.sdtKH }}</strong>
+                      <small class="text-muted d-block">SĐT người đặt:</small>
+                      <strong>{{ order.sdtKH }}</strong>
                     </div>
                     
                     <div class="mb-2">
@@ -232,13 +240,13 @@
                     </div>
                     
                     <div class="mb-2">
-                      <small class="text-muted d-block">Người nhận:</small>
-                      <strong>{{ order.tenNN || order.tenKH }}</strong>
+                      <small class="text-muted d-block">Người đặt:</small>
+                      <strong>{{ order.tenKH }}</strong>
                     </div>
                     
                     <div class="mb-2">
-                      <small class="text-muted d-block">SĐT:</small>
-                      <strong>{{ order.sdt || order.sdtKH }}</strong>
+                      <small class="text-muted d-block">SĐT người đặt:</small>
+                      <strong>{{order.sdtKH }}</strong>
                     </div>
                     
                     <div class="mb-2">
@@ -311,13 +319,13 @@
                     </div>
                     
                     <div class="mb-2">
-                      <small class="text-muted d-block">Người nhận:</small>
-                      <strong>{{ order.tenNN || order.tenKH }}</strong>
+                      <small class="text-muted d-block">Người đặt:</small>
+                      <strong>{{ order.tenKH }}</strong>
                     </div>
                     
                     <div class="mb-2">
-                      <small class="text-muted d-block">SĐT:</small>
-                      <strong>{{ order.sdt || order.sdtKH }}</strong>
+                      <small class="text-muted d-block">SĐT người đặt:</small>
+                      <strong>{{ order.sdtKH }}</strong>
                     </div>
                     
                     <div class="mb-2">
@@ -377,13 +385,13 @@
                     </div>
                     
                     <div class="mb-2">
-                      <small class="text-muted d-block">Người nhận:</small>
-                      <strong>{{ order.tenNN || order.tenKH }}</strong>
+                      <small class="text-muted d-block">Người đặt:</small>
+                      <strong>{{ order.tenKH }}</strong>
                     </div>
                     
                     <div class="mb-2">
-                      <small class="text-muted d-block">SĐT:</small>
-                      <strong>{{ order.sdt || order.sdtKH }}</strong>
+                      <small class="text-muted d-block">SĐT người đặt:</small>
+                      <strong>{{ order.sdtKH }}</strong>
                     </div>
                     
                     <div class="mb-2">
@@ -448,13 +456,13 @@
                     </div>
 
                     <div class="mb-2">
-                      <small class="text-muted d-block">Người nhận:</small>
-                      <strong>{{ order.tenNN || order.tenKH }}</strong>
+                      <small class="text-muted d-block">Người đặt:</small>
+                      <strong>{{ order.tenKH }}</strong>
                     </div>
                     
                     <div class="mb-2">
-                      <small class="text-muted d-block">SĐT:</small>
-                      <strong>{{ order.sdt || order.sdtKH }}</strong>
+                      <small class="text-muted d-block">SĐT người đặt:</small>
+                      <strong>{{ order.sdtKH }}</strong>
                     </div>
                     
                     <div class="mb-2">
@@ -557,7 +565,7 @@
                       <div>{{ orderDetail.tenNN }}</div>
                     </div>
                     <div class="d-flex mb-2">
-                      <div style="width: 100px;"><strong>SĐT:</strong></div>
+                      <div style="width: 100px;"><strong>SĐT người nhận:</strong></div>
                       <div>{{ orderDetail.sdt }}</div>
                     </div>
                     <div class="d-flex">
@@ -723,10 +731,11 @@ export default {
       rejected: [],
       error: []
     });
-    
+    const sortOrder = ref('desc'); 
+    const filterEmployee = ref('');
+    const employees = ref([]);
     const activeTab = ref('pending');
     const searchKeyword = ref('');
-    const filterPayment = ref('');
     const filterDate = ref('');
     const message = ref('');
     const error = ref('');
@@ -756,39 +765,45 @@ export default {
       error: orders.value.error.length
     }));
 
-    const getSortedOrders = (ordersList, tabType) => {
-      if (tabType === 'completed' || tabType === 'rejected') {
-        return [...ordersList].sort((a, b) => new Date(b.ngayMua) - new Date(a.ngayMua));
-      } else {
-        return [...ordersList].sort((a, b) => new Date(a.ngayMua) - new Date(b.ngayMua));
-      }
-    };
-
     const filteredOrders = computed(() => {
       const keyword = searchKeyword.value.toLowerCase().trim();
-      const payment = filterPayment.value;
       const date = filterDate.value;
+      const employeeId = filterEmployee.value;
+      const sort = sortOrder.value; 
 
       const filterFn = (order) => {
         if (keyword) {
           const maHDStr = `HD${String(order.maHD).padStart(4, '0')}`.toLowerCase();
           const matchesKeyword = 
             maHDStr.includes(keyword) ||
-            (order.tenKH && order.tenNN.toLowerCase().includes(keyword)) ||
+            (order.tenKH && order.tenKH.toLowerCase().includes(keyword)) ||
+            (order.tenNN && order.tenNN.toLowerCase().includes(keyword)) ||
+            (order.sdtKH && order.sdtKH.includes(keyword)) ||
             (order.sdt && order.sdt.includes(keyword)) ||
             (order.diemGiao && order.diemGiao.toLowerCase().includes(keyword));
           
           if (!matchesKeyword) return false;
         }
 
-        if (payment && order.phuongThucTT !== payment) return false;
-
         if (date) {
           const orderDate = new Date(order.ngayMua).toISOString().split('T')[0];
           if (orderDate !== date) return false;
         }
+        if (employeeId) {
+          const empId = parseInt(employeeId);
+          if (!order.maQT || order.maQT !== empId) return false;
+        }
 
         return true;
+        
+      };
+
+      const sortByDate = (orders) => {
+        return [...orders].sort((a, b) => {
+          const dateA = new Date(a.ngayMua);
+          const dateB = new Date(b.ngayMua);
+          return sort === 'desc' ? dateB - dateA : dateA - dateB;
+        });
       };
 
       const filteredPending = orders.value.pending.filter(filterFn);
@@ -798,11 +813,11 @@ export default {
       const filteredError = orders.value.error.filter(filterFn);
 
       return {
-        pending: getSortedOrders(filteredPending, 'pending'),
-        delivering: getSortedOrders(filteredDelivering, 'delivering'),
-        completed: getSortedOrders(filteredCompleted, 'completed'),
-        rejected: getSortedOrders(filteredRejected, 'rejected'),
-        error: getSortedOrders(filteredError, 'error')
+        pending: sortByDate(filteredPending),
+        delivering: sortByDate(filteredDelivering),
+        completed: sortByDate(filteredCompleted),
+        rejected: sortByDate(filteredRejected),
+        error: sortByDate(filteredError)
       };
     });
 
@@ -815,6 +830,17 @@ export default {
         }
       } catch (err) {
         error.value = 'Lỗi khi tải danh sách đơn hàng';
+      }
+    };
+
+    const loadEmployees = async () => {
+      try {
+        const response = await axios.get('/api/employee/orders/listnv');
+        if (response.data.success) {
+          employees.value = response.data.data;
+        }
+      } catch (err) {
+        console.error('Lỗi khi tải danh sách nhân viên:', err);
       }
     };
 
@@ -877,7 +903,7 @@ export default {
     };
 
     const deliverySuccess = async (orderId) => {
-      if (!confirm('Đánh dấu giao thành công? KH có 1 tháng báo lỗi')) return;
+      if (!confirm('Đánh dấu giao thành công? KH có 1 tháng báo lỗi/bảo hành')) return;
       processing.value = true;
       try {
         const response = await axios.post(`/api/employee/orders/${orderId}/delivery-success`);
@@ -968,8 +994,9 @@ export default {
 
     const resetFilters = () => {
       searchKeyword.value = '';
-      filterPayment.value = '';
       filterDate.value = '';
+      filterEmployee.value = ''; 
+      sortOrder.value = 'desc'; 
     };
 
     const formatPrice = (price) => {
@@ -1020,6 +1047,7 @@ export default {
 
     onMounted(() => {
       loadOrders();
+      loadEmployees();
       
       orderDetailModalInstance = new Modal(document.getElementById('orderDetailModal'));
       rejectModalInstance = new Modal(document.getElementById('rejectModal'));
@@ -1031,7 +1059,6 @@ export default {
       orders,
       activeTab,
       searchKeyword,
-      filterPayment,
       filterDate,
       message,
       error,
@@ -1046,6 +1073,10 @@ export default {
       // Computed
       orderCounts,
       filteredOrders,
+      employees,
+      filterEmployee,
+      sortOrder,
+      loadEmployees,
       
       // Methods
       setActiveTab,
