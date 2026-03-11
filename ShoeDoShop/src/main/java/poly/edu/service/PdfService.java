@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;
 import poly.edu.dto.DiaChiJsonDTO;
 import poly.edu.entity.HoaDon;
+import poly.edu.entity.KhachHang;
 import poly.edu.entity.HoaDonCT;
 
 import java.io.ByteArrayOutputStream;
@@ -33,6 +34,7 @@ public class PdfService {
 
     public byte[] generateInvoice(HoaDon hoaDon) throws Exception {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        KhachHang khachhang = hoaDon.getKhachHang();
         PdfWriter writer = new PdfWriter(baos);
         PdfDocument pdfDoc = new PdfDocument(writer);
         Document document = new Document(pdfDoc, PageSize.A4);
@@ -59,6 +61,8 @@ public class PdfService {
         	 SimpleDateFormat sdf2 = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
         	 document.add(new Paragraph("Ngày đến: " + sdf2.format(hoaDon.getNgayDen())));
         }
+        document.add(new Paragraph("Người đặt hàng: " + khachhang.getTenKH()));
+        document.add(new Paragraph("SĐT người đặt: " + khachhang.getSdt()));
         document.add(new Paragraph("Phương thức thanh toán: " + hoaDon.getPhuongThucTT()));
         document.add(new Paragraph("\n"));
 
