@@ -13,15 +13,16 @@ import java.util.List;
 public interface ThongKeDAO extends JpaRepository<HoaDon, Integer> {
 
     /**
-     * Thống kê doanh thu theo ngày với đầy đủ ngày (fill missing with zero)
+     * Thống kê doanh thu theo ngày
      * Chỉ tính các đơn hàng đã hoàn tất
      * 
-     * Time Complexity: O(n) where n = số ngày trong khoảng thời gian
-     * Database: 1 query với GROUP BY trên DATE(NgayMua)
+     * @param startDate Ngày bắt đầu
+     * @param endDate Ngày kết thúc
+     * @return List<Object[]> với ngay, doanhThu, soDonHang, giaTriDonTB, soSP
      */
     @Query(value = """
             SELECT
-                AllDates.DateValue AS ngay,
+                CAST(hd.NgayMua AS DATE) AS ngay,
                 ISNULL(SUM(hdct.DonGia * hdct.SoLuong), 0) AS doanhThu,
                 COUNT(DISTINCT hd.MaHD) AS soDonHang,
                 CASE
@@ -30,25 +31,27 @@ public interface ThongKeDAO extends JpaRepository<HoaDon, Integer> {
                     ELSE 0
                 END AS giaTriDonTB,
                 SUM(hdct.SoLuong) AS soSP
-            FROM dbo.GetDatesBetween(:startDate, :endDate) AllDates
-            LEFT JOIN HoaDon hd ON CAST(hd.NgayMua AS DATE) = AllDates.DateValue
-                AND hd.TrangThai = N'Hoàn tất'
+            FROM HoaDon hd
             LEFT JOIN HoaDonCT hdct ON hd.MaHD = hdct.MaHD
-            GROUP BY AllDates.DateValue
-            ORDER BY AllDates.DateValue
+            WHERE hd.TrangThai = N'Hoàn tất'
+                AND hd.NgayMua BETWEEN :startDate AND :endDate
+            GROUP BY CAST(hd.NgayMua AS DATE)
+            ORDER BY CAST(hd.NgayMua AS DATE)
             """, nativeQuery = true)
     List<Object[]> thongKeTheoNgay(
             @Param("startDate") Date startDate,
             @Param("endDate") Date endDate);
 
     /**
-     * Thống kê doanh thu theo tháng với đầy đủ tháng (fill missing with zero)
+     * Thống kê doanh thu theo tháng
      * 
-     * Time Complexity: O(n) where n = số tháng trong khoảng thời gian
+     * @param startDate Ngày bắt đầu
+     * @param endDate Ngày kết thúc
+     * @return List<Object[]> với thang, doanhThu, soDonHang, giaTriDonTB, soSP
      */
     @Query(value = """
             SELECT
-                AllMonths.MonthValue AS thang,
+                FORMAT(hd.NgayMua, 'yyyy-MM') AS thang,
                 ISNULL(SUM(hdct.DonGia * hdct.SoLuong), 0) AS doanhThu,
                 COUNT(DISTINCT hd.MaHD) AS soDonHang,
                 CASE
@@ -57,12 +60,12 @@ public interface ThongKeDAO extends JpaRepository<HoaDon, Integer> {
                     ELSE 0
                 END AS giaTriDonTB,
                 SUM(hdct.SoLuong) AS soSP
-            FROM dbo.GetMonthsBetween(:startDate, :endDate) AllMonths
-            LEFT JOIN HoaDon hd ON FORMAT(hd.NgayMua, 'yyyy-MM') = AllMonths.MonthValue
-                AND hd.TrangThai = N'Hoàn tất'
+            FROM HoaDon hd
             LEFT JOIN HoaDonCT hdct ON hd.MaHD = hdct.MaHD
-            GROUP BY AllMonths.MonthValue
-            ORDER BY AllMonths.MonthValue
+            WHERE hd.TrangThai = N'Hoàn tất'
+                AND hd.NgayMua BETWEEN :startDate AND :endDate
+            GROUP BY FORMAT(hd.NgayMua, 'yyyy-MM')
+            ORDER BY FORMAT(hd.NgayMua, 'yyyy-MM')
             """, nativeQuery = true)
     List<Object[]> thongKeTheoThang(
             @Param("startDate") Date startDate,

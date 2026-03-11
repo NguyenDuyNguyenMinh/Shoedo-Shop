@@ -22,6 +22,8 @@ public class WebConfig implements WebMvcConfigurer {
 	    config.addAllowedOrigin("http://localhost:5173");
 	    config.addAllowedOrigin("http://localhost:5174");
 	    config.addAllowedOrigin("http://localhost:8080");
+	    config.addAllowedOrigin("http://localhost:4200");
+	    config.addAllowedOrigin("https://sandbox.vnpayment.vn");
 	    config.addAllowedHeader("*");
 	    config.addAllowedMethod("*");
 	    
