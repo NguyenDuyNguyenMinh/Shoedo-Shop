@@ -656,7 +656,7 @@
                         required
                       />
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-6">
                       <label class="form-label small">Số lượng *</label>
                       <input
                         type="number"
@@ -665,7 +665,7 @@
                         required
                       />
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-6">
                       <label class="form-label small">Trạng thái</label>
                       <select class="form-select" v-model="v.trangThai">
                         <option value="Còn hàng">Còn hàng</option>
@@ -673,8 +673,8 @@
                         <option value="Sắp hết">Sắp hết</option>
                       </select>
                     </div>
-                    <div class="col-md-4">
-                      <label class="form-label small">Tên file ảnh</label>
+                    <div class="col-md-6">
+                      <label class="form-label small">Hình ảnh</label>
                       <div class="input-group">
                         <input
                           type="text"
@@ -932,7 +932,7 @@
                       </div>
                     </template>
 
-                    <div class="col-md-4">
+                    <div class="col-md-6">
                       <label class="form-label small">Số lượng *</label>
                       <input
                         type="number"
@@ -942,7 +942,7 @@
                         required
                       />
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-6">
                       <label class="form-label small">Trạng thái</label>
                       <select class="form-select" v-model="v.trangThai">
                         <option value="Còn hàng">Còn hàng</option>
@@ -950,7 +950,7 @@
                         <option value="Sắp hết">Sắp hết</option>
                       </select>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-6">
                       <label class="form-label small">Hình ảnh</label>
                       <div class="input-group">
                         <input
