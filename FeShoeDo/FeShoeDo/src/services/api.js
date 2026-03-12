@@ -113,7 +113,12 @@ export default {
   checkout(data) {
     return apiClient.post('/customer/checkout', data);
   },
-  
+
+  // VNPay Payment
+  createVNPayOrder(data) {
+    return apiClient.post('/payment/create-order', data);
+  },
+
   buyNow(data) {
     return apiClient.post('/customer/buy-now', data);
   },

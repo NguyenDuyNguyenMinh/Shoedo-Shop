@@ -9,6 +9,11 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
+// #region DEBUG - ThongKeService logging
+import java.io.FileWriter;
+import java.io.PrintWriter;
+// #endregion
+
 @Service
 public class ThongKeService {
 
@@ -20,6 +25,7 @@ public class ThongKeService {
 
     /**
      * Thống kê doanh thu theo ngày
+     * Bao gồm fill missing dates (các ngày không có đơn hàng sẽ có giá trị 0)
      * 
      * @param startDate Ngày bắt đầu
      * @param endDate Ngày kết thúc
@@ -27,11 +33,74 @@ public class ThongKeService {
      */
     public List<ThongKeDTO> thongKeTheoNgay(Date startDate, Date endDate) {
         List<Object[]> results = thongKeDAO.thongKeTheoNgay(startDate, endDate);
-        return mapResultsToThongKeDTO(results, "day");
+        List<ThongKeDTO> dtos = mapResultsToThongKeDTO(results, "day");
+        
+        // Fill missing dates
+        return fillMissingDates(dtos, startDate, endDate);
+    }
+
+    /**
+     * Điền các ngày còn thiếu trong khoảng thời gian
+     * 
+     * @param dtos Danh sách thống kê đã có
+     * @param startDate Ngày bắt đầu
+     * @param endDate Ngày kết thúc
+     * @return List<ThongKeDTO> với đầy đủ các ngày
+     */
+    private List<ThongKeDTO> fillMissingDates(List<ThongKeDTO> dtos, Date startDate, Date endDate) {
+        // Tạo map từ kết quả có sẵn
+        Map<Date, ThongKeDTO> existingData = new LinkedHashMap<>();
+        for (ThongKeDTO dto : dtos) {
+            if (dto.getThoiGian() != null) {
+                existingData.put(normalizeDate(dto.getThoiGian()), dto);
+            }
+        }
+        
+        // Tạo danh sách đầy đủ
+        List<ThongKeDTO> fullList = new ArrayList<>();
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(startDate);
+        Date current = cal.getTime();
+        Date end = normalizeDate(endDate);
+        
+        while (!current.after(end)) {
+            Date normalizedCurrent = normalizeDate(current);
+            if (existingData.containsKey(normalizedCurrent)) {
+                fullList.add(existingData.get(normalizedCurrent));
+            } else {
+                // Thêm ngày không có dữ liệu với giá trị 0
+                ThongKeDTO emptyDto = new ThongKeDTO();
+                emptyDto.setThoiGian(normalizedCurrent);
+                emptyDto.setDoanhThu(0.0);
+                emptyDto.setSoDonHang(0);
+                emptyDto.setGiaTriDonTrungBinh(0.0);
+                emptyDto.setSoSanPhamBanRa(0);
+                fullList.add(emptyDto);
+            }
+            cal.add(Calendar.DAY_OF_MONTH, 1);
+            current = cal.getTime();
+        }
+        
+        return fullList;
+    }
+
+    /**
+     * Chuẩn hóa ngày về định dạng yyyy-MM-dd (bỏ giờ phút giây)
+     */
+    private Date normalizeDate(Date date) {
+        if (date == null) return null;
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(date);
+        cal.set(Calendar.HOUR_OF_DAY, 0);
+        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.SECOND, 0);
+        cal.set(Calendar.MILLISECOND, 0);
+        return cal.getTime();
     }
 
     /**
      * Thống kê doanh thu theo tháng
+     * Bao gồm fill missing months (các tháng không có đơn hàng sẽ có giá trị 0)
      * 
      * @param startDate Ngày bắt đầu
      * @param endDate Ngày kết thúc
@@ -39,7 +108,58 @@ public class ThongKeService {
      */
     public List<ThongKeDTO> thongKeTheoThang(Date startDate, Date endDate) {
         List<Object[]> results = thongKeDAO.thongKeTheoThang(startDate, endDate);
-        return mapResultsToThongKeDTO(results, "month");
+        List<ThongKeDTO> dtos = mapResultsToThongKeDTO(results, "month");
+        
+        // Fill missing months
+        return fillMissingMonths(dtos, startDate, endDate);
+    }
+
+    /**
+     * Điền các tháng còn thiếu trong khoảng thời gian
+     * 
+     * @param dtos Danh sách thống kê đã có
+     * @param startDate Ngày bắt đầu
+     * @param endDate Ngày kết thúc
+     * @return List<ThongKeDTO> với đầy đủ các tháng
+     */
+    private List<ThongKeDTO> fillMissingMonths(List<ThongKeDTO> dtos, Date startDate, Date endDate) {
+        // Tạo map từ kết quả có sẵn (key là yyyy-MM)
+        Map<String, ThongKeDTO> existingData = new LinkedHashMap<>();
+        for (ThongKeDTO dto : dtos) {
+            if (dto.getThoiGian() != null) {
+                String monthKey = monthFormat.format(dto.getThoiGian());
+                existingData.put(monthKey, dto);
+            }
+        }
+        
+        // Tạo danh sách đầy đủ
+        List<ThongKeDTO> fullList = new ArrayList<>();
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(startDate);
+        cal.set(Calendar.DAY_OF_MONTH, 1); // Đầu tháng
+        
+        Calendar endCal = Calendar.getInstance();
+        endCal.setTime(endDate);
+        endCal.set(Calendar.DAY_OF_MONTH, 1); // Đầu tháng
+        
+        while (!cal.after(endCal)) {
+            String monthKey = monthFormat.format(cal.getTime());
+            if (existingData.containsKey(monthKey)) {
+                fullList.add(existingData.get(monthKey));
+            } else {
+                // Thêm tháng không có dữ liệu với giá trị 0
+                ThongKeDTO emptyDto = new ThongKeDTO();
+                emptyDto.setThoiGian(cal.getTime());
+                emptyDto.setDoanhThu(0.0);
+                emptyDto.setSoDonHang(0);
+                emptyDto.setGiaTriDonTrungBinh(0.0);
+                emptyDto.setSoSanPhamBanRa(0);
+                fullList.add(emptyDto);
+            }
+            cal.add(Calendar.MONTH, 1);
+        }
+        
+        return fullList;
     }
 
     /**
@@ -98,6 +218,18 @@ public class ThongKeService {
      * @return Map chứa các chỉ số tổng quan
      */
     public Map<String, Object> thongKeTongQuan(Date startDate, Date endDate) {
+        // #region DEBUG - Log input params
+        try {
+            String logPath = "c:\\Users\\dothanhphong\\Downloads\\Shoedo-Shop\\.cursor\\debug.log";
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+            String msg = "thongKeTongQuan called: startDate=" + sdf.format(startDate) + ", endDate=" + sdf.format(endDate);
+            try (FileWriter fw = new FileWriter(logPath, true);
+                 PrintWriter pw = new PrintWriter(fw)) {
+                pw.println("{\"timestamp\":" + System.currentTimeMillis() + ",\"location\":\"ThongKeService:thongKeTongQuan\",\"message\":\"" + msg + "\",\"hypothesisId\":\"H2\"}");
+            }
+        } catch (Exception e) {}
+        // #endregion
+        
         List<Object[]> results = thongKeDAO.thongKeTongQuan(startDate, endDate);
         Map<String, Object> dashboard = new HashMap<>();
         
@@ -111,6 +243,33 @@ public class ThongKeService {
             dashboard.put("donDangGiao", row[5] != null ? ((Number) row[5]).intValue() : 0);
             dashboard.put("donHoanTat", row[6] != null ? ((Number) row[6]).intValue() : 0);
             dashboard.put("donBiTuChoi", row[7] != null ? ((Number) row[7]).intValue() : 0);
+            
+            // #region DEBUG - Log output
+            try {
+                String logPath = "c:\\Users\\dothanhphong\\Downloads\\Shoedo-Shop\\.cursor\\debug.log";
+                String msg = "thongKeTongQuan result: tongDoanhThu=" + dashboard.get("tongDoanhThu") 
+                    + ", tongDonHang=" + dashboard.get("tongDonHang")
+                    + ", donDangXuLy=" + dashboard.get("donDangXuLy")
+                    + ", donDangGiao=" + dashboard.get("donDangGiao")
+                    + ", donHoanTat=" + dashboard.get("donHoanTat")
+                    + ", donBiTuChoi=" + dashboard.get("donBiTuChoi");
+                try (FileWriter fw = new FileWriter(logPath, true);
+                     PrintWriter pw = new PrintWriter(fw)) {
+                    pw.println("{\"timestamp\":" + System.currentTimeMillis() + ",\"location\":\"ThongKeService:thongKeTongQuan\",\"message\":\"" + msg + "\",\"hypothesisId\":\"H1\"}");
+                }
+            } catch (Exception e) {}
+            // #endregion
+        } else {
+            // #region DEBUG - Log empty results
+            try {
+                String logPath = "c:\\Users\\dothanhphong\\Downloads\\Shoedo-Shop\\.cursor\\debug.log";
+                String msg = "thongKeTongQuan: NO RESULTS returned";
+                try (FileWriter fw = new FileWriter(logPath, true);
+                     PrintWriter pw = new PrintWriter(fw)) {
+                    pw.println("{\"timestamp\":" + System.currentTimeMillis() + ",\"location\":\"ThongKeService:thongKeTongQuan\",\"message\":\"" + msg + "\",\"hypothesisId\":\"H1\"}");
+                }
+            } catch (Exception e) {}
+            // #endregion
         }
         
         return dashboard;

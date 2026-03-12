@@ -110,7 +110,7 @@
 
           <!-- Order Summary Sidebar -->
           <div class="col-lg-4">
-            <div class="order-summary sticky-top" style="top: 100px;">
+            <div class="order-summary sticky-top" style="top: 100px; z-index: 100;">
               <h5 class="summary-title">Tóm tắt đơn hàng</h5>
               
               <div class="summary-row">
@@ -259,12 +259,14 @@ export default {
     },
 
     getProductName(item) {
-      // Ưu tiên moTa (mô tả sản phẩm) nếu có
-      if (item.moTa && item.moTa.trim() !== '') return item.moTa;
-      // Fallback: bỏ prefix "SPXXX-ShoeDo - " từ tenSP
-      if (item.tenSP) {
+      // Ưu tiên hiển thị tenSP, nếu không có thì mới dùng moTa
+      if (item.tenSP && item.tenSP.trim() !== '') {
         const cleaned = item.tenSP.replace(/^SP\d+-ShoeDo\s*-\s*/, '');
         return cleaned || item.tenSP;
+      }
+      // Fallback: nếu tenSP không có thì dùng moTa
+      if (item.moTa && item.moTa.trim() !== '') {
+        return item.moTa;
       }
       return 'Sản phẩm';
     },

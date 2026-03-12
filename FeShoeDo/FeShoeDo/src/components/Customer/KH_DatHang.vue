@@ -129,20 +129,11 @@
                 </div>
               </div>
             </div>
-
-            <!-- 3. Ghi chú -->
-            <div class="checkout-section">
-              <div class="section-header">
-                <h5><i class="bi bi-chat-left-text me-2"></i>Ghi chú đơn hàng</h5>
-              </div>
-              <textarea class="form-control" rows="3" v-model="note"
-                        placeholder="Ghi chú cho người bán (ví dụ: giao giờ hành chính, gọi trước khi giao...)"></textarea>
-            </div>
           </div>
 
           <!-- Right: Tóm tắt đơn hàng -->
           <div class="col-lg-5">
-            <div class="order-review sticky-top" style="top: 100px;">
+            <div class="order-review sticky-top" style="top: 100px; z-index: 100;">
               <h5 class="review-title">Đơn hàng của bạn</h5>
 
               <!-- Product items -->
@@ -154,7 +145,10 @@
                   </div>
                   <div class="flex-fill">
                     <div class="review-item-name">{{ getProductName(item) }}</div>
-                    <div class="review-item-variant">{{ item.tenMau }} / Size {{ item.size }}</div>
+                    <div class="review-item-variant">
+                      <span class="variant-tag">{{ item.tenMau }}</span>
+                      <span class="variant-tag">Size {{ item.size }}</span>
+                    </div>
                   </div>
                   <div class="review-item-price">{{ formatCurrency(item.thanhTien) }}</div>
                 </div>
@@ -306,10 +300,14 @@ export default {
     },
 
     getProductName(item) {
-      if (item.moTa && item.moTa.trim() !== '') return item.moTa;
-      if (item.tenSP) {
+      // Ưu tiên hiển thị tenSP, nếu không có thì mới dùng moTa
+      if (item.tenSP && item.tenSP.trim() !== '') {
         const cleaned = item.tenSP.replace(/^SP\d+-ShoeDo\s*-\s*/, '');
         return cleaned || item.tenSP;
+      }
+      // Fallback: nếu tenSP không có thì dùng moTa
+      if (item.moTa && item.moTa.trim() !== '') {
+        return item.moTa;
       }
       return 'Sản phẩm';
     },
@@ -332,12 +330,32 @@ export default {
 
       this.ordering = true;
       try {
-        const response = await api.checkout({
-          maDC: this.selectedAddress,
-          phuongThucTT: this.paymentMethod,
-          ghiChu: this.note,
-          cartItemIds: this.checkoutItemIds,
-        });
+        let response;
+
+        // Nếu chọn thanh toán VNPay (Chuyển khoản), gọi API tạo thanh toán VNPay
+        if (this.paymentMethod === 'Chuyển khoản') {
+          response = await api.createVNPayOrder({
+            maDC: this.selectedAddress,
+            phuongThucTT: 'VNPAY',
+            isVNPay: true,
+            ghiChu: this.note,
+            cartItemIds: this.checkoutItemIds,
+          });
+
+          if (response.data.success && response.data.paymentUrl) {
+            // Redirect đến trang thanh toán VNPay
+            window.location.href = response.data.paymentUrl;
+            return;
+          }
+        } else {
+          // Thanh toán COD - gọi API checkout thông thường
+          response = await api.checkout({
+            maDC: this.selectedAddress,
+            phuongThucTT: this.paymentMethod,
+            ghiChu: this.note,
+            cartItemIds: this.checkoutItemIds,
+          });
+        }
 
         if (response.data.success) {
           this.orderSuccess = true;
@@ -546,6 +564,17 @@ export default {
 .review-item-variant {
   font-size: 12px;
   color: #666;
+}
+
+.variant-tag {
+  background: #f0f0f0;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #333;
+  display: inline-block;
+  margin-right: 6px;
 }
 
 .review-item-price {

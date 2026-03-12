@@ -262,17 +262,28 @@ public class GioHangService {
             }
         }
 
+        // Xác định phương thức thanh toán
+        String phuongThucTT = dto.getPhuongThucTT() != null ? dto.getPhuongThucTT() : "COD";
+        boolean isVNPay = Boolean.TRUE.equals(dto.getIsVNPay()) || "VNPAY".equalsIgnoreCase(phuongThucTT);
+        
         // Tạo hóa đơn
         HoaDon hoaDon = new HoaDon();
         hoaDon.setKhachHang(kh);
-        hoaDon.setPhuongThucTT(dto.getPhuongThucTT() != null ? dto.getPhuongThucTT() : "COD");
+        hoaDon.setPhuongThucTT(isVNPay ? "VNPAY" : phuongThucTT);
         hoaDon.setDiaChiJson(diaChiJson);
-        hoaDon.setTrangThai("Đang xử lý");
+        
+        // Nếu là VNPAY, đặt trạng thái chờ thanh toán (dùng Đang xử lý vì DB chỉ có giá trị này)
+        if (isVNPay) {
+            hoaDon.setTrangThai("Đang xử lý");
+        } else {
+            hoaDon.setTrangThai("Đang xử lý");
+        }
+        
         hoaDon.setGhiChu(dto.getGhiChu());
         hoaDon.setNgayMua(new Date());
         hoaDon = hoaDonDAO.save(hoaDon);
 
-        // Tạo chi tiết hóa đơn + trừ kho
+        // Tạo chi tiết hóa đơn + trừ kho (chỉ khi không phải VNPAY hoặc đã thanh toán)
         double tongTien = 0;
         for (GioHang item : selectedItems) {
             SanPhamChiTiet spct = item.getSanPhamChiTiet();
@@ -291,16 +302,6 @@ public class GioHangService {
             hdct.setDonGia(donGia);
             hoaDonCTDAO.save(hdct);
 
-            // Trừ kho
-            sanPhamChiTietDAO.truSoLuong(spct.getMaSKU(), item.getSoLuong());
-
-            // Cập nhật đã bán
-            if (spct.getSanPham() != null) {
-                SanPham sp = spct.getSanPham();
-                int daBan = sp.getDaBan() != null ? sp.getDaBan() : 0;
-                sp.setDaBan(daBan + item.getSoLuong());
-            }
-
             tongTien += donGia * item.getSoLuong();
         }
 
@@ -311,9 +312,17 @@ public class GioHangService {
 
         Map<String, Object> result = new HashMap<>();
         result.put("success", true);
-        result.put("message", "Đặt hàng thành công!");
+        
+        if (isVNPay) {
+            result.put("message", "Đơn hàng đã tạo. Vui lòng thanh toán VNPAY!");
+            result.put("requirePayment", true);
+        } else {
+            result.put("message", "Đặt hàng thành công!");
+        }
+        
         result.put("maHD", hoaDon.getMaHD());
         result.put("tongTien", tongTien);
+        result.put("isVNPay", isVNPay);
         return result;
     }
 

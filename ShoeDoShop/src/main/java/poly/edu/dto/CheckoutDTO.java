@@ -8,5 +8,6 @@ public class CheckoutDTO {
     private Integer maDC;
     private String phuongThucTT;
     private String ghiChu;
-    private List<Integer> cartItemIds; // danh sách MaGH được chọn để checkout
+    private List<Integer> cartItemIds;
+    private Boolean isVNPay;
 }

@@ -341,6 +341,14 @@ public class AuthService {
     }
 
     private Map<String, Object> getUserInfo(Users user) {
+        // #region debug log
+        try {
+            java.io.FileWriter fw = new java.io.FileWriter("c:\\Users\\dothanhphong\\Downloads\\Shoedo-Shop\\.cursor\\debug.log", true);
+            fw.write("{\"timestamp\":" + System.currentTimeMillis() + ",\"location\":\"AuthService:getUserInfo\",\"message\":\"Starting getUserInfo for user: " + (user != null ? user.getMaUser() : "null") + "\",\"hypothesisId\":\"B\"}\n");
+            fw.close();
+        } catch(Exception e) {}
+        // #endregion
+        
         Map<String, Object> info = new HashMap<>();
         info.put("maUser", user.getMaUser());
         info.put("mail", user.getMail());
