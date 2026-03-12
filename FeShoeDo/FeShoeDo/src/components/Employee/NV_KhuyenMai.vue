@@ -1,4 +1,38 @@
 <template>
+
+<div class="toast-container position-fixed top-0 start-50 translate-middle-x p-3 mt-2" style="z-index: 1090;">
+  <transition name="toast-fade">
+    <div
+      v-if="toast.show"
+      :key="toast.id"
+      class="toast show align-items-center text-white border-0 shadow-lg overflow-hidden"
+      :class="`bg-${toast.type}`"
+      role="alert"
+    >
+      <div class="d-flex position-relative z-1">
+        <div class="toast-body d-flex align-items-center fs-6">
+          <i
+            class="bi me-2 fs-5"
+            :class="{
+              'bi-check-circle-fill': toast.type === 'success',
+              'bi-exclamation-triangle-fill': toast.type === 'warning',
+              'bi-x-circle-fill': toast.type === 'danger',
+              'bi-info-circle-fill': toast.type === 'info'
+            }"
+          ></i>
+          {{ toast.message }}
+        </div>
+        <button
+          type="button"
+          class="btn-close btn-close-white me-2 m-auto"
+          @click="toast.show = false"
+        ></button>
+      </div>
+      <div class="toast-progress-bar"></div>
+    </div>
+  </transition>
+</div>
+
   <div class="employee-layout">
     <NV_Sidebar />
 
@@ -20,33 +54,31 @@
                 class="form-control"
               />
             </div>
-            <div class="col-md-3">
-              <select v-model="filterCategory" class="form-select">
-                <option value="">Tất cả danh mục</option>
-                <option
-                  v-for="cat in categories"
-                  :key="cat.maDM"
-                  :value="cat.maDM"
-                >
-                  {{ cat.tenDM }}
-                </option>
-              </select>
-            </div>
-            <div class="col-md-3">
-              <select
-                v-model="filterFlashSale"
-                class="form-select"
-              >
-                <option value="">Tất cả trạng thái</option>
-                <option value="DangSale">🔥 Đang Flash Sale (> 0%)</option>
-                <option value="KhongSale">Không giảm giá (0%)</option>
-              </select>
-            </div>
-            <div class="col-md-3">
-              <button @click="resetFilters" class="btn btn-secondary w-100">
-                <i class="bi bi-arrow-clockwise me-2"></i>Đặt lại bộ lọc
-              </button>
-            </div>
+            <div class="col-md-2">
+    <select v-model="filterCategory" class="form-select">
+      <option value="">Tất cả danh mục</option>
+      <option v-for="cat in categories" :key="cat.maDM" :value="cat.maDM">{{ cat.tenDM }}</option>
+    </select>
+  </div>
+  <div class="col-md-2">
+    <select v-model="filterFlashSale" class="form-select">
+      <option value="">Tất cả KM</option>
+      <option value="DangSale">🔥 Đang Flash Sale (> 0%)</option>
+      <option value="KhongSale">Không giảm giá (0%)</option>
+    </select>
+  </div>
+  <div class="col-md-3">
+    <select v-model="filterActive" class="form-select">
+      <option value="">Tất cả trạng thái</option>
+      <option value="true">Đang bán</option>
+      <option value="false">Đã ẩn</option>
+    </select>
+  </div>
+  <div class="col-md-2">
+    <button @click="resetFilters" class="btn btn-secondary w-100">
+      <i class="bi bi-arrow-clockwise me-1"></i>Đặt lại
+    </button>
+  </div>
           </div>
 
           <div
@@ -143,7 +175,16 @@
       </td>
       
       <td>
+        <div>
         <strong>{{ item.tenSP }}</strong>
+        <br>
+        <span v-if="item.isActive === false || item.active === false" class="badge bg-secondary" style="font-size: 0.7rem;">
+            <i class="bi bi-eye-slash me-1"></i>Đã ẩn
+          </span>
+          <span v-else class="badge border border-success text-success" style="font-size: 0.7rem;">
+            Đang bán
+          </span>
+          </div>
         <div class="text-muted small">
           Đã bán: {{ item.daBan }} | Mã SP: {{ item.maSP }}
         </div>
@@ -233,6 +274,7 @@ const bulkDiscount = ref(0); // Mặc định là 0%
 const filterKeyword = ref("");
 const filterCategory = ref("");
 const filterFlashSale = ref("");
+const filterActive = ref("");
 
 // Lấy danh mục
 const fetchCategories = async () => {
@@ -265,12 +307,11 @@ const fetchProducts = async () => {
 };
 
 // --- LOGIC LỌC SẢN PHẨM ---
+// --- LOGIC LỌC SẢN PHẨM ---
 const filteredProducts = computed(() => {
   return products.value.filter((item) => {
     // 1. Lọc theo tên
-    const matchKeyword =
-      !filterKeyword.value ||
-      item.tenSP?.toLowerCase().includes(filterKeyword.value.toLowerCase());
+    const matchKeyword = !filterKeyword.value || item.tenSP?.toLowerCase().includes(filterKeyword.value.toLowerCase());
 
     // 2. Lọc theo trạng thái Flash Sale
     let matchFlashSale = true;
@@ -284,13 +325,26 @@ const filteredProducts = computed(() => {
     let matchCategory = true;
     if (filterCategory.value && item.sanPhamDanhMucs) {
       matchCategory = item.sanPhamDanhMucs.some(
-        (dm) =>
-          dm.danhMuc?.maDM === filterCategory.value ||
-          dm.maDM === filterCategory.value
+        (dm) => dm.danhMuc?.maDM === filterCategory.value || dm.maDM === filterCategory.value
       );
     }
 
-    return matchKeyword && matchFlashSale && matchCategory;
+// 4. LỌC THEO TRẠNG THÁI HOẠT ĐỘNG
+    let matchActive = true;
+    if (filterActive.value !== "") {
+      // Mẹo: Lấy giá trị isActive (nếu có) hoặc active (nếu Spring Boot tự đổi tên)
+      const status = item.isActive !== undefined ? item.isActive : item.active;
+      
+      if (filterActive.value === "true") {
+        // Chấp nhận cả boolean, số 1, hoặc chuỗi "true"
+        matchActive = status === true || status === 1 || status === "true";
+      } else if (filterActive.value === "false") {
+        // Chấp nhận cả boolean, số 0, hoặc chuỗi "false"
+        matchActive = status === false || status === 0 || status === "false";
+      }
+    }
+
+    return matchKeyword && matchFlashSale && matchCategory && matchActive;
   });
 });
 
@@ -298,6 +352,7 @@ const resetFilters = () => {
   filterKeyword.value = "";
   filterCategory.value = "";
   filterFlashSale.value = "";
+  filterActive.value = "";
 };
 
 // --- LOGIC THAO TÁC HÀNG LOẠT ---
@@ -323,7 +378,7 @@ const isValidDiscount = (value) => {
 
 const applyBulkDiscount = () => {
   if (!isValidDiscount(bulkDiscount.value)) {
-    alert("Phần trăm khuyến mãi phải nằm trong khoảng từ 0 đến 100!");
+    showToast("Phần trăm khuyến mãi phải nằm trong khoảng từ 0 đến 100!","warning");
     return;
   }
 
@@ -340,7 +395,7 @@ const handleBulkSave = async () => {
     isValidDiscount(p.khuyenMaiMoi)
   );
   if (!isAllValid) {
-    alert("Có sản phẩm chứa giá trị khuyến mãi không hợp lệ (Phải từ 0-100).");
+    showToast("Có sản phẩm chứa giá trị khuyến mãi không hợp lệ (Phải từ 0-100).","warning");
     return;
   }
 
@@ -355,20 +410,20 @@ const handleBulkSave = async () => {
       "http://localhost:8080/api/khuyenmai/cap-nhat-hang-loat",
       payload
     );
-    alert(
+    showToast(
       `Đã cập nhật khuyến mãi thành công cho ${selectedItems.length} sản phẩm!`
     );
     unselectAll();
     await fetchProducts();
   } catch (error) {
-    alert("Có lỗi xảy ra khi cập nhật khuyến mãi!");
+    showToast("Có lỗi xảy ra khi cập nhật khuyến mãi!","danger");
     console.error(error);
   }
 };
 
 const handleSingleSave = async (item) => {
   if (!isValidDiscount(item.khuyenMaiMoi)) {
-    alert("Phần trăm khuyến mãi phải nằm trong khoảng từ 0 đến 100!");
+    showToast("Phần trăm khuyến mãi phải nằm trong khoảng từ 0 đến 100!","warning");
     return;
   }
 
@@ -378,10 +433,10 @@ const handleSingleSave = async (item) => {
       maSP: item.maSP,
       khuyenMai: item.khuyenMaiMoi,
     });
-    alert("Cập nhật khuyến mãi thành công!");
+    showToast("Cập nhật khuyến mãi thành công!");
     await fetchProducts();
   } catch (error) {
-    alert("Có lỗi xảy ra!");
+    showToast("Có lỗi xảy ra!","danger");
     console.error(error);
   }
 };
@@ -397,6 +452,29 @@ onMounted(() => {
   fetchProducts();
   fetchCategories();
 });
+
+// Trạng thái của thông báo (Toast)
+const toast = ref({
+  id: 0, // Thêm ID để ép reset thanh tiến trình
+  show: false,
+  message: "",
+  type: "success",
+});
+
+let toastTimeout = null;
+
+// Hàm gọi thông báo dùng chung
+const showToast = (message, type = "success") => {
+  // Gán Date.now() làm ID giúp mỗi lần bật là một animation mới hoàn toàn
+  toast.value = { id: Date.now(), show: true, message, type };
+  
+  if (toastTimeout) clearTimeout(toastTimeout);
+  
+  // Tự động tắt sau đúng 3 giây
+  toastTimeout = setTimeout(() => {
+    toast.value.show = false;
+  }, 5000);
+};
 </script>
 
 <style scoped>
@@ -423,5 +501,18 @@ td .form-control {
 td .btn-outline-danger {
   padding: 8px 16px;
   height: 38px;
+}
+/* Hiệu ứng trượt từ trên xuống cho vị trí Center-Top */
+.toast-fade-enter-active,
+.toast-fade-leave-active {
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.toast-fade-enter-from {
+  opacity: 0;
+  transform: translateY(-50px);
+}
+.toast-fade-leave-to {
+  opacity: 0;
+  transform: translateY(-50px);
 }
 </style>

@@ -28,7 +28,8 @@ public class KhuyenMaiService {
             (Integer) row[2],  // daBan
             (Integer) row[3],  // khuyenMai
             (String) row[4],   // hinhAnh
-            row[5] != null ? new BigDecimal(row[5].toString()) : BigDecimal.ZERO // donGia
+            row[5] != null ? new BigDecimal(row[5].toString()) : BigDecimal.ZERO,
+            (Boolean) row[6]
         )).collect(Collectors.toList());
     }
 

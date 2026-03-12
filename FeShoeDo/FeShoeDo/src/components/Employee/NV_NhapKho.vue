@@ -1,4 +1,38 @@
 <template>
+
+<div class="toast-container position-fixed top-0 start-50 translate-middle-x p-3 mt-2" style="z-index: 1090;">
+  <transition name="toast-fade">
+    <div
+      v-if="toast.show"
+      :key="toast.id"
+      class="toast show align-items-center text-white border-0 shadow-lg overflow-hidden"
+      :class="`bg-${toast.type}`"
+      role="alert"
+    >
+      <div class="d-flex position-relative z-1">
+        <div class="toast-body d-flex align-items-center fs-6">
+          <i
+            class="bi me-2 fs-5"
+            :class="{
+              'bi-check-circle-fill': toast.type === 'success',
+              'bi-exclamation-triangle-fill': toast.type === 'warning',
+              'bi-x-circle-fill': toast.type === 'danger',
+              'bi-info-circle-fill': toast.type === 'info'
+            }"
+          ></i>
+          {{ toast.message }}
+        </div>
+        <button
+          type="button"
+          class="btn-close btn-close-white me-2 m-auto"
+          @click="toast.show = false"
+        ></button>
+      </div>
+      <div class="toast-progress-bar"></div>
+    </div>
+  </transition>
+</div>
+
   <div class="employee-layout">
     <NV_Sidebar />
 
@@ -421,7 +455,7 @@ const unselectAll = () => {
 
 const applyBulkQuantity = () => {
   if (bulkQuantity.value < 1) {
-    alert("Số lượng phải lớn hơn 0");
+    showToast("Số lượng phải lớn hơn 0");
     return;
   }
   // Chỉ áp dụng cho sản phẩm đang lọc và được tick
@@ -433,7 +467,7 @@ const applyBulkQuantity = () => {
 const handleBulkImport = async () => {
   const selectedItems = products.value.filter((p) => p.selected);
   if (selectedItems.length === 0) {
-    alert("Vui lòng tích chọn ít nhất 1 sản phẩm để nhập kho!");
+    showToast("Vui lòng tích chọn ít nhất 1 sản phẩm để nhập kho!","warning");
     return;
   }
 
@@ -447,18 +481,18 @@ const handleBulkImport = async () => {
       "http://localhost:8080/api/nhapkho/nhap-hang-loat",
       payload
     );
-    alert(`Đã nhập kho thành công ${selectedItems.length} sản phẩm!`);
+    showToast(`Đã nhập kho thành công ${selectedItems.length} sản phẩm!`);
     unselectAll(); // Xóa tick sau khi nhập xong
     await fetchProducts();
   } catch (error) {
-    alert("Có lỗi xảy ra khi nhập kho hàng loạt!");
+    showToast("Có lỗi xảy ra khi nhập kho hàng loạt!","danger");
     console.error(error);
   }
 };
 
 const handleImportSingle = async (item) => {
   if (!item.soLuongNhap || item.soLuongNhap < 1) {
-    alert("Số lượng nhập phải lớn hơn 0");
+    showToast("Số lượng nhập phải lớn hơn 0","warning");
     return;
   }
   try {
@@ -466,10 +500,10 @@ const handleImportSingle = async (item) => {
       maSKU: item.maSKU,
       soLuongNhap: item.soLuongNhap,
     });
-    alert("Nhập kho thành công!");
+    showToast("Nhập kho thành công!");
     await fetchProducts();
   } catch (error) {
-    alert("Có lỗi xảy ra!");
+    showToast("Có lỗi xảy ra!","danger");
     console.error(error);
   }
 };
@@ -478,6 +512,29 @@ const formatDate = (dateString) => {
   if (!dateString) return "";
   const date = new Date(dateString);
   return date.toLocaleDateString("vi-VN");
+};
+
+// Trạng thái của thông báo (Toast)
+const toast = ref({
+  id: 0, // Thêm ID để ép reset thanh tiến trình
+  show: false,
+  message: "",
+  type: "success",
+});
+
+let toastTimeout = null;
+
+// Hàm gọi thông báo dùng chung
+const showToast = (message, type = "success") => {
+  // Gán Date.now() làm ID giúp mỗi lần bật là một animation mới hoàn toàn
+  toast.value = { id: Date.now(), show: true, message, type };
+  
+  if (toastTimeout) clearTimeout(toastTimeout);
+  
+  // Tự động tắt sau đúng 3 giây
+  toastTimeout = setTimeout(() => {
+    toast.value.show = false;
+  }, 5000);
 };
 
 watch(activeTab, (newVal) => {
@@ -591,5 +648,18 @@ td .btn-outline-success {
   background-color: #f8f9fa;
   border-color: #dee2e6;
   font-size: 14px;
+}
+/* Hiệu ứng trượt từ trên xuống cho vị trí Center-Top */
+.toast-fade-enter-active,
+.toast-fade-leave-active {
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.toast-fade-enter-from {
+  opacity: 0;
+  transform: translateY(-50px);
+}
+.toast-fade-leave-to {
+  opacity: 0;
+  transform: translateY(-50px);
 }
 </style>
