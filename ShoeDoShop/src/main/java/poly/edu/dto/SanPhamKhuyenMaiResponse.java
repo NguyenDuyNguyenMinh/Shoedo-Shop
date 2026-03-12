@@ -8,15 +8,17 @@ public class SanPhamKhuyenMaiResponse {
     private Integer khuyenMai;
     private String hinhAnh;
     private BigDecimal donGia;
+    private Boolean isActive;
 
     // Constructor đầy đủ tham số để map dữ liệu
-    public SanPhamKhuyenMaiResponse(Integer maSP, String tenSP, Integer daBan, Integer khuyenMai, String hinhAnh, BigDecimal donGia) {
+    public SanPhamKhuyenMaiResponse(Integer maSP, String tenSP, Integer daBan, Integer khuyenMai, String hinhAnh, BigDecimal donGia, Boolean isActive) {
         this.maSP = maSP;
         this.tenSP = tenSP;
         this.daBan = daBan;
         this.khuyenMai = khuyenMai;
         this.hinhAnh = hinhAnh;
         this.donGia = donGia;
+        this.isActive = isActive;
     }
 
     // --- Giữ lại các Getters và Setters cũ của bạn ---
@@ -32,4 +34,6 @@ public class SanPhamKhuyenMaiResponse {
     public void setHinhAnh(String hinhAnh) { this.hinhAnh = hinhAnh; }
     public BigDecimal getDonGia() { return donGia; }
     public void setDonGia(BigDecimal donGia) { this.donGia = donGia; }
+    public Boolean getIsActive() { return isActive; }
+    public void setIsActive(Boolean isActive) { this.isActive = isActive; }
 }
