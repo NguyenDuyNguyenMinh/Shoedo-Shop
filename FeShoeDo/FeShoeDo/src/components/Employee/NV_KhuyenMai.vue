@@ -202,14 +202,14 @@
       <td class="text-end">
         <div v-if="item.khuyenMai > 0">
           <span class="text-muted text-decoration-line-through small d-block">
-            {{ formatCurrency(item.donGia) }}
+            {{ displayPriceRange(item.donGiaMin, item.donGiaMax) }}
           </span>
           <strong class="text-danger">
-            {{ formatCurrency(item.donGia * (1 - item.khuyenMai / 100)) }}
+            {{ displayDiscountedPriceRange(item.donGiaMin, item.donGiaMax, item.khuyenMai) }}
           </strong>
         </div>
         <div v-else>
-          <strong>{{ formatCurrency(item.donGia) }}</strong>
+          <strong>{{ displayPriceRange(item.donGiaMin, item.donGiaMax) }}</strong>
         </div>
       </td>
 
@@ -232,14 +232,14 @@
       <td class="text-end bg-light">
         <div v-if="item.khuyenMaiMoi > 0">
           <span class="text-muted text-decoration-line-through small d-block">
-            {{ formatCurrency(item.donGia) }}
+            {{ displayPriceRange(item.donGiaMin, item.donGiaMax) }}
           </span>
           <span class="fs-5 fw-bold text-success">
-            {{ formatCurrency(item.donGia * (1 - item.khuyenMaiMoi / 100)) }}
+            {{ displayDiscountedPriceRange(item.donGiaMin, item.donGiaMax, item.khuyenMaiMoi) }} 
           </span>
         </div>
         <div v-else class="fs-6 fw-bold text-dark mt-2">
-          {{ formatCurrency(item.donGia) }}
+          {{ displayPriceRange(item.donGiaMin, item.donGiaMax) }}
         </div>
       </td>
     </tr>
@@ -323,10 +323,16 @@ const filteredProducts = computed(() => {
 
     // 3. Lọc theo danh mục
     let matchCategory = true;
-    if (filterCategory.value && item.sanPhamDanhMucs) {
-      matchCategory = item.sanPhamDanhMucs.some(
-        (dm) => dm.danhMuc?.maDM === filterCategory.value || dm.maDM === filterCategory.value
-      );
+    if (filterCategory.value) {
+      if (item.maDMs) {
+        // Cắt chuỗi "1,5" thành mảng ['1', '5']
+        const categoryArray = item.maDMs.split(',');
+        // Ép filterCategory về chuỗi để so sánh cho khớp kiểu dữ liệu
+        matchCategory = categoryArray.includes(String(filterCategory.value));
+      } else {
+        // Sản phẩm không có danh mục thì loại luôn
+        matchCategory = false; 
+      }
     }
 
 // 4. LỌC THEO TRẠNG THÁI HOẠT ĐỘNG
@@ -474,6 +480,29 @@ const showToast = (message, type = "success") => {
   toastTimeout = setTimeout(() => {
     toast.value.show = false;
   }, 5000);
+};
+
+// Hàm 1: Hiển thị khoảng giá gốc (trước khi giảm)
+const displayPriceRange = (min, max) => {
+  if (min == null || max == null) return "0 ₫";
+  if (min === max) {
+    return formatCurrency(min);
+  }
+  return `${formatCurrency(min)} - ${formatCurrency(max)}`;
+};
+
+// Hàm 2: Tính toán và hiển thị khoảng giá sau khi áp dụng % khuyến mãi
+const displayDiscountedPriceRange = (min, max, discountPercent) => {
+  if (min == null || max == null) return "0 ₫";
+  
+  const ratio = 1 - (discountPercent / 100);
+  const discountedMin = min * ratio;
+  const discountedMax = max * ratio;
+  
+  if (min === max) {
+    return formatCurrency(discountedMin);
+  }
+  return `${formatCurrency(discountedMin)} - ${formatCurrency(discountedMax)}`;
 };
 </script>
 
