@@ -251,7 +251,7 @@ public class AuthService {
         }
         
         if (System.currentTimeMillis() > info.getExpiryTime()) {
-            registrationConfirmations.remove("FORGOT_" + email);
+        	forgotPasswordConfirmations.remove(email);
             return error("Mã xác nhận đã hết hạn. Vui lòng thử lại.");
         }
         
@@ -269,7 +269,7 @@ public class AuthService {
             .map(KhachHang::getTenKH).orElse("Quý khách");
         
         sendPasswordResetEmail(email, fullname, info.getNewPasswordRaw());
-        registrationConfirmations.remove("FORGOT_" + email);
+        forgotPasswordConfirmations.remove(email);
         
         return success("Mật khẩu mới đã được gửi đến email của bạn. Vui lòng kiểm tra email.");
     }
@@ -669,5 +669,33 @@ public class AuthService {
         
         public long getExpiryTime() { return expiryTime; }
         public void setExpiryTime(long expiryTime) { this.expiryTime = expiryTime; }
+    }
+    
+    @Scheduled(fixedRate = 60000)
+    public void cleanupExpiredConfirmations() {
+        long now = System.currentTimeMillis();
+        int beforeReg = registrationConfirmations.size();
+        int beforeForgot = forgotPasswordConfirmations.size();
+        
+        registrationConfirmations.entrySet().removeIf(entry ->  {
+            boolean expired = entry.getValue().getExpiryTime() < now;
+            if (expired) {
+                System.out.println("Xóa OTP đăng ký hết hạn của: " + entry.getKey());
+            }
+            return expired;
+        });
+ 
+        forgotPasswordConfirmations.entrySet().removeIf(entry -> {
+            boolean expired = entry.getValue().getExpiryTime() < now;
+            if (expired) {
+                System.out.println("Xóa OTP quên mật khẩu hết hạn của: " + entry.getKey());
+            }
+            return expired;
+        });
+        
+//        System.out.println(String.format(
+//            "Cleanup: Đăng ký: %d → %d, Quên MK: %d → %d",
+//            beforeReg, registrationConfirmations.size(), beforeForgot, forgotPasswordConfirmations.size()
+//    	));
     }
 }
