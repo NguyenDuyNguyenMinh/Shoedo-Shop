@@ -198,31 +198,34 @@ INSERT INTO DanhMuc (TenDM) VALUES
 -- 5. Dữ liệu mẫu cho bảng Sản Phẩm
 INSERT INTO SanPham (TenSP, GioiTinh, MoTa, KhuyenMai, DaBan) VALUES
 --Giày da
-(N'SP001-ShoeDo - SP1 - GD', 1, N'Giày tây mỏ dẹt cao cấp', 10, 5),
-(N'SP002-ShoeDo - SP2 - GD', 0, N'Giày tây nữ thanh thoát cao cấp', 10, 2),
-(N'SP003-ShoeDo - SP3 - GD', 0, N'Giày cao gót nữ', 30, 0),
+(N'Giày Da Tây Shoedo "Gentle Derby" - Bản Lĩnh Quý Ông Hiện Đại - GD', 1, N'Sở hữu thiết kế Derby kinh điển, mẫu giày da Tây Gentle Derby từ Shoedo là biểu tượng của sự chuyên nghiệp và phong thái tự tin. Đây là sự lựa chọn không thể thay thế cho những buổi họp quan trọng, môi trường công sở hay các sự kiện lễ nghi, giúp phái mạnh khẳng định sự chỉn chu trong mọi tình huống.', 10, 2),
+(N'Giày Mary Jane Shoedo "Sweet Pearl" - Nét Ngọt Ngào Khó Cưỡng - GD', 0, N'Mang hơi thở của phong cách vintage pha chút hiện đại, mẫu giày Sweet Pearl từ Shoedo là lựa chọn tuyệt vời cho những cô nàng yêu thích vẻ đẹp trong sáng, nữ tính. Với thiết kế mũi tròn đáng yêu và điểm nhấn ngọc trai tinh tế, đôi giày này sẽ biến mọi outfit của bạn trở nên dịu dàng như một nàng tiểu thư.', 10, 0),
+(N'Giày Cao Gót Shoedo "Classic Muse" - Biểu Tượng Của Sự Thanh Lịch - GD', 0, N'Mang vẻ đẹp vượt thời gian với phong cách phối màu kinh điển (Two-tone), mẫu giày cao gót mũi nhọn Classic Muse từ Shoedo là món đồ không thể thiếu để hoàn thiện diện mạo sang trọng của phái đẹp. Sự giao thoa giữa tone kem nền nã và mũi giày đen quyền lực tạo nên sức hút khó cưỡng cho mọi quý cô công sở và những tín đồ thời trang cao cấp.', 30, 2),
 
 --Giày sneaker
-(N'SP004-ShoeDo - SP1 - GSK', 1, N'Êm ái trên từng bước chân', 0, 10),
-(N'SP005-ShoeDo - SP2 - GSK', 1, N'Giày có khả năng chạy bộ tốt', 0, 0),
+(N'Giày Sneaker Thể Thao Shoedo "Urban Pulse" - Năng Động & Bứt Phá - GSK', 1, N'Dòng Sneaker thể thao Urban Pulse từ Shoedo được thiết kế để bắt kịp nhịp sống sôi động của thế hệ trẻ. Đây không chỉ là một đôi giày tập luyện, mà còn là phụ kiện hoàn hảo cho những chuyến hành trình khám phá thành phố, mang lại sự cân bằng tuyệt vời giữa trọng lượng siêu nhẹ và khả năng nâng đỡ bàn chân tối ưu.', 0, 2),
+(N'Giày Sneaker Shoedo "Heritage Canvas" - Nét Cổ Điển Trong Nhịp Sống Hiện Đại - GSK', 1, N'Dòng Sneaker Heritage Canvas của Shoedo là sự tôn vinh dành cho những giá trị bền vững. Với thiết kế tối giản không bao giờ lỗi mốt, đây là đôi giày "quốc dân" có thể đồng hành cùng bạn từ giảng đường, văn phòng cho đến những buổi hẹn hò cuối tuần.', 0, 0),
 
 --Giày bóng đá
-(N'SP006-ShoeDo - SP1 - GBD', 1, N'Giày có gai bám cỏ tốt', 5, 0),
+(N'Giày Đá Bóng Shoedo "Neon Strike" - Bùng Nổ Tốc Độ, Làm Chủ Cuộc Chơi - GBD', 1, N'Sẵn sàng trở thành tâm điểm của mọi trận đấu với Shoedo Neon Strike. Được thiết kế cho những cầu thủ có lối chơi tốc độ và kĩ thuật, mẫu giày này không chỉ sở hữu vẻ ngoài cực kỳ cá tính mà còn tích hợp những công nghệ hỗ trợ tối đa cho việc kiểm soát bóng và bứt tốc.', 5, 3),
 
 --Giày sandal
-(N'SP007-ShoeDo - SP1 - GSD', 1, N'Giày có độ thoáng mát cao', 30, 0),
+(N'Sandal Cao Gót Shoedo "Elegant Lift" - Thanh Lịch & Tôn Dáng - GSD', 0, N'Được thiết kế để tôn vinh nét đẹp nữ tính và hiện đại, mẫu Sandal cao gót từ Shoedo là sự lựa chọn hoàn hảo cho những quý cô yêu thích sự kết hợp giữa chiều cao ấn tượng và cảm giác thoải mái. Với tone màu trắng kem tinh khôi, đôi giày này sẵn sàng đồng hành cùng bạn từ môi trường công sở chuyên nghiệp đến những buổi tiệc tối sang trọng.', 30, 2),
 
 --Giày boot
-(N'SP008-ShoeDo - SP1 - GBT', 1, N'Giày có độ ma sát tốt chống bám bẩn cao', 0, 0),
+(N'Giày Chelsea Boot Shoedo "Soft Urban" - Tối Giản, Hiện Đại & An Toàn - GBT', NULL, N'Định nghĩa lại phong cách thành thị với mẫu Boot vải cao cấp từ Shoedo. Không sử dụng dây buộc cầu kỳ, phiên bản "Soft Urban" tập trung vào những đường nét thanh thoát, mang lại sự tiện lợi tối đa cho người sử dụng mà vẫn giữ được vẻ ngoài thời thượng, tinh tế.', 0, 2),
 
 --Giày boot & da
-(N'SP009-ShoeDo - SP1 - GBT&GD', 1, N'Giày có độ ma sát tốt giữ form cao', 0, 0),
+(N'Giày Combat Boot Nữ Shoedo "Rebel Charm" - Khẳng Định Chất Riêng - GBT&GD', 0, N'Được thiết kế dành riêng cho những cô nàng hiện đại, yêu thích sự phá cách và không ngại thể hiện bản thân, mẫu Boot da từ Shoedo là sự kết hợp hoàn hảo giữa nét cổ điển của dòng Combat Boot và sự tinh tế trong từng đường nét đương đại. Đây chính là "vũ khí" bí mật giúp bạn nâng tầm mọi set đồ, từ dạo phố đến những buổi tiệc đêm sôi động.', 0, 1),
 
 --Phụ kiện
-(N'SP0010-ShoeDo - Vớ Thể Thao ShoeDo - PKvtt1', NULL, N'Thiết kế tất ngắn, Co giản tốt', 10, 100),
-(N'SP0011-ShoeDo - Vớ Thể Thao ShoeDo - PKvtt2', NULL, N'Thiết kế tất cổ cao, Mịn màng cho da', 10, 20),
-(N'SP0012-ShoeDo - Vớ Thể Thao ShoeDo - PKvtt3', NULL, N'Thiết kế tất trung bình, Thấm hút mồ hôi tốt', 10, 10),
-(N'SP0013-ShoeDo - Dây giày - PKgd1', NULL, N'Thiết kế đan dây tinh tế nhiều màu sắt để lựa chọn', 10, 50);
+(N'Vớ Cổ Cao Shoedo Daily Basic - Đơn Giản & Tiện Dụng - PKv1', NULL, N'Dòng vớ Shoedo Daily Basic là món phụ kiện "phải có" trong tủ đồ của bất kỳ ai. Không cầu kỳ về họa tiết, sản phẩm tập trung hoàn toàn vào sự thoải mái và khả năng ứng dụng linh hoạt, giúp bạn dễ dàng kết hợp với mọi loại giày từ giày Tây, Sneaker cho đến giày lười.', 10, 5),
+(N'Vớ Cổ Cao Shoedo "Helio Edition" - Đột Phá Thiết Kế Streetwear - PKv2', NULL, N'Không chỉ là một món phụ kiện giữ ấm, mẫu vớ Shoedo x Helio là sự giao thoa giữa nghệ thuật đồ họa và thời trang hiện đại. Với họa tiết độc bản mang tinh thần tự do, đây là lựa chọn hàng đầu để bạn tạo điểm nhấn nổi bật khi diện cùng các mẫu Short, Sneaker hoặc quần xắn gấu.', 10, 1),
+(N'Vớ Chạy Bộ Chuyên Dụng Shoedo Performance - Êm Ái Trên Mọi Cung Đường - PKv3', NULL, N'Được thiết kế dành riêng cho những vận động viên và người yêu thích chạy bộ, dòng vớ Shoedo Performance không chỉ là một phụ kiện mà là "người bạn đồng hành" giúp bảo vệ đôi chân tối đa. Với sự kết hợp giữa công nghệ dệt nén linh hoạt và khả năng kiểm soát độ ẩm, sản phẩm mang lại sự thoải mái tuyệt đối từ km đầu tiên đến khi về đích.', 10, 4),
+
+(N'Dây Giày Tròn Shoedo Basic - Đơn Giản, Bền Bỉ & Tiết Kiệm - PKgd1', NULL, N'Dòng dây giày tròn cơ bản từ Shoedo là giải pháp thay thế hoàn hảo cho mọi đôi giày khi dây cũ bị sờn rách hoặc bạn chỉ đơn giản muốn làm mới đôi giày của mình một cách nhanh chóng. Với thiết kế tối giản không cầu kỳ, sản phẩm chú trọng vào chất lượng thực tế và mức giá "mềm" nhất thị trường.', 10, 1),
+(N'Dây Giày Dẹt Shoedo Camo - Bản Phối Đầy Cá Tính - PKgd2', NULL, N'Dòng dây giày dẹt họa tiết Camo (rằn ri) từ Shoedo là phụ kiện lý tưởng dành cho những ai yêu thích phong cách Streetwear, Military hoặc muốn tạo nên một diện mạo phá cách cho đôi giày của mình. Không còn là những sợi dây đơn sắc nhàm chán, Shoedo Camo biến mỗi bước chân trở thành một tuyên ngôn về cá tính riêng biệt.', 10, 0),
+(N'Dây Giày Tròn Phản Quang Shoedo - Định Hình Phong Cách Tối Giản - PKgd3', NULL, N'Dòng dây giày nằm trong bộ sưu tập phụ kiện cao cấp từ Shoedo, dòng dây giày tròn phản quang là sự kết hợp hoàn hảo giữa tính năng bảo vệ và yếu tố thời trang "vượt thời gian". Không chỉ đơn thuần là phụ kiện giữ form giày, đây chính là điểm nhấn giúp đôi giày của bạn tỏa sáng theo đúng nghĩa đen.', 10, 1);
 
 INSERT INTO SanPham_DanhMuc (MaSP, MaDM) VALUES
 -- Giày da
@@ -251,7 +254,10 @@ INSERT INTO SanPham_DanhMuc (MaSP, MaDM) VALUES
 (10, 6),
 (11, 6),
 (12, 6),
-(13, 6);
+
+(13, 6),
+(14, 6),
+(15, 6);
 
 -- 6. Dữ liệu Size
 INSERT INTO Size (CoGiay) VALUES
@@ -271,102 +277,120 @@ INSERT INTO SanPham_ChiTiet (MaSP, TenMau, HinhAnh, MaSize, TrangThai, SoLuong, 
 -- Giày da (MaSP 1,2,3)
 -- =======================
 -- SP 1: ShoeDo - SP1 - GD
-(1, N'Trắng', 'sp1_trang_40.jpg', 5, N'Còn hàng', 50, 2500000), -- Size 40 (ID 5)
-(1, N'Đen', 'sp1_den_41.jpg', 6, N'Còn hàng', 30, 2500000), -- Size 41 (ID 6)
+(1, N'Đen', 'sp1_gd1_black.jpg', 5, N'Còn hàng', 10, 1000000), -- Size 40 (ID 5)
+(1, N'Đen', 'sp1_gd1_black.jpg', 6, N'Còn hàng', 10, 1200000), -- Size 41 (ID 6)
 
 -- SP 2: ShoeDo - SP2 - GD (Nữ)
-(2, N'Đen', 'sp2_den_38.jpg', 3, N'Còn hàng', 20, 3200000), -- Size 38 (ID 3)
-(2, N'Xám', 'sp2_xam_39.jpg', 4, N'Còn hàng', 15, 3200000), -- Size 39 (ID 4)
+(2, N'Trắng', 'sp2_gd2_white.jpg', 2, N'Còn hàng', 15, 1000000), -- Size 37 (ID 2)
+(2, N'Trắng', 'sp2_gd2_white.jpg', 3, N'Còn hàng', 20, 1200000), -- Size 38 (ID 3)
+(2, N'Trắng', 'sp2_gd2_white.jpg', 4, N'Còn hàng', 20, 1500000), -- Size 39 (ID 4)
 
 -- SP 3: ShoeDo - SP3 - GD (Cao gót)
-(3, N'Đỏ', 'sp3_do_37.jpg', 2, N'Còn hàng', 10, 4500000), -- Size 37 (ID 2)
-(3, N'Đen', 'sp3_den_38.jpg', 3, N'Còn hàng', 12, 4500000), -- Size 38 (ID 3)
+(3, N'Trắng', 'sp3_gd3_white.jpg', 2, N'Còn hàng', 10, 1000000), -- Size 37 (ID 2)
+(3, N'Trắng', 'sp3_gd3_white.jpg', 3, N'Còn hàng', 15, 1200000), -- Size 38 (ID 3)
+(3, N'Trắng', 'sp3_gd3_white.jpg', 4, N'Còn hàng', 10, 1300000), -- Size 39 (ID 4)
 
 -- =======================
 -- Giày sneaker (MaSP 4,5)
 -- =======================
 -- SP 4: ShoeDo - SP1 - GSK
-(4, N'Trắng', 'sp4_trang_41.jpg', 6, N'Còn hàng', 40, 2800000), -- Size 41 (ID 6)
-(4, N'Xám', 'sp4_xam_42.jpg', 7, N'Còn hàng', 35, 2800000), -- Size 42 (ID 7)
+(4, N'Đen', 'sp4_snk1_black.jpg', 5, N'Còn hàng', 10, 1500000),
+(4, N'Đen', 'sp4_snk1_black.jpg', 6, N'Còn hàng', 10, 1500000), 
+(4, N'Đen', 'sp4_snk1_black.jpg', 7, N'Còn hàng', 10, 1500000), 
+(4, N'Trắng', 'sp4_snk1_white.jpg', 5, N'Còn hàng', 10, 1300000), 
+(4, N'Trắng', 'sp4_snk1_white.jpg', 6, N'Còn hàng', 10, 1300000), 
+(4, N'Trắng', 'sp4_snk1_white.jpg', 7, N'Còn hàng', 10, 1300000), 
+(4, N'Nâu', 'sp4_snk1_brown.jpg', 5, N'Còn hàng', 20, 1800000),
+(4, N'Nâu', 'sp4_snk1_brown.jpg', 6, N'Còn hàng', 20, 1800000), 
+(4, N'Nâu', 'sp4_snk1_brown.jpg', 7, N'Còn hàng', 20, 1800000), 
 
 -- SP 5: ShoeDo - SP2 - GSK
-(5, N'Đen', 'sp5_den_42.jpg', 7, N'Còn hàng', 25, 3000000), -- Size 42 (ID 7)
-(5, N'Xanh biển', 'sp5_xanhbien_43.jpg', 8, N'Còn hàng', 20, 3000000), -- Size 43 (ID 8)
+-- Size 40 (ID 5)
+-- Size 41 (ID 6)
+-- Size 42 (ID 7)
+(5, N'Xanh lá', 'sp5_snk2_green.jpg', 5, N'Còn hàng', 20, 1500000),
+(5, N'Xanh lá', 'sp5_snk2_green.jpg', 6, N'Còn hàng', 20, 1500000), 
+(5, N'Xanh lá', 'sp5_snk2_green.jpg', 7, N'Còn hàng', 20, 1500000), 
+(5, N'Trắng', 'sp5_snk2_white.jpg', 5, N'Còn hàng', 10, 1200000), 
+(5, N'Trắng', 'sp5_snk2_white.jpg', 6, N'Còn hàng', 10, 1200000), 
+(5, N'Trắng', 'sp5_snk2_white.jpg', 7, N'Còn hàng', 10, 1200000), 
 
 -- =======================
 -- Giày bóng đá (MaSP 6)
 -- =======================
 -- SP 6: ShoeDo - SP1 - GBD
-(6, N'Xanh Lá', 'sp6_xanh_40.jpg', 5, N'Còn hàng', 30, 2200000), -- Size 40 (ID 5)
-(6, N'Cam', 'sp6_cam_41.jpg', 6, N'Còn hàng', 25, 2200000), -- Size 41 (ID 6)
+(6, N'Hồng', 'sp6_gbd1_pink.jpg', 8, N'Còn hàng', 12, 1500000), -- Size 43 (ID 8)
+(6, N'Hồng', 'sp6_gbd1_pink.jpg', 7, N'Còn hàng', 20, 1500000), -- Size 42 (ID 7)
+(6, N'Hồng', 'sp6_gbd1_pink.jpg', 6, N'Còn hàng', 10, 1200000), -- Size 41 (ID 6)
+(6, N'Hồng', 'sp6_gbd1_pink.jpg', 5, N'Còn hàng', 10, 1200000), -- Size 40 (ID 5)
+(6, N'Vàng', 'sp6_gbd1_yellow.jpg', 8, N'Còn hàng', 12, 1500000), -- Size 43 (ID 8)
+(6, N'Vàng', 'sp6_gbd1_yellow.jpg', 7, N'Còn hàng', 20, 1500000), -- Size 42 (ID 7)
+(6, N'Vàng', 'sp6_gbd1_yellow.jpg', 6, N'Còn hàng', 10, 1200000), -- Size 41 (ID 6)
+(6, N'Vàng', 'sp6_gbd1_yellow.jpg', 5, N'Còn hàng', 10, 1200000), -- Size 40 (ID 5)
 
 -- =======================
 -- Giày sandal (MaSP 7)
 -- =======================
 -- SP 7: ShoeDo - SP1 - GSD
-(7, N'Nâu', 'sp7_nau_40.jpg', 5, N'Còn hàng', 20, 1800000), -- Size 40 (ID 5)
-(7, N'Đen', 'sp7_den_41.jpg', 6, N'Còn hàng', 15, 1800000), -- Size 41 (ID 6)
+-- Size 37 (ID 2)
+-- Size 38 (ID 3)
+-- Size 39 (ID 4)
+(7, N'Đen', 'sp7_gsd1_black.jpg', 2, N'Còn hàng', 18, 1800000),
+(7, N'Đen', 'sp7_gsd1_black.jpg', 3, N'Còn hàng', 18, 1800000),
+(7, N'Đen', 'sp7_gsd1_black.jpg', 2, N'Còn hàng', 18, 1800000),
+(7, N'Trắng', 'sp7_gsd1_white.jpg', 3, N'Còn hàng', 18, 1800000),
+(7, N'Trắng', 'sp7_gsd1_white.jpg', 2, N'Còn hàng', 18, 1800000), 
+(7, N'Trắng', 'sp7_gsd1_white.jpg', 3, N'Còn hàng', 18, 1800000), 
 
 -- =======================
 -- Giày boot (MaSP 8)
 -- =======================
 -- SP 8: ShoeDo - SP1 - GBT
-(8, N'Đen', 'sp8_den_41.jpg', 6, N'Còn hàng', 18, 3500000), -- Size 41 (ID 6)
-(8, N'Nâu', 'sp8_nau_42.jpg', 7, N'Còn hàng', 12, 3500000), -- Size 42 (ID 7)
+(8, N'Đen', 'sp8_b1_black.jpg', 3, N'Còn hàng', 15, 1900000), -- Size 38 (ID 3)
+(8, N'Đen', 'sp8_b1_black.jpg', 5, N'Còn hàng', 15, 2000000), -- Size 40 (ID 5)
+(8, N'Đen', 'sp8_b1_black.jpg', 7, N'Còn hàng', 15, 2100000), -- Size 42 (ID 7)
+(8, N'Nâu', 'sp8_b1_brown.jpg', 3, N'Còn hàng', 15, 1900000), -- Size 38 (ID 3)
+(8, N'Nâu', 'sp8_b1_brown.jpg', 5, N'Còn hàng', 15, 2000000), -- Size 40 (ID 5)
+(8, N'Nâu', 'sp8_b1_brown.jpg', 7, N'Còn hàng', 15, 2100000), -- Size 42 (ID 7)
 
 -- =======================
--- Giày boot + da (MaSP 9)
+-- Giày boot + da
 -- =======================
--- SP 9: ShoeDo - SP1 - GBT&GD
-(9, N'Đen bóng', 'sp9_den_41.jpg', 6, N'Còn hàng', 10, 4200000), -- Size 41 (ID 6)
-(9, N'Nâu đậm', 'sp9_nau_42.jpg', 7, N'Còn hàng', 8, 4200000), -- Size 42 (ID 7)
+-- SP 9: ShoeDo - SP9 - GBT&GD
+-- Size 37 (ID 2)
+-- Size 38 (ID 3)
+-- Size 39 (ID 4)
+-- Size 40 (ID 5)
+(9, N'Đen', 'sp9_bd1_black.jpg', 2, N'Còn hàng', 15, 1500000),
+(9, N'Đen', 'sp9_bd1_black.jpg', 3, N'Còn hàng', 15, 1500000), 
+(9, N'Đen', 'sp9_bd1_black.jpg', 4, N'Còn hàng', 15, 1500000), 
+(9, N'Đen', 'sp9_bd1_black.jpg', 5, N'Còn hàng', 15, 1500000), 
 
 -- =======================
--- Phụ kiện (MaSP 10 → 13)
+-- Phụ kiện (MaSP 10 → 15)
 -- =======================
--- SP 10: Vớ thể thao (Dùng ID 1 = FreeSize)
-(10, N'Trắng', 'pk_vottt1.jpg', 1, N'Còn hàng', 100, 150000), -- Free size (ID 1)
+-- SP 10 - 12: Vớ (Dùng ID 1 = FreeSize)
+(10, N'Đen', 'sp10_v1_bw.jpg', 1, N'Còn hàng', 100, 70000), -- Free size (ID 1) 
+(10, N'Trắng', 'sp10_v1_bw.jpg', 1, N'Còn hàng', 100, 70000), -- Free size (ID 1)
 
--- SP 11: Vớ cổ cao
-(11, N'Đen', 'pk_vottt2.jpg', 1, N'Còn hàng', 80, 170000), -- Free size (ID 1)
+(11, N'Đen', 'sp11_v2_black.jpg', 1, N'Còn hàng', 80, 150000), -- Free size (ID 1)
+(11, N'Trắng', 'sp11_v2_white.jpg', 1, N'Còn hàng', 80, 150000), 
 
--- SP 12: Vớ trung bình
-(12, N'Xám', 'pk_vottt3.jpg', 1, N'Còn hàng', 90, 160000), -- Free size (ID 1)
+(12, N'Xám đen quân đội', 'sp12_v3_vip.jpg', 1, N'Còn hàng', 50, 180000), -- Free size (ID 1)
 
--- SP 13: Dây giày
-(13, N'Đa màu', 'pk_daygiay.jpg', 1, N'Còn hàng', 200, 120000); -- Free size (ID 1)
+-- SP 13 - 15: Dây giày
+(13, N'Đen', 'sp13_dg1_black.png', 1, N'Còn hàng', 100, 80000), -- Free size (ID 1)
+(13, N'Trắng', 'sp13_dg1_white.png', 1, N'Còn hàng', 100, 80000), -- Free size (ID 1)
 
--- 10. Dữ liệu mẫu cho bảng Nhập Kho
-INSERT INTO NhapKho (MaSKU, SoLuong, NgayNhap) VALUES
--- Giày da
-(1, 30, GETDATE()),
-(2, 20, GETDATE()),
-(3, 15, GETDATE()),
-(4, 15, GETDATE()),
-(5, 10, GETDATE()),
-(6, 12, GETDATE()),
+(14, N'Xanh biển', 'sp14_dg2_blue.png', 1, N'Còn hàng', 50, 150000), -- Free size (ID 1)
+(14, N'Hồng', 'sp14_dg2_pink.png', 1, N'Còn hàng', 50, 150000), -- Free size (ID 1)
+(14, N'Xanh lá', 'sp14_dg2_green.png', 1, N'Còn hàng', 50, 150000), -- Free size (ID 1)
 
--- Sneaker
-(7, 25, GETDATE()),
-(8, 15, GETDATE()),
-(9, 15, GETDATE()),
-(10, 10, GETDATE()),
-
--- Bóng đá
-(11, 20, GETDATE()),
-(12, 10, GETDATE()),
-
--- Sandal
-(13, 12, GETDATE()),
-(14, 8, GETDATE()),
-
--- Boot
-(15, 10, GETDATE()),
-(16, 8, GETDATE()),
-
--- Boot + da
-(17, 6, GETDATE()),
-(18, 4, GETDATE());
+(15, N'Đen', 'sp15_dg3_black.png', 1, N'Còn hàng', 80, 120000), -- Free size (ID 1)
+(15, N'Trắng', 'sp15_dg3_white.png', 1, N'Còn hàng', 80, 120000), -- Free size (ID 1)
+(15, N'Vàng', 'sp15_dg3_yellow.png', 1, N'Còn hàng', 80, 120000), -- Free size (ID 1)
+(15, N'Đỏ', 'sp15_dg3_red.png', 1, N'Còn hàng', 80, 120000), -- Free size (ID 1)
+(15, N'Xanh lá', 'sp15_dg3_green.png', 1, N'Còn hàng', 80, 120000); -- Free size (ID 1)
 
 -- 11. Dữ liệu mẫu cho bảng Địa Chỉ
 INSERT INTO DiaChi (MaKH, MacDinh, DiemGiao, TenNN, SDT) VALUES
@@ -465,65 +489,106 @@ INSERT INTO HoaDon (MaKH, MaQT, PhuongThucTT, DiaChiJson, TrangThai, GhiChu, Nga
  N'{"DiemGiao":"789 Cách Mạng Tháng 8Z","TenNN":"Trần Thị Hi A","SDT":"0912345678"}',
  N'Hoàn tất', NULL, '2026-01-19', '2026-01-24');
 
--- 14. Dữ liệu mẫu cho bảng Hóa Đơn Chi Tiết
+-- 14. Dữ liệu mẫu cho bảng Hóa Đơn Chi Tiết 
 INSERT INTO HoaDonCT (MaHD, MaSKU, SoLuong, DonGia) VALUES
 -- ===== HD 1 =====
-(1, 1, 1, 2500000),   -- Giày da trắng 40
-(1, 7, 1, 2800000),   -- Sneaker trắng 41
-(1, 19, 2, 150000),   -- Vớ thể thao
+-- Giày da đen 40 (MaSP 1, Size 40 - MaSKU 1): Giá gốc 1,000,000 - KM 10% = 900,000
+(1, 1, 1, 900000),
+-- Giày bóng đá hồng 41 (MaSP 6, Size 41 - MaSKU 25): Giá gốc 1,200,000 - KM 5% = 1,140,000
+(1, 25, 1, 1140000),
+-- Vớ đen (MaSP 10, FreeSize - MaSKU 40): Giá gốc 70,000 - KM 10% = 63,000
+(1, 40, 2, 63000),
 
 -- ===== HD 2 =====
-(2, 3, 1, 3200000),   -- Giày da nữ đen 38
-(2, 14, 1, 1800000),  -- Sandal đen 41
+-- Giày cao gót trắng 38 (MaSP 3, Size 38 - MaSKU 6): Giá gốc 1,200,000 - KM 30% = 840,000
+(2, 6, 1, 840000),
+-- Sandal đen 39 (MaSP 7, Size 39 - MaSKU 32): Giá gốc 1,800,000 - KM 30% = 1,260,000
+(2, 32, 1, 1260000),
 
 -- ===== HD 3 =====
-(3, 11, 2, 2200000),  -- Giày bóng đá xanh lá
-(3, 20, 1, 170000),   -- Vớ cổ cao
+-- Giày bóng đá vàng 42 (MaSP 6, Size 42 - MaSKU 29): Giá gốc 1,500,000 - KM 5% = 1,425,000
+(3, 29, 2, 1425000),
+-- Vớ cổ cao Helio trắng (MaSP 11, FreeSize - MaSKU 42): Giá gốc 150,000 - KM 10% = 135,000
+(3, 42, 1, 135000),
 
 -- ===== HD 4 =====
-(4, 15, 1, 3500000),  -- Boot đen 41
-(4, 22, 1, 120000),   -- Dây giày
+-- Boot đen 40 (MaSP 8, Size 40 - MaSKU 36): Giá gốc 2,000,000 - KM 0% = 2,000,000
+(4, 36, 1, 2000000),
+-- Dây giày tròn phản quang đen (MaSP 15, FreeSize - MaSKU 50): Giá gốc 120,000 - KM 10% = 108,000
+(4, 50, 1, 108000),
 
 -- ===== HD 5 =====
-(5, 5, 1, 4500000),   -- Cao gót đỏ 37
-(5, 21, 2, 160000),   -- Vớ trung bình
+-- Giày cao gót trắng 37 (MaSP 3, Size 37 - MaSKU 5): Giá gốc 1,000,000 - KM 30% = 700,000
+(5, 5, 1, 700000),
+-- Vớ chạy bộ Performance (MaSP 12, FreeSize - MaSKU 43): Giá gốc 180,000 - KM 10% = 162,000
+(5, 43, 2, 162000),
 
 -- ===== HD 6 =====
-(6, 8, 1, 2800000),   -- Sneaker xám 42
-(6, 19, 3, 150000),   -- Vớ thể thao
+-- Sneaker đen 42 (MaSP 4, Size 42 - MaSKU 10): Giá gốc 1,500,000 - KM 0% = 1,500,000
+(6, 10, 1, 1500000),
+-- Vớ trắng (MaSP 10, FreeSize - MaSKU 41): Giá gốc 70,000 - KM 10% = 63,000
+(6, 41, 3, 63000),
 
 -- ===== HD 7 =====
-(7, 17, 1, 4200000),  -- Boot & da đen bóng
-(7, 22, 1, 120000),   -- Dây giày
+-- Boot combat đen 38 (MaSP 9, Size 38 - MaSKU 38): Giá gốc 1,500,000 - KM 0% = 1,500,000
+(7, 38, 1, 1500000),
+-- Dây giày tròn basic đen (MaSP 13, FreeSize - MaSKU 44): Giá gốc 80,000 - KM 10% = 72,000
+(7, 44, 1, 72000),
 
--- ===== HD 8 =====
-(8, 9, 1, 3000000),   -- Sneaker đen 42
-(8, 20, 2, 170000),   -- Vớ cổ cao
+-- ===== HD 8  =====
+-- Sneaker trắng 41 (MaSP 4, Size 41 - MaSKU 12): Giá gốc 1,300,000 - KM 0% = 1,300,000
+(8, 12, 1, 1300000),
+-- Vớ cổ cao Helio đen (MaSP 11, FreeSize - MaSKU 41): Giá gốc 150,000 - KM 10% = 135,000
+(8, 41, 2, 135000),
 
 -- ===== HD 9 =====
-(9, 2, 1, 2500000),   -- Giày da đen 41
-(9, 13, 1, 1800000),  -- Sandal nâu 40
+-- Giày da đen 41 (MaSP 1, Size 41 - MaSKU 2): Giá gốc 1,200,000 - KM 10% = 1,080,000
+(9, 2, 1, 1080000),
+-- Sandal trắng 38 (MaSP 7, Size 38 - MaSKU 33): Giá gốc 1,800,000 - KM 30% = 1,260,000
+(9, 33, 1, 1260000),
 
 -- ===== HD 10 =====
-(10, 16, 1, 3500000), -- Boot nâu 42
-(10, 21, 2, 160000);  -- Vớ trung bình
+-- Boot nâu 42 (MaSP 8, Size 42 - MaSKU 37): Giá gốc 2,100,000 - KM 0% = 2,100,000
+(10, 37, 1, 2100000),
+-- Vớ chạy bộ Performance (MaSP 12, FreeSize - MaSKU 43): Giá gốc 180,000 - KM 10% = 162,000
+(10, 43, 2, 162000);
 
 -- 12. Dữ liệu mẫu cho bảng Đánh Giá
 INSERT INTO DanhGia (MaHDCT, Sao, DanhGiaCT) VALUES
--- Đánh giá 1: Khách 4 đánh giá đôi Boot đen size 41 thuộc HD 4
--- Giả sử MaHDCT của đôi Boot trong HD4 là 8 (dựa trên thứ tự insert bảng HoaDonCT)
-(8, 5, N'Giày đẹp, da xịn, đi rất êm chân. Giao hàng nhanh!'),
--- Đánh giá 2: Khách 4 đánh giá Dây giày thuộc HD 4
--- Giả sử MaHDCT của dây giày trong HD4 là 9
-(9, 4, N'Dây giày màu đẹp nhưng hơi ngắn so với mong đợi.'),
 
--- Đánh giá 3: Khách 2 đánh giá đôi Boot nâu size 42 thuộc HD 10
--- Giả sử MaHDCT của đôi Boot trong HD10 là 18
-(18, 5, N'Mua tặng chồng, chồng rất thích. Shop đóng gói cẩn thận.'),
+-- ===== ĐÁNH GIÁ CỦA KHÁCH HÀNG 4 (MaKH = 4) - Hóa đơn HD4 =====
+-- HD4 có 2 dòng:
+-- Dòng 1: Boot đen 40 (MaSKU 36) - MaHDCT = 7 (vì insert từ trên xuống)
+-- Dòng 2: Dây giày phản quang đen (MaSKU 50) - MaHDCT = 8
+(7, 5, N'Giày boot đẹp, da mềm, đi rất êm chân. Giao hàng nhanh, đóng gói cẩn thận!'),
+(8, 4, N'Dây giày phản quang đẹp, nhưng hơi ngắn so với mong đợi. Chất lượng ổn.'),
 
--- Đánh giá 4: Khách 2 đánh giá Vớ trung bình thuộc HD 10
--- Giả sử MaHDCT của Vớ trong HD10 là 19
-(19, 3, N'Vớ hơi mỏng, dùng tạm được.');
+-- ===== ĐÁNH GIÁ CỦA KHÁCH HÀNG 2 (MaKH = 2) - Hóa đơn HD2 và HD10 =====
+-- HD2 có 2 dòng:
+-- Dòng 1: Giày cao gót trắng 38 (MaSKU 6) - MaHDCT = 4
+-- Dòng 2: Sandal đen 39 (MaSKU 32) - MaHDCT = 5
+(4, 5, N'Giày cao gót rất đẹp, đúng size, đi tiệc thoải mái. Sẽ ủng hộ shop thêm.'),
+(5, 4, N'Sandal đen thời trang, chất liệu tốt. Trừ 1 sao vì giao hơi chậm.'),
+
+-- HD10 có 2 dòng:
+-- Dòng 1: Boot nâu 42 (MaSKU 37) - MaHDCT = 19
+-- Dòng 2: Vớ chạy bộ Performance (MaSKU 43) - MaHDCT = 20
+(19, 5, N'Mua tặng chồng, chồng rất thích. Boot nâu đẹp, da mềm, đi êm.'),
+(20, 4, N'Vớ chạy bộ chất tốt, thấm hút mồ hôi. Giá hơi cao so với mặt bằng chung.'),
+
+-- ===== ĐÁNH GIÁ CỦA KHÁCH HÀNG 3 (MaKH = 3) - Hóa đơn HD3 và HD7 =====
+-- HD3 có 2 dòng:
+-- Dòng 1: Giày bóng đá vàng 42 (MaSKU 29) - MaHDCT = 6
+-- Dòng 2: Vớ Helio trắng (MaSKU 42) - MaHDCT = 7 (đã có đánh giá ở trên? Không, đây là HD3)
+(6, 5, N'Giày bóng đá chất lượng tốt, đế bám sân, đá bóng êm chân. Đáng tiền!'),
+(7, 3, N'Vớ Helio màu đẹp nhưng hơi mỏng, đá bóng 1 trận đã thấy sờn gót.'),
+
+-- HD7 có 2 dòng:
+-- Dòng 1: Boot combat đen 38 (MaSKU 38) - MaHDCT = 13
+-- Dòng 2: Dây giày basic đen (MaSKU 44) - MaHDCT = 14
+(13, 4, N'Boot combat đen phong cách, đi chơi rất ngầu. Trừ 1 sao vì hơi nặng.'),
+(14, 5, N'Dây giày basic đen chất lượng tốt, giá rẻ, thay cho dây cũ hỏng.'),
+GO
 
 -- 15. Dữ liệu mẫu cho bảng TimKiem
 INSERT INTO TimKiem (MaKH, NoiDungTimKiem) VALUES
