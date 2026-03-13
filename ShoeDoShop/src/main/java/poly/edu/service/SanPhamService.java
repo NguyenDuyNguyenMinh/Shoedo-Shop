@@ -1,9 +1,9 @@
-// File: src/main/java/poly/edu/service/SanPhamService.java
 package poly.edu.service;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
-
 import jakarta.transaction.Transactional;
 import poly.edu.dao.SanPhamChiTietDAO;
 import poly.edu.dao.SanPhamDAO;
@@ -18,20 +18,81 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class SanPhamService {
 
-    @Autowired
-    private SanPhamDAO sanPhamDAO;
-
-    @Autowired
-    private SanPhamChiTietDAO sanPhamChiTietDAO;
- // Thêm vào SanPhamService.java
+    @Autowired private SanPhamDAO sanPhamDAO;
+    @Autowired private SanPhamChiTietDAO sanPhamChiTietDAO;
     @Autowired private poly.edu.dao.SanPhamDanhMucDAO sdmDAO;
     @Autowired private poly.edu.dao.SizeDAO sizeDAO;
 
+    private static final int SO_GIAY     = 4;
+    private static final int SO_FREESIZE = 1;
+    private static final int TONG        = SO_GIAY + SO_FREESIZE;
+
+    // ══════════════════════════════════════════════════════════════
+    //  TRANG CHỦ — Flash Sales, Nổi Bật, Bán Chạy
+    // ══════════════════════════════════════════════════════════════
+
+    public List<SanPhamDTO> layFlashSales() {
+        log.debug("Lay Flash Sales");
+        return ghepDanhSach(
+            sanPhamDAO.findFlashSalesGiay(PageRequest.of(0, SO_GIAY + 5)),
+            sanPhamDAO.findFlashSalesFreesize(PageRequest.of(0, SO_FREESIZE + 2))
+        );
+    }
+
+    public List<SanPhamDTO> layNoiBat() {
+        log.debug("Lay Noi Bat");
+        return ghepDanhSach(
+            sanPhamDAO.findNoiBatGiay(PageRequest.of(0, SO_GIAY + 5)),
+            sanPhamDAO.findNoiBatFreesize(PageRequest.of(0, SO_FREESIZE + 2))
+        );
+    }
+
+    public List<SanPhamDTO> layBanChay() {
+        log.debug("Lay Ban Chay");
+        return ghepDanhSach(
+            sanPhamDAO.findBanChayGiay(PageRequest.of(0, SO_GIAY + 5)),
+            sanPhamDAO.findBanChayFreesize(PageRequest.of(0, SO_FREESIZE + 2))
+        );
+    }
+
+    private List<SanPhamDTO> ghepDanhSach(List<SanPham> giay, List<SanPham> freesize) {
+        List<SanPham> result = new ArrayList<>(TONG);
+        int soFs = Math.min(freesize.size(), SO_FREESIZE);
+        result.addAll(freesize.subList(0, soFs));
+        int soGiayLay = Math.min(giay.size(), TONG - soFs);
+        result.addAll(giay.subList(0, soGiayLay));
+        if (result.size() < TONG && giay.size() > soGiayLay) {
+            int them = Math.min(giay.size() - soGiayLay, TONG - result.size());
+            result.addAll(giay.subList(soGiayLay, soGiayLay + them));
+        }
+        return result.stream().map(this::chuyenSangDTO).toList();
+    }
+
+    private SanPhamDTO chuyenSangDTO(SanPham sp) {
+        Integer maSP = sp.getMaSP();
+        Double giaGoc = sanPhamChiTietDAO.findGiaThapNhat(maSP).orElse(0.0);
+        int km = sp.getKhuyenMai() != null ? sp.getKhuyenMai() : 0;
+        Double giaSauKM = giaGoc * (100 - km) / 100.0;
+        List<String> danhSachAnh = sanPhamChiTietDAO.findDanhSachHinhAnh(maSP);
+        String hinhAnh = danhSachAnh.isEmpty() ? null : danhSachAnh.get(0);
+        Integer tongSoLuong = sanPhamChiTietDAO.tinhTongSoLuong(maSP);
+        return SanPhamDTO.builder()
+                .maSP(maSP).tenSP(sp.getTenSP()).hinhAnh(hinhAnh)
+                .giaGoc(giaGoc).giaSauKM(giaSauKM).khuyenMai(km)
+                .tongSoLuong(tongSoLuong != null ? tongSoLuong : 0)
+                .daBan(sp.getDaBan() != null ? sp.getDaBan() : 0)
+                .build();
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    //  QUẢN LÝ SẢN PHẨM (Admin)
+    // ══════════════════════════════════════════════════════════════
+
     @Transactional
     public SanPham createProduct(SanPhamNDTO dto) {
-        // 1. Lưu Sản Phẩm chính
         SanPham sp = new SanPham();
         sp.setTenSP(dto.getTenSP());
         sp.setMoTa(dto.getMoTa());
@@ -41,7 +102,6 @@ public class SanPhamService {
         sp.setIsActive(true);
         SanPham savedSP = sanPhamDAO.save(sp);
 
-        // 2. Lưu Danh mục (Bảng trung gian)
         if (dto.getCategoryIds() != null) {
             for (Integer catId : dto.getCategoryIds()) {
                 SanPhamDanhMuc sdm = new SanPhamDanhMuc();
@@ -54,7 +114,6 @@ public class SanPhamService {
             }
         }
 
-        // 3. Lưu các Biến thể (Chi tiết sản phẩm)
         if (dto.getVariants() != null) {
             for (SanPhamNDTO.VariantDTO vDto : dto.getVariants()) {
                 SanPhamChiTiet ct = new SanPhamChiTiet();
@@ -64,8 +123,6 @@ public class SanPhamService {
                 ct.setSoLuong(vDto.getSoLuong());
                 ct.setHinhAnh(vDto.getHinhAnh());
                 ct.setTrangThai(vDto.getTrangThai());
-                
-                // Tìm đối tượng Size từ DB
                 if (vDto.getMaSize() != null) {
                     ct.setSize(sizeDAO.findById(vDto.getMaSize()).orElse(null));
                 }
@@ -74,7 +131,7 @@ public class SanPhamService {
         }
         return savedSP;
     }
- // Lấy thông tin chi tiết 1 sản phẩm đổ lên Modal Sửa
+
     public SanPhamNDTO getProductDetail(Integer maSP) {
         SanPham sp = sanPhamDAO.findById(maSP).orElseThrow(() -> new RuntimeException("Không tìm thấy SP"));
         SanPhamNDTO dto = new SanPhamNDTO();
@@ -84,7 +141,6 @@ public class SanPhamService {
         dto.setGioiTinh(sp.getGioiTinh());
         dto.setKhuyenMai(sp.getKhuyenMai());
 
-        // Lấy danh sách ID danh mục
         if (sp.getSanPhamDanhMucs() != null) {
             List<Integer> catIds = sp.getSanPhamDanhMucs().stream()
                     .map(sdm -> sdm.getDanhMuc().getMaDM())
@@ -92,7 +148,6 @@ public class SanPhamService {
             dto.setCategoryIds(catIds);
         }
 
-        // Lấy danh sách phân loại
         List<SanPhamChiTiet> chiTiets = sanPhamChiTietDAO.findBySanPham_MaSP(maSP);
         List<SanPhamNDTO.VariantDTO> variantDTOs = new ArrayList<>();
         for (SanPhamChiTiet ct : chiTiets) {
@@ -110,7 +165,6 @@ public class SanPhamService {
         return dto;
     }
 
-    // Xử lý Cập nhật sản phẩm
     @Transactional
     public SanPham updateProduct(SanPhamNDTO dto) {
         SanPham sp = sanPhamDAO.findById(dto.getMaSP()).orElseThrow(() -> new RuntimeException("Không tìm thấy SP"));
@@ -120,7 +174,6 @@ public class SanPhamService {
         sp.setKhuyenMai(dto.getKhuyenMai() != null ? dto.getKhuyenMai() : 0);
         sanPhamDAO.save(sp);
 
-        // Xóa danh mục cũ, thêm danh mục mới
         if (sp.getSanPhamDanhMucs() != null) {
             sdmDAO.deleteAll(new ArrayList<>(sp.getSanPhamDanhMucs()));
         }
@@ -136,22 +189,17 @@ public class SanPhamService {
             }
         }
 
-        // Cập nhật phân loại
         if (dto.getVariants() != null) {
             for (SanPhamNDTO.VariantDTO vDto : dto.getVariants()) {
-                SanPhamChiTiet ct;
-                if (vDto.getMaSKU() != null) {
-                    ct = sanPhamChiTietDAO.findById(vDto.getMaSKU()).orElse(new SanPhamChiTiet());
-                } else {
-                    ct = new SanPhamChiTiet(); // Thêm mới nếu chưa có SKU
-                }
+                SanPhamChiTiet ct = vDto.getMaSKU() != null
+                    ? sanPhamChiTietDAO.findById(vDto.getMaSKU()).orElse(new SanPhamChiTiet())
+                    : new SanPhamChiTiet();
                 ct.setSanPham(sp);
                 ct.setTenMau(vDto.getTenMau());
                 ct.setDonGia(vDto.getDonGia());
                 ct.setSoLuong(vDto.getSoLuong());
                 ct.setHinhAnh(vDto.getHinhAnh());
                 ct.setTrangThai(vDto.getTrangThai());
-                
                 if (vDto.getMaSize() != null) {
                     ct.setSize(sizeDAO.findById(vDto.getMaSize()).orElse(null));
                 }
@@ -160,21 +208,18 @@ public class SanPhamService {
         }
         return sp;
     }
+
     public List<SanPhamDTO> getAllProductList() {
         List<SanPham> listSP = sanPhamDAO.findAll();
         List<SanPhamDTO> result = new ArrayList<>();
-
         for (SanPham sp : listSP) {
             SanPhamDTO dto = new SanPhamDTO();
             dto.setMaSP(sp.getMaSP());
             dto.setTenSP(sp.getTenSP());
             dto.setGioiTinh(sp.getGioiTinh());
             dto.setIsActive(sp.getIsActive() != null ? sp.getIsActive() : false);
-            
-            // Lấy Khuyến mãi từ DB
             dto.setKhuyenMai(sp.getKhuyenMai() != null ? sp.getKhuyenMai() : 0);
 
-            // 1. Lấy chuỗi Danh Mục
             if (sp.getSanPhamDanhMucs() != null) {
                 String dmStr = sp.getSanPhamDanhMucs().stream()
                         .map(sdm -> sdm.getDanhMuc().getTenDM())
@@ -182,21 +227,15 @@ public class SanPhamService {
                 dto.setDanhMucs(dmStr);
             }
 
-            // 2. Tính toán số lượng, giá min/max và hình ảnh từ bảng Chi Tiết
             List<SanPhamChiTiet> chiTiets = sanPhamChiTietDAO.findBySanPham_MaSP(sp.getMaSP());
             dto.setSoPhanLoai(chiTiets.size());
-
             int tongTon = 0;
-            Double giaMin = null;
-            Double giaMax = null;
+            Double giaMin = null, giaMax = null;
             String hinhAnh = null;
-
             if (!chiTiets.isEmpty()) {
                 hinhAnh = chiTiets.get(0).getHinhAnh();
                 for (SanPhamChiTiet ct : chiTiets) {
                     tongTon += (ct.getSoLuong() != null ? ct.getSoLuong() : 0);
-                    
-                    // Tìm giá thấp nhất và cao nhất
                     Double gia = ct.getDonGia();
                     if (gia != null) {
                         if (giaMin == null || gia < giaMin) giaMin = gia;
@@ -204,34 +243,25 @@ public class SanPhamService {
                     }
                 }
             }
-
             dto.setTongTonKho(tongTon);
             dto.setGiaMin(giaMin != null ? giaMin : 0.0);
             dto.setGiaMax(giaMax != null ? giaMax : 0.0);
-            dto.setGiaDaiDien(giaMin != null ? giaMin : 0.0); // Giữ lại giá đại diện nếu code cũ còn dùng
+            dto.setGiaDaiDien(giaMin != null ? giaMin : 0.0);
             dto.setHinhAnhDaiDien(hinhAnh);
-
-            // 3. Xét trạng thái
             if (tongTon == 0) dto.setTrangThai("Hết hàng");
             else if (tongTon <= 10) dto.setTrangThai("Sắp hết");
             else dto.setTrangThai("Còn hàng");
-
             result.add(dto);
         }
         return result;
     }
- // Thêm hàm chuyển đổi trạng thái (Ẩn/Hiện)
+
     @Transactional
     public boolean toggleProductStatus(Integer maSP) {
-        SanPham sp = sanPhamDAO.findById(maSP)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy SP"));
-        
-        // Nếu isActive đang null thì coi như là true, sau đó đảo ngược lại
+        SanPham sp = sanPhamDAO.findById(maSP).orElseThrow(() -> new RuntimeException("Không tìm thấy SP"));
         boolean currentStatus = sp.getIsActive() != null ? sp.getIsActive() : true;
         sp.setIsActive(!currentStatus);
-        
         sanPhamDAO.save(sp);
         return sp.getIsActive();
     }
-    
 }

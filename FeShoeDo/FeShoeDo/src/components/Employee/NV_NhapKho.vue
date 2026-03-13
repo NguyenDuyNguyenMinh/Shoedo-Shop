@@ -1,38 +1,4 @@
 <template>
-
-<div class="toast-container position-fixed top-0 start-50 translate-middle-x p-3 mt-2" style="z-index: 1090;">
-  <transition name="toast-fade">
-    <div
-      v-if="toast.show"
-      :key="toast.id"
-      class="toast show align-items-center text-white border-0 shadow-lg overflow-hidden"
-      :class="`bg-${toast.type}`"
-      role="alert"
-    >
-      <div class="d-flex position-relative z-1">
-        <div class="toast-body d-flex align-items-center fs-6">
-          <i
-            class="bi me-2 fs-5"
-            :class="{
-              'bi-check-circle-fill': toast.type === 'success',
-              'bi-exclamation-triangle-fill': toast.type === 'warning',
-              'bi-x-circle-fill': toast.type === 'danger',
-              'bi-info-circle-fill': toast.type === 'info'
-            }"
-          ></i>
-          {{ toast.message }}
-        </div>
-        <button
-          type="button"
-          class="btn-close btn-close-white me-2 m-auto"
-          @click="toast.show = false"
-        ></button>
-      </div>
-      <div class="toast-progress-bar"></div>
-    </div>
-  </transition>
-</div>
-
   <div class="employee-layout">
     <NV_Sidebar />
 
@@ -112,7 +78,7 @@
                     class="form-control form-control-lg"
                     placeholder="Nhập số lượng"
                   />
-                  <button @click="applyBulkQuantity" class="btn btn-dark">
+                  <button @click="applyBulkQuantity" class="btn btn-success">
                     <i class="bi bi-check-lg me-2"></i>Áp dụng
                   </button>
                 </div>
@@ -125,7 +91,7 @@
                   <span class="text-muted me-3">
                     Đã chọn:
                     <strong class="text-primary">{{ selectedCount }}</strong> /
-                    {{ filteredProducts.length }} phân loại
+                    {{ filteredProducts.length }} sản phẩm
                   </span>
                   <button
                     @click="unselectAll"
@@ -133,7 +99,7 @@
                   >
                     <i class="bi bi-x-circle me-2"></i>Bỏ chọn tất cả
                   </button>
-                  <button @click="handleBulkImport" class="btn btn-dark">
+                  <button @click="handleBulkImport" class="btn btn-success">
                     <i class="bi bi-box-arrow-in-down me-2"></i>
                     Nhập hàng loạt
                   </button>
@@ -154,13 +120,13 @@
                         />
                       </div>
                     </th>
-                    <th class="text-center align-middle">Hình</th>
-                    <th class="text-center align-middle">Tên sản phẩm</th>
-                    <th class="text-center align-middle">Phân loại</th>
-                    <th class="text-center align-middle">Giá</th>
-                    <th class="text-center align-middle">SL tồn</th>
-                    <th class="text-center align-middle">Trạng thái</th>
-                    <th style="width: 180px" class="text-center align-middle">Số lượng nhập</th>
+                    <th>Hình</th>
+                    <th>Tên sản phẩm</th>
+                    <th>Phân loại</th>
+                    <th>Giá</th>
+                    <th>SL tồn</th>
+                    <th>Trạng thái</th>
+                    <th style="width: 180px">Số lượng nhập</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -245,7 +211,7 @@
                           />
                           <button
                             @click="handleImportSingle(item)"
-                            class="btn btn-outline-dark"
+                            class="btn btn-outline-success"
                           >
                             <i class="bi bi-arrow-down-circle me-1"></i>Nhập
                           </button>
@@ -455,7 +421,7 @@ const unselectAll = () => {
 
 const applyBulkQuantity = () => {
   if (bulkQuantity.value < 1) {
-    showToast("Số lượng phải lớn hơn 0");
+    alert("Số lượng phải lớn hơn 0");
     return;
   }
   // Chỉ áp dụng cho sản phẩm đang lọc và được tick
@@ -467,7 +433,7 @@ const applyBulkQuantity = () => {
 const handleBulkImport = async () => {
   const selectedItems = products.value.filter((p) => p.selected);
   if (selectedItems.length === 0) {
-    showToast("Vui lòng tích chọn ít nhất 1 sản phẩm để nhập kho!","warning");
+    alert("Vui lòng tích chọn ít nhất 1 sản phẩm để nhập kho!");
     return;
   }
 
@@ -481,18 +447,18 @@ const handleBulkImport = async () => {
       "http://localhost:8080/api/nhapkho/nhap-hang-loat",
       payload
     );
-    showToast(`Đã nhập kho thành công ${selectedItems.length} sản phẩm!`);
+    alert(`Đã nhập kho thành công ${selectedItems.length} sản phẩm!`);
     unselectAll(); // Xóa tick sau khi nhập xong
     await fetchProducts();
   } catch (error) {
-    showToast("Có lỗi xảy ra khi nhập kho hàng loạt!","danger");
+    alert("Có lỗi xảy ra khi nhập kho hàng loạt!");
     console.error(error);
   }
 };
 
 const handleImportSingle = async (item) => {
   if (!item.soLuongNhap || item.soLuongNhap < 1) {
-    showToast("Số lượng nhập phải lớn hơn 0","warning");
+    alert("Số lượng nhập phải lớn hơn 0");
     return;
   }
   try {
@@ -500,10 +466,10 @@ const handleImportSingle = async (item) => {
       maSKU: item.maSKU,
       soLuongNhap: item.soLuongNhap,
     });
-    showToast("Nhập kho thành công!");
+    alert("Nhập kho thành công!");
     await fetchProducts();
   } catch (error) {
-    showToast("Có lỗi xảy ra!","danger");
+    alert("Có lỗi xảy ra!");
     console.error(error);
   }
 };
@@ -512,29 +478,6 @@ const formatDate = (dateString) => {
   if (!dateString) return "";
   const date = new Date(dateString);
   return date.toLocaleDateString("vi-VN");
-};
-
-// Trạng thái của thông báo (Toast)
-const toast = ref({
-  id: 0, // Thêm ID để ép reset thanh tiến trình
-  show: false,
-  message: "",
-  type: "success",
-});
-
-let toastTimeout = null;
-
-// Hàm gọi thông báo dùng chung
-const showToast = (message, type = "success") => {
-  // Gán Date.now() làm ID giúp mỗi lần bật là một animation mới hoàn toàn
-  toast.value = { id: Date.now(), show: true, message, type };
-  
-  if (toastTimeout) clearTimeout(toastTimeout);
-  
-  // Tự động tắt sau đúng 3 giây
-  toastTimeout = setTimeout(() => {
-    toast.value.show = false;
-  }, 5000);
 };
 
 watch(activeTab, (newVal) => {
@@ -648,18 +591,5 @@ td .btn-outline-success {
   background-color: #f8f9fa;
   border-color: #dee2e6;
   font-size: 14px;
-}
-/* Hiệu ứng trượt từ trên xuống cho vị trí Center-Top */
-.toast-fade-enter-active,
-.toast-fade-leave-active {
-  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-.toast-fade-enter-from {
-  opacity: 0;
-  transform: translateY(-50px);
-}
-.toast-fade-leave-to {
-  opacity: 0;
-  transform: translateY(-50px);
 }
 </style>

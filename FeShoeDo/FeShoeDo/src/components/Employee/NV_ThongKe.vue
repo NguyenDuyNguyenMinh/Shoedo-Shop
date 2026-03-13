@@ -14,41 +14,16 @@
           <!-- Date Filter -->
           <div class="d-flex gap-2 align-items-center">
             <div class="btn-group time-filter" role="group">
-              <button type="button" 
-                      class="btn btn-sm" 
-                      :class="selectedFilter === '1' ? 'btn-dark' : 'btn-outline-dark'"
-                      @click="setFilter('1')">Hôm nay</button>
-              <button type="button" 
-                      class="btn btn-sm" 
-                      :class="selectedFilter === '7' ? 'btn-dark' : 'btn-outline-dark'"
-                      @click="setFilter('7')">7 ngày</button>
-              <button type="button" 
-                      class="btn btn-sm" 
-                      :class="selectedFilter === '30' ? 'btn-dark' : 'btn-outline-dark'"
-                      @click="setFilter('30')">30 ngày</button>
-              <button type="button" 
-                      class="btn btn-sm" 
-                      :class="selectedFilter === '90' ? 'btn-dark' : 'btn-outline-dark'"
-                      @click="setFilter('90')">90 ngày</button>
+              <button type="button" class="btn btn-outline-dark btn-sm">Hôm nay</button>
+              <button type="button" class="btn btn-dark btn-sm">7 ngày</button>
+              <button type="button" class="btn btn-outline-dark btn-sm">30 ngày</button>
+              <button type="button" class="btn btn-outline-dark btn-sm">Tùy chỉnh</button>
             </div>
           </div>
         </div>
 
-        <!-- Loading State -->
-        <div v-if="loading" class="text-center py-5">
-          <div class="spinner-border text-dark" role="status">
-            <span class="visually-hidden">Loading...</span>
-          </div>
-          <p class="mt-2 text-muted">Đang tải dữ liệu thống kê...</p>
-        </div>
-
-        <!-- Error State -->
-        <div v-else-if="error" class="alert alert-danger" role="alert">
-          <i class="bi bi-exclamation-triangle me-2"></i>{{ error }}
-        </div>
-
         <!-- Stats Cards -->
-        <div v-else class="row g-3 mb-4">
+        <div class="row g-3 mb-4">
           <div class="col-md-3">
             <div class="stats-card">
               <div class="stats-card-icon bg-gradient-revenue">
@@ -56,7 +31,8 @@
               </div>
               <div class="stats-card-content">
                 <p class="stats-label">Tổng doanh thu</p>
-                <h3 class="stats-value">{{ formatCurrency(thongKeData?.tongQuan?.tongDoanhThu) }}<small class="stats-unit">VND</small></h3>
+                <h3 class="stats-value">32.490.000<small class="stats-unit">VND</small></h3>
+                <span class="stats-change positive"><i class="bi bi-arrow-up-short"></i>+12.5%</span>
               </div>
             </div>
           </div>
@@ -67,7 +43,8 @@
               </div>
               <div class="stats-card-content">
                 <p class="stats-label">Đơn hàng</p>
-                <h3 class="stats-value">{{ thongKeData?.tongQuan?.tongDonHang || 0 }}</h3>
+                <h3 class="stats-value">10</h3>
+                <span class="stats-change positive"><i class="bi bi-arrow-up-short"></i>+3 đơn mới</span>
               </div>
             </div>
           </div>
@@ -78,7 +55,8 @@
               </div>
               <div class="stats-card-content">
                 <p class="stats-label">Sản phẩm đã bán</p>
-                <h3 class="stats-value">{{ thongKeData?.tongQuan?.tongSanPhamBan || 0 }}</h3>
+                <h3 class="stats-value">197</h3>
+                <span class="stats-change positive"><i class="bi bi-arrow-up-short"></i>+18 sp</span>
               </div>
             </div>
           </div>
@@ -88,19 +66,20 @@
                 <i class="bi bi-people"></i>
               </div>
               <div class="stats-card-content">
-                <p class="stats-label">Giá trị đơn TB</p>
-                <h3 class="stats-value">{{ formatCurrency(thongKeData?.tongQuan?.giaTriDonTrungBinh) }}<small class="stats-unit">VND</small></h3>
+                <p class="stats-label">Khách hàng</p>
+                <h3 class="stats-value">4</h3>
+                <span class="stats-change neutral"><i class="bi bi-dash"></i>Ổn định</span>
               </div>
             </div>
           </div>
         </div>
 
         <!-- Charts Row 1: Revenue Line Chart -->
-        <div v-if="!loading && !error" class="content-card mb-4">
+        <div class="content-card mb-4">
           <div class="d-flex justify-content-between align-items-center mb-3">
             <div>
               <h6 class="chart-title"><i class="bi bi-graph-up me-2"></i>Biểu đồ doanh thu</h6>
-              <p class="chart-subtitle">Doanh thu {{ selectedFilter }} ngày gần nhất (VND)</p>
+              <p class="chart-subtitle">Doanh thu 7 ngày gần nhất (VND)</p>
             </div>
           </div>
           <div class="chart-container">
@@ -109,7 +88,7 @@
         </div>
 
         <!-- Charts Row 2: Bar + Doughnut -->
-        <div v-if="!loading && !error" class="row g-4 mb-4">
+        <div class="row g-4 mb-4">
           <div class="col-md-7">
             <div class="content-card h-100">
               <h6 class="chart-title"><i class="bi bi-bar-chart me-2"></i>Top 5 sản phẩm bán chạy</h6>
@@ -131,7 +110,7 @@
         </div>
 
         <!-- Tables Row: Recent Orders + Top Customers -->
-        <div v-if="!loading && !error" class="row g-4 mb-4">
+        <div class="row g-4 mb-4">
           <!-- Đơn hàng gần đây -->
           <div class="col-md-7">
             <div class="content-card h-100">
@@ -151,20 +130,65 @@
                     </tr>
                   </thead>
                   <tbody>
-                    <tr v-for="order in (thongKeData?.donHangGanday || [])" :key="order.maHD">
-                      <td class="fw-semibold">#{{ order.maHD }}</td>
+                    <tr>
+                      <td class="fw-semibold">#HD010</td>
                       <td>
                         <div class="d-flex align-items-center gap-2">
-                          <div class="avatar-sm bg-customer-sm">{{ getInitials(order.tenKH) }}</div>
-                          {{ order.tenKH }}
+                          <div class="avatar-sm bg-customer-sm">TH</div>
+                          Trần Thị Hi
                         </div>
                       </td>
-                      <td>{{ formatDate(order.ngayMua) }}</td>
-                      <td class="fw-semibold">{{ formatCurrency(order.tongTien) }}đ</td>
-                      <td><span :class="'badge order-badge badge-' + getStatusClass(order.trangThai)">{{ order.trangThai }}</span></td>
+                      <td>19/01/2025</td>
+                      <td class="fw-semibold">3.820.000đ</td>
+                      <td><span class="badge order-badge badge-completed">Hoàn tất</span></td>
                     </tr>
-                    <tr v-if="!thongKeData?.donHangGanday?.length">
-                      <td colspan="5" class="text-center text-muted py-4">Không có đơn hàng gần đây</td>
+                    <tr>
+                      <td class="fw-semibold">#HD009</td>
+                      <td>
+                        <div class="d-flex align-items-center gap-2">
+                          <div class="avatar-sm bg-customer-sm">NA</div>
+                          Nguyễn Văn A
+                        </div>
+                      </td>
+                      <td>18/01/2025</td>
+                      <td class="fw-semibold">4.300.000đ</td>
+                      <td><span class="badge order-badge badge-processing">Đang xử lý</span></td>
+                    </tr>
+                    <tr>
+                      <td class="fw-semibold">#HD008</td>
+                      <td>
+                        <div class="d-flex align-items-center gap-2">
+                          <div class="avatar-sm bg-customer-sm">MQ</div>
+                          Nguyễn Hoàng Minh Quân
+                        </div>
+                      </td>
+                      <td>17/01/2025</td>
+                      <td class="fw-semibold">3.340.000đ</td>
+                      <td><span class="badge order-badge badge-shipping">Đang giao</span></td>
+                    </tr>
+                    <tr>
+                      <td class="fw-semibold">#HD007</td>
+                      <td>
+                        <div class="d-flex align-items-center gap-2">
+                          <div class="avatar-sm bg-customer-sm">LB</div>
+                          Lê Thị B
+                        </div>
+                      </td>
+                      <td>16/01/2025</td>
+                      <td class="fw-semibold">4.320.000đ</td>
+                      <td><span class="badge order-badge badge-returned">Hoàn hàng</span></td>
+                    </tr>
+                    <tr>
+                      <td class="fw-semibold">#HD006</td>
+                      <td>
+                        <div class="d-flex align-items-center gap-2">
+                          <div class="avatar-sm bg-customer-sm">TH</div>
+                          Trần Thị Hi
+                        </div>
+                      </td>
+                      <td>15/01/2025</td>
+                      <td class="fw-semibold">3.250.000đ</td>
+                      <td><span class="badge order-badge badge-error">Báo lỗi</span></td>
                     </tr>
                   </tbody>
                 </table>
@@ -177,21 +201,57 @@
             <div class="content-card h-100">
               <h6 class="chart-title mb-3"><i class="bi bi-trophy me-2"></i>Top khách hàng</h6>
               <div class="top-customer-list">
-                <div v-for="(customer, index) in (thongKeData?.topKhachHang || [])" :key="customer.maKH" class="top-customer-item">
+                <div class="top-customer-item">
                   <div class="d-flex align-items-center gap-3">
-                    <div :class="'rank-badge rank-' + (index + 1)">{{ index + 1 }}</div>
-                    <div class="avatar-sm bg-customer-sm">{{ getInitials(customer.tenKH) }}</div>
+                    <div class="rank-badge rank-1">1</div>
+                    <div class="avatar-sm bg-customer-sm">NA</div>
                     <div>
-                      <div class="fw-semibold">{{ customer.tenKH }}</div>
-                      <div class="text-muted small">{{ customer.soDonMua }} đơn hàng</div>
+                      <div class="fw-semibold">Nguyễn Văn A</div>
+                      <div class="text-muted small">3 đơn hàng</div>
                     </div>
                   </div>
                   <div class="text-end">
-                    <div class="fw-bold text-dark">{{ formatCurrency(customer.tongChiTieu) }}đ</div>
+                    <div class="fw-bold text-dark">10.320.000đ</div>
                   </div>
                 </div>
-                <div v-if="!thongKeData?.topKhachHang?.length" class="text-center text-muted py-4">
-                  Chưa có dữ liệu khách hàng
+                <div class="top-customer-item">
+                  <div class="d-flex align-items-center gap-3">
+                    <div class="rank-badge rank-2">2</div>
+                    <div class="avatar-sm bg-customer-sm">TH</div>
+                    <div>
+                      <div class="fw-semibold">Trần Thị Hi</div>
+                      <div class="text-muted small">3 đơn hàng</div>
+                    </div>
+                  </div>
+                  <div class="text-end">
+                    <div class="fw-bold text-dark">11.070.000đ</div>
+                  </div>
+                </div>
+                <div class="top-customer-item">
+                  <div class="d-flex align-items-center gap-3">
+                    <div class="rank-badge rank-3">3</div>
+                    <div class="avatar-sm bg-customer-sm">LB</div>
+                    <div>
+                      <div class="fw-semibold">Lê Thị B</div>
+                      <div class="text-muted small">2 đơn hàng</div>
+                    </div>
+                  </div>
+                  <div class="text-end">
+                    <div class="fw-bold text-dark">8.890.000đ</div>
+                  </div>
+                </div>
+                <div class="top-customer-item">
+                  <div class="d-flex align-items-center gap-3">
+                    <div class="rank-badge rank-4">4</div>
+                    <div class="avatar-sm bg-customer-sm">MQ</div>
+                    <div>
+                      <div class="fw-semibold">Nguyễn Hoàng Minh Quân</div>
+                      <div class="text-muted small">2 đơn hàng</div>
+                    </div>
+                  </div>
+                  <div class="text-end">
+                    <div class="fw-bold text-dark">6.960.000đ</div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -199,24 +259,86 @@
         </div>
 
         <!-- Category Stats -->
-        <div v-if="!loading && !error" class="content-card">
+        <div class="content-card">
           <h6 class="chart-title mb-3"><i class="bi bi-grid me-2"></i>Thống kê theo danh mục</h6>
           <div class="row g-3">
-            <div v-for="category in (thongKeData?.theoDanhMuc || [])" :key="category.tenDanhMuc" class="col-md-2">
+            <div class="col-md-2">
               <div class="category-stat-card">
                 <div class="category-icon"><i class="bi bi-briefcase"></i></div>
-                <h6 class="mb-1">{{ category.tenDanhMuc || 'N/A' }}</h6>
+                <h6 class="mb-1">Giày da</h6>
                 <div class="d-flex justify-content-between align-items-center">
-                  <span class="text-muted small">{{ category.soLoaiSanPham || 0 }} sản phẩm</span>
-                  <span class="fw-bold text-dark">{{ category.soSanPham || 0 }} đã bán</span>
+                  <span class="text-muted small">3 sản phẩm</span>
+                  <span class="fw-bold text-dark">7 đã bán</span>
                 </div>
                 <div class="progress mt-2" style="height: 4px;">
-                  <div class="progress-bar bg-dark" :style="{ width: Math.min((category.soSanPham || 0) * 5, 100) + '%' }"></div>
+                  <div class="progress-bar bg-dark" style="width: 35%"></div>
                 </div>
               </div>
             </div>
-            <div v-if="!thongKeData?.theoDanhMuc?.length" class="col-12 text-center text-muted py-4">
-              Chưa có dữ liệu danh mục
+            <div class="col-md-2">
+              <div class="category-stat-card">
+                <div class="category-icon"><i class="bi bi-lightning"></i></div>
+                <h6 class="mb-1">Giày sneaker</h6>
+                <div class="d-flex justify-content-between align-items-center">
+                  <span class="text-muted small">2 sản phẩm</span>
+                  <span class="fw-bold text-dark">10 đã bán</span>
+                </div>
+                <div class="progress mt-2" style="height: 4px;">
+                  <div class="progress-bar bg-dark" style="width: 50%"></div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-2">
+              <div class="category-stat-card">
+                <div class="category-icon"><i class="bi bi-dribbble"></i></div>
+                <h6 class="mb-1">Giày bóng đá</h6>
+                <div class="d-flex justify-content-between align-items-center">
+                  <span class="text-muted small">1 sản phẩm</span>
+                  <span class="fw-bold text-dark">0 đã bán</span>
+                </div>
+                <div class="progress mt-2" style="height: 4px;">
+                  <div class="progress-bar bg-dark" style="width: 5%"></div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-2">
+              <div class="category-stat-card">
+                <div class="category-icon"><i class="bi bi-sun"></i></div>
+                <h6 class="mb-1">Giày sandal</h6>
+                <div class="d-flex justify-content-between align-items-center">
+                  <span class="text-muted small">1 sản phẩm</span>
+                  <span class="fw-bold text-dark">0 đã bán</span>
+                </div>
+                <div class="progress mt-2" style="height: 4px;">
+                  <div class="progress-bar bg-dark" style="width: 5%"></div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-2">
+              <div class="category-stat-card">
+                <div class="category-icon"><i class="bi bi-snow"></i></div>
+                <h6 class="mb-1">Giày boot</h6>
+                <div class="d-flex justify-content-between align-items-center">
+                  <span class="text-muted small">2 sản phẩm</span>
+                  <span class="fw-bold text-dark">0 đã bán</span>
+                </div>
+                <div class="progress mt-2" style="height: 4px;">
+                  <div class="progress-bar bg-dark" style="width: 5%"></div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-2">
+              <div class="category-stat-card">
+                <div class="category-icon"><i class="bi bi-bag"></i></div>
+                <h6 class="mb-1">Phụ kiện</h6>
+                <div class="d-flex justify-content-between align-items-center">
+                  <span class="text-muted small">4 sản phẩm</span>
+                  <span class="fw-bold text-dark">180 đã bán</span>
+                </div>
+                <div class="progress mt-2" style="height: 4px;">
+                  <div class="progress-bar bg-dark" style="width: 90%"></div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -227,10 +349,9 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted } from 'vue';
 import { Chart, registerables } from 'chart.js';
 import NV_Sidebar from '@/components/Shared/NV_Sidebar.vue';
-import api from '@/services/api';
 
 Chart.register(...registerables);
 
@@ -238,107 +359,15 @@ const revenueChart = ref(null);
 const topProductsChart = ref(null);
 const orderStatusChart = ref(null);
 
-// Loading state
-const loading = ref(true);
-const error = ref(null);
-
-// Data states
-const thongKeData = ref(null);
-const selectedFilter = ref('7'); // Default 7 days
-
-// Computed dates
-const dateRange = computed(() => {
-  const endDate = new Date();
-  const startDate = new Date();
-  startDate.setDate(endDate.getDate() - parseInt(selectedFilter.value));
-  return {
-    startDate: startDate.toISOString().split('T')[0],
-    endDate: endDate.toISOString().split('T')[0]
-  };
-});
-
-// Format currency
-const formatCurrency = (value) => {
-  if (!value) return '0';
-  return new Intl.NumberFormat('vi-VN').format(value);
-};
-
-// Format date for display
-const formatDate = (dateStr) => {
-  if (!dateStr) return '';
-  const date = new Date(dateStr);
-  return date.toLocaleDateString('vi-VN');
-};
-
-// Load data from API
-const loadThongKeData = async () => {
-  loading.value = true;
-  error.value = null;
-  
-  const endDate = new Date();
-  const startDate = new Date();
-  startDate.setDate(endDate.getDate() - parseInt(selectedFilter.value));
-  
-  const startDateStr = startDate.toISOString().split('T')[0];
-  const endDateStr = endDate.toISOString().split('T')[0];
-  
-    try {
-    // Fetch all required data in parallel
-    const [tongQuan, theoNgay, theoDanhMuc, topSanPham, topKhachHang, donHangGanDay] = await Promise.all([
-      api.getThongKeTongQuan(startDateStr, endDateStr),
-      api.getThongKeNgay(startDateStr, endDateStr),
-      api.getThongKeDanhMuc(startDateStr, endDateStr),
-      api.getTopSanPham(startDateStr, endDateStr, 10),
-      api.getTopKhachHang(startDateStr, endDateStr, 5),
-      api.getDonHangGanDay(5)
-    ]);
-    
-    thongKeData.value = {
-      tongQuan: tongQuan.data,
-      theoNgay: theoNgay.data,
-      theoDanhMuc: theoDanhMuc.data,
-      topSanPham: topSanPham.data,
-      topKhachHang: topKhachHang.data,
-      donHangGanday: donHangGanDay.data
-    };
-    
-    // Initialize charts after data loaded
-    setTimeout(() => {
-      initCharts();
-    }, 100);
-  } catch (err) {
-    console.error('Error loading statistics:', err);
-    error.value = 'Không thể tải dữ liệu thống kê';
-  } finally {
-    loading.value = false;
-  }
-};
-
-// Filter button handlers
-const setFilter = (days) => {
-  selectedFilter.value = days;
-  loadThongKeData();
-};
-
-// Initialize charts with real data
-const initCharts = () => {
-  if (!thongKeData.value) return;
-  
-  const data = thongKeData.value;
-  
-  // Revenue Chart Data
-  const revenueData = data.theoNgay || [];
-  const revenueLabels = revenueData.map(item => formatDate(item.thoiGian));
-  const revenueValues = revenueData.map(item => item.doanhThu || 0);
-
+onMounted(() => {
   // Revenue Line Chart
   new Chart(revenueChart.value, {
     type: 'line',
     data: {
-      labels: revenueLabels.length > 0 ? revenueLabels : ['No data'],
+      labels: ['13/01', '14/01', '15/01', '16/01', '17/01', '18/01', '19/01'],
       datasets: [{
         label: 'Doanh thu (VND)',
-        data: revenueValues.length > 0 ? revenueValues : [0],
+        data: [5600000, 4820000, 3250000, 4320000, 3340000, 4300000, 3820000],
         borderColor: '#212529',
         backgroundColor: 'rgba(33, 37, 41, 0.08)',
         borderWidth: 3,
@@ -388,14 +417,13 @@ const initCharts = () => {
   });
 
   // Top Products Bar Chart
-  const topProducts = data.topSanPham || [];
   new Chart(topProductsChart.value, {
     type: 'bar',
     data: {
-      labels: topProducts.length > 0 ? topProducts.map(p => p.tenSP || p.maSP) : ['No data'],
+      labels: ['Vớ Thể Thao 1', 'Dây giày', 'Vớ cổ cao', 'Sneaker SP1', 'Vớ trung bình'],
       datasets: [{
         label: 'Số lượng đã bán',
-        data: topProducts.length > 0 ? topProducts.map(p => p.tongSoLuong || 0) : [0],
+        data: [100, 50, 20, 10, 10],
         backgroundColor: [
           'rgba(33, 37, 41, 0.85)',
           'rgba(33, 37, 41, 0.70)',
@@ -436,23 +464,19 @@ const initCharts = () => {
   });
 
   // Order Status Doughnut Chart
-  const tongQuan = data.tongQuan || {};
   new Chart(orderStatusChart.value, {
     type: 'doughnut',
     data: {
-      labels: ['Hoàn tất', 'Đang giao', 'Đang xử lý', 'Đã từ chối'],
+      labels: ['Hoàn tất', 'Đang giao', 'Đang xử lý', 'Đã từ chối', 'Báo lỗi', 'Hoàn hàng'],
       datasets: [{
-        data: [
-          tongQuan.donHoanTat || 0,
-          tongQuan.donDangGiao || 0,
-          tongQuan.donDangXuLy || 0,
-          tongQuan.donBiTuChoi || 0
-        ],
+        data: [2, 2, 2, 2, 1, 1],
         backgroundColor: [
           '#10b981',
           '#3b82f6',
           '#f59e0b',
-          '#ef4444'
+          '#ef4444',
+          '#8b5cf6',
+          '#6b7280'
         ],
         borderWidth: 3,
         borderColor: '#fff',
@@ -486,29 +510,6 @@ const initCharts = () => {
       }
     }
   });
-};
-
-// Helper function for initials
-const getInitials = (name) => {
-  if (!name) return '?';
-  return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-};
-
-// Helper function for status class
-const getStatusClass = (status) => {
-  const statusMap = {
-    'Hoàn tất': 'completed',
-    'Đang giao': 'shipping',
-    'Đang xử lý': 'processing',
-    'Đã từ chối': 'rejected',
-    'Báo lỗi': 'error',
-    'Hoàn hàng': 'returned'
-  };
-  return statusMap[status] || 'processing';
-};
-
-onMounted(() => {
-  loadThongKeData();
 });
 </script>
 

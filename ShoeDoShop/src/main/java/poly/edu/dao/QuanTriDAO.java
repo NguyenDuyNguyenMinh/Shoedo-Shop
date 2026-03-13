@@ -13,5 +13,4 @@ public interface QuanTriDAO extends JpaRepository<QuanTri, Integer> {
     List<QuanTri> findByRoleTrue();
 
     List<QuanTri> findByRoleFalse();
-
 }

@@ -14,44 +14,15 @@
       </div>
 
       <div v-else>
-        <!-- Combo box với icon sắp xếp -->
-        <div class="row mb-4 align-items-center">
-          <div class="col-md-5 col-lg-4">
-            <div class="d-flex align-items-center gap-2">
-              <label class="fw-bold text-nowrap">Lọc theo:</label>
-              <select class="form-select" v-model="currentTab" @change="changeTab" style="max-width: 250px;">
-                <option value="all">Tất cả đơn hàng ({{ orders.length }})</option>
-                <option value="pending">Chờ xử lý ({{ filterByStatus('Đang xử lý').length }})</option>
-                <option value="shipping">Đang giao ({{ filterByStatus('Đang giao').length }})</option>
-                <option value="completed">Hoàn tất ({{ filterByStatus('Hoàn tất').length }})</option>
-                <option value="returned">Trả hàng ({{ filterByStatus('Hoàn hàng/trả hàng').length }})</option>
-                <option value="error">Báo lỗi ({{ filterByStatus('Báo lỗi').length }})</option>
-                <option value="cancelled">Đã hủy ({{ filterByStatus('Đã từ chối').length }})</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="col-md-4">
-            <div class="d-flex align-items-center gap-2">
-              <label class="fw-bold text-nowrap">Sắp xếp:</label>
-              <div class="input-group" style="max-width: 200px;">
-                <select class="form-select" v-model="sortDirection" @change="changeSort">
-                  <option value="desc">Mới nhất</option>
-                  <option value="asc">Cũ nhất</option>
-                </select>
-                <span class="input-group-text bg-light" @click="toggleSort" style="cursor: pointer;">
-          <i :class="sortDirection === 'desc' ? 'bi bi-sort-down' : 'bi bi-sort-up'"></i>
-        </span>
-              </div>
-            </div>
-          </div>
-
-          <div class="col-md-3 text-md-end">
-            <span class="text-muted">
-              Tổng số: <strong>{{ orders.length }}</strong> đơn hàng
-            </span>
-          </div>
-        </div>
+        <!-- Tabs phân loại -->
+        <ul class="nav nav-tabs mb-4">
+          <li class="nav-item" v-for="tab in tabs" :key="tab.value">
+            <a class="nav-link" :class="{ active: currentTab === tab.value }" href="#" @click.prevent="changeTab(tab.value)">
+              {{ tab.label }}
+              <span class="badge bg-secondary ms-1">{{ tab.count }}</span>
+            </a>
+          </li>
+        </ul>
 
         <!-- Hiển thị đơn hàng theo tab -->
         <div v-if="filteredOrders.length === 0" class="alert alert-info text-center">
@@ -87,7 +58,7 @@
 
                 <!-- Thành tiền -->
                 <div class="d-flex justify-content-between align-items-center mb-2">
-                  <span class="text-muted">Thành Tiền: </span>
+                  <span class="text-muted">Thành Tiền</span>
                   <strong class="text-danger">
                     {{ formatPrice(order.tongTien || calculateOrderTotal(order)) }}
                   </strong>
@@ -263,7 +234,6 @@ export default {
   },
   setup() {
     const currentTab = ref('all');
-    const sortDirection = ref('desc');
     const orders = ref([]);
     const loading = ref(false);
     const error = ref('');
@@ -318,7 +288,6 @@ export default {
           }
 
           orders.value = allOrders;
-          sortOrders(); // Sắp xếp sau khi nhận dữ liệu
         } else {
           error.value = response.data.message || 'Không thể tải danh sách đơn hàng';
         }
@@ -330,6 +299,15 @@ export default {
       }
     };
 
+    const tabs = computed(() => [
+      { value: 'all', label: 'Tất cả', count: orders.value.length },
+      { value: 'pending', label: 'Chờ xử lý', count: filterByStatus('Đang xử lý').length },
+      { value: 'shipping', label: 'Đang giao', count: filterByStatus('Đang giao').length },
+      { value: 'completed', label: 'Hoàn tất', count: filterByStatus('Hoàn tất').length },
+      { value: 'returned', label: 'Trả hàng', count: filterByStatus('Hoàn hàng/trả hàng').length + filterByStatus('Báo lỗi').length },
+      { value: 'error', label: 'Báo lỗi', count: filterByStatus('Báo lỗi').length }
+    ]);
+
     // Lọc đơn hàng theo trạng thái
     const filterByStatus = (status) => {
       return orders.value.filter(order => order.trangThai === status);
@@ -337,85 +315,45 @@ export default {
 
     // Lọc đơn hàng theo tab hiện tại
     const filteredOrders = computed(() => {
-      let result = [];
-
-      // Lọc theo tab
       switch (currentTab.value) {
         case 'all':
-          result = [...orders.value];
-          break;
+          return sortedOrders.value;
         case 'pending':
-          result = filterByStatus('Đang xử lý');
-          break;
+          return filterByStatus('Đang xử lý');
         case 'shipping':
-          result = filterByStatus('Đang giao');
-          break;
+          return filterByStatus('Đang giao');
         case 'completed':
-          result = filterByStatus('Hoàn tất');
-          break;
-        case 'cancelled':
-          result = filterByStatus('Đã từ chối');
-          break;
+          return filterByStatus('Hoàn tất');
         case 'error':
-          result = filterByStatus('Báo lỗi');
-          break;
+          return orders.value.filter(order =>
+              order.trangThai === 'Đã từ chối' || order.trangThai === 'Báo lỗi'
+          );
         case 'returned':
-          result = filterByStatus('Hoàn hàng/trả hàng');
-          break;
+          return filterByStatus('Hoàn hàng/trả hàng');
         default:
-          result = [...orders.value];
+          return sortedOrders.value;
       }
-
-      // Sắp xếp theo sortDirection
-      return result.sort((a, b) => {
-        const dateA = new Date(a.ngayMua);
-        const dateB = new Date(b.ngayMua);
-
-        if (sortDirection.value === 'desc') {
-          return dateB - dateA; // Mới nhất lên đầu
-        } else {
-          return dateA - dateB; // Cũ nhất lên đầu
-        }
-      });
     });
 
     // Đổi tab
-    const changeTab = () => {
-      //console.log('Tab changed to:', currentTab.value);
-    };
-
-    const changeSort = () => {
-      // Sắp xếp lại orders theo sortDirection
-      sortOrders();
-    };
-
-    const toggleSort = () => {
-      sortDirection.value = sortDirection.value === 'desc' ? 'asc' : 'desc';
-      sortOrders();
-    };
-
-    const sortOrders = () => {
-      const sorted = [...orders.value].sort((a, b) => {
-        const dateA = new Date(a.ngayMua);
-        const dateB = new Date(b.ngayMua);
-
-        if (sortDirection.value === 'desc') {
-          return dateB - dateA; // Mới nhất xuống cũ nhất
-        } else {
-          return dateA - dateB; // Cũ nhất lên mới nhất
-        }
-      });
-
-      orders.value = sorted;
+    const changeTab = (tab) => {
+      currentTab.value = tab;
     };
 
     // Kiểm tra đơn hàng có thể trả trong vòng 7 ngày không
     const canReturnOrder = (order) => {
+      // Chỉ cho phép trả hàng khi đơn đã hoàn tất
       if (order.trangThai !== 'Hoàn tất') return false;
+
+      // Lấy ngày nhận hàng (ngayDen) hoặc ngày mua nếu không có
       const receivedDate = order.ngayDen ? new Date(order.ngayDen) : new Date(order.ngayMua);
       const today = new Date();
+
+      // Tính số ngày chênh lệch
       const diffTime = today - receivedDate;
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+      // Cho phép trả trong vòng 7 ngày
       return diffDays <= 7;
     };
 
@@ -534,6 +472,7 @@ export default {
     // Xử lý xác nhận từ modal
     const handleConfirmReceived = async () => {
       confirming.value = true;
+
       try {
         await processConfirmReceived(pendingOrderId.value);
       } finally {
@@ -542,21 +481,21 @@ export default {
       }
     };
 
-    // Đóng modal xác nhận
+   // Đóng modal xác nhận
     const closeConfirmModal = () => {
       showConfirmModal.value = false;
       pendingOrderId.value = null;
     };
 
-    // Xử lý API cập nhật trạng thái
+   // Xử lý API cập nhật trạng thái
     const processConfirmReceived = async (orderId) => {
       receivingOrderId.value = orderId;
 
       try {
-        //console.log('Updating order status:', orderId, 'to Hoàn tất');
+        console.log('Updating order status:', orderId, 'to Hoàn tất');
 
         const response = await api.updateCustomerOrderStatus(orderId, 'Hoàn tất');
-        //console.log('Update response:', response.data);
+        console.log('Update response:', response.data);
 
         if (response.data.success) {
           const orderIndex = orders.value.findIndex(o => o.maHD === orderId);
@@ -566,14 +505,16 @@ export default {
             orders.value = [...orders.value];
           }
 
+          // Hiển thị modal thành công
           successMessage.value = 'Xác nhận thành công! Cảm ơn bạn đã mua hàng.';
           showSuccessModal.value = true;
         } else {
+          // Hiển thị modal lỗi
           errorMessage.value = response.data.message || 'Không thể cập nhật trạng thái';
           showErrorModal.value = true;
         }
       } catch (err) {
-        //console.error('Error updating order status:', err);
+        console.error('Error updating order status:', err);
         errorMessage.value = err.response?.data?.message || 'Lỗi khi cập nhật trạng thái';
         showErrorModal.value = true;
       } finally {
@@ -616,10 +557,14 @@ export default {
         });
 
         if (response.data.success) {
+          // Đóng modal trả hàng
           closeReturnModal();
+
+          // Hiển thị modal thành công
           successMessage.value = 'Yêu cầu trả hàng đã được gửi thành công! Chúng tôi sẽ xử lý trong thời gian sớm nhất.';
           showSuccessModal.value = true;
 
+          // Reload trang
           setTimeout(() => {
             window.location.reload();
           }, 1000);
@@ -628,7 +573,7 @@ export default {
           showErrorModal.value = true;
         }
       } catch (err) {
-        //console.error('Error submitting return request:', err);
+        console.error('Error submitting return request:', err);
         errorMessage.value = err.response?.data?.message || 'Lỗi khi gửi yêu cầu trả hàng';
         showErrorModal.value = true;
       } finally {
@@ -646,14 +591,11 @@ export default {
       loading,
       error,
       currentTab,
+      tabs,
       filteredOrders,
       changeTab,
-      filterByStatus,
       receivingOrderId,
       sortedOrders,
-      sortDirection,
-      changeSort,
-      toggleSort,
       getFirstProductName,
       getFirstProductImage,
       getProductCount,
@@ -699,67 +641,120 @@ export default {
   border: 1px solid #e0e0e0;
   border-radius: 10px;
   height: 100%;
-  padding: 1.2rem !important;
 }
 
 .card:hover {
   transform: translateY(-5px);
   box-shadow: 0 8px 20px rgba(0,0,0,0.1);
 }
-
-/* Kích thước ảnh sản phẩm */
-.product-image {
-  width: 70px !important;
-  height: 70px !important;
-  border-radius: 8px;
-  object-fit: cover;
+.nav-tabs {
+  border-bottom: 2px solid #dee2e6;
 }
 
-/* Kích thước chữ */
+.nav-tabs .nav-link {
+  color: #495057;
+  border: none;
+  padding: 0.75rem 1.25rem;
+  font-weight: 500;
+  position: relative;
+}
+
+.nav-tabs .nav-link:hover {
+  border: none;
+  color: #000;
+}
+
+.nav-tabs .nav-link.active {
+  color: #000;
+  background: none;
+  border: none;
+  font-weight: 600;
+}
+
+.nav-tabs .nav-link.active::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: #000;
+}
+
+.nav-tabs .nav-link .badge {
+  font-size: 0.65rem;
+  padding: 3px 6px;
+  margin-left: 5px;
+  background-color: #6c757d;
+}
+
+hr {
+  margin-top: auto !important;
+  opacity: 0.5;
+}
+
+.badge {
+  font-size: 0.7rem;
+  padding: 5px 8px;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
 .product-name {
-  font-size: 1rem;
+  font-size: 0.9rem;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
-  line-height: 1.4;
+  line-height: 1.3;
   font-weight: 600;
 }
 
-/* Kích thước badge */
-.badge {
-  font-size: 0.8rem;
-  padding: 6px 10px;
-  white-space: nowrap;
-  font-weight: 500;
+.product-image {
+  border-radius: 8px;
+  object-fit: cover;
 }
 
-/*Kích thước thành tiền */
-.text-danger {
-  font-size: 1.1rem;
+.row {
+  margin-right: -0.5rem;
+  margin-left: -0.5rem;
 }
 
-/* Khoảng cách giữa các dòng */
-.mb-2 {
-  margin-bottom: 0.75rem !important;
+.col {
+  padding-right: 0.5rem;
+  padding-left: 0.5rem;
 }
 
-.mb-3 {
-  margin-bottom: 1rem !important;
-}
-
-/* Kích thước nút */
 .btn-sm {
-  font-size: 0.9rem;
-  padding: 0.5rem 0.75rem;
+  font-size: 0.8rem;
+  padding: 0.4rem 0.5rem;
   font-weight: 500;
 }
 
-hr {
-  margin-top: 0.75rem !important;
-  margin-bottom: 0.75rem !important;
-  opacity: 0.5;
+/* Modal styles */
+.modal {
+  z-index: 1050;
+}
+
+.modal-content {
+  border-radius: 12px;
+  border: none;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+.modal-header {
+  border-bottom: 1px solid #eee;
+  padding: 1rem 1.5rem;
+}
+
+.modal-body {
+  padding: 1.5rem;
+}
+
+.modal-footer {
+  border-top: 1px solid #eee;
+  padding: 1rem 1.5rem;
 }
 
 /* Responsive adjustments */
@@ -769,20 +764,11 @@ hr {
   }
 
   .product-name {
-    font-size: 0.95rem;
-  }
-
-  .btn-sm {
     font-size: 0.85rem;
   }
 
-  .card {
-    padding: 1rem !important;
-  }
-
-  .product-image {
-    width: 60px !important;
-    height: 60px !important;
+  .btn-sm {
+    font-size: 0.75rem;
   }
 }
 </style>

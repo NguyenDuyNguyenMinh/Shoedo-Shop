@@ -9,24 +9,28 @@
         <div class="row g-3 mb-4">
           <div class="col-md-3">
             <div class="stats-mini bg-gradient-1">
+              <div class="stats-icon"><i class="bi bi-people-fill"></i></div>
               <h4>{{ stats.totalUsers }}</h4>
               <p>Tổng User</p>
             </div>
           </div>
           <div class="col-md-3">
-            <div class="stats-mini bg-gradient-1">
+            <div class="stats-mini bg-gradient-2">
+              <div class="stats-icon"><i class="bi bi-person-heart"></i></div>
               <h4>{{ stats.totalCustomers }}</h4>
               <p>Khách hàng</p>
             </div>
           </div>
           <div class="col-md-3">
-            <div class="stats-mini bg-gradient-1">
+            <div class="stats-mini bg-gradient-3">
+              <div class="stats-icon"><i class="bi bi-person-gear"></i></div>
               <h4>{{ stats.totalEmployees + stats.totalAdmins }}</h4>
               <p>Quản trị viên</p>
             </div>
           </div>
           <div class="col-md-3">
-            <div class="stats-mini bg-gradient-1">
+            <div class="stats-mini bg-gradient-4">
+              <div class="stats-icon"><i class="bi bi-person-x-fill"></i></div>
               <h4>{{ stats.totalInactive }}</h4>
               <p>Tài khoản bị khóa</p>
             </div>

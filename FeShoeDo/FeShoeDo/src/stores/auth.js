@@ -8,7 +8,6 @@ export const useAuthStore = defineStore('auth', {
     isLoading: false,
     error: null,
     cartCount: 0,
-    isInitialized: false,
   }),
   
   getters: {
@@ -31,89 +30,7 @@ export const useAuthStore = defineStore('auth', {
   },
   
   actions: {
-    
-    async initAuth() {
-      if (this.isInitialized) return;
-      this.isLoading = true;
-      
-      try {
-        if (this.token) {
-          const success = await this.loadUserFromToken();
-          if (success) {
-            this.isInitialized = true;
-            return;
-          }
-        }
-
-        const sessionSuccess = await this.checkSession();
-        if (sessionSuccess) {
-          this.isInitialized = true;
-          return;
-        }
-
-        const cookieSuccess = await this.autoLoginFromCookie();
-        if (cookieSuccess) {
-          this.isInitialized = true;
-          return;
-        }
-        this.clearAuth();
-      } catch (error) {
-        this.clearAuth();
-      } finally {
-        this.isLoading = false;
-        this.isInitialized = true;
-      }
-    },
-
-    async checkSession() {
-      try {
-        const response = await axios.get('/api/auth/check-session', {
-          withCredentials: true
-        });
-        
-        if (response.data.success && response.data.user) {
-          this.user = response.data.user;
-          this.cartCount = response.data.user.cartCount || 0;
-
-          if (!this.token) {
-            const token = btoa(JSON.stringify({
-              maUser: response.data.user.maUser,
-              exp: Date.now() + 24 * 60 * 60 * 1000
-            }));
-            localStorage.setItem('auth_token', token);
-            this.token = token;
-          }
-          return true;
-        }
-      } catch (error) {
-        console.error('Check session error:', error);
-      }
-      return false;
-    },
-
-    async autoLoginFromCookie() {
-      try {
-        const response = await axios.get('/api/auth/auto-login', {
-          withCredentials: true
-        });
-        
-        if (response.data.success && response.data.user) {
-          this.user = response.data.user;
-          this.cartCount = response.data.user.cartCount || 0;
-          const token = btoa(JSON.stringify({
-            maUser: response.data.user.maUser,
-            exp: Date.now() + 24 * 60 * 60 * 1000
-          }));
-          localStorage.setItem('auth_token', token);
-          this.token = token;
-          return true;
-        }
-      } catch (error) {
-        console.error('Auto login error:', error);
-      }
-      return false;
-    },
-
+  
     async logout() {
       try {
         await axios.post('/api/auth/logout', {}, {

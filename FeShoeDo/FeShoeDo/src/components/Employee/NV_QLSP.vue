@@ -1,52 +1,18 @@
 <template>
-  <div class="toast-container position-fixed top-0 start-50 translate-middle-x p-3 mt-2" style="z-index: 1090;">
-  <transition name="toast-fade">
-    <div
-      v-if="toast.show"
-      :key="toast.id"
-      class="toast show align-items-center text-white border-0 shadow-lg overflow-hidden"
-      :class="`bg-${toast.type}`"
-      role="alert"
-    >
-      <div class="d-flex position-relative z-1">
-        <div class="toast-body d-flex align-items-center fs-6">
-          <i
-            class="bi me-2 fs-5"
-            :class="{
-              'bi-check-circle-fill': toast.type === 'success',
-              'bi-exclamation-triangle-fill': toast.type === 'warning',
-              'bi-x-circle-fill': toast.type === 'danger',
-              'bi-info-circle-fill': toast.type === 'info'
-            }"
-          ></i>
-          {{ toast.message }}
-        </div>
-        <button
-          type="button"
-          class="btn-close btn-close-white me-2 m-auto"
-          @click="toast.show = false"
-        ></button>
-      </div>
-      <div class="toast-progress-bar"></div>
-    </div>
-  </transition>
-</div>
   <div class="employee-layout">
     <NV_Sidebar />
 
     <main class="main-content">
       <div class="page-container">
         <div
-          v-if="successMessage"
-          class="alert alert-success alert-dismissible fade show shadow-sm"
+          class="alert alert-success alert-dismissible fade show"
           role="alert"
         >
-          <i class="bi bi-check-circle-fill me-2"></i>
-          <span>{{ successMessage }}</span>
+          <span>Đã lưu sản phẩm thành công.</span>
           <button
             type="button"
             class="btn-close"
-            @click="successMessage = ''"
+            data-bs-dismiss="alert"
           ></button>
         </div>
 
@@ -64,15 +30,15 @@
             </div>
           </div>
           <div class="col-md-3">
-            <div class="stats-mini bg-gradient-4">
-              <h4>{{ lowStock }}</h4>
-              <p>Sắp hết hàng</p>
-            </div>
-          </div>
-          <div class="col-md-3">
             <div class="stats-mini bg-gradient-3">
               <h4>{{ outOfStock }}</h4>
               <p>Hết hàng</p>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="stats-mini bg-gradient-4">
+              <h4>{{ lowStock }}</h4>
+              <p>Sắp hết hàng</p>
             </div>
           </div>
         </div>
@@ -131,20 +97,10 @@
               </div>
               <div class="col-md-2">
                 <select v-model="filterStatus" class="form-select">
-                  <option value="">Tất cả trạng thái</option>
-
-                  <optgroup label="Trạng thái hiển thị">
-                    <option value="Đang hoạt động">
-                      Đang hoạt động (Hiện)
-                    </option>
-                    <option value="Đã ẩn">Không hoạt động (Ẩn)</option>
-                  </optgroup>
-
-                  <optgroup label="Tình trạng tồn kho">
-                    <option value="Còn hàng">Còn hàng</option>
-                    <option value="Hết hàng">Hết hàng</option>
-                    <option value="Sắp hết">Sắp hết</option>
-                  </optgroup>
+                  <option value="">Trạng thái</option>
+                  <option value="Còn hàng">Còn hàng</option>
+                  <option value="Hết hàng">Hết hàng</option>
+                  <option value="Sắp hết">Sắp hết</option>
                 </select>
               </div>
               <div class="col-md-2">
@@ -162,14 +118,14 @@
             <div class="row">
               <div
                 class="col-12"
-                v-for="item in paginatedProducts"
+                v-for="item in filteredProducts"
                 :key="item.maSP"
               >
                 <div
                   class="product-card"
-                  :class="{ 'product-hidden': !item.isActive }"
+                  :class="{ 'opacity-50': !item.isActive }"
                 >
-                  <span
+                <span
                     class="status-badge-corner"
                     :class="[
                       'badge',
@@ -344,57 +300,7 @@
                   </div>
                 </div>
               </div>
-              <div
-                v-if="totalPages > 1"
-                class="d-flex justify-content-center align-items-center mt-4 mb-2"
-              >
-                <nav aria-label="Page navigation">
-                  <ul class="pagination pagination-sm mb-0">
-                    <li
-                      class="page-item"
-                      :class="{ disabled: currentPage === 1 }"
-                    >
-                      <button
-                        class="page-link text-dark"
-                        @click="goToPage(currentPage - 1)"
-                      >
-                        <i class="bi bi-chevron-left"></i> Trước
-                      </button>
-                    </li>
 
-                    <li
-                      class="page-item"
-                      v-for="page in totalPages"
-                      :key="page"
-                      :class="{ active: currentPage === page }"
-                    >
-                      <button
-                        class="page-link"
-                        :class="
-                          currentPage === page
-                            ? 'bg-dark border-dark text-white'
-                            : 'text-dark'
-                        "
-                        @click="goToPage(page)"
-                      >
-                        {{ page }}
-                      </button>
-                    </li>
-
-                    <li
-                      class="page-item"
-                      :class="{ disabled: currentPage === totalPages }"
-                    >
-                      <button
-                        class="page-link text-dark"
-                        @click="goToPage(currentPage + 1)"
-                      >
-                        Sau <i class="bi bi-chevron-right"></i>
-                      </button>
-                    </li>
-                  </ul>
-                </nav>
-              </div>
               <div
                 v-if="products.length === 0"
                 class="text-center py-5 text-muted"
@@ -423,12 +329,7 @@
               type="button"
               class="btn-close"
               id="closeCategoryModalBtn"
-              data-bs-toggle="modal"
-              :data-bs-target="
-                categoryMode === 'edit'
-                  ? '#editProductModal'
-                  : '#addProductModal'
-              "
+              data-bs-dismiss="modal"
             ></button>
           </div>
           <div class="modal-body">
@@ -444,12 +345,7 @@
             <button
               type="button"
               class="btn btn-sm btn-secondary"
-              data-bs-toggle="modal"
-              :data-bs-target="
-                categoryMode === 'edit'
-                  ? '#editProductModal'
-                  : '#addProductModal'
-              "
+              data-bs-dismiss="modal"
             >
               Hủy
             </button>
@@ -535,7 +431,7 @@
                   </button>
                 </div>
               </div>
-              <br />
+
               <div class="mb-3">
                 <label class="form-label">Giới tính *</label>
                 <div class="btn-group w-100 gender-group" role="group">
@@ -598,7 +494,7 @@
                   <div
                     class="d-flex justify-content-between align-items-center mb-3"
                   >
-                    <span class="badge bg-dark fs-6"
+                    <span class="badge bg-primary fs-6"
                       >Phân loại #{{ index + 1 }}</span
                     >
                     <button
@@ -622,30 +518,24 @@
                         required
                       />
                     </div>
-                    <div class="col-md-12 mb-3">
-                      <label class="form-label small fw-bold text-dark">
-                        Chọn các Size cho màu này
-                      </label>
-                      <div class="d-flex flex-wrap gap-2">
-                        <div
+                    <div class="col-md-3">
+                      <label class="form-label small">Size (Nhập ID) *</label>
+                      <select
+                        class="form-select form-control-sm"
+                        v-model="v.maSize"
+                        required
+                      >
+                        <option value="" disabled selected>Chọn Size</option>
+                        <option
                           v-for="s in sizes"
-                          :key="'var-' + index + '-size-' + s.maSize"
+                          :key="s.maSize"
+                          :value="s.maSize"
                         >
-                          <input
-                            type="checkbox"
-                            class="btn-check"
-                            :id="'var-' + index + '-size-' + s.maSize"
-                            :value="s.maSize"
-                            v-model="v.selectedSizes"
-                          />
-                          <label
-                            class="btn btn-outline-dark btn-sm rounded-pill px-3"
-                            :for="'var-' + index + '-size-' + s.maSize"
-                          >
-                            {{ s.coGiay === 0 ? "Freesize" : s.coGiay }}
-                          </label>
-                        </div>
-                      </div>
+                          {{
+                            s.coGiay === 0 ? "Freesize (Phụ kiện)" : s.coGiay
+                          }}
+                        </option>
+                      </select>
                     </div>
                     <div class="col-md-6">
                       <label class="form-label small">Đơn giá (VND) *</label>
@@ -656,7 +546,7 @@
                         required
                       />
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                       <label class="form-label small">Số lượng *</label>
                       <input
                         type="number"
@@ -665,7 +555,7 @@
                         required
                       />
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                       <label class="form-label small">Trạng thái</label>
                       <select class="form-select" v-model="v.trangThai">
                         <option value="Còn hàng">Còn hàng</option>
@@ -673,8 +563,8 @@
                         <option value="Sắp hết">Sắp hết</option>
                       </select>
                     </div>
-                    <div class="col-md-6">
-                      <label class="form-label small">Hình ảnh</label>
+                    <div class="col-md-4">
+                      <label class="form-label small">Tên file ảnh</label>
                       <div class="input-group">
                         <input
                           type="text"
@@ -702,7 +592,7 @@
               <div class="text-center mb-3">
                 <button
                   type="button"
-                  class="btn btn-outline-dark border-dashed w-100 py-2"
+                  class="btn btn-outline-primary border-dashed w-100 py-2"
                   @click="addVariant"
                 >
                   <i class="bi bi-plus-circle me-2"></i>Thêm phân loại
@@ -790,9 +680,8 @@
                   </button>
                 </div>
               </div>
-              <br />
               <div class="row mb-3">
-                <div class="col-md-12">
+                <div class="col-md-6">
                   <label class="form-label">Giới tính *</label>
                   <div class="btn-group w-100 gender-group">
                     <input
@@ -827,6 +716,21 @@
                     >
                   </div>
                 </div>
+
+                <div class="col-md-6">
+                  <label class="form-label">Khuyến mãi (%)</label>
+                  <div class="input-group">
+                    <input
+                      type="number"
+                      class="form-control"
+                      v-model="editProductData.khuyenMai"
+                      min="0"
+                      max="100"
+                      placeholder="0 - 100"
+                    />
+                    <span class="input-group-text">%</span>
+                  </div>
+                </div>
               </div>
               <div class="mb-3">
                 <label class="form-label">Mô tả</label>
@@ -844,8 +748,8 @@
                 class="card mb-3 bg-light"
               >
                 <div class="card-body">
-                  <div class="d-flex justify-content-between align-items-center mb-3">
-                    <span class="badge bg-dark fs-6"
+                  <div class="d-flex justify-content-between mb-2">
+                    <span class="badge bg-primary"
                       >Phân loại #{{ index + 1 }}</span
                     >
                     <button
@@ -853,7 +757,7 @@
                       class="btn btn-outline-danger btn-sm"
                       @click="removeEditVariant(index)"
                       v-if="editProductData.variants.length > 1"
-                    ><i class="bi bi-trash me-1"></i>
+                    >
                       Xóa
                     </button>
                   </div>
@@ -867,82 +771,40 @@
                         required
                       />
                     </div>
-
-                    <template v-if="!v.isNewGroup">
-                      <div class="col-md-3">
-                        <label class="form-label small">Size *</label>
-                        <select class="form-select" v-model="v.maSize" required>
-                          <option value="" disabled>Chọn Size</option>
-                          <option
-                            v-for="s in sizes"
-                            :key="s.maSize"
-                            :value="s.maSize"
-                          >
-                            {{
-                              s.coGiay === 0 ? "Freesize (Phụ kiện)" : s.coGiay
-                            }}
-                          </option>
-                        </select>
-                      </div>
-                      <div class="col-md-6">
-                        <label class="form-label small">Đơn giá *</label>
-                        <input
-                          type="number"
-                          class="form-control"
-                          v-model="v.donGia"
-                          required
-                        />
-                      </div>
-                    </template>
-
-                    <template v-else>
-                      <div class="col-md-12 mb-3">
-                        <label class="form-label small fw-bold text-dark">
-                          Chọn các Size cho màu này
-                        </label>
-                        <div class="d-flex flex-wrap gap-2">
-                          <div
-                            v-for="s in sizes"
-                            :key="'edit-var-' + index + '-size-' + s.maSize"
-                          >
-                            <input
-                              type="checkbox"
-                              class="btn-check"
-                              :id="'edit-var-' + index + '-size-' + s.maSize"
-                              :value="s.maSize"
-                              v-model="v.selectedSizes"
-                            />
-                            <label
-                              class="btn btn-outline-dark btn-sm rounded-pill px-3"
-                              :for="'edit-var-' + index + '-size-' + s.maSize"
-                            >
-                              {{ s.coGiay === 0 ? "Freesize" : s.coGiay }}
-                            </label>
-                          </div>
-                        </div>
-                      </div>
-                      <div class="col-md-6">
-                        <label class="form-label small">Đơn giá *</label>
-                        <input
-                          type="number"
-                          class="form-control"
-                          v-model="v.donGia"
-                          required
-                        />
-                      </div>
-                    </template>
-
+                    <div class="col-md-3">
+                      <label class="form-label small">Size *</label>
+                      <select class="form-select" v-model="v.maSize" required>
+                        <option value="" disabled>Chọn Size</option>
+                        <option
+                          v-for="s in sizes"
+                          :key="s.maSize"
+                          :value="s.maSize"
+                        >
+                          {{
+                            s.coGiay === 0 ? "Freesize (Phụ kiện)" : s.coGiay
+                          }}
+                        </option>
+                      </select>
+                    </div>
                     <div class="col-md-6">
+                      <label class="form-label small">Đơn giá *</label>
+                      <input
+                        type="number"
+                        class="form-control"
+                        v-model="v.donGia"
+                        required
+                      />
+                    </div>
+                    <div class="col-md-4">
                       <label class="form-label small">Số lượng *</label>
                       <input
                         type="number"
                         class="form-control"
                         v-model="v.soLuong"
-                        @input="autoUpdateStatus(v)"
                         required
                       />
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                       <label class="form-label small">Trạng thái</label>
                       <select class="form-select" v-model="v.trangThai">
                         <option value="Còn hàng">Còn hàng</option>
@@ -950,7 +812,7 @@
                         <option value="Sắp hết">Sắp hết</option>
                       </select>
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                       <label class="form-label small">Hình ảnh</label>
                       <div class="input-group">
                         <input
@@ -976,7 +838,7 @@
               </div>
               <button
                 type="button"
-                class="btn btn-outline-dark w-100 border-dashed"
+                class="btn btn-outline-primary w-100 border-dashed"
                 @click="addEditVariant"
               >
                 + Thêm phân loại
@@ -1003,7 +865,7 @@
           <div class="modal-header">
             <h5 class="modal-title">
               <i class="bi bi-list-check me-2"></i>Phân loại:
-              <span class="text-dark">{{ selectedProductName }}</span>
+              <span class="text-primary">{{ selectedProductName }}</span>
             </h5>
             <button
               type="button"
@@ -1199,14 +1061,11 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from "vue";
+import { ref, computed, onMounted } from "vue";
 import axios from "axios";
 import NV_Sidebar from "@/components/Shared/NV_Sidebar.vue";
 
 axios.defaults.withCredentials = true;
-
-// Biến lưu nội dung thông báo thành công
-const successMessage = ref("");
 
 const products = ref([]);
 const categories = ref([]);
@@ -1217,48 +1076,6 @@ const filterKeyword = ref("");
 const filterCategory = ref("");
 const filterGender = ref("");
 const filterStatus = ref("");
-
-// Thêm hàm này vào phần <script setup> của bạn
-const autoUpdateStatus = (variant) => {
-  // Ép kiểu về số nguyên để kiểm tra cho chắc chắn
-  const quantity = parseInt(variant.soLuong) || 0;
-
-  if (quantity <= 0) {
-    variant.soLuong = 0; // Tránh trường hợp người dùng nhập số âm
-    variant.trangThai = "Hết hàng";
-  } else if (quantity > 0 && variant.trangThai === "Hết hàng") {
-    // Nếu có nhập số lượng nhưng trạng thái đang kẹt ở 'Hết hàng' thì tự động đổi
-    variant.trangThai = "Còn hàng";
-  }
-};
-
-// --- LOGIC PHÂN TRANG ---
-const currentPage = ref(1);
-const itemsPerPage = 10;
-
-// Tính tổng số trang dựa trên danh sách đã lọc
-const totalPages = computed(() => {
-  return Math.ceil(filteredProducts.value.length / itemsPerPage);
-});
-
-// Lấy ra đúng 10 sản phẩm cho trang hiện tại
-const paginatedProducts = computed(() => {
-  const start = (currentPage.value - 1) * itemsPerPage;
-  const end = start + itemsPerPage;
-  return filteredProducts.value.slice(start, end);
-});
-
-// Hàm chuyển trang
-const goToPage = (page) => {
-  if (page >= 1 && page <= totalPages.value) {
-    currentPage.value = page;
-  }
-};
-
-// Tự động quay về trang 1 nếu người dùng thay đổi bộ lọc
-watch([filterKeyword, filterCategory, filterGender, filterStatus], () => {
-  currentPage.value = 1;
-});
 
 // 1. Gọi API Danh mục
 const fetchCategories = async () => {
@@ -1291,10 +1108,9 @@ const fetchProducts = async () => {
   }
 };
 
-// 3. Computed LỌC REAL-TIME TỔNG HỢP VÀ SẮP XẾP
+// 3. Computed LỌC REAL-TIME TỔNG HỢP
 const filteredProducts = computed(() => {
-  // Bước 1: Lọc dữ liệu như bình thường
-  let result = products.value.filter((item) => {
+  return products.value.filter((item) => {
     const matchKeyword =
       !filterKeyword.value ||
       item.tenSP.toLowerCase().includes(filterKeyword.value.toLowerCase());
@@ -1309,28 +1125,10 @@ const filteredProducts = computed(() => {
     else if (filterGender.value === "Unisex")
       matchGender = item.gioiTinh === null;
 
-    let matchStatus = true;
-    if (filterStatus.value === "Còn hàng")
-      matchStatus = item.trangThai === "Còn hàng";
-    else if (filterStatus.value === "Hết hàng")
-      matchStatus = item.trangThai === "Hết hàng";
-    else if (filterStatus.value === "Sắp hết")
-      matchStatus = item.trangThai === "Sắp hết";
-    else if (filterStatus.value === "Đang hoạt động")
-      matchStatus = item.isActive === true;
-    else if (filterStatus.value === "Đã ẩn")
-      matchStatus = item.isActive === false;
+    const matchStatus =
+      !filterStatus.value || item.trangThai === filterStatus.value;
 
     return matchKeyword && matchCategory && matchGender && matchStatus;
-  });
-
-  // Bước 2: Sắp xếp ưu tiên sản phẩm isActive = true lên đầu
-  return result.sort((a, b) => {
-    // Nếu cả 2 sản phẩm cùng trạng thái (cùng hiện hoặc cùng ẩn) thì giữ nguyên thứ tự
-    if (a.isActive === b.isActive) return 0;
-
-    // Nếu sản phẩm 'a' đang hoạt động thì đưa lên trước (-1), ngược lại đẩy xuống sau (1)
-    return a.isActive ? -1 : 1;
   });
 });
 
@@ -1367,7 +1165,7 @@ const prepareAddCategory = (mode) => {
 // Hàm lưu danh mục khi bấm nút trong Modal
 const saveNewCategory = async () => {
   if (!newCategoryName.value || newCategoryName.value.trim() === "") {
-    showToast("Vui lòng nhập tên danh mục!","warning");
+    alert("Vui lòng nhập tên danh mục!");
     return;
   }
 
@@ -1396,7 +1194,7 @@ const saveNewCategory = async () => {
     }
   } catch (error) {
     console.error("Lỗi thêm danh mục:", error);
-    showToast(error.response?.data?.message || "Có lỗi xảy ra khi thêm danh mục!");
+    alert(error.response?.data?.message || "Có lỗi xảy ra khi thêm danh mục!");
   }
 };
 
@@ -1409,7 +1207,7 @@ const newProduct = ref({
   variants: [
     {
       tenMau: "",
-      selectedSizes: [],
+      maSize: "",
       donGia: 0,
       soLuong: 0,
       hinhAnh: "",
@@ -1422,7 +1220,7 @@ const newProduct = ref({
 const addVariant = () => {
   newProduct.value.variants.push({
     tenMau: "",
-    selectedSizes: [],
+    maSize: "",
     donGia: 0,
     soLuong: 0,
     hinhAnh: "",
@@ -1437,27 +1235,19 @@ const removeVariant = (index) => {
   }
 };
 
-// Trạng thái của thông báo (Toast)
-const toast = ref({
-  id: 0, // Thêm ID để ép reset thanh tiến trình
-  show: false,
-  message: "",
-  type: "success",
-});
-
-let toastTimeout = null;
-
-// Hàm gọi thông báo dùng chung
-const showToast = (message, type = "success") => {
-  // Gán Date.now() làm ID giúp mỗi lần bật là một animation mới hoàn toàn
-  toast.value = { id: Date.now(), show: true, message, type };
-  
-  if (toastTimeout) clearTimeout(toastTimeout);
-  
-  // Tự động tắt sau đúng 3 giây
-  toastTimeout = setTimeout(() => {
-    toast.value.show = false;
-  }, 5000);
+// Hàm lưu sản phẩm thêm mới
+const saveProduct = async () => {
+  try {
+    const res = await axios.post(
+      "http://localhost:8080/api/sanpham/create",
+      newProduct.value
+    );
+    alert("Thêm sản phẩm thành công!");
+    location.reload();
+  } catch (error) {
+    console.error(error);
+    alert("Lỗi khi lưu sản phẩm!");
+  }
 };
 
 // --- LOGIC CHO MODAL CHỌN ẢNH VÀ EDIT ---
@@ -1522,12 +1312,12 @@ const handleFileUpload = async (event) => {
       }
     );
     if (res.data.success) {
-      showToast("Tải ảnh lên thành công!");
+      alert("Tải ảnh lên thành công!");
       await fetchImages(); // Tải lại danh sách ảnh
       selectedImageName.value = res.data.fileName; // Chọn luôn ảnh vừa tải
     }
   } catch (error) {
-    showToast("Lỗi tải ảnh lên!","danger");
+    alert("Lỗi tải ảnh lên!");
     console.error(error);
   }
 };
@@ -1549,60 +1339,28 @@ const openEditModal = async (maSP) => {
     const res = await axios.get(`http://localhost:8080/api/sanpham/${maSP}`);
     editProductData.value = res.data;
   } catch (error) {
-    showToast("Lỗi tải thông tin sản phẩm!","danger");
+    alert("Lỗi tải thông tin sản phẩm!");
   }
 };
 
 // Lưu thông tin chỉnh sửa
 const saveEditProduct = async () => {
   try {
-    const payload = { ...editProductData.value };
-    const formattedVariants = [];
-
-    // Duyệt qua danh sách phân loại
-    for (const v of payload.variants) {
-      if (v.isNewGroup) {
-        // Tách cụm size mới thêm thành các phân loại lẻ
-        if (!v.selectedSizes || v.selectedSizes.length === 0) {
-          showToast(
-            `Vui lòng chọn ít nhất 1 size cho màu "${
-              v.tenMau || "chưa nhập tên"
-            }"`,"warning"
-          );
-          return;
-        }
-        v.selectedSizes.forEach((sizeId) => {
-          formattedVariants.push({
-            tenMau: v.tenMau,
-            maSize: sizeId,
-            donGia: v.donGia,
-            soLuong: v.soLuong,
-            hinhAnh: v.hinhAnh,
-            trangThai: v.soLuong <= 0 ? "Hết hàng" : "Còn hàng",
-          });
-        });
-      } else {
-        // Giữ nguyên các phân loại cũ đã có sẵn
-        formattedVariants.push(v);
-      }
-    }
-
-    payload.variants = formattedVariants;
-
-    await axios.put("http://localhost:8080/api/sanpham/update", payload);
-    showToast("Cập nhật sản phẩm thành công!");
+    await axios.put(
+      "http://localhost:8080/api/sanpham/update",
+      editProductData.value
+    );
+    alert("Cập nhật sản phẩm thành công!");
     location.reload();
   } catch (error) {
-    console.error(error);
-    showToast("Lỗi cập nhật sản phẩm!","danger");
+    alert("Lỗi cập nhật sản phẩm!");
   }
 };
 
 const addEditVariant = () => {
   editProductData.value.variants.push({
-    isNewGroup: true,
     tenMau: "",
-    selectedSizes: [],
+    maSize: "",
     donGia: 0,
     soLuong: 0,
     hinhAnh: "",
@@ -1610,23 +1368,8 @@ const addEditVariant = () => {
   });
 };
 const removeEditVariant = (index) => {
-  if (editProductData.value.variants.length > 1) {
-    const variant = editProductData.value.variants[index];
-    
-    if (variant.isNewGroup) {
-      // Nếu là dòng mới bấm "+ Thêm phân loại" (chưa có trong DB) -> Xóa hẳn cho đỡ rác form
-      editProductData.value.variants.splice(index, 1);
-    } else {
-      // Nếu là phân loại cũ từ DB -> Giữ nguyên trên UI, ép số lượng về 0 và Hết hàng
-      variant.soLuong = 0;
-      variant.trangThai = "Hết hàng";
-      
-      // Thêm một thông báo nhỏ để nhân viên biết họ vừa thao tác gì
-      showToast(`Đã chuyển phân loại "${variant.tenMau || 'này'}" về 0 - Hết hàng!`);
-    }
-  } else {
-    showToast("Sản phẩm phải có ít nhất 1 phân loại!","warning");
-  }
+  if (editProductData.value.variants.length > 1)
+    editProductData.value.variants.splice(index, 1);
 };
 
 // Biến lưu trữ dữ liệu cho Modal Xem phân loại
@@ -1654,7 +1397,7 @@ const viewVariants = async (item) => {
     selectedVariants.value = res.data.variants;
   } catch (error) {
     console.error("Lỗi lấy phân loại:", error);
-    showToast("Không thể tải danh sách phân loại!");
+    alert("Không thể tải danh sách phân loại!");
   }
 };
 
@@ -1682,57 +1425,7 @@ const toggleProductStatus = async (maSP, currentStatus) => {
     }
   } catch (error) {
     console.error(error);
-    showToast(`Lỗi khi ${actionText} sản phẩm!`);
-  }
-};
-
-// Hàm lưu sản phẩm thêm mới
-const saveProduct = async () => {
-  try {
-    // 1. Tạo bản sao của dữ liệu form
-    const payload = { ...newProduct.value };
-    const formattedVariants = [];
-
-    // 2. Duyệt qua từng nhóm Màu và tách ra thành các phân loại lẻ
-    for (const group of payload.variants) {
-      // Bắt lỗi nếu người dùng quên chọn size
-      if (!group.selectedSizes || group.selectedSizes.length === 0) {
-        showToast(
-          `Vui lòng chọn ít nhất 1 size cho màu "${
-            group.tenMau || "chưa nhập tên"
-          }"`,"warning"
-        );
-        return;
-      }
-
-      // Tách mỗi size được chọn thành một object variant riêng
-      group.selectedSizes.forEach((sizeId) => {
-        formattedVariants.push({
-          tenMau: group.tenMau,
-          maSize: sizeId,
-          donGia: group.donGia,
-          soLuong: group.soLuong,
-          hinhAnh: group.hinhAnh,
-          // Tích hợp luôn logic tự động set trạng thái Hết hàng ở đây
-          trangThai: group.soLuong <= 0 ? "Hết hàng" : "Còn hàng",
-        });
-      });
-    }
-
-    // 3. Ghi đè mảng variants đã được làm phẳng vào payload
-    payload.variants = formattedVariants;
-
-    // 4. Gửi payload đã xử lý xuống Backend
-    const res = await axios.post(
-      "http://localhost:8080/api/sanpham/create",
-      payload
-    );
-
-    showToast("Thêm sản phẩm thành công!");
-    location.reload();
-  } catch (error) {
-    console.error(error);
-    showToast("Lỗi khi lưu sản phẩm! Vui lòng kiểm tra lại console.");
+    alert(`Lỗi khi ${actionText} sản phẩm!`);
   }
 };
 
@@ -1938,60 +1631,6 @@ onMounted(() => {
   border-style: dashed !important;
   border-width: 2px !important;
 }
-
-/* Style cho sản phẩm bị ẩn */
-.product-card.product-hidden {
-  background-color: #f8f9fa; /* Thêm chút nền xám để dễ phân biệt hơn */
-  border-color: #eeeeee;
-}
-
-/* Chỉ làm mờ hình ảnh (col-md-1), thông tin (col-md-8) và badge trạng thái */
-.product-card.product-hidden .col-md-1,
-.product-card.product-hidden .col-md-8,
-.product-card.product-hidden .status-badge-corner {
-  opacity: 1;
-  pointer-events: none; /* Tùy chọn: chặn không cho click bôi đen text ở phần đã mờ */
-}
-
-/* --- TOAST & PROGRESS BAR CUSTOME CSS --- */
-.toast {
-  position: relative;
-}
-
-/* Thanh tiến trình chạy ở dưới đáy Toast */
-.toast-progress-bar {
-  height: 4px;
-  background-color: rgba(255, 255, 255, 0.7);
-  width: 100%;
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  border-bottom-left-radius: var(--bs-toast-border-radius);
-  /* Trùng khớp với 3s ở setTimeout */
-  animation: shrinkProgress 3s linear forwards; 
-}
-
-@keyframes shrinkProgress {
-  from { width: 100%; }
-  to { width: 0%; }
-}
-
-/* Hiệu ứng trượt từ trên xuống cho vị trí Center-Top */
-.toast-fade-enter-active,
-.toast-fade-leave-active {
-  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-.toast-fade-enter-from {
-  opacity: 0;
-  transform: translateY(-50px);
-}
-.toast-fade-leave-to {
-  opacity: 0;
-  transform: translateY(-50px);
-}
-
-/* Phần cột chứa cụm nút bấm (.action-buttons) hoàn toàn không bị CSS này đụng tới 
-   nên nó sẽ giữ nguyên độ rõ nét và có thể click bình thường */
 
 /* Responsive */
 @media (max-width: 768px) {

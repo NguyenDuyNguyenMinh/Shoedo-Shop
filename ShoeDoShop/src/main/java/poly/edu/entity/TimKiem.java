@@ -3,7 +3,7 @@ package poly.edu.entity;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.Data;
-import java.util.Date;
+import java.time.LocalDateTime;
 
 @Entity
 @Data
@@ -24,6 +24,5 @@ public class TimKiem {
     private String noiDungTimKiem;
 
     @Column(name = "ThoiGian")
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date thoiGian;
+    private LocalDateTime thoiGian;
 }
