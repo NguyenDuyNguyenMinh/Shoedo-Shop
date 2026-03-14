@@ -16,45 +16,35 @@
         </div>
 
         <!-- Thống kê nhanh -->
-        <div class="row mb-4">
+        <div class="row g-3 mb-4">
           <div class="col-md">
-            <div class="card text-white bg-dark" @click="setActiveTab('pending')" style="cursor: pointer;">
-              <div class="card-body text-center">
-                <h5 class="card-title">Chờ duyệt</h5>
-                <h2 class="mb-0">{{ orderCounts.pending }}</h2>
-              </div>
+            <div class="text-white stats-mini bg-gradient-1" @click="setActiveTab('pending')" style="cursor: pointer;">
+              <h4>{{ orderCounts.pending }}</h4>
+              <p>Chờ duyệt</p>
             </div>
           </div>
           <div class="col-md">
-            <div class="card text-white bg-dark" @click="setActiveTab('delivering')" style="cursor: pointer;">
-              <div class="card-body text-center">
-                <h5 class="card-title">Đang giao</h5>
-                <h2 class="mb-0">{{ orderCounts.delivering }}</h2>
-              </div>
+            <div class="text-white stats-mini bg-gradient-1" @click="setActiveTab('delivering')" style="cursor: pointer;">
+              <h4>{{ orderCounts.delivering }}</h4>
+              <p>Đang giao</p>
             </div>
           </div>
           <div class="col-md">
-            <div class="card text-white bg-dark" @click="setActiveTab('completed')" style="cursor: pointer;">
-              <div class="card-body text-center">
-                <h5 class="card-title">Hoàn tất</h5>
-                <h2 class="mb-0">{{ orderCounts.completed }}</h2>
-              </div>
+            <div class="text-white stats-mini bg-gradient-1" @click="setActiveTab('completed')" style="cursor: pointer;">
+              <h4>{{ orderCounts.completed }}</h4>
+              <p>Hoàn tất</p>
             </div>
           </div>
           <div class="col-md">
-            <div class="card text-white bg-dark" @click="setActiveTab('rejected')" style="cursor: pointer;">
-              <div class="card-body text-center">
-                <h5 class="card-title">Từ chối</h5>
-                <h2 class="mb-0">{{ orderCounts.rejected }}</h2>
-              </div>
+            <div class="text-white stats-mini bg-gradient-1" @click="setActiveTab('rejected')" style="cursor: pointer;">
+              <h4>{{ orderCounts.rejected }}</h4>
+              <p>Từ chối</p>
             </div>
           </div>
           <div class="col-md">
-            <div class="card text-white bg-dark" @click="setActiveTab('error')" style="cursor: pointer;">
-              <div class="card-body text-center">
-                <h5 class="card-title">Báo lỗi</h5>
-                <h2 class="mb-0">{{ orderCounts.error }}</h2>
-              </div>
+            <div class="text-white stats-mini bg-gradient-1" @click="setActiveTab('error')" style="cursor: pointer;">
+              <h4>{{ orderCounts.error }}</h4>
+              <p>Báo lỗi</p>
             </div>  
           </div>
         </div>
@@ -1164,6 +1154,30 @@ export default {
 
 .modal-header.bg-dark {
   background-color: #343a40 !important;
+}
+
+.stats-mini {
+  padding: 25px 20px;
+  border-radius: 12px;
+  text-align: center;
+  color: rgb(255, 255, 255);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.stats-mini h4 {
+  font-size: 32px;
+  font-weight: bold;
+  margin: 0;
+}
+
+.stats-mini p {
+  margin: 8px 0 0;
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+.bg-gradient-1 {
+  background: linear-gradient(135deg, #212529, #000000);
 }
 
 .modal-header .btn-close-white {

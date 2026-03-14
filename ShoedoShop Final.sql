@@ -198,34 +198,34 @@ INSERT INTO DanhMuc (TenDM) VALUES
 -- 5. Dữ liệu mẫu cho bảng Sản Phẩm
 INSERT INTO SanPham (TenSP, GioiTinh, MoTa, KhuyenMai, DaBan) VALUES
 --Giày da
-(N'Giày Da Tây Shoedo "Gentle Derby" - Bản Lĩnh Quý Ông Hiện Đại - GD', 1, N'Sở hữu thiết kế Derby kinh điển, mẫu giày da Tây Gentle Derby từ Shoedo là biểu tượng của sự chuyên nghiệp và phong thái tự tin. Đây là sự lựa chọn không thể thay thế cho những buổi họp quan trọng, môi trường công sở hay các sự kiện lễ nghi, giúp phái mạnh khẳng định sự chỉn chu trong mọi tình huống.', 10, 2),
-(N'Giày Mary Jane Shoedo "Sweet Pearl" - Nét Ngọt Ngào Khó Cưỡng - GD', 0, N'Mang hơi thở của phong cách vintage pha chút hiện đại, mẫu giày Sweet Pearl từ Shoedo là lựa chọn tuyệt vời cho những cô nàng yêu thích vẻ đẹp trong sáng, nữ tính. Với thiết kế mũi tròn đáng yêu và điểm nhấn ngọc trai tinh tế, đôi giày này sẽ biến mọi outfit của bạn trở nên dịu dàng như một nàng tiểu thư.', 10, 0),
-(N'Giày Cao Gót Shoedo "Classic Muse" - Biểu Tượng Của Sự Thanh Lịch - GD', 0, N'Mang vẻ đẹp vượt thời gian với phong cách phối màu kinh điển (Two-tone), mẫu giày cao gót mũi nhọn Classic Muse từ Shoedo là món đồ không thể thiếu để hoàn thiện diện mạo sang trọng của phái đẹp. Sự giao thoa giữa tone kem nền nã và mũi giày đen quyền lực tạo nên sức hút khó cưỡng cho mọi quý cô công sở và những tín đồ thời trang cao cấp.', 30, 2),
+(N'Giày Da Tây Shoedo "Gentle Derby" - GD', 1, N'Sở hữu thiết kế Derby kinh điển, mẫu giày da Tây Gentle Derby từ Shoedo là biểu tượng của sự chuyên nghiệp và phong thái tự tin. Đây là sự lựa chọn không thể thay thế cho những buổi họp quan trọng, môi trường công sở hay các sự kiện lễ nghi, giúp phái mạnh khẳng định sự chỉn chu trong mọi tình huống.', 10, 2),
+(N'Giày Mary Jane Shoedo "Sweet Pearl" - GD', 0, N'Mang hơi thở của phong cách vintage pha chút hiện đại, mẫu giày Sweet Pearl từ Shoedo là lựa chọn tuyệt vời cho những cô nàng yêu thích vẻ đẹp trong sáng, nữ tính. Với thiết kế mũi tròn đáng yêu và điểm nhấn ngọc trai tinh tế, đôi giày này sẽ biến mọi outfit của bạn trở nên dịu dàng như một nàng tiểu thư.', 10, 0),
+(N'Giày Cao Gót Shoedo "Classic Muse" - GD', 0, N'Mang vẻ đẹp vượt thời gian với phong cách phối màu kinh điển (Two-tone), mẫu giày cao gót mũi nhọn Classic Muse từ Shoedo là món đồ không thể thiếu để hoàn thiện diện mạo sang trọng của phái đẹp. Sự giao thoa giữa tone kem nền nã và mũi giày đen quyền lực tạo nên sức hút khó cưỡng cho mọi quý cô công sở và những tín đồ thời trang cao cấp.', 30, 2),
 
 --Giày sneaker
-(N'Giày Sneaker Thể Thao Shoedo "Urban Pulse" - Năng Động & Bứt Phá - GSK', 1, N'Dòng Sneaker thể thao Urban Pulse từ Shoedo được thiết kế để bắt kịp nhịp sống sôi động của thế hệ trẻ. Đây không chỉ là một đôi giày tập luyện, mà còn là phụ kiện hoàn hảo cho những chuyến hành trình khám phá thành phố, mang lại sự cân bằng tuyệt vời giữa trọng lượng siêu nhẹ và khả năng nâng đỡ bàn chân tối ưu.', 0, 2),
-(N'Giày Sneaker Shoedo "Heritage Canvas" - Nét Cổ Điển Trong Nhịp Sống Hiện Đại - GSK', 1, N'Dòng Sneaker Heritage Canvas của Shoedo là sự tôn vinh dành cho những giá trị bền vững. Với thiết kế tối giản không bao giờ lỗi mốt, đây là đôi giày "quốc dân" có thể đồng hành cùng bạn từ giảng đường, văn phòng cho đến những buổi hẹn hò cuối tuần.', 0, 0),
+(N'Giày Sneaker Thể Thao Shoedo "Urban Pulse" - GSK', 1, N'Dòng Sneaker thể thao Urban Pulse từ Shoedo được thiết kế để bắt kịp nhịp sống sôi động của thế hệ trẻ. Đây không chỉ là một đôi giày tập luyện, mà còn là phụ kiện hoàn hảo cho những chuyến hành trình khám phá thành phố, mang lại sự cân bằng tuyệt vời giữa trọng lượng siêu nhẹ và khả năng nâng đỡ bàn chân tối ưu.', 0, 2),
+(N'Giày Sneaker Shoedo "Heritage Canvas" - GSK', 1, N'Dòng Sneaker Heritage Canvas của Shoedo là sự tôn vinh dành cho những giá trị bền vững. Với thiết kế tối giản không bao giờ lỗi mốt, đây là đôi giày "quốc dân" có thể đồng hành cùng bạn từ giảng đường, văn phòng cho đến những buổi hẹn hò cuối tuần.', 0, 0),
 
 --Giày bóng đá
-(N'Giày Đá Bóng Shoedo "Neon Strike" - Bùng Nổ Tốc Độ, Làm Chủ Cuộc Chơi - GBD', 1, N'Sẵn sàng trở thành tâm điểm của mọi trận đấu với Shoedo Neon Strike. Được thiết kế cho những cầu thủ có lối chơi tốc độ và kĩ thuật, mẫu giày này không chỉ sở hữu vẻ ngoài cực kỳ cá tính mà còn tích hợp những công nghệ hỗ trợ tối đa cho việc kiểm soát bóng và bứt tốc.', 5, 3),
+(N'Giày Đá Bóng Shoedo "Neon Strike" - GBD', 1, N'Sẵn sàng trở thành tâm điểm của mọi trận đấu với Shoedo Neon Strike. Được thiết kế cho những cầu thủ có lối chơi tốc độ và kĩ thuật, mẫu giày này không chỉ sở hữu vẻ ngoài cực kỳ cá tính mà còn tích hợp những công nghệ hỗ trợ tối đa cho việc kiểm soát bóng và bứt tốc.', 5, 3),
 
 --Giày sandal
-(N'Sandal Cao Gót Shoedo "Elegant Lift" - Thanh Lịch & Tôn Dáng - GSD', 0, N'Được thiết kế để tôn vinh nét đẹp nữ tính và hiện đại, mẫu Sandal cao gót từ Shoedo là sự lựa chọn hoàn hảo cho những quý cô yêu thích sự kết hợp giữa chiều cao ấn tượng và cảm giác thoải mái. Với tone màu trắng kem tinh khôi, đôi giày này sẵn sàng đồng hành cùng bạn từ môi trường công sở chuyên nghiệp đến những buổi tiệc tối sang trọng.', 30, 2),
+(N'Sandal Cao Gót Shoedo "Elegant Lift" - GSD', 0, N'Được thiết kế để tôn vinh nét đẹp nữ tính và hiện đại, mẫu Sandal cao gót từ Shoedo là sự lựa chọn hoàn hảo cho những quý cô yêu thích sự kết hợp giữa chiều cao ấn tượng và cảm giác thoải mái. Với tone màu trắng kem tinh khôi, đôi giày này sẵn sàng đồng hành cùng bạn từ môi trường công sở chuyên nghiệp đến những buổi tiệc tối sang trọng.', 30, 2),
 
 --Giày boot
-(N'Giày Chelsea Boot Shoedo "Soft Urban" - Tối Giản, Hiện Đại & An Toàn - GBT', NULL, N'Định nghĩa lại phong cách thành thị với mẫu Boot vải cao cấp từ Shoedo. Không sử dụng dây buộc cầu kỳ, phiên bản "Soft Urban" tập trung vào những đường nét thanh thoát, mang lại sự tiện lợi tối đa cho người sử dụng mà vẫn giữ được vẻ ngoài thời thượng, tinh tế.', 0, 2),
+(N'Giày Chelsea Boot Shoedo "Soft Urban" - GBT', NULL, N'Định nghĩa lại phong cách thành thị với mẫu Boot vải cao cấp từ Shoedo. Không sử dụng dây buộc cầu kỳ, phiên bản "Soft Urban" tập trung vào những đường nét thanh thoát, mang lại sự tiện lợi tối đa cho người sử dụng mà vẫn giữ được vẻ ngoài thời thượng, tinh tế.', 0, 2),
 
 --Giày boot & da
-(N'Giày Combat Boot Nữ Shoedo "Rebel Charm" - Khẳng Định Chất Riêng - GBT&GD', 0, N'Được thiết kế dành riêng cho những cô nàng hiện đại, yêu thích sự phá cách và không ngại thể hiện bản thân, mẫu Boot da từ Shoedo là sự kết hợp hoàn hảo giữa nét cổ điển của dòng Combat Boot và sự tinh tế trong từng đường nét đương đại. Đây chính là "vũ khí" bí mật giúp bạn nâng tầm mọi set đồ, từ dạo phố đến những buổi tiệc đêm sôi động.', 0, 1),
+(N'Giày Combat Boot Nữ Shoedo "Rebel Charm" - GBT&GD', 0, N'Được thiết kế dành riêng cho những cô nàng hiện đại, yêu thích sự phá cách và không ngại thể hiện bản thân, mẫu Boot da từ Shoedo là sự kết hợp hoàn hảo giữa nét cổ điển của dòng Combat Boot và sự tinh tế trong từng đường nét đương đại. Đây chính là "vũ khí" bí mật giúp bạn nâng tầm mọi set đồ, từ dạo phố đến những buổi tiệc đêm sôi động.', 0, 1),
 
 --Phụ kiện
-(N'Vớ Cổ Cao Shoedo Daily Basic - Đơn Giản & Tiện Dụng - PKv1', NULL, N'Dòng vớ Shoedo Daily Basic là món phụ kiện "phải có" trong tủ đồ của bất kỳ ai. Không cầu kỳ về họa tiết, sản phẩm tập trung hoàn toàn vào sự thoải mái và khả năng ứng dụng linh hoạt, giúp bạn dễ dàng kết hợp với mọi loại giày từ giày Tây, Sneaker cho đến giày lười.', 10, 5),
-(N'Vớ Cổ Cao Shoedo "Helio Edition" - Đột Phá Thiết Kế Streetwear - PKv2', NULL, N'Không chỉ là một món phụ kiện giữ ấm, mẫu vớ Shoedo x Helio là sự giao thoa giữa nghệ thuật đồ họa và thời trang hiện đại. Với họa tiết độc bản mang tinh thần tự do, đây là lựa chọn hàng đầu để bạn tạo điểm nhấn nổi bật khi diện cùng các mẫu Short, Sneaker hoặc quần xắn gấu.', 10, 1),
-(N'Vớ Chạy Bộ Chuyên Dụng Shoedo Performance - Êm Ái Trên Mọi Cung Đường - PKv3', NULL, N'Được thiết kế dành riêng cho những vận động viên và người yêu thích chạy bộ, dòng vớ Shoedo Performance không chỉ là một phụ kiện mà là "người bạn đồng hành" giúp bảo vệ đôi chân tối đa. Với sự kết hợp giữa công nghệ dệt nén linh hoạt và khả năng kiểm soát độ ẩm, sản phẩm mang lại sự thoải mái tuyệt đối từ km đầu tiên đến khi về đích.', 10, 4),
+(N'Vớ Cổ Cao Shoedo Daily Basic - PKv1', NULL, N'Dòng vớ Shoedo Daily Basic là món phụ kiện "phải có" trong tủ đồ của bất kỳ ai. Không cầu kỳ về họa tiết, sản phẩm tập trung hoàn toàn vào sự thoải mái và khả năng ứng dụng linh hoạt, giúp bạn dễ dàng kết hợp với mọi loại giày từ giày Tây, Sneaker cho đến giày lười.', 10, 5),
+(N'Vớ Cổ Cao Shoedo "Helio Edition" - PKv2', NULL, N'Không chỉ là một món phụ kiện giữ ấm, mẫu vớ Shoedo x Helio là sự giao thoa giữa nghệ thuật đồ họa và thời trang hiện đại. Với họa tiết độc bản mang tinh thần tự do, đây là lựa chọn hàng đầu để bạn tạo điểm nhấn nổi bật khi diện cùng các mẫu Short, Sneaker hoặc quần xắn gấu.', 10, 1),
+(N'Vớ Chạy Bộ Chuyên Dụng Shoedo Performance - PKv3', NULL, N'Được thiết kế dành riêng cho những vận động viên và người yêu thích chạy bộ, dòng vớ Shoedo Performance không chỉ là một phụ kiện mà là "người bạn đồng hành" giúp bảo vệ đôi chân tối đa. Với sự kết hợp giữa công nghệ dệt nén linh hoạt và khả năng kiểm soát độ ẩm, sản phẩm mang lại sự thoải mái tuyệt đối từ km đầu tiên đến khi về đích.', 10, 4),
 
-(N'Dây Giày Tròn Shoedo Basic - Đơn Giản, Bền Bỉ & Tiết Kiệm - PKgd1', NULL, N'Dòng dây giày tròn cơ bản từ Shoedo là giải pháp thay thế hoàn hảo cho mọi đôi giày khi dây cũ bị sờn rách hoặc bạn chỉ đơn giản muốn làm mới đôi giày của mình một cách nhanh chóng. Với thiết kế tối giản không cầu kỳ, sản phẩm chú trọng vào chất lượng thực tế và mức giá "mềm" nhất thị trường.', 10, 1),
-(N'Dây Giày Dẹt Shoedo Camo - Bản Phối Đầy Cá Tính - PKgd2', NULL, N'Dòng dây giày dẹt họa tiết Camo (rằn ri) từ Shoedo là phụ kiện lý tưởng dành cho những ai yêu thích phong cách Streetwear, Military hoặc muốn tạo nên một diện mạo phá cách cho đôi giày của mình. Không còn là những sợi dây đơn sắc nhàm chán, Shoedo Camo biến mỗi bước chân trở thành một tuyên ngôn về cá tính riêng biệt.', 10, 0),
-(N'Dây Giày Tròn Phản Quang Shoedo - Định Hình Phong Cách Tối Giản - PKgd3', NULL, N'Dòng dây giày nằm trong bộ sưu tập phụ kiện cao cấp từ Shoedo, dòng dây giày tròn phản quang là sự kết hợp hoàn hảo giữa tính năng bảo vệ và yếu tố thời trang "vượt thời gian". Không chỉ đơn thuần là phụ kiện giữ form giày, đây chính là điểm nhấn giúp đôi giày của bạn tỏa sáng theo đúng nghĩa đen.', 10, 1);
+(N'Dây Giày Tròn Shoedo Basic - PKgd1', NULL, N'Dòng dây giày tròn cơ bản từ Shoedo là giải pháp thay thế hoàn hảo cho mọi đôi giày khi dây cũ bị sờn rách hoặc bạn chỉ đơn giản muốn làm mới đôi giày của mình một cách nhanh chóng. Với thiết kế tối giản không cầu kỳ, sản phẩm chú trọng vào chất lượng thực tế và mức giá "mềm" nhất thị trường.', 10, 1),
+(N'Dây Giày Dẹt Shoedo Camo - PKgd2', NULL, N'Dòng dây giày dẹt họa tiết Camo (rằn ri) từ Shoedo là phụ kiện lý tưởng dành cho những ai yêu thích phong cách Streetwear, Military hoặc muốn tạo nên một diện mạo phá cách cho đôi giày của mình. Không còn là những sợi dây đơn sắc nhàm chán, Shoedo Camo biến mỗi bước chân trở thành một tuyên ngôn về cá tính riêng biệt.', 10, 0),
+(N'Dây Giày Tròn Phản Quang Shoedo - PKgd3', NULL, N'Dòng dây giày nằm trong bộ sưu tập phụ kiện cao cấp từ Shoedo, dòng dây giày tròn phản quang là sự kết hợp hoàn hảo giữa tính năng bảo vệ và yếu tố thời trang "vượt thời gian". Không chỉ đơn thuần là phụ kiện giữ form giày, đây chính là điểm nhấn giúp đôi giày của bạn tỏa sáng theo đúng nghĩa đen.', 10, 1);
 
 INSERT INTO SanPham_DanhMuc (MaSP, MaDM) VALUES
 -- Giày da
@@ -337,10 +337,10 @@ INSERT INTO SanPham_ChiTiet (MaSP, TenMau, HinhAnh, MaSize, TrangThai, SoLuong, 
 -- Size 39 (ID 4)
 (7, N'Đen', 'sp7_gsd1_black.jpg', 2, N'Còn hàng', 18, 1800000),
 (7, N'Đen', 'sp7_gsd1_black.jpg', 3, N'Còn hàng', 18, 1800000),
-(7, N'Đen', 'sp7_gsd1_black.jpg', 2, N'Còn hàng', 18, 1800000),
-(7, N'Trắng', 'sp7_gsd1_white.jpg', 3, N'Còn hàng', 18, 1800000),
-(7, N'Trắng', 'sp7_gsd1_white.jpg', 2, N'Còn hàng', 18, 1800000), 
+(7, N'Đen', 'sp7_gsd1_black.jpg', 4, N'Còn hàng', 18, 1800000),
+(7, N'Trắng', 'sp7_gsd1_white.jpg', 2, N'Còn hàng', 18, 1800000),
 (7, N'Trắng', 'sp7_gsd1_white.jpg', 3, N'Còn hàng', 18, 1800000), 
+(7, N'Trắng', 'sp7_gsd1_white.jpg', 4, N'Còn hàng', 18, 1800000), 
 
 -- =======================
 -- Giày boot (MaSP 8)
@@ -560,8 +560,8 @@ INSERT INTO DanhGia (MaHDCT, Sao, DanhGiaCT) VALUES
 -- HD4 có 2 dòng:
 -- Dòng 1: Boot đen 40 (MaSKU 36) - MaHDCT = 7 (vì insert từ trên xuống)
 -- Dòng 2: Dây giày phản quang đen (MaSKU 50) - MaHDCT = 8
-(7, 5, N'Giày boot đẹp, da mềm, đi rất êm chân. Giao hàng nhanh, đóng gói cẩn thận!'),
-(8, 4, N'Dây giày phản quang đẹp, nhưng hơi ngắn so với mong đợi. Chất lượng ổn.'),
+(8, 5, N'Giày boot đẹp, da mềm, đi rất êm chân. Giao hàng nhanh, đóng gói cẩn thận!'),
+(9, 4, N'Dây giày phản quang đẹp, nhưng hơi ngắn so với mong đợi. Chất lượng ổn.'),
 
 -- ===== ĐÁNH GIÁ CỦA KHÁCH HÀNG 2 (MaKH = 2) - Hóa đơn HD2 và HD10 =====
 -- HD2 có 2 dòng:
@@ -587,7 +587,7 @@ INSERT INTO DanhGia (MaHDCT, Sao, DanhGiaCT) VALUES
 -- Dòng 1: Boot combat đen 38 (MaSKU 38) - MaHDCT = 13
 -- Dòng 2: Dây giày basic đen (MaSKU 44) - MaHDCT = 14
 (13, 4, N'Boot combat đen phong cách, đi chơi rất ngầu. Trừ 1 sao vì hơi nặng.'),
-(14, 5, N'Dây giày basic đen chất lượng tốt, giá rẻ, thay cho dây cũ hỏng.'),
+(14, 5, N'Dây giày basic đen chất lượng tốt, giá rẻ, thay cho dây cũ hỏng.');
 GO
 
 -- 15. Dữ liệu mẫu cho bảng TimKiem
