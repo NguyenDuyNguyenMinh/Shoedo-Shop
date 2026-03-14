@@ -22,7 +22,9 @@ public class AuthInterceptor implements HandlerInterceptor {
             uri.startsWith("/images/") ||
             uri.startsWith("/anh/") ||
             uri.equals("/") ||
-            uri.equals("/customer/index")) {
+            uri.equals("/customer/index") ||
+            uri.equals("/customer/chinhsach") ||
+            uri.equals("/customer/sanpham")) {
             return true;
         }
         
@@ -52,7 +54,8 @@ public class AuthInterceptor implements HandlerInterceptor {
                 return false;
             }
             
-            if (uri.equals("/employee/dashboard") && !authService.isAdmin()) {
+            if ((uri.equals("/employee/dashboard") || uri.startsWith("/employee/dashboard/")) 
+                    && !authService.isAdmin()) {
                 res.sendRedirect("/employee/products");
                 return false;
             }

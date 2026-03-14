@@ -29,10 +29,14 @@
 
       <!-- Footer message -->
       <div class="text-center mt-5 pt-4">
-        <div class="brand-message">
-          <img :src="getImageUrl('anh/logo blackwhite.jpg')" alt="BlackWhite" class="brand-logo mb-3" style="max-width: 150px;">
-          <p class="lead fw-bold">SHOUDO - Localbrand giày Việt</p>
-          <p class="text-muted">Cám ơn bạn đã tin tưởng và ủng hộ shop!</p>
+        <div class="brand-message d-flex align-items-center justify-content-center gap-3 flex-wrap">
+          <router-link to="/customer/index" class="d-inline-block">
+            <img src="/SHOEDO.png" alt="Shoedo" class="brand-logo" style="max-width: 40px; height: auto;">
+          </router-link>
+          <div class="text-start">
+            <p class="lead fw-bold mb-0">SHOUDO - Localbrand giày Việt</p>
+            <p class="text-muted small mb-0">Cám ơn bạn đã tin tưởng và ủng hộ shop!</p>
+          </div>
         </div>
       </div>
     </main>
@@ -44,7 +48,6 @@
 import { ref } from 'vue';
 import KH_Navbar from '@/components/shared/KH_Navbar.vue';
 import Footer from '@/components/shared/Footer.vue';
-
 export default {
   name: 'KH_ChinhSach',
   components: {
@@ -52,9 +55,6 @@ export default {
     Footer
   },
   setup() {
-    const getImageUrl = (imagePath) => {
-      return `http://localhost:8080/${imagePath}`;
-    };
 
     const policies = ref([
       {
@@ -166,7 +166,6 @@ export default {
     ]);
 
     return {
-      getImageUrl,
       policies
     };
   }
@@ -232,6 +231,7 @@ export default {
 .policy-content {
   padding: 1.5rem;
   color: #333333;
+  font-size: 0.95rem;
 }
 
 /* Policy list styling */
@@ -260,23 +260,47 @@ export default {
   font-size: 0.95rem;
 }
 
-/* Brand message */
+/* Brand message - Flex layout */
 .brand-message {
   padding: 2rem;
   background: #f8f9fa;
   border-radius: 12px;
   border: 2px dashed #000000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
 }
 
+/* Brand logo */
 .brand-logo {
-  filter: brightness(0);
-  opacity: 0.8;
+  max-width: 40px;
+  height: auto;
   transition: all 0.3s ease;
+  display: inline-block;
+  flex-shrink: 0;
 }
 
 .brand-logo:hover {
-  opacity: 1;
-  transform: scale(1.05);
+  transform: scale(1.1);
+}
+
+/* Text container */
+.brand-message .text-start {
+  text-align: left;
+}
+
+.brand-message .lead {
+  font-size: 1.2rem;
+  margin-bottom: 0.15rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.brand-message .small {
+  font-size: 0.85rem;
+  color: #6c757d;
 }
 
 /* Responsive adjustments */
@@ -291,10 +315,28 @@ export default {
 
   .policy-content {
     padding: 1rem;
+    font-size: 0.9rem;
   }
 
   .policy-list li {
-    font-size: 0.95rem;
+    font-size: 0.9rem;
+  }
+
+  .brand-message {
+    gap: 1rem;
+    padding: 1.5rem;
+  }
+
+  .brand-logo {
+    max-width: 35px;
+  }
+
+  .brand-message .lead {
+    font-size: 1rem;
+  }
+
+  .brand-message .small {
+    font-size: 0.8rem;
   }
 }
 

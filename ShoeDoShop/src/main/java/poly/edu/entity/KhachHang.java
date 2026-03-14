@@ -16,7 +16,7 @@ public class KhachHang {
     @Column(name = "MaKH")
     private Integer maKH;
 
-    @Column(name = "TenKH")
+    @Column(name = "TenKH", nullable = false, length = 100)
     private String tenKH;
 
     @Column(name = "SDT")

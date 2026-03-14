@@ -40,6 +40,7 @@ public class SecurityConfig {
                 CorsConfiguration config = new CorsConfiguration();
                 config.setAllowCredentials(true);
                 config.addAllowedOrigin("http://localhost:5173");
+                config.addAllowedOrigin("http://localhost:5174");
                 config.addAllowedOrigin("http://localhost:8080");
                 config.addAllowedHeader("*");
                 config.addAllowedMethod("*");
@@ -53,7 +54,8 @@ public class SecurityConfig {
                     "/images/**",
                     "/anh/**", 
                     "/oauth2/**",
-                    "/login/oauth2/**"
+                    "/login/oauth2/**",
+                    "/error"
                 ).permitAll()
                 .anyRequest().authenticated()
             )

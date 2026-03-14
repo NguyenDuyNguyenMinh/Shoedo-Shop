@@ -9,29 +9,25 @@
         <div class="row g-3 mb-4">
           <div class="col-md-3">
             <div class="stats-mini bg-gradient-1">
-              <div class="stats-icon"><i class="bi bi-people-fill"></i></div>
-              <h4>8</h4>
+              <h4>{{ stats.totalUsers }}</h4>
               <p>Tổng User</p>
             </div>
           </div>
           <div class="col-md-3">
-            <div class="stats-mini bg-gradient-2">
-              <div class="stats-icon"><i class="bi bi-person-heart"></i></div>
-              <h4>4</h4>
+            <div class="stats-mini bg-gradient-1">
+              <h4>{{ stats.totalCustomers }}</h4>
               <p>Khách hàng</p>
             </div>
           </div>
           <div class="col-md-3">
-            <div class="stats-mini bg-gradient-3">
-              <div class="stats-icon"><i class="bi bi-person-gear"></i></div>
-              <h4>4</h4>
+            <div class="stats-mini bg-gradient-1">
+              <h4>{{ stats.totalEmployees + stats.totalAdmins }}</h4>
               <p>Quản trị viên</p>
             </div>
           </div>
           <div class="col-md-3">
-            <div class="stats-mini bg-gradient-4">
-              <div class="stats-icon"><i class="bi bi-person-x-fill"></i></div>
-              <h4>0</h4>
+            <div class="stats-mini bg-gradient-1">
+              <h4>{{ stats.totalInactive }}</h4>
               <p>Tài khoản bị khóa</p>
             </div>
           </div>
@@ -44,48 +40,58 @@
               <h5 class="page-title">Danh sách người dùng</h5>
               <p class="page-subtitle">Quản lý tài khoản và thông tin người dùng</p>
             </div>
+            <button class="btn btn-dark" @click="openCreateModal">
+              <i class="bi bi-plus-circle me-2"></i>Thêm người dùng
+            </button>
           </div>
 
           <!-- Filter Section -->
           <div class="filter-section">
             <div class="row g-3">
-              <div class="col-md-3">
+              <div class="col-md-4">
                 <div class="input-group">
                   <span class="input-group-text bg-light">
                     <i class="bi bi-search"></i>
                   </span>
-                  <input type="text" class="form-control" placeholder="Tìm username, email...">
+                  <input type="text" class="form-control" v-model="filters.keyword"
+                         placeholder="Tìm theo username, email, họ tên, SĐT..."
+                         @keyup.enter="applyFilters">
+                  <button v-if="filters.keyword" class="btn btn-outline-secondary" type="button" @click="clearKeyword">
+                    <i class="bi bi-x"></i>
+                  </button>
                 </div>
               </div>
               <div class="col-md-2">
-                <select class="form-select">
-                  <option>Tất cả vai trò</option>
-                  <option>Admin</option>
-                  <option>Nhân viên</option>
-                  <option>Khách hàng</option>
+                <select class="form-select" v-model="filters.role" @change="applyFilters">
+                  <option value="">Tất cả vai trò</option>
+                  <option value="ADMIN">Admin</option>
+                  <option value="EMPLOYEE">Nhân viên</option>
+                  <option value="CUSTOMER">Khách hàng</option>
                 </select>
               </div>
               <div class="col-md-2">
-                <select class="form-select">
-                  <option>Tất cả trạng thái</option>
-                  <option>Đang hoạt động</option>
-                  <option>Bị khóa</option>
+                <select class="form-select" v-model="filters.status" @change="applyFilters">
+                  <option value="all">Tất cả trạng thái</option>
+                  <option value="active">Đang hoạt động</option>
+                  <option value="inactive">Bị khóa</option>
                 </select>
               </div>
               <div class="col-md-2">
-                <select class="form-select">
-                  <option>Sắp xếp</option>
-                  <option>Mới nhất</option>
-                  <option>Cũ nhất</option>
-                  <option>Username A-Z</option>
+                <select class="form-select" v-model="filters.sortBy" @change="applyFilters">
+                  <option value="maUser,desc">Mới nhất</option>
+                  <option value="maUser,asc">Cũ nhất</option>
+                  <option value="userName,asc">Username A-Z</option>
+                  <option value="userName,desc">Username Z-A</option>
+                  <option value="hoTen,asc">Tên A-Z</option>
+                  <option value="hoTen,desc">Tên Z-A</option>
                 </select>
               </div>
-              <div class="col-md-3">
+              <div class="col-md-2">
                 <div class="d-flex gap-2">
-                  <button class="btn btn-dark flex-fill">
+                  <button class="btn btn-dark flex-fill" @click="applyFilters">
                     <i class="bi bi-search me-2"></i>Tìm kiếm
                   </button>
-                  <button class="btn btn-outline-secondary">
+                  <button class="btn btn-outline-secondary" @click="resetFilters" title="Reset bộ lọc">
                     <i class="bi bi-arrow-clockwise"></i>
                   </button>
                 </div>
@@ -93,275 +99,74 @@
             </div>
           </div>
 
+          <!-- Loading State -->
+          <div v-if="loading" class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+          </div>
+
           <!-- User Table -->
-          <div class="table-responsive">
+          <div v-else class="table-responsive">
             <table class="table table-hover align-middle user-table">
               <thead>
-                <tr>
-                  <th>#</th>
-                  <th>Người dùng</th>
-                  <th>Email</th>
-                  <th>Họ tên</th>
-                  <th>SĐT</th>
-                  <th>Vai trò</th>
-                  <th>Trạng thái</th>
-                  <th>Ngày tạo</th>
-                  <th class="text-center">Thao tác</th>
-                </tr>
+              <tr>
+                <th>#</th>
+                <th>Người dùng</th>
+                <th>Email</th>
+                <th>Họ tên</th>
+                <th>SĐT</th>
+                <th>Vai trò</th>
+                <th>Trạng thái</th>
+                <th>Ngày tạo</th>
+                <th class="text-center">Thao tác</th>
+              </tr>
               </thead>
               <tbody>
-                <!-- User 1 - Admin -->
-                <tr>
-                  <td><span class="fw-semibold text-muted">1</span></td>
-                  <td>
-                    <div class="d-flex align-items-center gap-2">
-                      <div class="user-avatar bg-admin">
-                        <i class="bi bi-star-fill"></i>
-                      </div>
-                      <span class="fw-semibold">admin</span>
+              <tr v-for="(user, index) in users" :key="user.maUser">
+                <td><span class="fw-semibold text-muted">{{ (pagination.currentPage - 1) * pagination.pageSize + index + 1 }}</span></td>
+                <td>
+                  <div class="d-flex align-items-center gap-2">
+                    <div class="user-avatar" :class="getAvatarClass(user.role)">
+                      <i :class="getAvatarIcon(user.role)"></i>
                     </div>
-                  </td>
-                  <td><span class="text-muted">admin@shop.com</span></td>
-                  <td>Quan</td>
-                  <td>—</td>
-                  <td><span class="badge role-badge badge-admin"><i class="bi bi-star-fill me-1"></i>Admin</span></td>
-                  <td><span class="badge status-badge badge-active"><i class="bi bi-check-circle me-1"></i>Hoạt động</span></td>
-                  <td><span class="text-muted small">25/01/2025</span></td>
-                  <td class="text-center">
-                    <div class="action-buttons justify-content-center">
-                      <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#viewUserModal" title="Xem chi tiết">
-                        <i class="bi bi-eye"></i>
-                      </button>
-                      <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#editUserModal" title="Chỉnh sửa">
-                        <i class="bi bi-pencil"></i>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-
-                <!-- User 2 - Nhân viên -->
-                <tr>
-                  <td><span class="fw-semibold text-muted">2</span></td>
-                  <td>
-                    <div class="d-flex align-items-center gap-2">
-                      <div class="user-avatar bg-employee">
-                        <i class="bi bi-person-gear"></i>
-                      </div>
-                      <span class="fw-semibold">nv1</span>
-                    </div>
-                  </td>
-                  <td><span class="text-muted">nhanvien1@gmail.com</span></td>
-                  <td>Minh</td>
-                  <td>—</td>
-                  <td><span class="badge role-badge badge-employee"><i class="bi bi-person-gear me-1"></i>Nhân viên</span></td>
-                  <td><span class="badge status-badge badge-active"><i class="bi bi-check-circle me-1"></i>Hoạt động</span></td>
-                  <td><span class="text-muted small">25/01/2025</span></td>
-                  <td class="text-center">
-                    <div class="action-buttons justify-content-center">
-                      <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#viewUserModal" title="Xem chi tiết">
-                        <i class="bi bi-eye"></i>
-                      </button>
-                      <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#editUserModal" title="Chỉnh sửa">
-                        <i class="bi bi-pencil"></i>
-                      </button>
-                      <button class="btn btn-outline-danger btn-sm" title="Khóa tài khoản">
-                        <i class="bi bi-lock"></i>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-
-                <!-- User 3 - Nhân viên -->
-                <tr>
-                  <td><span class="fw-semibold text-muted">3</span></td>
-                  <td>
-                    <div class="d-flex align-items-center gap-2">
-                      <div class="user-avatar bg-employee">
-                        <i class="bi bi-person-gear"></i>
-                      </div>
-                      <span class="fw-semibold">nv2</span>
-                    </div>
-                  </td>
-                  <td><span class="text-muted">nhanvien2@gmail.com</span></td>
-                  <td>Minh3D</td>
-                  <td>—</td>
-                  <td><span class="badge role-badge badge-employee"><i class="bi bi-person-gear me-1"></i>Nhân viên</span></td>
-                  <td><span class="badge status-badge badge-active"><i class="bi bi-check-circle me-1"></i>Hoạt động</span></td>
-                  <td><span class="text-muted small">25/01/2025</span></td>
-                  <td class="text-center">
-                    <div class="action-buttons justify-content-center">
-                      <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#viewUserModal" title="Xem chi tiết">
-                        <i class="bi bi-eye"></i>
-                      </button>
-                      <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#editUserModal" title="Chỉnh sửa">
-                        <i class="bi bi-pencil"></i>
-                      </button>
-                      <button class="btn btn-outline-danger btn-sm" title="Khóa tài khoản">
-                        <i class="bi bi-lock"></i>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-
-                <!-- User 4 - Nhân viên -->
-                <tr>
-                  <td><span class="fw-semibold text-muted">4</span></td>
-                  <td>
-                    <div class="d-flex align-items-center gap-2">
-                      <div class="user-avatar bg-employee">
-                        <i class="bi bi-person-gear"></i>
-                      </div>
-                      <span class="fw-semibold">nv3</span>
-                    </div>
-                  </td>
-                  <td><span class="text-muted">nhanvien3@gmail.com</span></td>
-                  <td>Brynes</td>
-                  <td>—</td>
-                  <td><span class="badge role-badge badge-employee"><i class="bi bi-person-gear me-1"></i>Nhân viên</span></td>
-                  <td><span class="badge status-badge badge-active"><i class="bi bi-check-circle me-1"></i>Hoạt động</span></td>
-                  <td><span class="text-muted small">25/01/2025</span></td>
-                  <td class="text-center">
-                    <div class="action-buttons justify-content-center">
-                      <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#viewUserModal" title="Xem chi tiết">
-                        <i class="bi bi-eye"></i>
-                      </button>
-                      <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#editUserModal" title="Chỉnh sửa">
-                        <i class="bi bi-pencil"></i>
-                      </button>
-                      <button class="btn btn-outline-danger btn-sm" title="Khóa tài khoản">
-                        <i class="bi bi-lock"></i>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-
-                <!-- User 5 - Khách hàng -->
-                <tr>
-                  <td><span class="fw-semibold text-muted">5</span></td>
-                  <td>
-                    <div class="d-flex align-items-center gap-2">
-                      <div class="user-avatar bg-customer">
-                        <i class="bi bi-person"></i>
-                      </div>
-                      <span class="fw-semibold">user1</span>
-                    </div>
-                  </td>
-                  <td><span class="text-muted">user1@gmail.com</span></td>
-                  <td>Nguyễn Văn A</td>
-                  <td>0901234567</td>
-                  <td><span class="badge role-badge badge-customer"><i class="bi bi-person me-1"></i>Khách hàng</span></td>
-                  <td><span class="badge status-badge badge-active"><i class="bi bi-check-circle me-1"></i>Hoạt động</span></td>
-                  <td><span class="text-muted small">25/01/2025</span></td>
-                  <td class="text-center">
-                    <div class="action-buttons justify-content-center">
-                      <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#viewUserModal" title="Xem chi tiết">
-                        <i class="bi bi-eye"></i>
-                      </button>
-                      <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#editUserModal" title="Chỉnh sửa">
-                        <i class="bi bi-pencil"></i>
-                      </button>
-                      <button class="btn btn-outline-danger btn-sm" title="Khóa tài khoản">
-                        <i class="bi bi-lock"></i>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-
-                <!-- User 6 - Khách hàng -->
-                <tr>
-                  <td><span class="fw-semibold text-muted">6</span></td>
-                  <td>
-                    <div class="d-flex align-items-center gap-2">
-                      <div class="user-avatar bg-customer">
-                        <i class="bi bi-person"></i>
-                      </div>
-                      <span class="fw-semibold">user2</span>
-                    </div>
-                  </td>
-                  <td><span class="text-muted">user2@gmail.com</span></td>
-                  <td>Trần Thị Hi</td>
-                  <td>0912345678</td>
-                  <td><span class="badge role-badge badge-customer"><i class="bi bi-person me-1"></i>Khách hàng</span></td>
-                  <td><span class="badge status-badge badge-active"><i class="bi bi-check-circle me-1"></i>Hoạt động</span></td>
-                  <td><span class="text-muted small">25/01/2025</span></td>
-                  <td class="text-center">
-                    <div class="action-buttons justify-content-center">
-                      <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#viewUserModal" title="Xem chi tiết">
-                        <i class="bi bi-eye"></i>
-                      </button>
-                      <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#editUserModal" title="Chỉnh sửa">
-                        <i class="bi bi-pencil"></i>
-                      </button>
-                      <button class="btn btn-outline-danger btn-sm" title="Khóa tài khoản">
-                        <i class="bi bi-lock"></i>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-
-                <!-- User 7 - Khách hàng -->
-                <tr>
-                  <td><span class="fw-semibold text-muted">7</span></td>
-                  <td>
-                    <div class="d-flex align-items-center gap-2">
-                      <div class="user-avatar bg-customer">
-                        <i class="bi bi-person"></i>
-                      </div>
-                      <span class="fw-semibold">user3</span>
-                    </div>
-                  </td>
-                  <td><span class="text-muted">user3@gmail.com</span></td>
-                  <td>Lê Thị B</td>
-                  <td>0987654321</td>
-                  <td><span class="badge role-badge badge-customer"><i class="bi bi-person me-1"></i>Khách hàng</span></td>
-                  <td><span class="badge status-badge badge-active"><i class="bi bi-check-circle me-1"></i>Hoạt động</span></td>
-                  <td><span class="text-muted small">25/01/2025</span></td>
-                  <td class="text-center">
-                    <div class="action-buttons justify-content-center">
-                      <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#viewUserModal" title="Xem chi tiết">
-                        <i class="bi bi-eye"></i>
-                      </button>
-                      <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#editUserModal" title="Chỉnh sửa">
-                        <i class="bi bi-pencil"></i>
-                      </button>
-                      <button class="btn btn-outline-danger btn-sm" title="Khóa tài khoản">
-                        <i class="bi bi-lock"></i>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-
-                <!-- User 8 - Khách hàng -->
-                <tr>
-                  <td><span class="fw-semibold text-muted">8</span></td>
-                  <td>
-                    <div class="d-flex align-items-center gap-2">
-                      <div class="user-avatar bg-customer">
-                        <i class="bi bi-person"></i>
-                      </div>
-                      <span class="fw-semibold">QuanTesteremail</span>
-                    </div>
-                  </td>
-                  <td><span class="text-muted">nguyenhoangminhquan786@gmail.com</span></td>
-                  <td>Nguyễn Hoàng Minh Quân</td>
-                  <td>010100101</td>
-                  <td><span class="badge role-badge badge-customer"><i class="bi bi-person me-1"></i>Khách hàng</span></td>
-                  <td><span class="badge status-badge badge-active"><i class="bi bi-check-circle me-1"></i>Hoạt động</span></td>
-                  <td><span class="text-muted small">25/01/2025</span></td>
-                  <td class="text-center">
-                    <div class="action-buttons justify-content-center">
-                      <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#viewUserModal" title="Xem chi tiết">
-                        <i class="bi bi-eye"></i>
-                      </button>
-                      <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#editUserModal" title="Chỉnh sửa">
-                        <i class="bi bi-pencil"></i>
-                      </button>
-                      <button class="btn btn-outline-danger btn-sm" title="Khóa tài khoản">
-                        <i class="bi bi-lock"></i>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
+                    <span class="fw-semibold">{{ user.userName }}</span>
+                  </div>
+                </td>
+                <td><span class="text-muted">{{ user.mail }}</span></td>
+                <td>{{ user.hoTen || '—' }}</td>
+                <td>{{ user.sdt || '—' }}</td>
+                <td>
+                    <span class="badge role-badge" :class="getRoleClass(user.role)">
+                      <i :class="getRoleIcon(user.role)" class="me-1"></i>{{ getRoleText(user.role) }}
+                    </span>
+                </td>
+                <td>
+                    <span class="badge status-badge" :class="user.isActive ? 'badge-active' : 'badge-inactive'">
+                      <i :class="user.isActive ? 'bi bi-check-circle' : 'bi bi-x-circle'" class="me-1"></i>
+                      {{ user.isActive ? 'Hoạt động' : 'Bị khóa' }}
+                    </span>
+                </td>
+                <td><span class="text-muted small">{{ formatDate(user.createAt) }}</span></td>
+                <td class="text-center">
+                  <div class="action-buttons justify-content-center">
+                    <button class="btn btn-outline-primary btn-sm" @click="viewUserDetail(user.maUser)" title="Xem chi tiết">
+                      <i class="bi bi-eye"></i>
+                    </button>
+                    <button class="btn btn-outline-secondary btn-sm" @click="openEditModal(user)" title="Chỉnh sửa">
+                      <i class="bi bi-pencil"></i>
+                    </button>
+                    <button v-if="user.role !== 'ADMIN'" class="btn btn-outline-danger btn-sm" @click="toggleUserStatus(user)" :title="user.isActive ? 'Khóa tài khoản' : 'Mở khóa'">
+                      <i :class="user.isActive ? 'bi bi-lock' : 'bi bi-unlock'"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+              <tr v-if="users.length === 0">
+                <td colspan="9" class="text-center py-4 text-muted">
+                  Không tìm thấy người dùng nào
+                </td>
+              </tr>
               </tbody>
             </table>
           </div>
@@ -369,17 +174,23 @@
           <!-- Pagination -->
           <div class="mt-4">
             <div class="d-flex justify-content-between align-items-center">
-              <span class="text-muted small">Hiển thị 1-8 trên tổng 8 người dùng</span>
+              <span class="text-muted small">
+                Hiển thị {{ startItem }} - {{ endItem }} trên tổng {{ pagination.totalItems }} người dùng
+              </span>
               <nav>
                 <ul class="pagination mb-0">
-                  <li class="page-item disabled">
-                    <button class="page-link"><i class="bi bi-chevron-left"></i></button>
+                  <li class="page-item" :class="{ disabled: pagination.currentPage === 1 }">
+                    <button class="page-link" @click="changePage(pagination.currentPage - 1)">
+                      <i class="bi bi-chevron-left"></i>
+                    </button>
                   </li>
-                  <li class="page-item active">
-                    <button class="page-link">1</button>
+                  <li v-for="page in pagination.totalPages" :key="page" class="page-item" :class="{ active: pagination.currentPage === page }">
+                    <button class="page-link" @click="changePage(page)">{{ page }}</button>
                   </li>
-                  <li class="page-item disabled">
-                    <button class="page-link"><i class="bi bi-chevron-right"></i></button>
+                  <li class="page-item" :class="{ disabled: pagination.currentPage === pagination.totalPages }">
+                    <button class="page-link" @click="changePage(pagination.currentPage + 1)">
+                      <i class="bi bi-chevron-right"></i>
+                    </button>
                   </li>
                 </ul>
               </nav>
@@ -390,7 +201,7 @@
     </main>
 
     <!-- Modal Xem Chi Tiết User -->
-    <div class="modal fade" id="viewUserModal" tabindex="-1" aria-hidden="true">
+    <div class="modal fade" id="viewUserModal" tabindex="-1" aria-hidden="true" ref="viewUserModal">
       <div class="modal-dialog modal-lg">
         <div class="modal-content">
           <div class="modal-header">
@@ -399,57 +210,66 @@
             </h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
           </div>
-          <div class="modal-body">
+          <div class="modal-body" v-if="selectedUser">
             <!-- User Info Card -->
             <div class="user-detail-card mb-4">
               <div class="row">
                 <div class="col-md-2 text-center">
-                  <div class="user-avatar-lg bg-customer">
-                    <i class="bi bi-person-fill"></i>
+                  <div class="user-avatar-lg" :class="getAvatarClass(selectedUser.role)">
+                    <i :class="getAvatarIcon(selectedUser.role)"></i>
                   </div>
                 </div>
                 <div class="col-md-10">
-                  <div class="row">
+                  <div class="row g-3">
                     <div class="col-md-6">
                       <div class="detail-item">
                         <label>Username</label>
-                        <p>user1</p>
+                        <p>{{ selectedUser.userName || '—' }}</p>
                       </div>
                     </div>
                     <div class="col-md-6">
                       <div class="detail-item">
                         <label>Email</label>
-                        <p>user1@gmail.com</p>
+                        <p>{{ selectedUser.mail || '—' }}</p>
                       </div>
                     </div>
                     <div class="col-md-6">
                       <div class="detail-item">
                         <label>Họ tên</label>
-                        <p>Nguyễn Văn A</p>
+                        <p>{{ selectedUser.hoTen || '—' }}</p>
                       </div>
                     </div>
                     <div class="col-md-6">
                       <div class="detail-item">
                         <label>Số điện thoại</label>
-                        <p>0901234567</p>
+                        <p>{{ selectedUser.sdt || '—' }}</p>
                       </div>
                     </div>
                     <div class="col-md-4">
                       <div class="detail-item">
                         <label>Vai trò</label>
-                        <p><span class="badge role-badge badge-customer"><i class="bi bi-person me-1"></i>Khách hàng</span></p>
+                        <p>
+                          <span class="badge role-badge" :class="getRoleClass(selectedUser.role)">
+                            <i :class="getRoleIcon(selectedUser.role)" class="me-1"></i>{{ getRoleText(selectedUser.role) }}
+                          </span>
+                        </p>
                       </div>
                     </div>
                     <div class="col-md-4">
                       <div class="detail-item">
                         <label>Trạng thái</label>
-                        <p><span class="badge status-badge badge-active"><i class="bi bi-check-circle me-1"></i>Hoạt động</span></p>
+                        <p>
+                          <span class="badge status-badge" :class="selectedUser.isActive ? 'badge-active' : 'badge-inactive'">
+                            <i :class="selectedUser.isActive ? 'bi bi-check-circle' : 'bi bi-x-circle'" class="me-1"></i>
+                            {{ selectedUser.isActive ? 'Hoạt động' : 'Bị khóa' }}
+                          </span>
+                        </p>
                       </div>
                     </div>
                     <div class="col-md-4">
                       <div class="detail-item">
                         <label>Ngày tạo</label>
-                        <p>25/01/2025</p>
+                        <p>{{ formatDate(selectedUser.createAt) }}</p>
                       </div>
                     </div>
                   </div>
@@ -460,30 +280,19 @@
             <!-- Địa Chỉ -->
             <h6 class="section-title"><i class="bi bi-geo-alt me-2"></i>Danh sách địa chỉ</h6>
             <div class="address-list mb-4">
-              <div class="address-item">
-                <div class="d-flex justify-content-between align-items-start">
-                  <div>
-                    <div class="fw-semibold">Nguyễn Văn A <span class="text-muted">| 0901234567</span></div>
-                    <div class="text-muted small mt-1">123 Nguyễn Huệ A, Quận 1, TP.HCM</div>
-                  </div>
-                  <span class="badge bg-dark">Mặc định</span>
-                </div>
-              </div>
-              <div class="address-item">
-                <div class="d-flex justify-content-between align-items-start">
-                  <div>
-                    <div class="fw-semibold">Nguyễn Văn A-B <span class="text-muted">| 0901234567</span></div>
-                    <div class="text-muted small mt-1">123 Nguyễn Huệ B, Quận 1, TP.HCM</div>
+              <template v-if="selectedUser.diaChis && selectedUser.diaChis.length > 0">
+                <div v-for="address in selectedUser.diaChis" :key="address.maDC" class="address-item">
+                  <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                      <div class="fw-semibold">{{ address.tenNN || '—' }} <span class="text-muted">| {{ address.sdt || '—' }}</span></div>
+                      <div class="text-muted small mt-1">{{ address.diemGiao || '—' }}</div>
+                    </div>
+                    <span v-if="address.macDinh" class="badge bg-dark">Mặc định</span>
                   </div>
                 </div>
-              </div>
-              <div class="address-item">
-                <div class="d-flex justify-content-between align-items-start">
-                  <div>
-                    <div class="fw-semibold">Nguyễn Văn A-C <span class="text-muted">| 0901234567</span></div>
-                    <div class="text-muted small mt-1">123 Nguyễn Huệ C, Quận 1, TP.HCM</div>
-                  </div>
-                </div>
+              </template>
+              <div v-else class="text-muted text-center py-3">
+                <i class="bi bi-geo-alt me-2"></i>Không có địa chỉ nào
               </div>
             </div>
 
@@ -492,42 +301,39 @@
             <div class="table-responsive">
               <table class="table table-sm table-hover">
                 <thead>
-                  <tr>
-                    <th>Mã HĐ</th>
-                    <th>Ngày mua</th>
-                    <th>Phương thức TT</th>
-                    <th>Trạng thái</th>
-                    <th>Ghi chú</th>
-                  </tr>
+                <tr>
+                  <th>Mã HĐ</th>
+                  <th>Ngày mua</th>
+                  <th>Phương thức TT</th>
+                  <th>Trạng thái</th>
+                  <th>Ghi chú</th>
+                </tr>
                 </thead>
                 <tbody>
-                  <tr>
-                    <td class="fw-semibold">#HD001</td>
-                    <td>10/01/2025</td>
-                    <td>COD</td>
-                    <td><span class="badge bg-danger">Đã từ chối</span></td>
-                    <td class="text-muted small">Đơn hàng đặt số lượng quá lớn</td>
+                <template v-if="selectedUser.hoaDons && selectedUser.hoaDons.length > 0">
+                  <tr v-for="order in selectedUser.hoaDons" :key="order.maHD">
+                    <td class="fw-semibold">#{{ formatOrderId(order.maHD) }}</td>
+                    <td>{{ formatDate(order.ngayMua) }}</td>
+                    <td>{{ order.phuongThucTT || '—' }}</td>
+                    <td>
+            <span class="badge" :class="getOrderStatusClass(order.trangThai)">
+              {{ order.trangThai || '—' }}
+            </span>
+                    </td>
+                    <td class="text-muted small">{{ order.ghiChu || '—' }}</td>
                   </tr>
-                  <tr>
-                    <td class="fw-semibold">#HD005</td>
-                    <td>14/01/2025</td>
-                    <td>COD</td>
-                    <td><span class="badge bg-danger">Đã từ chối</span></td>
-                    <td class="text-muted small">Khách hủy đơn</td>
-                  </tr>
-                  <tr>
-                    <td class="fw-semibold">#HD009</td>
-                    <td>18/01/2025</td>
-                    <td>COD</td>
-                    <td><span class="badge bg-warning text-dark">Đang xử lý</span></td>
-                    <td class="text-muted small">—</td>
-                  </tr>
+                </template>
+                <tr v-else>
+                  <td colspan="5" class="text-center py-3 text-muted">
+                    Không có đơn hàng nào
+                  </td>
+                </tr>
                 </tbody>
               </table>
             </div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            <button type="button" class="btn btn-secondary" @click="closeViewModal">
               <i class="bi bi-x-circle me-2"></i>Đóng
             </button>
           </div>
@@ -535,60 +341,179 @@
       </div>
     </div>
 
-    <!-- Modal Chỉnh sửa User -->
-    <div class="modal fade" id="editUserModal" tabindex="-1" aria-hidden="true">
+    <!-- Modal Thêm/Sửa User -->
+    <div class="modal fade" id="editUserModal" tabindex="-1" aria-hidden="true" ref="editUserModal">
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title">
-              <i class="bi bi-pencil-square me-2"></i>Chỉnh sửa người dùng
+              <i :class="isEdit ? 'bi bi-pencil-square' : 'bi bi-plus-circle'" class="me-2"></i>
+              {{ isEdit ? 'Chỉnh sửa người dùng' : 'Thêm người dùng mới' }}
             </h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
           </div>
-          <form>
+          <form @submit.prevent="saveUser">
             <div class="modal-body">
               <div class="mb-3">
-                <label class="form-label">Username</label>
-                <input type="text" class="form-control" value="user1" disabled>
-                <small class="text-muted">Username không thể thay đổi</small>
+                <label class="form-label">Username <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" v-model="form.userName" :disabled="isEdit" required>
+                <small class="text-muted" v-if="isEdit">Username không thể thay đổi</small>
               </div>
               <div class="mb-3">
-                <label class="form-label">Email</label>
-                <input type="email" class="form-control" value="user1@gmail.com" disabled>
+                <label class="form-label">Email <span class="text-danger">*</span></label>
+                <input type="email" class="form-control" v-model="form.mail" :disabled="isEdit" required>
+                <small class="text-muted" v-if="isEdit">Email không thể thay đổi</small>
+              </div>
+              <div class="mb-3" v-if="!isEdit">
+                <label class="form-label">Mật khẩu <span class="text-danger">*</span></label>
+                <input type="password" class="form-control" v-model="form.password" required>
               </div>
               <div class="mb-3">
-                <label class="form-label">Họ tên</label>
-                <input type="text" class="form-control" value="Nguyễn Văn A">
+                <label class="form-label">Họ tên <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" v-model="form.hoTen" required>
               </div>
               <div class="mb-3">
                 <label class="form-label">Số điện thoại</label>
-                <input type="text" class="form-control" value="0901234567">
+                <input type="text" class="form-control" v-model="form.sdt">
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Vai trò <span class="text-danger">*</span></label>
+                <select class="form-select" v-model="form.role"
+                        :disabled="(isEdit && (form.role === 'ADMIN' || form.role === 'EMPLOYEE')) || (!isEdit && currentUserRole === 'EMPLOYEE')">
+                  <option value="CUSTOMER">Khách hàng</option>
+                  <option value="EMPLOYEE" :disabled="currentUserRole === 'EMPLOYEE'">Nhân viên</option>
+                  <option value="ADMIN" :disabled="currentUserRole === 'EMPLOYEE'">Admin</option>
+                </select>
+                <small v-if="!isEdit && currentUserRole === 'EMPLOYEE'" class="text-warning d-block mt-1">
+                  <i class="bi bi-info-circle"></i> Bạn chỉ có thể tạo tài khoản khách hàng
+                </small>
               </div>
               <div class="mb-3">
                 <label class="form-label">Trạng thái tài khoản</label>
                 <div class="form-check form-switch">
-                  <input class="form-check-input" type="checkbox" id="statusSwitch" checked>
+                  <input class="form-check-input" type="checkbox" id="statusSwitch" v-model="form.isActive">
                   <label class="form-check-label" for="statusSwitch">
-                    <span class="badge status-badge badge-active"><i class="bi bi-check-circle me-1"></i>Đang hoạt động</span>
+                    <span class="badge status-badge" :class="form.isActive ? 'badge-active' : 'badge-inactive'">
+                      <i :class="form.isActive ? 'bi bi-check-circle' : 'bi bi-x-circle'" class="me-1"></i>
+                      {{ form.isActive ? 'Đang hoạt động' : 'Bị khóa' }}
+                    </span>
                   </label>
                 </div>
               </div>
-              <div class="mb-3">
+              <div class="mb-3" v-if="isEdit">
                 <label class="form-label">Đặt lại mật khẩu</label>
-                <button type="button" class="btn btn-outline-warning w-100">
+                <button type="button" class="btn btn-outline-warning w-100" @click="resetPassword">
                   <i class="bi bi-key me-2"></i>Reset mật khẩu
                 </button>
               </div>
             </div>
             <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+              <button type="button" class="btn btn-secondary" @click="closeEditModal">
                 <i class="bi bi-x-circle me-2"></i>Hủy
               </button>
-              <button type="button" class="btn btn-dark">
-                <i class="bi bi-check-circle me-2"></i>Lưu thay đổi
+              <button type="submit" class="btn btn-dark" :disabled="submitting">
+                <span v-if="submitting" class="spinner-border spinner-border-sm me-2"></span>
+                <i class="bi bi-check-circle me-2"></i>{{ isEdit ? 'Cập nhật' : 'Thêm mới' }}
               </button>
             </div>
           </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Xác nhận -->
+    <div class="modal fade" id="confirmModal" tabindex="-1" ref="confirmModal">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header" :class="confirmConfig.type === 'danger' ? 'bg-danger' : 'bg-warning'">
+            <h5 class="modal-title text-white">
+              <i :class="confirmConfig.icon" class="me-2"></i>{{ confirmConfig.title }}
+            </h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body text-center py-4">
+            <i :class="confirmConfig.icon" :style="{ fontSize: '4rem', color: confirmConfig.type === 'danger' ? '#dc3545' : '#ffc107' }"></i>
+            <h5 class="mt-3">{{ confirmConfig.message }}</h5>
+            <p class="text-muted" v-if="confirmConfig.detail">{{ confirmConfig.detail }}</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+              <i class="bi bi-x-circle me-1"></i>Hủy
+            </button>
+            <button type="button" class="btn" :class="confirmConfig.type === 'danger' ? 'btn-danger' : 'btn-warning'" @click="confirmAction">
+              <span v-if="confirmSubmitting" class="spinner-border spinner-border-sm me-2"></span>
+              <i :class="confirmConfig.confirmIcon" class="me-1"></i>{{ confirmConfig.confirmText }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal thông báo thành công -->
+    <div class="modal fade" id="successModal" tabindex="-1" ref="successModal">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header bg-success text-white">
+            <h5 class="modal-title">
+              <i class="bi bi-check-circle me-2"></i>Thành công
+            </h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body text-center py-4">
+            <i class="bi bi-check-circle-fill text-success" style="font-size: 4rem;"></i>
+            <h5 class="mt-3">{{ successMessage }}</h5>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-success" data-bs-dismiss="modal">
+              <i class="bi bi-check me-1"></i>Đóng
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal thông báo lỗi -->
+    <div class="modal fade" id="errorModal" tabindex="-1" ref="errorModal">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header bg-danger text-white">
+            <h5 class="modal-title">
+              <i class="bi bi-exclamation-triangle me-2"></i>Lỗi
+            </h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body text-center py-4">
+            <i class="bi bi-x-circle-fill text-danger" style="font-size: 4rem;"></i>
+            <h5 class="mt-3">{{ errorMessage }}</h5>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-danger" data-bs-dismiss="modal">
+              <i class="bi bi-x me-1"></i>Đóng
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal thông báo thông tin -->
+    <div class="modal fade" id="infoModal" tabindex="-1" ref="infoModal">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header bg-info text-white">
+            <h5 class="modal-title">
+              <i class="bi bi-info-circle me-2"></i>Thông tin
+            </h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body text-center py-4">
+            <i class="bi bi-info-circle-fill text-info" style="font-size: 4rem;"></i>
+            <h5 class="mt-3">{{ infoMessage }}</h5>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-info text-white" data-bs-dismiss="modal">
+              <i class="bi bi-check me-1"></i>Đóng
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -596,7 +521,461 @@
 </template>
 
 <script setup>
+import { ref, reactive, onMounted, computed } from 'vue';
+import { Modal } from 'bootstrap';
 import NV_Sidebar from '@/components/Shared/NV_Sidebar.vue';
+import api from '@/services/api';
+
+// State
+const users = ref([]);
+const loading = ref(false);
+const submitting = ref(false);
+const confirmSubmitting = ref(false);
+const currentUserRole = ref('');
+
+const stats = reactive({
+  totalUsers: 0,
+  totalCustomers: 0,
+  totalEmployees: 0,
+  totalAdmins: 0,
+  totalInactive: 0
+});
+
+const pagination = reactive({
+  currentPage: 1,
+  totalPages: 1,
+  totalItems: 0,
+  pageSize: 10
+});
+
+const filters = reactive({
+  keyword: '',
+  role: '',
+  status: 'all',
+  sortBy: 'maUser,desc'
+});
+
+const selectedUser = ref(null);
+const isEdit = ref(false);
+const form = reactive({
+  maUser: null,
+  userName: '',
+  mail: '',
+  password: '',
+  hoTen: '',
+  sdt: '',
+  role: 'CUSTOMER',
+  isActive: true
+});
+
+// Modal refs
+const viewUserModal = ref(null);
+const editUserModal = ref(null);
+const confirmModal = ref(null);
+const successModal = ref(null);
+const errorModal = ref(null);
+const infoModal = ref(null);
+
+let viewModalInstance = null;
+let editModalInstance = null;
+let confirmModalInstance = null;
+let successModalInstance = null;
+let errorModalInstance = null;
+let infoModalInstance = null;
+
+// Modal state
+const confirmConfig = reactive({
+  type: 'warning',
+  title: '',
+  message: '',
+  detail: '',
+  icon: 'bi bi-question-circle',
+  confirmIcon: 'bi bi-check-circle',
+  confirmText: 'Xác nhận',
+  action: null,
+  data: null
+});
+
+const successMessage = ref('');
+const errorMessage = ref('');
+const infoMessage = ref('');
+
+// Computed
+const startItem = computed(() => {
+  if (users.value.length === 0) return 0;
+  return (pagination.currentPage - 1) * pagination.pageSize + 1;
+});
+
+const endItem = computed(() => {
+  if (users.value.length === 0) return 0;
+  return Math.min(pagination.currentPage * pagination.pageSize, pagination.totalItems);
+});
+
+// Methods
+const getCurrentUser = async () => {
+  try {
+    const response = await api.getCurrentUser();
+    if (response.data.success) {
+      currentUserRole.value = response.data.user?.role;
+    }
+  } catch (error) {
+    console.error('Error getting current user:', error);
+  }
+};
+
+const loadUsers = async () => {
+  loading.value = true;
+  try {
+    // Xử lý sort
+    let sortBy = 'maUser';
+    let sortDir = 'desc';
+
+    if (filters.sortBy) {
+      const [field, dir] = filters.sortBy.split(',');
+      sortBy = field;
+      sortDir = dir;
+    }
+
+    const params = {
+      keyword: filters.keyword,
+      role: filters.role,
+      status: filters.status,
+      page: pagination.currentPage,
+      size: pagination.pageSize,
+      sortBy: sortBy,
+      sortDir: sortDir
+    };
+
+    console.log('Loading users with params:', params);
+
+    const response = await api.getUsers(params);
+    console.log('API Response:', response.data);
+
+    if (response.data.success) {
+      users.value = response.data.data || [];
+
+      if (response.data.stats) {
+        Object.assign(stats, response.data.stats);
+      }
+
+      pagination.currentPage = response.data.currentPage || 1;
+      pagination.totalPages = response.data.totalPages || 1;
+      pagination.totalItems = response.data.totalItems || 0;
+
+      console.log('Updated users:', users.value);
+    } else {
+      users.value = [];
+      showErrorModal(response.data.message || 'Không thể tải danh sách người dùng');
+    }
+  } catch (error) {
+    console.error('Error loading users:', error);
+    users.value = [];
+    showErrorModal(error.response?.data?.message || 'Không thể tải danh sách người dùng');
+  } finally {
+    loading.value = false;
+  }
+};
+
+// Apply filters
+const applyFilters = () => {
+  pagination.currentPage = 1;
+  loadUsers();
+};
+
+// Clear keyword
+const clearKeyword = () => {
+  filters.keyword = '';
+  applyFilters();
+};
+
+// Reset filters
+const resetFilters = () => {
+  filters.keyword = '';
+  filters.role = '';
+  filters.status = 'all';
+  filters.sortBy = 'maUser,desc';
+  pagination.currentPage = 1;
+  loadUsers();
+};
+
+const viewUserDetail = async (id) => {
+  try {
+    const response = await api.getUserDetails(id);
+    if (response.data.success) {
+      selectedUser.value = response.data.data;
+      if (!viewModalInstance) {
+        viewModalInstance = new Modal(viewUserModal.value);
+      }
+      viewModalInstance.show();
+    }
+  } catch (error) {
+    console.error('Error loading user detail:', error);
+    showErrorModal('Không thể tải chi tiết người dùng');
+  }
+};
+
+const closeViewModal = () => {
+  if (viewModalInstance) {
+    viewModalInstance.hide();
+  }
+};
+
+const openCreateModal = () => {
+  isEdit.value = false;
+  Object.assign(form, {
+    maUser: null,
+    userName: '',
+    mail: '',
+    password: '',
+    hoTen: '',
+    sdt: '',
+    role: 'CUSTOMER',
+    isActive: true
+  });
+
+  if (!editModalInstance) {
+    editModalInstance = new Modal(editUserModal.value);
+  }
+  editModalInstance.show();
+};
+
+const openEditModal = (user) => {
+  isEdit.value = true;
+
+  // Kiểm tra quyền
+  if (currentUserRole.value === 'EMPLOYEE' && (user.role === 'ADMIN' || user.role === 'EMPLOYEE')) {
+    showErrorModal('Bạn không có quyền sửa tài khoản này');
+    return;
+  }
+
+  Object.assign(form, {
+    maUser: user.maUser,
+    userName: user.userName,
+    mail: user.mail,
+    password: '',
+    hoTen: user.hoTen,
+    sdt: user.sdt,
+    role: user.role,
+    isActive: user.isActive
+  });
+
+  if (!editModalInstance) {
+    editModalInstance = new Modal(editUserModal.value);
+  }
+  editModalInstance.show();
+};
+
+const closeEditModal = () => {
+  if (editModalInstance) {
+    editModalInstance.hide();
+  }
+};
+
+const saveUser = async () => {
+  submitting.value = true;
+  try {
+    let response;
+    if (isEdit.value) {
+      response = await api.updateUser(form.maUser, form);
+    } else {
+      response = await api.createUser(form);
+    }
+
+    if (response.data.success) {
+      editModalInstance.hide();
+      showSuccessModal(response.data.message);
+      await loadUsers();
+    }
+  } catch (error) {
+    console.error('Error saving user:', error);
+    showErrorModal(error.response?.data?.message || 'Có lỗi xảy ra');
+  } finally {
+    submitting.value = false;
+  }
+};
+
+const toggleUserStatus = (user) => {
+  confirmConfig.type = user.isActive ? 'danger' : 'warning';
+  confirmConfig.title = user.isActive ? 'Khóa tài khoản' : 'Mở khóa tài khoản';
+  confirmConfig.message = user.isActive
+      ? 'Bạn có chắc muốn khóa tài khoản này?'
+      : 'Bạn có chắc muốn mở khóa tài khoản này?';
+  confirmConfig.detail = `Tài khoản: ${user.userName} (${user.mail})`;
+  confirmConfig.icon = user.isActive ? 'bi bi-lock-fill' : 'bi bi-unlock-fill';
+  confirmConfig.confirmIcon = user.isActive ? 'bi bi-lock' : 'bi bi-unlock';
+  confirmConfig.confirmText = user.isActive ? 'Khóa' : 'Mở khóa';
+  confirmConfig.action = async () => {
+    await processToggleStatus(user.maUser);
+  };
+  confirmConfig.data = user;
+
+  if (!confirmModalInstance) {
+    confirmModalInstance = new Modal(confirmModal.value);
+  }
+  confirmModalInstance.show();
+};
+
+const processToggleStatus = async (id) => {
+  confirmSubmitting.value = true;
+  try {
+    const response = await api.toggleUserStatus(id);
+
+    if (response.data.success) {
+      confirmModalInstance.hide();
+      showSuccessModal(response.data.message);
+      await loadUsers();
+    }
+  } catch (error) {
+    console.error('Error toggling user status:', error);
+    showErrorModal(error.response?.data?.message || 'Có lỗi xảy ra');
+  } finally {
+    confirmSubmitting.value = false;
+  }
+};
+
+const resetPassword = async () => {
+  if (!form.maUser) return;
+
+  confirmConfig.type = 'warning';
+  confirmConfig.title = 'Reset mật khẩu';
+  confirmConfig.message = 'Bạn có chắc muốn reset mật khẩu?';
+  confirmConfig.detail = `Mật khẩu mới sẽ được tạo cho tài khoản ${form.userName}`;
+  confirmConfig.icon = 'bi bi-key-fill';
+  confirmConfig.confirmIcon = 'bi bi-key';
+  confirmConfig.confirmText = 'Reset';
+  confirmConfig.action = async () => {
+    await processResetPassword(form.maUser);
+  };
+
+  if (!confirmModalInstance) {
+    confirmModalInstance = new Modal(confirmModal.value);
+  }
+  confirmModalInstance.show();
+};
+
+const processResetPassword = async (id) => {
+  confirmSubmitting.value = true;
+  try {
+    const response = await api.resetPassword(id);
+
+    if (response.data.success) {
+      confirmModalInstance.hide();
+
+      infoMessage.value = `Mật khẩu mới: ${response.data.newPassword}`;
+      if (!infoModalInstance) {
+        infoModalInstance = new Modal(infoModal.value);
+      }
+      infoModalInstance.show();
+    }
+  } catch (error) {
+    console.error('Error resetting password:', error);
+    showErrorModal(error.response?.data?.message || 'Có lỗi xảy ra');
+  } finally {
+    confirmSubmitting.value = false;
+  }
+};
+
+const confirmAction = () => {
+  if (confirmConfig.action) {
+    confirmConfig.action();
+  }
+};
+
+const showSuccessModal = (message) => {
+  successMessage.value = message;
+  if (!successModalInstance) {
+    successModalInstance = new Modal(successModal.value);
+  }
+  successModalInstance.show();
+};
+
+const showErrorModal = (message) => {
+  errorMessage.value = message;
+  if (!errorModalInstance) {
+    errorModalInstance = new Modal(errorModal.value);
+  }
+  errorModalInstance.show();
+};
+
+const changePage = (page) => {
+  if (page >= 1 && page <= pagination.totalPages) {
+    pagination.currentPage = page;
+    loadUsers();
+  }
+};
+
+// Helper methods
+const getAvatarClass = (role) => {
+  switch (role) {
+    case 'ADMIN': return 'bg-admin';
+    case 'EMPLOYEE': return 'bg-employee';
+    default: return 'bg-customer';
+  }
+};
+
+const getAvatarIcon = (role) => {
+  switch (role) {
+    case 'ADMIN': return 'bi bi-star-fill';
+    case 'EMPLOYEE': return 'bi bi-person-gear';
+    default: return 'bi bi-person';
+  }
+};
+
+const getRoleClass = (role) => {
+  switch (role) {
+    case 'ADMIN': return 'badge-admin';
+    case 'EMPLOYEE': return 'badge-employee';
+    default: return 'badge-customer';
+  }
+};
+
+const getRoleIcon = (role) => {
+  switch (role) {
+    case 'ADMIN': return 'bi bi-star-fill';
+    case 'EMPLOYEE': return 'bi bi-person-gear';
+    default: return 'bi bi-person';
+  }
+};
+
+const getRoleText = (role) => {
+  switch (role) {
+    case 'ADMIN': return 'Admin';
+    case 'EMPLOYEE': return 'Nhân viên';
+    default: return 'Khách hàng';
+  }
+};
+
+const formatDate = (dateString) => {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  return date.toLocaleDateString('vi-VN', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  });
+};
+
+const formatOrderId = (id) => {
+  return `HD${String(id).padStart(4, '0')}`;
+};
+
+const getOrderStatusClass = (status) => {
+  switch (status) {
+    case 'Hoàn tất': return 'bg-success';
+    case 'Đang giao': return 'bg-primary';
+    case 'Đang xử lý': return 'bg-warning text-dark';
+    case 'Đã từ chối': return 'bg-danger';
+    case 'Hoàn hàng/trả hàng': return 'bg-secondary';
+    case 'Báo lỗi': return 'bg-dark';
+    default: return 'bg-secondary';
+  }
+};
+
+// Lifecycle
+onMounted(() => {
+  getCurrentUser();
+  loadUsers();
+});
 </script>
 
 <style scoped>
@@ -872,11 +1251,11 @@ import NV_Sidebar from '@/components/Shared/NV_Sidebar.vue';
   .main-content {
     margin-left: 0;
   }
-  
+
   .page-container {
     padding: 15px;
   }
-  
+
   .action-buttons {
     flex-direction: column;
   }

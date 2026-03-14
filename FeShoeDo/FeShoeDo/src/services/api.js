@@ -113,7 +113,12 @@ export default {
   checkout(data) {
     return apiClient.post('/customer/checkout', data);
   },
-  
+
+  // VNPay Payment
+  createVNPayOrder(data) {
+    return apiClient.post('/payment/create-order', data);
+  },
+
   buyNow(data) {
     return apiClient.post('/customer/buy-now', data);
   },
@@ -130,7 +135,7 @@ export default {
   updateProfile(data) {
     return apiClient.put('/customer/profile', data);
   },
-  
+
   getOrders() {
     return apiClient.get('/customer/orders');
   },
@@ -139,8 +144,12 @@ export default {
     return apiClient.get(`/customer/orders/${id}`);
   },
 
-  updateOrderStatus(id, status) {
-    return apiClient.put(`/customer/orders/${id}/status?status=${status}`);
+  updateCustomerOrderStatus(id, status) {
+    return apiClient.put(`/customer/orders/${id}/status?status=${encodeURIComponent(status)}`);
+  },
+
+  requestReturn(data) {
+    return apiClient.post('/customer/orders/return', data);
   },
 
   getAddresses() {
@@ -187,7 +196,7 @@ export default {
   },
 
   getUserDetails(id) {
-    return apiClient.get(`/employee/user-details/${id}`);
+    return apiClient.get(`/employee/users/${id}`);
   },
 
   createUser(data) {
@@ -198,8 +207,12 @@ export default {
     return apiClient.put(`/employee/users/${id}`, data);
   },
 
-  deleteUser(id) {
-    return apiClient.delete(`/employee/users/${id}`);
+  toggleUserStatus(id) {
+    return apiClient.put(`/employee/users/${id}/toggle-status`);
+  },
+
+  resetPassword(id) {
+    return apiClient.post(`/employee/users/${id}/reset-password`);
   },
 
   // Employee Stock Import
@@ -319,4 +332,73 @@ export default {
   getProductDetail(id) {
     return apiClient.get(`/employee/products/${id}`);
   },
+
+  // ========== STATISTICS APIs ==========
+  // Thống kê mặc định - 30 ngày gần nhất
+  getThongKeMacDinh() {
+    return apiClient.get('/employee/thongke');
+  },
+
+  // Thống kê tổng quan
+  getThongKeTongQuan(startDate, endDate) {
+    return apiClient.get('/employee/thongke/tong-quan', {
+      params: { startDate, endDate }
+    });
+  },
+
+  // Thống kê theo ngày
+  getThongKeNgay(startDate, endDate) {
+    return apiClient.get('/employee/thongke/ngay', {
+      params: { startDate, endDate }
+    });
+  },
+
+  // Thống kê theo tháng
+  getThongKeThang(startDate, endDate) {
+    return apiClient.get('/employee/thongke/thang', {
+      params: { startDate, endDate }
+    });
+  },
+
+  // Thống kê theo năm
+  getThongKeNam(startDate, endDate) {
+    return apiClient.get('/employee/thongke/nam', {
+      params: { startDate, endDate }
+    });
+  },
+
+  // Thống kê theo danh mục
+  getThongKeDanhMuc(startDate, endDate) {
+    return apiClient.get('/employee/thongke/danh-muc', {
+      params: { startDate, endDate }
+    });
+  },
+
+  // Top sản phẩm bán chạy
+  getTopSanPham(startDate, endDate, limit = 10) {
+    return apiClient.get('/employee/thongke/top-san-pham', {
+      params: { startDate, endDate, limit }
+    });
+  },
+
+  // Top khách hàng
+  getTopKhachHang(startDate, endDate, limit = 5) {
+    return apiClient.get('/employee/thongke/top-khach-hang', {
+      params: { startDate, endDate, limit }
+    });
+  },
+
+  // Thống kê theo trạng thái
+  getThongKeTrangThai(startDate, endDate) {
+    return apiClient.get('/employee/thongke/trang-thai', {
+      params: { startDate, endDate }
+    });
+  },
+
+  // Đơn hàng gần đây
+  getDonHangGanDay(limit = 5) {
+    return apiClient.get('/employee/thongke/don-hang-gan-day', {
+      params: { limit }
+    });
+  }
 };
