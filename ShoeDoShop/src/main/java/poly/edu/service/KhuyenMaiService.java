@@ -31,7 +31,7 @@ public class KhuyenMaiService {
             row[5] != null ? new BigDecimal(row[5].toString()) : BigDecimal.ZERO, // donGiaMin
             	    row[6] != null ? new BigDecimal(row[6].toString()) : BigDecimal.ZERO,
             (Boolean) row[7],
-            row[8] != null ? row[7].toString() : ""
+            row[8] != null ? row[8].toString() : ""
         )).collect(Collectors.toList());
     }
 
