@@ -410,14 +410,14 @@ INSERT INTO SanPham_ChiTiet (MaSP, TenMau, HinhAnh, MaSize, TrangThai, SoLuong, 
 -- Giày bóng đá (MaSP 6)
 -- =======================
 -- SP 6: ShoeDo - SP1 - GBD
-(6, N'Hồng', 'sp6_gbd1_pink.jpg', 8, N'Còn hàng', 12, 1500000), -- Size 43 (ID 8)
-(6, N'Hồng', 'sp6_gbd1_pink.jpg', 7, N'Còn hàng', 20, 1500000), -- Size 42 (ID 7)
-(6, N'Hồng', 'sp6_gbd1_pink.jpg', 6, N'Còn hàng', 10, 1200000), -- Size 41 (ID 6)
-(6, N'Hồng', 'sp6_gbd1_pink.jpg', 5, N'Còn hàng', 10, 1200000), -- Size 40 (ID 5)
-(6, N'Vàng', 'sp6_gbd1_yellow.jpg', 8, N'Còn hàng', 12, 1500000), -- Size 43 (ID 8)
-(6, N'Vàng', 'sp6_gbd1_yellow.jpg', 7, N'Còn hàng', 20, 1500000), -- Size 42 (ID 7)
-(6, N'Vàng', 'sp6_gbd1_yellow.jpg', 6, N'Còn hàng', 10, 1200000), -- Size 41 (ID 6)
-(6, N'Vàng', 'sp6_gbd1_yellow.jpg', 5, N'Còn hàng', 10, 1200000), -- Size 40 (ID 5)
+(6, N'Hồng', 'sp6_gbd1_pink.jpg', 5, N'Còn hàng', 12, 1200000), -- Size 43 (ID 8)
+(6, N'Hồng', 'sp6_gbd1_pink.jpg', 6, N'Còn hàng', 20, 1200000), -- Size 42 (ID 7)
+(6, N'Hồng', 'sp6_gbd1_pink.jpg', 7, N'Còn hàng', 10, 1500000), -- Size 41 (ID 6)
+(6, N'Hồng', 'sp6_gbd1_pink.jpg', 8, N'Còn hàng', 10, 1500000), -- Size 40 (ID 5)
+(6, N'Vàng', 'sp6_gbd1_yellow.jpg', 5, N'Còn hàng', 12, 1200000), -- Size 43 (ID 8)
+(6, N'Vàng', 'sp6_gbd1_yellow.jpg', 6, N'Còn hàng', 20, 1200000), -- Size 42 (ID 7)
+(6, N'Vàng', 'sp6_gbd1_yellow.jpg', 7, N'Còn hàng', 10, 1500000), -- Size 41 (ID 6)
+(6, N'Vàng', 'sp6_gbd1_yellow.jpg', 8, N'Còn hàng', 10, 1500000), -- Size 40 (ID 5)
 
 -- =======================
 -- Giày sandal (MaSP 7)
@@ -461,8 +461,8 @@ INSERT INTO SanPham_ChiTiet (MaSP, TenMau, HinhAnh, MaSize, TrangThai, SoLuong, 
 -- Phụ kiện (MaSP 10 → 15)
 -- =======================
 -- SP 10 - 12: Vớ (Dùng ID 1 = FreeSize)
-(10, N'Đen', 'sp10_v1_bw.jpg', 1, N'Còn hàng', 100, 70000), -- Free size (ID 1) 
-(10, N'Trắng', 'sp10_v1_bw.jpg', 1, N'Còn hàng', 100, 70000), -- Free size (ID 1)
+(10, N'Đen', 'sp10_v1_black.jpg', 1, N'Còn hàng', 100, 70000), -- Free size (ID 1) 
+(10, N'Trắng', 'sp10_v1_white.jpg', 1, N'Còn hàng', 100, 70000), -- Free size (ID 1)
 
 (11, N'Đen', 'sp11_v2_black.jpg', 1, N'Còn hàng', 80, 150000), -- Free size (ID 1)
 (11, N'Trắng', 'sp11_v2_white.jpg', 1, N'Còn hàng', 80, 150000), 
@@ -779,66 +779,66 @@ INSERT INTO HoaDon (MaKH, MaQT, PhuongThucTT, DiaChiJson, TrangThai, GhiChu, Nga
 -- 14. Dữ liệu mẫu cho bảng Hóa Đơn Chi Tiết 
 INSERT INTO HoaDonCT (MaHD, MaSKU, SoLuong, DonGia) VALUES
 -- ===== HD 1 =====
--- Giày da đen 40 (MaSP 1, Size 40 - MaSKU 1): Giá gốc 1,000,000 - KM 10% = 900,000
+-- Giày da đen 40: Giá gốc 1,000,000 - KM 10% = 900,000
 (1, 1, 1, 900000),
--- Giày bóng đá hồng 41 (MaSP 6, Size 41 - MaSKU 25): Giá gốc 1,200,000 - KM 5% = 1,140,000
+-- Giày bóng đá hồng 41: Giá gốc 1,200,000 - KM 5% = 1,140,000
 (1, 25, 1, 1140000),
--- Vớ đen (MaSP 10, FreeSize - MaSKU 40): Giá gốc 70,000 - KM 10% = 63,000
-(1, 40, 2, 63000),
+-- Vớ đen: Giá gốc 70,000 - KM 10% = 63,000
+(1, 48, 2, 63000),
 
 -- ===== HD 2 =====
--- Giày cao gót trắng 38 (MaSP 3, Size 38 - MaSKU 6): Giá gốc 1,200,000 - KM 30% = 840,000
-(2, 6, 1, 840000),
--- Sandal đen 39 (MaSP 7, Size 39 - MaSKU 32): Giá gốc 1,800,000 - KM 30% = 1,260,000
+-- Giày cao gót trắng 38: Giá gốc 1,200,000 - KM 30% = 840,000
+(2, 7, 1, 840000),
+-- Sandal đen 37: Giá gốc 1,800,000 - KM 30% = 1,260,000
 (2, 32, 1, 1260000),
 
 -- ===== HD 3 =====
--- Giày bóng đá vàng 42 (MaSP 6, Size 42 - MaSKU 29): Giá gốc 1,500,000 - KM 5% = 1,425,000
-(3, 29, 2, 1425000),
--- Vớ cổ cao Helio trắng (MaSP 11, FreeSize - MaSKU 42): Giá gốc 150,000 - KM 10% = 135,000
-(3, 42, 1, 135000),
+-- Giày bóng đá vàng 42: Giá gốc 1,500,000 - KM 5% = 1,425,000
+(3, 30, 2, 1425000),
+-- Vớ cổ cao Helio trắng: Giá gốc 150,000 - KM 10% = 135,000
+(3, 51, 1, 135000),
 
 -- ===== HD 4 =====
--- Boot đen 40 (MaSP 8, Size 40 - MaSKU 36): Giá gốc 2,000,000 - KM 0% = 2,000,000
-(4, 36, 1, 2000000),
--- Dây giày tròn phản quang đen (MaSP 15, FreeSize - MaSKU 50): Giá gốc 120,000 - KM 10% = 108,000
-(4, 50, 1, 108000),
+-- Boot đen 40: Giá gốc 2,000,000 - KM 0% = 2,000,000
+(4, 39, 1, 2000000),
+-- Dây giày tròn phản quang đen: Giá gốc 120,000 - KM 10% = 108,000
+(4, 58, 1, 108000),
 
 -- ===== HD 5 =====
--- Giày cao gót trắng 37 (MaSP 3, Size 37 - MaSKU 5): Giá gốc 1,000,000 - KM 30% = 700,000
-(5, 5, 1, 700000),
--- Vớ chạy bộ Performance (MaSP 12, FreeSize - MaSKU 43): Giá gốc 180,000 - KM 10% = 162,000
-(5, 43, 2, 162000),
+-- Giày cao gót trắng 37: Giá gốc 1,000,000 - KM 30% = 700,000
+(5, 3, 1, 700000),
+-- Vớ chạy bộ Performance: Giá gốc 180,000 - KM 10% = 162,000
+(5, 52, 2, 162000),
 
 -- ===== HD 6 =====
--- Sneaker đen 42 (MaSP 4, Size 42 - MaSKU 10): Giá gốc 1,500,000 - KM 0% = 1,500,000
-(6, 10, 1, 1500000),
--- Vớ trắng (MaSP 10, FreeSize - MaSKU 41): Giá gốc 70,000 - KM 10% = 63,000
-(6, 41, 3, 63000),
+-- Sneaker đen 42: Giá gốc 1,500,000 - KM 0% = 1,500,000
+(6, 11, 1, 1500000),
+-- Vớ trắng: Giá gốc 70,000 - KM 10% = 63,000
+(6, 49, 3, 63000),
 
 -- ===== HD 7 =====
--- Boot combat đen 38 (MaSP 9, Size 38 - MaSKU 38): Giá gốc 1,500,000 - KM 0% = 1,500,000
-(7, 38, 1, 1500000),
--- Dây giày tròn basic đen (MaSP 13, FreeSize - MaSKU 44): Giá gốc 80,000 - KM 10% = 72,000
-(7, 44, 1, 72000),
+-- Boot combat đen 38: Giá gốc 1,500,000 - KM 0% = 1,500,000
+(7, 45, 1, 1500000),
+-- Dây giày tròn basic đen: Giá gốc 80,000 - KM 10% = 72,000
+(7, 53, 1, 72000),
 
 -- ===== HD 8  =====
--- Sneaker trắng 41 (MaSP 4, Size 41 - MaSKU 12): Giá gốc 1,300,000 - KM 0% = 1,300,000
+-- Sneaker trắng 40: Giá gốc 1,300,000 - KM 0% = 1,300,000
 (8, 12, 1, 1300000),
--- Vớ cổ cao Helio đen (MaSP 11, FreeSize - MaSKU 41): Giá gốc 150,000 - KM 10% = 135,000
-(8, 41, 2, 135000),
+-- Vớ cổ cao Helio đen: Giá gốc 150,000 - KM 10% = 135,000
+(8, 50, 2, 135000),
 
 -- ===== HD 9 =====
--- Giày da đen 41 (MaSP 1, Size 41 - MaSKU 2): Giá gốc 1,200,000 - KM 10% = 1,080,000
+-- Giày da đen 41: Giá gốc 1,200,000 - KM 10% = 1,080,000
 (9, 2, 1, 1080000),
--- Sandal trắng 38 (MaSP 7, Size 38 - MaSKU 33): Giá gốc 1,800,000 - KM 30% = 1,260,000
-(9, 33, 1, 1260000),
+-- Sandal trắng 38: Giá gốc 1,800,000 - KM 30% = 1,260,000
+(9, 36, 1, 1260000),
 
 -- ===== HD 10 =====
--- Boot nâu 42 (MaSP 8, Size 42 - MaSKU 37): Giá gốc 2,100,000 - KM 0% = 2,100,000
-(10, 37, 1, 2100000),
--- Vớ chạy bộ Performance (MaSP 12, FreeSize - MaSKU 43): Giá gốc 180,000 - KM 10% = 162,000
-(10, 43, 2, 162000);
+-- Boot nâu 42: Giá gốc 2,100,000 - KM 0% = 2,100,000
+(10, 43, 1, 2100000),       
+-- Vớ chạy bộ Performance: Giá gốc 180,000 - KM 10% = 162,000
+(10, 52, 2, 162000);
 
 -- 12. Dữ liệu mẫu cho bảng Đánh Giá
 INSERT INTO DanhGia (MaHDCT, Sao, DanhGiaCT) VALUES
