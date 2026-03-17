@@ -112,12 +112,10 @@
               <thead>
               <tr>
                 <th>#</th>
-                <th>Người dùng</th>
-                <th>Email</th>
+                <th>Username</th>
+                <th>Vai trò</th>
                 <th>Họ tên</th>
                 <th>SĐT</th>
-                <th>Vai trò</th>
-                <th>Trạng thái</th>
                 <th>Ngày tạo</th>
                 <th class="text-center">Thao tác</th>
               </tr>
@@ -126,27 +124,15 @@
               <tr v-for="(user, index) in users" :key="user.maUser">
                 <td><span class="fw-semibold text-muted">{{ (pagination.currentPage - 1) * pagination.pageSize + index + 1 }}</span></td>
                 <td>
-                  <div class="d-flex align-items-center gap-2">
-                    <div class="user-avatar" :class="getAvatarClass(user.role)">
-                      <i :class="getAvatarIcon(user.role)"></i>
-                    </div>
-                    <span class="fw-semibold">{{ user.userName }}</span>
-                  </div>
+                  <span class="fw-semibold">{{ user.userName }}</span>
                 </td>
-                <td><span class="text-muted">{{ user.mail }}</span></td>
+                <td>
+                  <span class="badge role-badge" :class="getRoleClass(user.role)">
+                    <i :class="getRoleIcon(user.role)" class="me-1"></i>{{ getRoleText(user.role) }}
+                  </span>
+                </td>
                 <td>{{ user.hoTen || '—' }}</td>
                 <td>{{ user.sdt || '—' }}</td>
-                <td>
-                    <span class="badge role-badge" :class="getRoleClass(user.role)">
-                      <i :class="getRoleIcon(user.role)" class="me-1"></i>{{ getRoleText(user.role) }}
-                    </span>
-                </td>
-                <td>
-                    <span class="badge status-badge" :class="user.isActive ? 'badge-active' : 'badge-inactive'">
-                      <i :class="user.isActive ? 'bi bi-check-circle' : 'bi bi-x-circle'" class="me-1"></i>
-                      {{ user.isActive ? 'Hoạt động' : 'Bị khóa' }}
-                    </span>
-                </td>
                 <td><span class="text-muted small">{{ formatDate(user.createAt) }}</span></td>
                 <td class="text-center">
                   <div class="action-buttons justify-content-center">
@@ -163,7 +149,7 @@
                 </td>
               </tr>
               <tr v-if="users.length === 0">
-                <td colspan="9" class="text-center py-4 text-muted">
+                <td colspan="7" class="text-center py-4 text-muted">
                   Không tìm thấy người dùng nào
                 </td>
               </tr>
@@ -201,25 +187,26 @@
     </main>
 
     <!-- Modal Xem Chi Tiết User -->
-    <div class="modal fade" id="viewUserModal" tabindex="-1" aria-hidden="true" ref="viewUserModal">
+    <div class="modal fade" :class="{ show: showViewModal }" tabindex="-1" :style="{ display: showViewModal ? 'block' : 'none' }">
       <div class="modal-dialog modal-lg">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title">
-              <i class="bi bi-person-lines-fill me-2"></i>Chi tiết người dùng
-            </h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            <div class="d-flex justify-content-between align-items-center w-100">
+              <h5 class="modal-title">
+                <i class="bi bi-person-lines-fill me-2"></i>Chi tiết người dùng
+              </h5>
+              <span class="badge status-badge ms-3" :class="selectedUser?.isActive ? 'badge-active' : 'badge-inactive'">
+                <i :class="selectedUser?.isActive ? 'bi bi-check-circle' : 'bi bi-x-circle'" class="me-1"></i>
+                {{ selectedUser?.isActive ? 'Hoạt động' : 'Bị khóa' }}
+              </span>
+            </div>
+            <button type="button" class="btn-close" @click="closeViewModal"></button>
           </div>
           <div class="modal-body" v-if="selectedUser">
             <!-- User Info Card -->
             <div class="user-detail-card mb-4">
               <div class="row">
-                <div class="col-md-2 text-center">
-                  <div class="user-avatar-lg" :class="getAvatarClass(selectedUser.role)">
-                    <i :class="getAvatarIcon(selectedUser.role)"></i>
-                  </div>
-                </div>
-                <div class="col-md-10">
+                <div class="col-md-12">
                   <div class="row g-3">
                     <div class="col-md-6">
                       <div class="detail-item">
@@ -257,17 +244,6 @@
                     </div>
                     <div class="col-md-4">
                       <div class="detail-item">
-                        <label>Trạng thái</label>
-                        <p>
-                          <span class="badge status-badge" :class="selectedUser.isActive ? 'badge-active' : 'badge-inactive'">
-                            <i :class="selectedUser.isActive ? 'bi bi-check-circle' : 'bi bi-x-circle'" class="me-1"></i>
-                            {{ selectedUser.isActive ? 'Hoạt động' : 'Bị khóa' }}
-                          </span>
-                        </p>
-                      </div>
-                    </div>
-                    <div class="col-md-4">
-                      <div class="detail-item">
                         <label>Ngày tạo</label>
                         <p>{{ formatDate(selectedUser.createAt) }}</p>
                       </div>
@@ -277,28 +253,30 @@
               </div>
             </div>
 
-            <!-- Địa Chỉ -->
-            <h6 class="section-title"><i class="bi bi-geo-alt me-2"></i>Danh sách địa chỉ</h6>
-            <div class="address-list mb-4">
-              <template v-if="selectedUser.diaChis && selectedUser.diaChis.length > 0">
-                <div v-for="address in selectedUser.diaChis" :key="address.maDC" class="address-item">
-                  <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                      <div class="fw-semibold">{{ address.tenNN || '—' }} <span class="text-muted">| {{ address.sdt || '—' }}</span></div>
-                      <div class="text-muted small mt-1">{{ address.diemGiao || '—' }}</div>
+            <!-- Địa Chỉ - chỉ hiển thị cho CUSTOMER -->
+            <div v-if="selectedUser.role === 'CUSTOMER'">
+              <h6 class="section-title"><i class="bi bi-geo-alt me-2"></i>Danh sách địa chỉ</h6>
+              <div class="address-list mb-4 scrollable-content">
+                <template v-if="selectedUser.diaChis && selectedUser.diaChis.length > 0">
+                  <div v-for="address in selectedUser.diaChis" :key="address.maDC" class="address-item">
+                    <div class="d-flex justify-content-between align-items-start">
+                      <div>
+                        <div class="fw-semibold">{{ address.tenNN || '—' }} <span class="text-muted">| {{ address.sdt || '—' }}</span></div>
+                        <div class="text-muted small mt-1">{{ address.diemGiao || '—' }}</div>
+                      </div>
+                      <span v-if="address.macDinh" class="badge bg-dark">Mặc định</span>
                     </div>
-                    <span v-if="address.macDinh" class="badge bg-dark">Mặc định</span>
                   </div>
+                </template>
+                <div v-else class="text-muted text-center py-3">
+                  <i class="bi bi-geo-alt me-2"></i>Không có địa chỉ nào
                 </div>
-              </template>
-              <div v-else class="text-muted text-center py-3">
-                <i class="bi bi-geo-alt me-2"></i>Không có địa chỉ nào
               </div>
             </div>
 
             <!-- Đơn hàng gần đây -->
             <h6 class="section-title"><i class="bi bi-bag-check me-2"></i>Đơn hàng gần đây</h6>
-            <div class="table-responsive">
+            <div class="table-responsive scrollable-content" style="max-height: 300px;">
               <table class="table table-sm table-hover">
                 <thead>
                 <tr>
@@ -316,9 +294,9 @@
                     <td>{{ formatDate(order.ngayMua) }}</td>
                     <td>{{ order.phuongThucTT || '—' }}</td>
                     <td>
-            <span class="badge" :class="getOrderStatusClass(order.trangThai)">
-              {{ order.trangThai || '—' }}
-            </span>
+                      <span class="badge" :class="getOrderStatusClass(order.trangThai)">
+                        {{ order.trangThai || '—' }}
+                      </span>
                     </td>
                     <td class="text-muted small">{{ order.ghiChu || '—' }}</td>
                   </tr>
@@ -340,9 +318,10 @@
         </div>
       </div>
     </div>
+    <div v-if="showViewModal" class="modal-backdrop fade show"></div>
 
     <!-- Modal Thêm/Sửa User -->
-    <div class="modal fade" id="editUserModal" tabindex="-1" aria-hidden="true" ref="editUserModal">
+    <div class="modal fade" :class="{ show: showEditModal }" tabindex="-1" :style="{ display: showEditModal ? 'block' : 'none' }">
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
@@ -350,7 +329,7 @@
               <i :class="isEdit ? 'bi bi-pencil-square' : 'bi bi-plus-circle'" class="me-2"></i>
               {{ isEdit ? 'Chỉnh sửa người dùng' : 'Thêm người dùng mới' }}
             </h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            <button type="button" class="btn-close" @click="closeEditModal"></button>
           </div>
           <form @submit.prevent="saveUser">
             <div class="modal-body">
@@ -379,13 +358,17 @@
               <div class="mb-3">
                 <label class="form-label">Vai trò <span class="text-danger">*</span></label>
                 <select class="form-select" v-model="form.role"
-                        :disabled="(isEdit && (form.role === 'ADMIN' || form.role === 'EMPLOYEE')) || (!isEdit && currentUserRole === 'EMPLOYEE')">
+                        :disabled="(!isEdit && currentUserRole === 'EMPLOYEE') || (isEdit && currentUserRole === 'EMPLOYEE' && (form.role === 'ADMIN' || form.role === 'EMPLOYEE'))"
+                        @change="handleRoleChange">
                   <option value="CUSTOMER">Khách hàng</option>
                   <option value="EMPLOYEE" :disabled="currentUserRole === 'EMPLOYEE'">Nhân viên</option>
                   <option value="ADMIN" :disabled="currentUserRole === 'EMPLOYEE'">Admin</option>
                 </select>
                 <small v-if="!isEdit && currentUserRole === 'EMPLOYEE'" class="text-warning d-block mt-1">
                   <i class="bi bi-info-circle"></i> Bạn chỉ có thể tạo tài khoản khách hàng
+                </small>
+                <small v-if="isEdit && currentUserRole === 'ADMIN'" class="text-info d-block mt-1">
+                  <i class="bi bi-info-circle"></i> Admin có thể thay đổi vai trò của tất cả user
                 </small>
               </div>
               <div class="mb-3">
@@ -395,7 +378,7 @@
                   <label class="form-check-label" for="statusSwitch">
                     <span class="badge status-badge" :class="form.isActive ? 'badge-active' : 'badge-inactive'">
                       <i :class="form.isActive ? 'bi bi-check-circle' : 'bi bi-x-circle'" class="me-1"></i>
-                      {{ form.isActive ? 'Đang hoạt động' : 'Bị khóa' }}
+                      {{ form.isActive ? 'Hoạt động' : 'Bị khóa' }}
                     </span>
                   </label>
                 </div>
@@ -420,16 +403,17 @@
         </div>
       </div>
     </div>
+    <div v-if="showEditModal" class="modal-backdrop fade show"></div>
 
     <!-- Modal Xác nhận -->
-    <div class="modal fade" id="confirmModal" tabindex="-1" ref="confirmModal">
+    <div class="modal fade" :class="{ show: showConfirmModal }" tabindex="-1" :style="{ display: showConfirmModal ? 'block' : 'none' }">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
           <div class="modal-header" :class="confirmConfig.type === 'danger' ? 'bg-danger' : 'bg-warning'">
             <h5 class="modal-title text-white">
               <i :class="confirmConfig.icon" class="me-2"></i>{{ confirmConfig.title }}
             </h5>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            <button type="button" class="btn-close btn-close-white" @click="closeConfirmModal"></button>
           </div>
           <div class="modal-body text-center py-4">
             <i :class="confirmConfig.icon" :style="{ fontSize: '4rem', color: confirmConfig.type === 'danger' ? '#dc3545' : '#ffc107' }"></i>
@@ -437,7 +421,7 @@
             <p class="text-muted" v-if="confirmConfig.detail">{{ confirmConfig.detail }}</p>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            <button type="button" class="btn btn-secondary" @click="closeConfirmModal">
               <i class="bi bi-x-circle me-1"></i>Hủy
             </button>
             <button type="button" class="btn" :class="confirmConfig.type === 'danger' ? 'btn-danger' : 'btn-warning'" @click="confirmAction">
@@ -448,81 +432,84 @@
         </div>
       </div>
     </div>
+    <div v-if="showConfirmModal" class="modal-backdrop fade show"></div>
 
     <!-- Modal thông báo thành công -->
-    <div class="modal fade" id="successModal" tabindex="-1" ref="successModal">
+    <div class="modal fade" :class="{ show: showSuccessModal }" tabindex="-1" :style="{ display: showSuccessModal ? 'block' : 'none' }">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
           <div class="modal-header bg-success text-white">
             <h5 class="modal-title">
               <i class="bi bi-check-circle me-2"></i>Thành công
             </h5>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            <button type="button" class="btn-close btn-close-white" @click="closeSuccessModal"></button>
           </div>
           <div class="modal-body text-center py-4">
             <i class="bi bi-check-circle-fill text-success" style="font-size: 4rem;"></i>
             <h5 class="mt-3">{{ successMessage }}</h5>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-success" data-bs-dismiss="modal">
+            <button type="button" class="btn btn-success" @click="closeSuccessModal">
               <i class="bi bi-check me-1"></i>Đóng
             </button>
           </div>
         </div>
       </div>
     </div>
+    <div v-if="showSuccessModal" class="modal-backdrop fade show"></div>
 
     <!-- Modal thông báo lỗi -->
-    <div class="modal fade" id="errorModal" tabindex="-1" ref="errorModal">
+    <div class="modal fade" :class="{ show: showErrorModal }" tabindex="-1" :style="{ display: showErrorModal ? 'block' : 'none' }">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
           <div class="modal-header bg-danger text-white">
             <h5 class="modal-title">
               <i class="bi bi-exclamation-triangle me-2"></i>Lỗi
             </h5>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            <button type="button" class="btn-close btn-close-white" @click="closeErrorModal"></button>
           </div>
           <div class="modal-body text-center py-4">
             <i class="bi bi-x-circle-fill text-danger" style="font-size: 4rem;"></i>
             <h5 class="mt-3">{{ errorMessage }}</h5>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-danger" data-bs-dismiss="modal">
+            <button type="button" class="btn btn-danger" @click="closeErrorModal">
               <i class="bi bi-x me-1"></i>Đóng
             </button>
           </div>
         </div>
       </div>
     </div>
+    <div v-if="showErrorModal" class="modal-backdrop fade show"></div>
 
     <!-- Modal thông báo thông tin -->
-    <div class="modal fade" id="infoModal" tabindex="-1" ref="infoModal">
+    <div class="modal fade" :class="{ show: showInfoModal }" tabindex="-1" :style="{ display: showInfoModal ? 'block' : 'none' }">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
           <div class="modal-header bg-info text-white">
             <h5 class="modal-title">
               <i class="bi bi-info-circle me-2"></i>Thông tin
             </h5>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            <button type="button" class="btn-close btn-close-white" @click="closeInfoModal"></button>
           </div>
           <div class="modal-body text-center py-4">
             <i class="bi bi-info-circle-fill text-info" style="font-size: 4rem;"></i>
             <h5 class="mt-3">{{ infoMessage }}</h5>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-info text-white" data-bs-dismiss="modal">
+            <button type="button" class="btn btn-info text-white" @click="closeInfoModal">
               <i class="bi bi-check me-1"></i>Đóng
             </button>
           </div>
         </div>
       </div>
     </div>
+    <div v-if="showInfoModal" class="modal-backdrop fade show"></div>
   </div>
 </template>
 
 <script setup>
 import { ref, reactive, onMounted, computed } from 'vue';
-import { Modal } from 'bootstrap';
 import NV_Sidebar from '@/components/Shared/NV_Sidebar.vue';
 import api from '@/services/api';
 
@@ -568,22 +555,15 @@ const form = reactive({
   isActive: true
 });
 
-// Modal refs
-const viewUserModal = ref(null);
-const editUserModal = ref(null);
-const confirmModal = ref(null);
-const successModal = ref(null);
-const errorModal = ref(null);
-const infoModal = ref(null);
+// Modal states
+const showViewModal = ref(false);
+const showEditModal = ref(false);
+const showConfirmModal = ref(false);
+const showSuccessModal = ref(false);
+const showErrorModal = ref(false);
+const showInfoModal = ref(false);
 
-let viewModalInstance = null;
-let editModalInstance = null;
-let confirmModalInstance = null;
-let successModalInstance = null;
-let errorModalInstance = null;
-let infoModalInstance = null;
-
-// Modal state
+// Modal state for confirm
 const confirmConfig = reactive({
   type: 'warning',
   title: '',
@@ -638,7 +618,7 @@ const loadUsers = async () => {
 
     const params = {
       keyword: filters.keyword,
-      role: filters.role,
+      role: filters.role, // Đã là 'CUSTOMER', 'EMPLOYEE', 'ADMIN'
       status: filters.status,
       page: pagination.currentPage,
       size: pagination.pageSize,
@@ -646,10 +626,10 @@ const loadUsers = async () => {
       sortDir: sortDir
     };
 
-    console.log('Loading users with params:', params);
+    //console.log('Loading users with params:', params);
 
     const response = await api.getUsers(params);
-    console.log('API Response:', response.data);
+    //console.log('API Response:', response.data);
 
     if (response.data.success) {
       users.value = response.data.data || [];
@@ -662,15 +642,15 @@ const loadUsers = async () => {
       pagination.totalPages = response.data.totalPages || 1;
       pagination.totalItems = response.data.totalItems || 0;
 
-      console.log('Updated users:', users.value);
+      //console.log('Updated users:', users.value);
     } else {
       users.value = [];
-      showErrorModal(response.data.message || 'Không thể tải danh sách người dùng');
+      openErrorModal(response.data.message || 'Không thể tải danh sách người dùng');
     }
   } catch (error) {
     console.error('Error loading users:', error);
     users.value = [];
-    showErrorModal(error.response?.data?.message || 'Không thể tải danh sách người dùng');
+    openErrorModal(error.response?.data?.message || 'Không thể tải danh sách người dùng');
   } finally {
     loading.value = false;
   }
@@ -703,21 +683,17 @@ const viewUserDetail = async (id) => {
     const response = await api.getUserDetails(id);
     if (response.data.success) {
       selectedUser.value = response.data.data;
-      if (!viewModalInstance) {
-        viewModalInstance = new Modal(viewUserModal.value);
-      }
-      viewModalInstance.show();
+      showViewModal.value = true;
     }
   } catch (error) {
     console.error('Error loading user detail:', error);
-    showErrorModal('Không thể tải chi tiết người dùng');
+    openErrorModal('Không thể tải chi tiết người dùng');
   }
 };
 
 const closeViewModal = () => {
-  if (viewModalInstance) {
-    viewModalInstance.hide();
-  }
+  showViewModal.value = false;
+  selectedUser.value = null;
 };
 
 const openCreateModal = () => {
@@ -732,11 +708,7 @@ const openCreateModal = () => {
     role: 'CUSTOMER',
     isActive: true
   });
-
-  if (!editModalInstance) {
-    editModalInstance = new Modal(editUserModal.value);
-  }
-  editModalInstance.show();
+  showEditModal.value = true;
 };
 
 const openEditModal = (user) => {
@@ -744,7 +716,7 @@ const openEditModal = (user) => {
 
   // Kiểm tra quyền
   if (currentUserRole.value === 'EMPLOYEE' && (user.role === 'ADMIN' || user.role === 'EMPLOYEE')) {
-    showErrorModal('Bạn không có quyền sửa tài khoản này');
+    openErrorModal('Bạn không có quyền sửa tài khoản này');
     return;
   }
 
@@ -758,17 +730,18 @@ const openEditModal = (user) => {
     role: user.role,
     isActive: user.isActive
   });
-
-  if (!editModalInstance) {
-    editModalInstance = new Modal(editUserModal.value);
-  }
-  editModalInstance.show();
+  showEditModal.value = true;
 };
 
 const closeEditModal = () => {
-  if (editModalInstance) {
-    editModalInstance.hide();
-  }
+  showEditModal.value = false;
+};
+
+const handleRoleChange = () => {
+  // Log để debug
+  // console.log('Role changed to:', form.role);
+  // console.log('Current user role:', currentUserRole.value);
+  // console.log('Is edit mode:', isEdit.value);
 };
 
 const saveUser = async () => {
@@ -782,13 +755,12 @@ const saveUser = async () => {
     }
 
     if (response.data.success) {
-      editModalInstance.hide();
-      showSuccessModal(response.data.message);
+      closeEditModal();
+      openSuccessModal(response.data.message);
       await loadUsers();
     }
   } catch (error) {
-    console.error('Error saving user:', error);
-    showErrorModal(error.response?.data?.message || 'Có lỗi xảy ra');
+    openErrorModal(error.response?.data?.message || 'Có lỗi xảy ra');
   } finally {
     submitting.value = false;
   }
@@ -808,11 +780,12 @@ const toggleUserStatus = (user) => {
     await processToggleStatus(user.maUser);
   };
   confirmConfig.data = user;
+  showConfirmModal.value = true;
+};
 
-  if (!confirmModalInstance) {
-    confirmModalInstance = new Modal(confirmModal.value);
-  }
-  confirmModalInstance.show();
+const closeConfirmModal = () => {
+  showConfirmModal.value = false;
+  confirmConfig.data = null;
 };
 
 const processToggleStatus = async (id) => {
@@ -821,13 +794,12 @@ const processToggleStatus = async (id) => {
     const response = await api.toggleUserStatus(id);
 
     if (response.data.success) {
-      confirmModalInstance.hide();
-      showSuccessModal(response.data.message);
+      closeConfirmModal();
+      openSuccessModal(response.data.message);
       await loadUsers();
     }
   } catch (error) {
-    console.error('Error toggling user status:', error);
-    showErrorModal(error.response?.data?.message || 'Có lỗi xảy ra');
+    openErrorModal(error.response?.data?.message || 'Có lỗi xảy ra');
   } finally {
     confirmSubmitting.value = false;
   }
@@ -847,10 +819,7 @@ const resetPassword = async () => {
     await processResetPassword(form.maUser);
   };
 
-  if (!confirmModalInstance) {
-    confirmModalInstance = new Modal(confirmModal.value);
-  }
-  confirmModalInstance.show();
+  showConfirmModal.value = true;
 };
 
 const processResetPassword = async (id) => {
@@ -859,17 +828,11 @@ const processResetPassword = async (id) => {
     const response = await api.resetPassword(id);
 
     if (response.data.success) {
-      confirmModalInstance.hide();
-
-      infoMessage.value = `Mật khẩu mới: ${response.data.newPassword}`;
-      if (!infoModalInstance) {
-        infoModalInstance = new Modal(infoModal.value);
-      }
-      infoModalInstance.show();
+      closeConfirmModal();
+      openInfoModal(`Mật khẩu mới: ${response.data.newPassword}`);
     }
   } catch (error) {
-    console.error('Error resetting password:', error);
-    showErrorModal(error.response?.data?.message || 'Có lỗi xảy ra');
+    openErrorModal(error.response?.data?.message || 'Có lỗi xảy ra');
   } finally {
     confirmSubmitting.value = false;
   }
@@ -881,20 +844,31 @@ const confirmAction = () => {
   }
 };
 
-const showSuccessModal = (message) => {
+const openSuccessModal = (message) => {
   successMessage.value = message;
-  if (!successModalInstance) {
-    successModalInstance = new Modal(successModal.value);
-  }
-  successModalInstance.show();
+  showSuccessModal.value = true;
 };
 
-const showErrorModal = (message) => {
+const closeSuccessModal = () => {
+  showSuccessModal.value = false;
+};
+
+const openErrorModal = (message) => {
   errorMessage.value = message;
-  if (!errorModalInstance) {
-    errorModalInstance = new Modal(errorModal.value);
-  }
-  errorModalInstance.show();
+  showErrorModal.value = true;
+};
+
+const closeErrorModal = () => {
+  showErrorModal.value = false;
+};
+
+const openInfoModal = (message) => {
+  infoMessage.value = message;
+  showInfoModal.value = true;
+};
+
+const closeInfoModal = () => {
+  showInfoModal.value = false;
 };
 
 const changePage = (page) => {
@@ -905,21 +879,6 @@ const changePage = (page) => {
 };
 
 // Helper methods
-const getAvatarClass = (role) => {
-  switch (role) {
-    case 'ADMIN': return 'bg-admin';
-    case 'EMPLOYEE': return 'bg-employee';
-    default: return 'bg-customer';
-  }
-};
-
-const getAvatarIcon = (role) => {
-  switch (role) {
-    case 'ADMIN': return 'bi bi-star-fill';
-    case 'EMPLOYEE': return 'bi bi-person-gear';
-    default: return 'bi bi-person';
-  }
-};
 
 const getRoleClass = (role) => {
   switch (role) {
@@ -1001,12 +960,6 @@ onMounted(() => {
   overflow: hidden;
 }
 
-.stats-mini .stats-icon {
-  font-size: 20px;
-  opacity: 0.6;
-  margin-bottom: 8px;
-}
-
 .stats-mini h4 {
   font-size: 32px;
   font-weight: bold;
@@ -1021,15 +974,6 @@ onMounted(() => {
 
 .bg-gradient-1 {
   background: linear-gradient(135deg, #212529, #000000);
-}
-.bg-gradient-2 {
-  background: linear-gradient(135deg, #10b981, #059669);
-}
-.bg-gradient-3 {
-  background: linear-gradient(135deg, #48cae4, #0096c7);
-}
-.bg-gradient-4 {
-  background: linear-gradient(135deg, #ef4444, #dc2626);
 }
 
 /* Content Card */
@@ -1059,41 +1003,6 @@ onMounted(() => {
   border-radius: 12px;
   margin-bottom: 25px;
   border: 1px solid #eee;
-}
-
-/* User Avatar */
-.user-avatar {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-size: 14px;
-  flex-shrink: 0;
-}
-
-.user-avatar-lg {
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-size: 32px;
-  margin: 0 auto;
-}
-
-.bg-admin {
-  background: linear-gradient(135deg, #fbbf24, #ee5a24);
-}
-.bg-employee {
-  background: linear-gradient(135deg, #48cae4, #0096c7);
-}
-.bg-customer {
-  background: linear-gradient(135deg, #10b981, #059669);
 }
 
 /* Table */
@@ -1208,6 +1117,16 @@ onMounted(() => {
   margin-bottom: 16px;
 }
 
+/* Scrollable Content */
+.scrollable-content {
+  max-height: 250px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: 10px;
+}
+
 /* Address List */
 .address-list {
   display: flex;
@@ -1244,6 +1163,51 @@ onMounted(() => {
 .form-check-input:checked {
   background-color: #10b981;
   border-color: #10b981;
+}
+
+/* Modal styles */
+.modal {
+  z-index: 1050;
+}
+
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1040;
+}
+
+.modal-content {
+  border-radius: 12px;
+  border: none;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-header {
+  border-bottom: 1px solid #eee;
+  padding: 1rem 1.5rem;
+  position: sticky;
+  top: 0;
+  background: white;
+  z-index: 10;
+}
+
+.modal-body {
+  padding: 1.5rem;
+}
+
+.modal-footer {
+  border-top: 1px solid #eee;
+  padding: 1rem 1.5rem;
+  position: sticky;
+  bottom: 0;
+  background: white;
+  z-index: 10;
 }
 
 /* Responsive */

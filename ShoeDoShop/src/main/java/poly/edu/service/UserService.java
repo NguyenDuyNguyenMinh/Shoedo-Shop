@@ -8,7 +8,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import poly.edu.dao.*;
-import poly.edu.dto.DiaChiJsonDTO;
+import poly.edu.dto.*;
 import poly.edu.entity.*;
 
 import java.util.*;
@@ -241,14 +241,15 @@ public class UserService {
 
         // Chuyển đổi role từ frontend sang định dạng DAO hiểu
         if ("ADMIN".equals(role)) {
-            roleFilter = "ADMIN"; // Filter admin
+            roleFilter = "ADMIN";
         } else if ("EMPLOYEE".equals(role)) {
-            roleFilter = "EMPLOYEE"; // Filter employee
-        } else if ("CUSTOMER".equals(role)) {
-            roleFilter = "KH"; // KhachHang
+            roleFilter = "EMPLOYEE";
+        } else if ("CUSTOMER".equals(role)) {  // Sửa từ "KH" thành "CUSTOMER"
+            roleFilter = "KH";
         } else {
             roleFilter = ""; // Tất cả
         }
+
         Page<Users> result;
         if (isAdmin) {
             // Admin có thể xem tất cả
@@ -309,21 +310,79 @@ public class UserService {
 
     @Transactional
     public void updateUser(Users targetUser, Map<String, Object> userData) {
+        // Cập nhật trạng thái active
         if (userData.containsKey("isActive")) {
             targetUser.setIsActive((Boolean) userData.get("isActive"));
             usersDAO.save(targetUser);
         }
 
-        if (targetUser.getKhachHang() != null) {
-            KhachHang kh = targetUser.getKhachHang();
-            if (userData.containsKey("hoTen")) kh.setTenKH((String) userData.get("hoTen"));
-            if (userData.containsKey("sdt")) kh.setSdt((String) userData.get("sdt"));
-            khachHangDAO.save(kh);
-        } else if (targetUser.getQuanTri() != null) {
-            QuanTri qt = targetUser.getQuanTri();
-            if (userData.containsKey("hoTen")) qt.setTenQT((String) userData.get("hoTen"));
-            quanTriDAO.save(qt);
+        // Xử lý thay đổi role
+        if (userData.containsKey("role")) {
+            String newRole = (String) userData.get("role");
+            String currentRole = getCurrentRole(targetUser);
+
+            // Nếu role thay đổi
+            if (!currentRole.equals(newRole)) {
+                // Xóa dữ liệu cũ
+                if (targetUser.getKhachHang() != null) {
+                    khachHangDAO.delete(targetUser.getKhachHang());
+                    targetUser.setKhachHang(null);
+                }
+                if (targetUser.getQuanTri() != null) {
+                    quanTriDAO.delete(targetUser.getQuanTri());
+                    targetUser.setQuanTri(null);
+                }
+
+                // Tạo dữ liệu mới theo role mới
+                if ("CUSTOMER".equals(newRole)) {
+                    KhachHang kh = new KhachHang();
+                    kh.setUser(targetUser);
+                    kh.setTenKH((String) userData.get("hoTen"));
+                    kh.setSdt((String) userData.get("sdt"));
+                    khachHangDAO.save(kh);
+                } else if ("EMPLOYEE".equals(newRole) || "ADMIN".equals(newRole)) {
+                    QuanTri qt = new QuanTri();
+                    qt.setUser(targetUser);
+                    qt.setTenQT((String) userData.get("hoTen"));
+                    qt.setRole("ADMIN".equals(newRole));
+                    quanTriDAO.save(qt);
+                }
+            } else {
+                // Role không thay đổi, chỉ cập nhật thông tin cơ bản
+                if (targetUser.getKhachHang() != null) {
+                    KhachHang kh = targetUser.getKhachHang();
+                    if (userData.containsKey("hoTen")) kh.setTenKH((String) userData.get("hoTen"));
+                    if (userData.containsKey("sdt")) kh.setSdt((String) userData.get("sdt"));
+                    khachHangDAO.save(kh);
+                } else if (targetUser.getQuanTri() != null) {
+                    QuanTri qt = targetUser.getQuanTri();
+                    if (userData.containsKey("hoTen")) qt.setTenQT((String) userData.get("hoTen"));
+                    quanTriDAO.save(qt);
+                }
+            }
+        } else {
+            // Không thay đổi role, chỉ cập nhật thông tin
+            if (targetUser.getKhachHang() != null) {
+                KhachHang kh = targetUser.getKhachHang();
+                if (userData.containsKey("hoTen")) kh.setTenKH((String) userData.get("hoTen"));
+                if (userData.containsKey("sdt")) kh.setSdt((String) userData.get("sdt"));
+                khachHangDAO.save(kh);
+            } else if (targetUser.getQuanTri() != null) {
+                QuanTri qt = targetUser.getQuanTri();
+                if (userData.containsKey("hoTen")) qt.setTenQT((String) userData.get("hoTen"));
+                quanTriDAO.save(qt);
+            }
         }
+    }
+
+    // Thêm phương thức helper
+    private String getCurrentRole(Users user) {
+        if (user.getQuanTri() != null) {
+            return user.getQuanTri().getRole() ? "ADMIN" : "EMPLOYEE";
+        } else if (user.getKhachHang() != null) {
+            return "CUSTOMER";
+        }
+        return "UNKNOWN";
     }
 
     @Transactional

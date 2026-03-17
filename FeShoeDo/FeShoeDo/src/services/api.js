@@ -203,8 +203,8 @@ export default {
     return apiClient.post('/employee/users', data);
   },
 
-  updateUser(id, data) {
-    return apiClient.put(`/employee/users/${id}`, data);
+  updateUser(id, userData) {
+    return axios.put(`/api/employee/users/${id}`, userData);
   },
 
   toggleUserStatus(id) {
