@@ -2,8 +2,14 @@
 package poly.edu.dto;
 
 import lombok.Data;
+import lombok.Builder;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class SanPhamDTO {
     private Integer maSP;
     private String tenSP;
@@ -20,4 +26,11 @@ public class SanPhamDTO {
     private String hinhAnhDaiDien;
     private String trangThai;
     private Boolean isActive;
+
+    // Fields used by public product pages
+    private String  hinhAnh;
+    private Double  giaGoc;
+    private Double  giaSauKM;
+    private int     tongSoLuong;
+    private int     daBan;
 }

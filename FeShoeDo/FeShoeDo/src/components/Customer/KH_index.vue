@@ -1,8 +1,9 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import KH_Navbar from '@/components/Shared/KH_Navbar.vue'
 import Footer from '@/components/Shared/Footer.vue'
+import axios from 'axios'
 
 const router = useRouter()
 
@@ -20,32 +21,63 @@ const nextSlide = () => {
   currentSlide.value = (currentSlide.value + 1) % slides.value.length
 }
 
-// ── DANH SÁCH SẢN PHẨM (Mock data) ──
-const products = ref([
-  { id: 1,  name: 'Nike Air Max 270',       price: '2.890.000 đ', stock: 20, image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=300&q=80' },
-  { id: 2,  name: 'Adidas Ultraboost 23',   price: '3.490.000 đ', stock: 15, image: 'https://images.unsplash.com/photo-1608231387042-66d1773070a5?w=300&q=80' },
-  { id: 3,  name: 'Air Jordan 1 Retro High OG Chicago', price: '4.190.000 đ', stock: 8,  image: 'https://images.unsplash.com/photo-1600185365926-3a2ce3cdb9eb?w=300&q=80' },
-  { id: 4,  name: 'Vans Old Skool Classic', price: '1.290.000 đ', stock: 50, image: 'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=300&q=80' },
-  { id: 5,  name: 'Converse Chuck 70 Hi',   price: '1.590.000 đ', stock: 35, image: 'https://images.unsplash.com/photo-1460353581641-37baddab0fa2?w=300&q=80' },
-  { id: 6,  name: 'New Balance 574 Core',   price: '1.990.000 đ', stock: 18, image: 'https://images.unsplash.com/photo-1584735175315-9d5df23be620?w=300&q=80' },
-  { id: 7,  name: 'Nike React Infinity',    price: '2.690.000 đ', stock: 12, image: 'https://images.unsplash.com/photo-1539185441755-769473a23570?w=300&q=80' },
-  { id: 8,  name: 'Puma RS-X Reinvention',  price: '1.650.000 đ', stock: 25, image: 'https://images.unsplash.com/photo-1491553895911-0055eca6402d?w=300&q=80' },
-  { id: 9,  name: 'Reebok Classic Leather', price: '1.190.000 đ', stock: 30, image: 'https://images.unsplash.com/photo-1556906781-9a412961a28c?w=300&q=80' },
-  { id: 10, name: 'Balenciaga Triple S',    price: '5.990.000 đ', stock: 5,  image: 'https://images.unsplash.com/photo-1512374382149-233c42b6a83b?w=300&q=80' },
-])
+// ── API ──
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8080/api'
 
-// Lấy 5 sản phẩm mỗi hàng cho đẹp layout
-const flashSales = computed(() => products.value.slice(0, 5))
-const featuredProducts = computed(() => products.value.slice(5, 10))
-const bestSellers = computed(() => [...products.value].reverse().slice(0, 5))
+// ── STATE ──
+const flashSales       = ref([])
+const featuredProducts = ref([])
+const bestSellers      = ref([])
+const loading          = ref(true)
+const error            = ref(null)
 
+// ── FETCH từ GET /api/san-pham/trang-chu ──
+const fetchTrangChu = async () => {
+  try {
+    loading.value = true
+    error.value   = null
+    const { data } = await axios.get(`${API_BASE}/san-pham/trang-chu`)
+    if (data.success) {
+      flashSales.value       = data.data.flashSales || []
+      featuredProducts.value = data.data.noiBat     || []
+      bestSellers.value      = data.data.banChay    || []
+    } else {
+      error.value = data.message || 'Có lỗi xảy ra khi tải dữ liệu'
+    }
+  } catch (err) {
+    console.error('Lỗi fetch trang chủ:', err)
+    error.value = 'Không thể kết nối đến máy chủ. Vui lòng thử lại!'
+  } finally {
+    loading.value = false
+  }
+}
+
+// ── FORMAT GIÁ (VND) ──
+const formatPrice = (price) => {
+  if (!price && price !== 0) return ''
+  return new Intl.NumberFormat('vi-VN', {
+    style: 'currency',
+    currency: 'VND'
+  }).format(price)
+}
+
+// ── ẢNH: nếu là tên file thì ghép với thư mục static ──
+const getImageUrl = (hinhAnh) => {
+  if (!hinhAnh) return 'https://placehold.co/300x300?text=No+Image'
+  if (hinhAnh.startsWith('http')) return hinhAnh
+  // Khớp với file.upload-dir trong application.properties
+  return `http://localhost:8080/images/${hinhAnh}`
+}
+
+// ── NAVIGATION ──
 const goToDetail = (id) => {
   router.push({ name: 'DetailProduct', params: { id } })
 }
-
-const viewAll = (category) => {
-  console.log('Chuyển đến trang xem tất cả của:', category)
+const viewAll = (section) => {
+  router.push({ name: 'ProductList', query: { section } })
 }
+
+onMounted(() => fetchTrangChu())
 </script>
 
 <template>
@@ -59,7 +91,7 @@ const viewAll = (category) => {
         <button class="arrow-btn left" @click="prevSlide">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
         </button>
-        
+
         <div class="banner-text">
           Carousel Mẫu<br />
           <span>{{ slides[currentSlide].line1 }} {{ slides[currentSlide].line2 }}</span>
@@ -72,65 +104,107 @@ const viewAll = (category) => {
     </div>
 
     <div class="sections-container">
-      
-      <section class="product-section">
-        <div class="section-header">
-          <h2 class="section-title">Flash Sales</h2>
-          <button class="view-all-btn" @click="viewAll('flash-sales')">Xem tất cả</button>
-        </div>
-        <div class="product-grid">
-          <div v-for="product in flashSales" :key="product.id" class="pcard" @click="goToDetail(product.id)">
-            <div class="pcard-img-wrap">
-              <img :src="product.image" :alt="product.name" class="pcard-img" />
-            </div>
-            <div class="pcard-body">
-              <div class="pcard-name" :title="product.name">{{ product.name }}</div>
-              <div class="pcard-price">{{ product.price }}</div>
+
+      <!-- Loading -->
+      <div v-if="loading" class="loading-wrap">
+        <div class="loading-spinner"></div>
+        <p>Đang tải sản phẩm...</p>
+      </div>
+
+      <!-- Error -->
+      <div v-else-if="error" class="error-wrap">
+        <p>⚠️ {{ error }}</p>
+        <button class="retry-btn" @click="fetchTrangChu">Thử lại</button>
+      </div>
+
+      <!-- Content -->
+      <template v-else>
+
+        <!-- Flash Sales -->
+        <section class="product-section">
+          <div class="section-header">
+            <h2 class="section-title">Flash Sales</h2>
+            <button class="view-all-btn" @click="viewAll('flash-sales')">Xem tất cả</button>
+          </div>
+          <div class="product-grid">
+            <div
+              v-for="product in flashSales"
+              :key="product.maSP"
+              class="pcard"
+              @click="goToDetail(product.maSP)"
+            >
+              <div class="pcard-img-wrap">
+                <img :src="getImageUrl(product.hinhAnh)" :alt="product.tenSP" class="pcard-img" />
+                <span v-if="product.khuyenMai > 0" class="badge-sale">-{{ product.khuyenMai }}%</span>
+              </div>
+              <div class="pcard-body">
+                <div class="pcard-name" :title="product.tenSP">{{ product.tenSP }}</div>
+                <div class="pcard-price-wrap">
+                  <span class="pcard-price">{{ formatPrice(product.giaSauKM) }}</span>
+                  <span v-if="product.khuyenMai > 0" class="pcard-price-old">{{ formatPrice(product.giaGoc) }}</span>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <section class="product-section">
-        <div class="section-header">
-          <h2 class="section-title">Nổi Bật</h2>
-          <button class="view-all-btn" @click="viewAll('featured')">Xem tất cả</button>
-        </div>
-        <div class="product-grid">
-          <div v-for="product in featuredProducts" :key="product.id" class="pcard" @click="goToDetail(product.id)">
-            <div class="pcard-img-wrap">
-              <img :src="product.image" :alt="product.name" class="pcard-img" />
-            </div>
-            <div class="pcard-body">
-              <div class="pcard-name" :title="product.name">{{ product.name }}</div>
-              <div class="pcard-price">{{ product.price }}</div>
+        <!-- Nổi Bật -->
+        <section class="product-section">
+          <div class="section-header">
+            <h2 class="section-title">Nổi Bật</h2>
+            <button class="view-all-btn" @click="viewAll('noi-bat')">Xem tất cả</button>
+          </div>
+          <div class="product-grid">
+            <div
+              v-for="product in featuredProducts"
+              :key="product.maSP"
+              class="pcard"
+              @click="goToDetail(product.maSP)"
+            >
+              <div class="pcard-img-wrap">
+                <img :src="getImageUrl(product.hinhAnh)" :alt="product.tenSP" class="pcard-img" />
+              </div>
+              <div class="pcard-body">
+                <div class="pcard-name" :title="product.tenSP">{{ product.tenSP }}</div>
+                <div class="pcard-price-wrap">
+                  <span class="pcard-price">{{ formatPrice(product.giaSauKM) }}</span>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <section class="product-section">
-        <div class="section-header">
-          <h2 class="section-title">Bán Chạy</h2>
-          <button class="view-all-btn" @click="viewAll('best-sellers')">Xem tất cả</button>
-        </div>
-        <div class="product-grid">
-          <div v-for="product in bestSellers" :key="product.id" class="pcard" @click="goToDetail(product.id)">
-            <div class="pcard-img-wrap">
-              <img :src="product.image" :alt="product.name" class="pcard-img" />
-            </div>
-            <div class="pcard-body">
-              <div class="pcard-name" :title="product.name">{{ product.name }}</div>
-              <div class="pcard-price">{{ product.price }}</div>
+        <!-- Bán Chạy -->
+        <section class="product-section">
+          <div class="section-header">
+            <h2 class="section-title">Bán Chạy</h2>
+            <button class="view-all-btn" @click="viewAll('ban-chay')">Xem tất cả</button>
+          </div>
+          <div class="product-grid">
+            <div
+              v-for="product in bestSellers"
+              :key="product.maSP"
+              class="pcard"
+              @click="goToDetail(product.maSP)"
+            >
+              <div class="pcard-img-wrap">
+                <img :src="getImageUrl(product.hinhAnh)" :alt="product.tenSP" class="pcard-img" />
+                <span v-if="product.daBan > 0" class="badge-sold">Đã bán {{ product.daBan }}</span>
+              </div>
+              <div class="pcard-body">
+                <div class="pcard-name" :title="product.tenSP">{{ product.tenSP }}</div>
+                <div class="pcard-price-wrap">
+                  <span class="pcard-price">{{ formatPrice(product.giaSauKM) }}</span>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
+      </template>
     </div>
 
     <Footer />
-
   </div>
 </template>
 
@@ -142,191 +216,105 @@ const viewAll = (category) => {
 }
 
 /* ════════ HERO CAROUSEL ════════ */
-.hero-wrap {
-  width: 100%;
-  border-bottom: 1px solid #ddd;
-}
+.hero-wrap { width: 100%; border-bottom: 1px solid #ddd; }
 .hero-main {
-  width: 100%;
-  height: 350px;
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  width: 100%; height: 350px; position: relative;
+  display: flex; align-items: center; justify-content: center;
   transition: background 0.4s ease;
 }
 .banner-bg {
   position: absolute; inset: 0;
   background: radial-gradient(ellipse at center, rgba(255,255,255,0.05) 0%, transparent 70%);
 }
-.banner-text {
-  font-size: 56px;
-  font-weight: bold;
-  color: #fff;
-  text-align: center;
-  z-index: 2;
-}
-.banner-text span {
-  display: block;
-  font-size: 24px;
-  font-weight: normal;
-  margin-top: 10px;
-}
+.banner-text { font-size: 56px; font-weight: bold; color: #fff; text-align: center; z-index: 2; }
+.banner-text span { display: block; font-size: 24px; font-weight: normal; margin-top: 10px; }
 .arrow-btn {
-  position: absolute;
-  top: 50%; transform: translateY(-50%);
-  background: transparent;
-  border: none; color: #fff;
+  position: absolute; top: 50%; transform: translateY(-50%);
+  background: transparent; border: none; color: #fff;
   display: flex; align-items: center; justify-content: center;
-  cursor: pointer; z-index: 5;
+  cursor: pointer; z-index: 5; opacity: 0.7;
   transition: transform 0.2s, opacity 0.2s;
-  opacity: 0.7;
 }
 .arrow-btn:hover { opacity: 1; transform: translateY(-50%) scale(1.2); }
 .arrow-btn.left  { left: 30px; }
 .arrow-btn.right { right: 30px; }
 
+/* ════════ LOADING / ERROR ════════ */
+.loading-wrap {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 16px; padding: 60px 0; color: #666;
+}
+.loading-spinner {
+  width: 40px; height: 40px;
+  border: 4px solid #eee; border-top-color: #d32f2f;
+  border-radius: 50%; animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.error-wrap { text-align: center; padding: 60px 0; color: #c62828; }
+.retry-btn {
+  margin-top: 12px; padding: 8px 24px;
+  background: #d32f2f; color: #fff;
+  border: none; border-radius: 4px; cursor: pointer; font-size: 14px;
+}
+.retry-btn:hover { background: #b71c1c; }
+
 /* ════════ SECTIONS & GRID ════════ */
 .sections-container {
-  /* Tăng max-width và set width lớn để lấp đầy khoảng trắng 2 bên */
-  max-width: 1400px;
-  width: 96%;
-  margin: 0 auto;
-  padding: 30px 0 60px;
-  display: flex;
-  flex-direction: column;
-  gap: 40px;
+  max-width: 1400px; width: 96%;
+  margin: 0 auto; padding: 30px 0 60px;
+  display: flex; flex-direction: column; gap: 40px;
 }
-
-.product-section {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
+.product-section { display: flex; flex-direction: column; gap: 16px; }
 .section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  border-bottom: 2px solid #333;
-  padding-bottom: 8px;
+  display: flex; justify-content: space-between; align-items: flex-end;
+  border-bottom: 2px solid #333; padding-bottom: 8px;
 }
-
-.section-title {
-  font-size: 24px;
-  margin: 0;
-  color: #222;
-}
-
+.section-title { font-size: 24px; margin: 0; color: #222; }
 .view-all-btn {
-  background: #fff;
-  border: 1px solid #444;
-  padding: 6px 16px;
-  font-size: 14px;
-  cursor: pointer;
-  border-radius: 4px;
-  transition: all 0.2s;
+  background: #fff; border: 1px solid #444;
+  padding: 6px 16px; font-size: 14px; cursor: pointer;
+  border-radius: 4px; transition: all 0.2s;
 }
-
-.view-all-btn:hover {
-  background: #444;
-  color: #fff;
-}
-
-.product-grid {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr); /* 5 SẢN PHẨM TRÊN 1 DÒNG */
-  gap: 15px; /* Khoảng cách giữa các thẻ */
-}
+.view-all-btn:hover { background: #444; color: #fff; }
+.product-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px; }
 
 /* ════════ PRODUCT CARD ════════ */
 .pcard {
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  background: #fff;
-  overflow: hidden;
-  cursor: pointer;
+  border: 1px solid #e0e0e0; border-radius: 8px; background: #fff;
+  overflow: hidden; cursor: pointer;
   transition: box-shadow 0.2s, transform 0.2s;
-  
-  /* Flexbox giúp các thẻ luôn cao bằng nhau */
-  display: flex;
-  flex-direction: column;
-  height: 100%; 
+  display: flex; flex-direction: column; height: 100%;
 }
-
-.pcard:hover { 
-  box-shadow: 0 8px 20px rgba(0,0,0,0.08); 
-  transform: translateY(-4px); 
+.pcard:hover { box-shadow: 0 8px 20px rgba(0,0,0,0.08); transform: translateY(-4px); }
+.pcard-img-wrap {
+  width: 100%; padding-top: 100%; position: relative;
+  background: #f8f8f8; border-bottom: 1px solid #eee; overflow: hidden;
 }
-
-/* Ép khung ảnh thành hình vuông hoàn hảo không bao giờ tràn */
-.pcard-img-wrap { 
-  width: 100%; 
-  padding-top: 100%; /* Mẹo tạo hình vuông tỷ lệ 1:1 */
-  position: relative;
-  background: #f8f8f8; 
-  border-bottom: 1px solid #eee;
-  overflow: hidden;
+.pcard-img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+.badge-sale, .badge-sold {
+  position: absolute; top: 8px; left: 8px;
+  padding: 3px 8px; border-radius: 4px;
+  font-size: 12px; font-weight: 700; z-index: 2;
 }
-
-.pcard-img { 
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%; 
-  height: 100%; 
-  object-fit: cover; /* Cắt vừa vặn, không bị kéo dãn hay méo hình */
-  display: block; 
+.badge-sale { background: #d32f2f; color: #fff; }
+.badge-sold { background: #f57c00; color: #fff; }
+.pcard-body {
+  padding: 12px; display: flex; flex-direction: column;
+  justify-content: space-between; flex-grow: 1; gap: 8px;
 }
-
-.pcard-body { 
-  padding: 12px; 
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between; /* Giữ giá sản phẩm luôn nằm dưới cùng */
-  flex-grow: 1; /* Lấp đầy khoảng trống còn lại của thẻ */
-  gap: 8px;
+.pcard-name {
+  font-size: 14px; font-weight: 500; color: #333;
+  display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2;
+  -webkit-box-orient: vertical; overflow: hidden;
+  text-overflow: ellipsis; line-height: 1.4;
 }
-
-.pcard-name { 
-  font-size: 14px; 
-  font-weight: 500; 
-  color: #333; 
-  
-  /* Hiển thị tối đa 2 dòng nếu tên quá dài, sau đó có dấu ... */
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  line-clamp:2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  line-height: 1.4;
-}
-
-.pcard-price { 
-  font-size: 15px; 
-  font-weight: 700; 
-  color: #d32f2f; 
-  margin-top: auto; /* Luôn đẩy giá xuống sát đáy */
-}
+.pcard-price-wrap { display: flex; flex-direction: column; gap: 2px; margin-top: auto; }
+.pcard-price { font-size: 15px; font-weight: 700; color: #d32f2f; }
+.pcard-price-old { font-size: 12px; color: #999; text-decoration: line-through; }
 
 /* ════════ RESPONSIVE ════════ */
-@media (max-width: 1200px) {
-  .product-grid { grid-template-columns: repeat(4, 1fr); }
-}
-@media (max-width: 992px) { 
-  .product-grid { grid-template-columns: repeat(3, 1fr); } 
-}
-@media (max-width: 768px) {
-  .product-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
-  .hero-main { height: 250px; }
-  .banner-text { font-size: 40px; }
-}
-@media (max-width: 480px) {
-  .hero-main { height: 180px; }
-  .banner-text { font-size: 28px; }
-  .banner-text span { font-size: 14px; }
-  .section-title { font-size: 18px; }
-  .view-all-btn { padding: 4px 10px; font-size: 12px; }
-}
+@media (max-width: 1200px) { .product-grid { grid-template-columns: repeat(4, 1fr); } }
+@media (max-width: 992px)  { .product-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 768px)  { .product-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; } .hero-main { height: 250px; } .banner-text { font-size: 40px; } }
+@media (max-width: 480px)  { .hero-main { height: 180px; } .banner-text { font-size: 28px; } .banner-text span { font-size: 14px; } .section-title { font-size: 18px; } .view-all-btn { padding: 4px 10px; font-size: 12px; } }
 </style>
