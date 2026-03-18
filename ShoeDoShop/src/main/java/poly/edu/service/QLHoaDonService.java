@@ -377,6 +377,23 @@ public class QLHoaDonService {
         }
     }
 
+    @Transactional
+    public Map<String, Object> confirmReturn(Integer id) {
+        HoaDon hd = findOrder(id);
+        checkStatus(hd, "Hoàn hàng/trả hàng", "Chỉ có thể xác nhận hoàn hàng cho đơn hàng đang chờ hoàn");
+
+        for (HoaDonCT ct : hd.getHoaDonCTs()) {
+            spctDAO.congSoLuong(ct.getSanPhamChiTiet().getMaSKU(), ct.getSoLuong());
+        }
+
+        hd.setTrangThai("Đã từ chối");
+        hd.setGhiChu((hd.getGhiChu() != null ? hd.getGhiChu() + " | " : "") + "Đã hoàn tất xử lý hoàn hàng");
+        hd.setQuanTri(getCurrentEmployee());
+        hoaDonDAO.save(hd);
+
+        return success("Đã xác nhận hoàn hàng và cộng lại số lượng vào kho");
+    }
+
     private Map<String, Object> success(String key, Object value) {
         return Map.of("success", true, key, value);
     }
