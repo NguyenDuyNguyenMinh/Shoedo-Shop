@@ -2,12 +2,10 @@
   <nav class="navbar navbar-expand-lg bg-black py-3 sticky-top" data-bs-theme="dark">
     <div class="container-fluid px-4 px-lg-5 d-flex align-items-center justify-content-between">
       
-      <!-- Logo -->
       <router-link to="/customer/index" class="navbar-brand logo-box d-flex align-items-center justify-content-center">
         <img :src="logoUrl" alt="Shoedo" class="logo-img">
       </router-link>
 
-      <!-- Menu chính -->
       <div class="collapse navbar-collapse flex-grow-0 mx-auto d-none d-lg-block" id="navbarNav">
         <ul class="navbar-nav gap-5"> 
           <li class="nav-item">
@@ -24,7 +22,6 @@
 
       <div class="d-flex align-items-center gap-3 right-actions">
         
-        <!-- ══════════ SEARCH ══════════ -->
         <div class="search-wrapper d-none d-md-block position-relative" ref="searchWrapper">
           <div class="input-group" :class="{ 'dropdown-open': showDropdownSearch }">
             <input 
@@ -43,11 +40,9 @@
             </button>
           </div>
 
-          <!-- Dropdown lịch sử / gợi ý -->
           <Transition name="dropdown-fade">
             <div v-if="showDropdownSearch" class="search-history-dropdown">
 
-              <!-- Đang gõ → hiển thị gợi ý từ lịch sử -->
               <template v-if="searchQuery.trim().length > 0">
                 <div v-if="filteredHistory.length > 0">
                   <div class="sh-section-title px-3 py-2">
@@ -70,7 +65,6 @@
                 </div>
               </template>
 
-              <!-- Chưa gõ → hiển thị lịch sử -->
               <template v-else>
                 <template v-if="isAuthenticated">
                   <div v-if="historyLoading" class="px-3 py-3 text-secondary text-center" style="font-size:0.85rem;">
@@ -118,7 +112,6 @@
           </Transition>
         </div>
 
-        <!-- Giỏ hàng -->
         <router-link to="/customer/cart" class="btn btn-icon position-relative text-white">
           <i class="bi bi-cart3 fs-5"></i>
           <span v-if="isAuthenticated && cartCount > 0" class="position-absolute badge rounded-pill bg-danger cart-badge">
@@ -126,7 +119,6 @@
           </span>
         </router-link>
 
-        <!-- Account Dropdown -->
         <div class="dropdown" ref="accountDropdown">
           <button
             class="user-box d-flex align-items-center gap-2 px-3 py-2 rounded-0 cursor-pointer text-white bg-transparent"
@@ -212,14 +204,16 @@ const lastName = computed(() => {
 })
 const maKH = computed(() => authStore.user?.maKH ?? null)
 
-// ── Cart ───────────────────────────────────────────────────────
-const cartCount = ref(0)
+// ── Cart (Giữ logic từ File 1) ──────────────────────────────────
+const cartCount = computed(() => authStore.cartCount || 0)
+
 const fetchCartCount = async () => {
-  if (!isAuthenticated.value) { cartCount.value = 0; return }
+  if (!isAuthenticated.value) return
   try {
-    const r = await api.getCartCount()
-    cartCount.value = r.data?.count || 0
-  } catch { cartCount.value = 0 }
+    await authStore.updateCartCount()
+  } catch (error) {
+    console.error('Lỗi lấy số lượng giỏ hàng:', error)
+  }
 }
 
 // ── Account dropdown ──────────────────────────────────────────
@@ -230,7 +224,7 @@ const toggleAccountDropdown = () => { showAccountDropdown.value = !showAccountDr
 const logout = async () => {
   try {
     await authStore.logout()
-    cartCount.value = 0
+    // Không gán cartCount.value = 0 ở đây nữa vì nó là computed
     showAccountDropdown.value = false
     historyList.value = []
     router.push('/auth/login')
@@ -238,7 +232,7 @@ const logout = async () => {
 }
 
 // ═══════════════════════════════════════════════════════════════
-//  SEARCH
+//  SEARCH (Giữ nguyên từ File 2)
 // ═══════════════════════════════════════════════════════════════
 const searchQuery        = ref('')
 const showDropdownSearch = ref(false)
@@ -360,21 +354,31 @@ const handleClickOutside = (e) => {
 
 // ── Watch auth change ────────────────────────────────────────
 watch(isAuthenticated, async (v) => {
-  if (v) { await fetchCartCount(); await fetchHistory() }
-  else   { cartCount.value = 0; historyList.value = [] }
+  if (v) { 
+    await fetchCartCount()
+    await fetchHistory() 
+  } else { 
+    // cartCount là computed nên ko cần reset thủ công
+    historyList.value = [] 
+  }
 })
 
 // ── Lifecycle ────────────────────────────────────────────────
 onMounted(() => {
-  if (isAuthenticated.value) { fetchCartCount(); fetchHistory() }
+  if (isAuthenticated.value) { 
+    fetchCartCount()
+    fetchHistory() 
+  }
   document.addEventListener('click', handleClickOutside)
 })
+
 onBeforeUnmount(() => {
   document.removeEventListener('click', handleClickOutside)
 })
 </script>
 
 <style scoped>
+/* Toàn bộ CSS từ File 2 */
 .bg-black { background-color: #000000 !important; }
 
 .logo-box { width: 120px; height: 48px; transition: all 0.3s ease; padding: 5px; }
