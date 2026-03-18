@@ -40,7 +40,7 @@ public class NhapKhoController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
- // THÊM API NÀY: Nhận mảng dữ liệu từ Vue.js
+
     @PostMapping("/nhap-hang-loat")
     public ResponseEntity<?> nhapKhoHangLoat(@RequestBody List<NhapKhoDTO> requests) {
         try {
@@ -50,6 +50,7 @@ public class NhapKhoController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+    
     @GetMapping("/danhmuc")
     public ResponseEntity<?> getAllDanhMuc() {
         return ResponseEntity.ok(danhMucDAO.findAll());

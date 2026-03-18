@@ -1,5 +1,4 @@
 <template>
-
 <div class="toast-container position-fixed top-0 start-50 translate-middle-x p-3 mt-2" style="z-index: 1090;">
   <transition name="toast-fade">
     <div
@@ -33,9 +32,10 @@
   </transition>
 </div>
 
+<!-- page content -->
+
   <div class="employee-layout">
     <NV_Sidebar />
-
     <main class="main-content">
       <div class="page-container">
         <div class="d-flex align-items-center mb-4 pb-2 border-bottom">
@@ -43,6 +43,8 @@
             <i class="bi bi-tags-fill me-2"></i>Quản lý Khuyến Mãi (Flash Sale)
           </h4>
         </div>
+
+<!-- bộ lọc -->
 
         <div class="bg-white p-4 rounded-3 shadow-sm border">
           <div class="row g-2 mb-4">
@@ -131,6 +133,8 @@
               </div>
             </div>
           </div>
+
+<!-- list sản phẩm -->
 
           <div class="table-responsive">
 <table class="table table-bordered table-hover align-middle">
@@ -268,9 +272,7 @@ axios.defaults.withCredentials = true;
 
 const products = ref([]);
 const categories = ref([]);
-const bulkDiscount = ref(0); // Mặc định là 0%
-
-// --- STATE CHO BỘ LỌC ---
+const bulkDiscount = ref(0);
 const filterKeyword = ref("");
 const filterCategory = ref("");
 const filterFlashSale = ref("");
@@ -288,16 +290,14 @@ const fetchCategories = async () => {
   }
 };
 
-// Lấy danh sách Sản Phẩm (Gốc)
+// Lấy danh sách Sản Phẩm
 const fetchProducts = async () => {
   try {
-    // Lưu ý: Đổi endpoint này thành endpoint lấy danh sách bảng SanPham của bạn
     const response = await axios.get(
       "http://localhost:8080/api/khuyenmai/sanpham"
     );
     products.value = response.data.map((item) => ({
       ...item,
-      // Gán khuyến mãi mới mặc định bằng với khuyến mãi hiện tại để dễ thao tác
       khuyenMaiMoi: item.khuyenMai || 0,
       selected: false,
     }));
@@ -306,46 +306,31 @@ const fetchProducts = async () => {
   }
 };
 
-// --- LOGIC LỌC SẢN PHẨM ---
-// --- LOGIC LỌC SẢN PHẨM ---
+// lọc sản phẩm theo tìm kiếm, trạng thái sale, danh mục và còn hoạt động hay không
 const filteredProducts = computed(() => {
   return products.value.filter((item) => {
-    // 1. Lọc theo tên
     const matchKeyword = !filterKeyword.value || item.tenSP?.toLowerCase().includes(filterKeyword.value.toLowerCase());
-
-    // 2. Lọc theo trạng thái Flash Sale
     let matchFlashSale = true;
     if (filterFlashSale.value === "DangSale") {
       matchFlashSale = item.khuyenMai > 0;
     } else if (filterFlashSale.value === "KhongSale") {
       matchFlashSale = item.khuyenMai === 0;
     }
-
-    // 3. Lọc theo danh mục
     let matchCategory = true;
     if (filterCategory.value) {
       if (item.maDMs) {
-        // Cắt chuỗi "1,5" thành mảng ['1', '5']
         const categoryArray = item.maDMs.split(',');
-        // Ép filterCategory về chuỗi để so sánh cho khớp kiểu dữ liệu
         matchCategory = categoryArray.includes(String(filterCategory.value));
       } else {
-        // Sản phẩm không có danh mục thì loại luôn
         matchCategory = false; 
       }
     }
-
-// 4. LỌC THEO TRẠNG THÁI HOẠT ĐỘNG
     let matchActive = true;
     if (filterActive.value !== "") {
-      // Mẹo: Lấy giá trị isActive (nếu có) hoặc active (nếu Spring Boot tự đổi tên)
       const status = item.isActive !== undefined ? item.isActive : item.active;
-      
       if (filterActive.value === "true") {
-        // Chấp nhận cả boolean, số 1, hoặc chuỗi "true"
         matchActive = status === true || status === 1 || status === "true";
       } else if (filterActive.value === "false") {
-        // Chấp nhận cả boolean, số 0, hoặc chuỗi "false"
         matchActive = status === false || status === 0 || status === "false";
       }
     }
@@ -354,6 +339,7 @@ const filteredProducts = computed(() => {
   });
 });
 
+// hàm reset bộ lọc
 const resetFilters = () => {
   filterKeyword.value = "";
   filterCategory.value = "";
@@ -361,11 +347,12 @@ const resetFilters = () => {
   filterActive.value = "";
 };
 
-// --- LOGIC THAO TÁC HÀNG LOẠT ---
+// đếm sản phẩm đã chọn
 const selectedCount = computed(
   () => filteredProducts.value.filter((p) => p.selected).length
 );
 
+//chọn tất cả
 const isAllSelected = computed({
   get: () =>
     filteredProducts.value.length > 0 &&
@@ -373,11 +360,12 @@ const isAllSelected = computed({
   set: (val) => filteredProducts.value.forEach((p) => (p.selected = val)),
 });
 
+// bỏ chọn tất cả
 const unselectAll = () => {
   products.value.forEach((p) => (p.selected = false));
 };
 
-// Validate giá trị KM từ 0 đến 100
+// kiểm tra có đúng hợp lý chưa
 const isValidDiscount = (value) => {
   return value !== null && value !== "" && value >= 0 && value <= 100;
 };
@@ -387,7 +375,6 @@ const applyBulkDiscount = () => {
     showToast("Phần trăm khuyến mãi phải nằm trong khoảng từ 0 đến 100!","warning");
     return;
   }
-
   filteredProducts.value.forEach((p) => {
     if (p.selected) p.khuyenMaiMoi = bulkDiscount.value;
   });
@@ -395,7 +382,6 @@ const applyBulkDiscount = () => {
 
 const handleBulkSave = async () => {
   const selectedItems = products.value.filter((p) => p.selected);
-
   // Check validate trước khi gửi
   const isAllValid = selectedItems.every((p) =>
     isValidDiscount(p.khuyenMaiMoi)
@@ -409,9 +395,7 @@ const handleBulkSave = async () => {
     maSP: item.maSP,
     khuyenMai: item.khuyenMaiMoi,
   }));
-
   try {
-    // Lưu ý: Sửa endpoint POST này cho khớp với backend của bạn
     await axios.post(
       "http://localhost:8080/api/khuyenmai/cap-nhat-hang-loat",
       payload
@@ -432,9 +416,7 @@ const handleSingleSave = async (item) => {
     showToast("Phần trăm khuyến mãi phải nằm trong khoảng từ 0 đến 100!","warning");
     return;
   }
-
   try {
-    // Lưu ý: Sửa endpoint POST này cho khớp với backend của bạn
     await axios.post("http://localhost:8080/api/khuyenmai/cap-nhat", {
       maSP: item.maSP,
       khuyenMai: item.khuyenMaiMoi,
@@ -459,9 +441,9 @@ onMounted(() => {
   fetchCategories();
 });
 
-// Trạng thái của thông báo (Toast)
+
 const toast = ref({
-  id: 0, // Thêm ID để ép reset thanh tiến trình
+  id: 0,
   show: false,
   message: "",
   type: "success",
@@ -469,20 +451,15 @@ const toast = ref({
 
 let toastTimeout = null;
 
-// Hàm gọi thông báo dùng chung
 const showToast = (message, type = "success") => {
-  // Gán Date.now() làm ID giúp mỗi lần bật là một animation mới hoàn toàn
   toast.value = { id: Date.now(), show: true, message, type };
-  
   if (toastTimeout) clearTimeout(toastTimeout);
-  
-  // Tự động tắt sau đúng 3 giây
   toastTimeout = setTimeout(() => {
     toast.value.show = false;
   }, 5000);
 };
 
-// Hàm 1: Hiển thị khoảng giá gốc (trước khi giảm)
+// hiển thị giá gốc
 const displayPriceRange = (min, max) => {
   if (min == null || max == null) return "0 ₫";
   if (min === max) {
@@ -491,14 +468,12 @@ const displayPriceRange = (min, max) => {
   return `${formatCurrency(min)} - ${formatCurrency(max)}`;
 };
 
-// Hàm 2: Tính toán và hiển thị khoảng giá sau khi áp dụng % khuyến mãi
+// hiển thị giá sau giảm để kiểm tra
 const displayDiscountedPriceRange = (min, max, discountPercent) => {
   if (min == null || max == null) return "0 ₫";
-  
   const ratio = 1 - (discountPercent / 100);
   const discountedMin = min * ratio;
   const discountedMax = max * ratio;
-  
   if (min === max) {
     return formatCurrency(discountedMin);
   }
@@ -531,7 +506,7 @@ td .btn-outline-danger {
   padding: 8px 16px;
   height: 38px;
 }
-/* Hiệu ứng trượt từ trên xuống cho vị trí Center-Top */
+
 .toast-fade-enter-active,
 .toast-fade-leave-active {
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);

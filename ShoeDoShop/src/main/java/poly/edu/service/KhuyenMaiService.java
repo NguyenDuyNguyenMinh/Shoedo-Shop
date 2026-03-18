@@ -29,19 +29,17 @@ public class KhuyenMaiService {
             (Integer) row[3],  // khuyenMai
             (String) row[4],   // hinhAnh
             row[5] != null ? new BigDecimal(row[5].toString()) : BigDecimal.ZERO, // donGiaMin
-            	    row[6] != null ? new BigDecimal(row[6].toString()) : BigDecimal.ZERO,
+            row[6] != null ? new BigDecimal(row[6].toString()) : BigDecimal.ZERO, // dongiamax
             (Boolean) row[7],
-            row[8] != null ? row[8].toString() : ""
+            row[8] != null ? row[8].toString() : ""//danh mục
         )).collect(Collectors.toList());
     }
 
-    // Cập nhật 1 sản phẩm
     @Transactional
     public void capNhatKhuyenMai(KhuyenMaiUpdateRequest request) {
         if (request.getKhuyenMai() < 0 || request.getKhuyenMai() > 100) {
             throw new IllegalArgumentException("Khuyến mãi phải từ 0 đến 100%");
         }
-
         SanPham sp = sanPhamRepository.findById(request.getMaSP())
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy Sản phẩm với mã: " + request.getMaSP()));
         
@@ -49,11 +47,10 @@ public class KhuyenMaiService {
         sanPhamRepository.save(sp);
     }
 
-    // Cập nhật hàng loạt (Bulk Update)
     @Transactional
     public void capNhatKhuyenMaiHangLoat(List<KhuyenMaiUpdateRequest> requests) {
         for (KhuyenMaiUpdateRequest req : requests) {
-            capNhatKhuyenMai(req); // Tái sử dụng logic validate và update ở trên
+            capNhatKhuyenMai(req);
         }
     }
 }
