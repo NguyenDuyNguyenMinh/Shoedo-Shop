@@ -58,11 +58,6 @@ public class QLHoaDonController {
         return ResponseEntity.ok(orderService.sendApologyEmail(id));
     }
 
-    @PostMapping("/{id}/confirm-return")
-    public ResponseEntity<Map<String, Object>> confirmReturn(@PathVariable Integer id) {
-        return ResponseEntity.ok(orderService.confirmReturn(id));
-    }
-
     @GetMapping("/{id}/print")
     public ResponseEntity<?> printInvoice(@PathVariable Integer id) {
         return orderService.printInvoice(id);
