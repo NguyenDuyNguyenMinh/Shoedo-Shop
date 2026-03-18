@@ -31,8 +31,12 @@
     </div>
   </transition>
 </div>
+
+
   <div class="employee-layout">
     <NV_Sidebar />
+
+<!-- page content -->
 
     <main class="main-content">
       <div class="page-container">
@@ -49,6 +53,8 @@
             @click="successMessage = ''"
           ></button>
         </div>
+
+<!-- tổng quan sản phẩm -->
 
         <div class="row g-3 mb-4">
           <div class="col-md-3">
@@ -77,6 +83,8 @@
           </div>
         </div>
 
+<!-- sản phẩm -->
+
         <div class="content-card">
           <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
@@ -93,6 +101,8 @@
               <i class="bi bi-plus-circle me-2"></i>Thêm sản phẩm mới
             </button>
           </div>
+
+<!-- bộ lọc sản phẩm -->
 
           <div class="filter-section">
             <div class="row g-3">
@@ -157,6 +167,8 @@
               </div>
             </div>
           </div>
+
+<!-- list sản phẩm -->
 
           <div class="products-list">
             <div class="row">
@@ -284,22 +296,6 @@
                         >
                       </div>
                     </div>
-                    <!-- <div class="col-md-1 align-items-center">
-                      <div class="small">
-                        <span
-                          :class="[
-                            'badge',
-                            item.trangThai === 'Còn hàng'
-                              ? 'bg-success'
-                              : item.trangThai === 'Sắp hết'
-                              ? 'bg-warning text-dark'
-                              : 'bg-danger',
-                          ]"
-                        >
-                          {{ item.trangThai }}
-                        </span>
-                      </div>
-                    </div> -->
                     <div class="col-md-2 align-items-end">
                       <div class="action-buttons">
                         <button
@@ -344,6 +340,9 @@
                   </div>
                 </div>
               </div>
+
+              <!-- phân trang -->
+
               <div
                 v-if="totalPages > 1"
                 class="d-flex justify-content-center align-items-center mt-4 mb-2"
@@ -395,6 +394,9 @@
                   </ul>
                 </nav>
               </div>
+
+              <!-- nếu không có sản phẩm -->
+
               <div
                 v-if="products.length === 0"
                 class="text-center py-5 text-muted"
@@ -406,6 +408,8 @@
         </div>
       </div>
     </main>
+
+<!-- modal thêm danh mục -->
 
     <div
       class="modal fade"
@@ -464,6 +468,8 @@
         </div>
       </div>
     </div>
+
+<!-- modal thêm sản phẩm -->
 
     <div
       class="modal fade"
@@ -726,6 +732,8 @@
         </div>
       </div>
     </div>
+
+<!-- modal chỉnh sửa sản phẩm -->
 
     <div
       class="modal fade"
@@ -997,6 +1005,8 @@
       </div>
     </div>
 
+<!-- modal list phân loại -->
+
     <div class="modal fade" id="variantsModal" tabindex="-1" aria-hidden="true">
       <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -1104,6 +1114,8 @@
       </div>
     </div>
 
+<!-- modal chọn ảnh -->
+
     <div
       class="modal fade"
       id="imagePickerModal"
@@ -1205,62 +1217,54 @@ import NV_Sidebar from "@/components/Shared/NV_Sidebar.vue";
 
 axios.defaults.withCredentials = true;
 
-// Biến lưu nội dung thông báo thành công
-const successMessage = ref("");
 
+const successMessage = ref("");
 const products = ref([]);
 const categories = ref([]);
 const sizes = ref([]);
-
-// Các biến state cho bộ lọc
 const filterKeyword = ref("");
 const filterCategory = ref("");
 const filterGender = ref("");
 const filterStatus = ref("");
 
-// Thêm hàm này vào phần <script setup> của bạn
+//Trạng thái sản phẩm
 const autoUpdateStatus = (variant) => {
-  // Ép kiểu về số nguyên để kiểm tra cho chắc chắn
   const quantity = parseInt(variant.soLuong) || 0;
-
   if (quantity <= 0) {
-    variant.soLuong = 0; // Tránh trường hợp người dùng nhập số âm
+    variant.soLuong = 0;
     variant.trangThai = "Hết hàng";
   } else if (quantity > 0 && variant.trangThai === "Hết hàng") {
-    // Nếu có nhập số lượng nhưng trạng thái đang kẹt ở 'Hết hàng' thì tự động đổi
     variant.trangThai = "Còn hàng";
   }
 };
 
-// --- LOGIC PHÂN TRANG ---
+//phân trang
 const currentPage = ref(1);
 const itemsPerPage = 10;
 
-// Tính tổng số trang dựa trên danh sách đã lọc
 const totalPages = computed(() => {
   return Math.ceil(filteredProducts.value.length / itemsPerPage);
 });
 
-// Lấy ra đúng 10 sản phẩm cho trang hiện tại
 const paginatedProducts = computed(() => {
   const start = (currentPage.value - 1) * itemsPerPage;
   const end = start + itemsPerPage;
   return filteredProducts.value.slice(start, end);
 });
 
-// Hàm chuyển trang
+//chuyển trang
 const goToPage = (page) => {
   if (page >= 1 && page <= totalPages.value) {
     currentPage.value = page;
   }
 };
 
-// Tự động quay về trang 1 nếu người dùng thay đổi bộ lọc
+// tự động quay về nếu đổi bộ lọc
 watch([filterKeyword, filterCategory, filterGender, filterStatus], () => {
   currentPage.value = 1;
 });
 
-// 1. Gọi API Danh mục
+// api danh mục
 const fetchCategories = async () => {
   try {
     const response = await axios.get(
@@ -1271,7 +1275,7 @@ const fetchCategories = async () => {
     console.error("Lỗi lấy danh mục:", error);
   }
 };
-//Size
+// api size
 const fetchSizes = async () => {
   try {
     const response = await axios.get("http://localhost:8080/api/sanpham/sizes");
@@ -1281,7 +1285,7 @@ const fetchSizes = async () => {
   }
 };
 
-// 2. Gọi API Sản phẩm
+// api sản phẩm
 const fetchProducts = async () => {
   try {
     const response = await axios.get("http://localhost:8080/api/sanpham/list");
@@ -1291,9 +1295,9 @@ const fetchProducts = async () => {
   }
 };
 
-// 3. Computed LỌC REAL-TIME TỔNG HỢP VÀ SẮP XẾP
+// lọc sản phẩm
 const filteredProducts = computed(() => {
-  // Bước 1: Lọc dữ liệu như bình thường
+  // lọc theo tìm kiếm, danh mục và giới tính và trạng thái
   let result = products.value.filter((item) => {
     const matchKeyword =
       !filterKeyword.value ||
@@ -1324,7 +1328,7 @@ const filteredProducts = computed(() => {
     return matchKeyword && matchCategory && matchGender && matchStatus;
   });
 
-  // Bước 2: Sắp xếp ưu tiên sản phẩm isActive = true lên đầu
+  // sort sản phẩm còn hoạt động lên trước
   return result.sort((a, b) => {
     // Nếu cả 2 sản phẩm cùng trạng thái (cùng hiện hoặc cùng ẩn) thì giữ nguyên thứ tự
     if (a.isActive === b.isActive) return 0;
@@ -1334,7 +1338,7 @@ const filteredProducts = computed(() => {
   });
 });
 
-// 4. Hàm làm mới bộ lọc
+// reset bộ lọc
 const resetFilters = () => {
   filterKeyword.value = "";
   filterCategory.value = "";
@@ -1342,7 +1346,7 @@ const resetFilters = () => {
   filterStatus.value = "";
 };
 
-// 5. Thống kê số liệu (Tính trên danh sách TỔNG)
+// hàm tính thống kê
 const totalProducts = computed(() => products.value.length);
 const activeProducts = computed(
   () => products.value.filter((p) => p.isActive).length
@@ -1354,23 +1358,22 @@ const lowStock = computed(
   () => products.value.filter((p) => p.trangThai === "Sắp hết").length
 );
 
-// Biến dùng cho Modal Thêm Danh Mục
+// biến cho modal danh mục
 const newCategoryName = ref("");
 const categoryMode = ref(""); // Lưu trạng thái đang mở ở modal 'add' hay 'edit'
 
-// Chuẩn bị mở modal
+// Chuẩn bị mở modal danh mục
 const prepareAddCategory = (mode) => {
   categoryMode.value = mode;
   newCategoryName.value = ""; // Xóa trắng ô text mỗi lần mở
 };
 
-// Hàm lưu danh mục khi bấm nút trong Modal
+// lưu danh mục và kiểm tra dữ liệu
 const saveNewCategory = async () => {
   if (!newCategoryName.value || newCategoryName.value.trim() === "") {
     showToast("Vui lòng nhập tên danh mục!","warning");
     return;
   }
-
   try {
     const response = await axios.post(
       "http://localhost:8080/api/sanpham/danhmuc/create",
@@ -1378,20 +1381,17 @@ const saveNewCategory = async () => {
         tenDM: newCategoryName.value.trim(),
       }
     );
-
     if (response.data.success) {
-      // 1. Load lại danh sách
+      // Load lại danh sách
       await fetchCategories();
-
-      // 2. Tự động tick chọn danh mục vừa tạo
+      // tick chọn danh mục vừa tạo
       const newCatId = response.data.data.maDM;
       if (categoryMode.value === "edit") {
         editProductData.value.categoryIds.push(newCatId);
       } else {
         newProduct.value.categoryIds.push(newCatId);
       }
-
-      // 3. Tự động đóng modal Thêm danh mục bằng JS
+      // Tự động đóng modal Thêm danh mục bằng JS
       document.getElementById("closeCategoryModalBtn").click();
     }
   } catch (error) {
@@ -1404,7 +1404,7 @@ const saveNewCategory = async () => {
 const newProduct = ref({
   tenSP: "",
   moTa: "",
-  gioiTinh: null, // Mặc định Unisex
+  gioiTinh: null,
   categoryIds: [],
   variants: [
     {
@@ -1418,7 +1418,7 @@ const newProduct = ref({
   ],
 });
 
-// Thêm một dòng phân loại mới
+// Thêm một phân loại mới
 const addVariant = () => {
   newProduct.value.variants.push({
     tenMau: "",
@@ -1430,16 +1430,16 @@ const addVariant = () => {
   });
 };
 
-// Xóa một dòng phân loại
+// Xóa một phân loại
 const removeVariant = (index) => {
   if (newProduct.value.variants.length > 1) {
     newProduct.value.variants.splice(index, 1);
   }
 };
 
-// Trạng thái của thông báo (Toast)
+// thanh thông báo
 const toast = ref({
-  id: 0, // Thêm ID để ép reset thanh tiến trình
+  id: 0,
   show: false,
   message: "",
   type: "success",
@@ -1447,26 +1447,24 @@ const toast = ref({
 
 let toastTimeout = null;
 
-// Hàm gọi thông báo dùng chung
+// gọi thông báo
 const showToast = (message, type = "success") => {
   // Gán Date.now() làm ID giúp mỗi lần bật là một animation mới hoàn toàn
   toast.value = { id: Date.now(), show: true, message, type };
-  
   if (toastTimeout) clearTimeout(toastTimeout);
-  
-  // Tự động tắt sau đúng 3 giây
+  // tắt sau 5 giây
   toastTimeout = setTimeout(() => {
     toast.value.show = false;
   }, 5000);
 };
 
-// --- LOGIC CHO MODAL CHỌN ẢNH VÀ EDIT ---
+// modal chọn ảnh và edit
 const availableImages = ref([]);
 const currentVariantIndex = ref(-1);
 const selectedImageName = ref("");
-const parentModalSelector = ref("#addProductModal"); // Ghi nhớ modal gốc
-const isEditMode = ref(false); // Kiểm tra đang ở form Thêm hay Sửa
-
+const parentModalSelector = ref("#addProductModal"); // nhớ modal gốc
+const isEditMode = ref(false); // kiểm tra đang ở form sửa hay thêm mới
+// api hình ảnh
 const fetchImages = async () => {
   try {
     const res = await axios.get("http://localhost:8080/api/sanpham/images");
@@ -1476,7 +1474,7 @@ const fetchImages = async () => {
   }
 };
 
-// Cập nhật hàm mở Modal ảnh
+// hàm mở modal chỉnh ảnh
 const openImagePicker = (index, parentModal, isEdit) => {
   currentVariantIndex.value = index;
   parentModalSelector.value = parentModal;
@@ -1492,7 +1490,6 @@ const openImagePicker = (index, parentModal, isEdit) => {
 const selectImage = (imgName) => {
   selectedImageName.value = imgName;
 };
-
 const confirmImageSelection = () => {
   if (currentVariantIndex.value >= 0) {
     if (isEditMode.value) {
@@ -1523,8 +1520,8 @@ const handleFileUpload = async (event) => {
     );
     if (res.data.success) {
       showToast("Tải ảnh lên thành công!");
-      await fetchImages(); // Tải lại danh sách ảnh
-      selectedImageName.value = res.data.fileName; // Chọn luôn ảnh vừa tải
+      await fetchImages();
+      selectedImageName.value = res.data.fileName; // Chọn sẵn ảnh vừa tải
     }
   } catch (error) {
     showToast("Lỗi tải ảnh lên!","danger");
@@ -1558,11 +1555,10 @@ const saveEditProduct = async () => {
   try {
     const payload = { ...editProductData.value };
     const formattedVariants = [];
-
-    // Duyệt qua danh sách phân loại
+    // load lên phân loại
     for (const v of payload.variants) {
       if (v.isNewGroup) {
-        // Tách cụm size mới thêm thành các phân loại lẻ
+        // tách size thêm thành từng phân loại riêng
         if (!v.selectedSizes || v.selectedSizes.length === 0) {
           showToast(
             `Vui lòng chọn ít nhất 1 size cho màu "${
@@ -1586,9 +1582,7 @@ const saveEditProduct = async () => {
         formattedVariants.push(v);
       }
     }
-
     payload.variants = formattedVariants;
-
     await axios.put("http://localhost:8080/api/sanpham/update", payload);
     showToast("Cập nhật sản phẩm thành công!");
     location.reload();
@@ -1597,7 +1591,7 @@ const saveEditProduct = async () => {
     showToast("Lỗi cập nhật sản phẩm!","danger");
   }
 };
-
+// thêm phân loại mới trong edit
 const addEditVariant = () => {
   editProductData.value.variants.push({
     isNewGroup: true,
@@ -1609,31 +1603,27 @@ const addEditVariant = () => {
     trangThai: "Còn hàng",
   });
 };
+// xóa phân loại chỉ set số lượng về 0 và trạng thái hết chứ không xóa hẳn
 const removeEditVariant = (index) => {
   if (editProductData.value.variants.length > 1) {
     const variant = editProductData.value.variants[index];
-    
     if (variant.isNewGroup) {
       // Nếu là dòng mới bấm "+ Thêm phân loại" (chưa có trong DB) -> Xóa hẳn cho đỡ rác form
       editProductData.value.variants.splice(index, 1);
     } else {
-      // Nếu là phân loại cũ từ DB -> Giữ nguyên trên UI, ép số lượng về 0 và Hết hàng
       variant.soLuong = 0;
       variant.trangThai = "Hết hàng";
-      
-      // Thêm một thông báo nhỏ để nhân viên biết họ vừa thao tác gì
       showToast(`Đã chuyển phân loại "${variant.tenMau || 'này'}" về 0 - Hết hàng!`);
     }
   } else {
     showToast("Sản phẩm phải có ít nhất 1 phân loại!","warning");
   }
 };
-
 // Biến lưu trữ dữ liệu cho Modal Xem phân loại
 const selectedVariants = ref([]);
 const selectedProductName = ref("");
 
-// Hàm lấy tên Size từ maSize (Để hiển thị "Size 40" thay vì "ID 5")
+// lấy size theo size trong bảng size chứ không lấy theo mã size
 const getSizeName = (maSize) => {
   if (!maSize) return "Chưa cập nhật";
   const sizeObj = sizes.value.find((s) => s.maSize === maSize);
@@ -1641,13 +1631,12 @@ const getSizeName = (maSize) => {
   return sizeObj.coGiay === 0 ? "Freesize (Phụ kiện)" : sizeObj.coGiay;
 };
 
-// Hàm gọi API lấy phân loại khi bấm nút "Xem phân loại"
+// gọi api lấy phân loại khi xem phân loại
 const viewVariants = async (item) => {
   selectedProductName.value = item.tenSP;
-  selectedVariants.value = []; // Reset dữ liệu cũ trong lúc chờ tải
-
+  selectedVariants.value = [];
   try {
-    // Tận dụng API getProductDetail đã viết sẵn cho chức năng Edit
+    // dùng lại api đã viết sẵn cho chức năng edit
     const res = await axios.get(
       `http://localhost:8080/api/sanpham/${item.maSP}`
     );
@@ -1658,42 +1647,37 @@ const viewVariants = async (item) => {
   }
 };
 
-// 6. Hàm đổi trạng thái Ẩn/Hiện sản phẩm (Xóa mềm)
+// đổi trạng thái còn hoạt động hay không
 const toggleProductStatus = async (maSP, currentStatus) => {
   const actionText = currentStatus ? "ẩn" : "hiện";
-
-  // Hỏi xác nhận trước khi làm
+  // xác nhận trước khi thực hiện
   if (!confirm(`Bạn có chắc chắn muốn ${actionText} sản phẩm này không?`)) {
     return;
   }
-
   try {
     const res = await axios.put(
       `http://localhost:8080/api/sanpham/toggle-status/${maSP}`
     );
-
     if (res.data.success) {
-      // Tìm và cập nhật lại trạng thái ngay trên mảng products để UI tự render lại
-      // Không cần reload cả trang web (location.reload())
       const productIndex = products.value.findIndex((p) => p.maSP === maSP);
       if (productIndex !== -1) {
         products.value[productIndex].isActive = res.data.isActive;
       }
+      showToast(`Sản phẩm đã được ${actionText} thành công!`,"success");
     }
   } catch (error) {
     console.error(error);
-    showToast(`Lỗi khi ${actionText} sản phẩm!`);
+    showToast(`Lỗi khi ${actionText} sản phẩm!`,"danger");
   }
 };
 
-// Hàm lưu sản phẩm thêm mới
+// lưu sản phẩm mới
 const saveProduct = async () => {
   try {
-    // 1. Tạo bản sao của dữ liệu form
+    // tạo bản sao
     const payload = { ...newProduct.value };
     const formattedVariants = [];
-
-    // 2. Duyệt qua từng nhóm Màu và tách ra thành các phân loại lẻ
+    // duyệt qua phân loại
     for (const group of payload.variants) {
       // Bắt lỗi nếu người dùng quên chọn size
       if (!group.selectedSizes || group.selectedSizes.length === 0) {
@@ -1704,8 +1688,6 @@ const saveProduct = async () => {
         );
         return;
       }
-
-      // Tách mỗi size được chọn thành một object variant riêng
       group.selectedSizes.forEach((sizeId) => {
         formattedVariants.push({
           tenMau: group.tenMau,
@@ -1713,21 +1695,15 @@ const saveProduct = async () => {
           donGia: group.donGia,
           soLuong: group.soLuong,
           hinhAnh: group.hinhAnh,
-          // Tích hợp luôn logic tự động set trạng thái Hết hàng ở đây
           trangThai: group.soLuong <= 0 ? "Hết hàng" : "Còn hàng",
         });
       });
     }
-
-    // 3. Ghi đè mảng variants đã được làm phẳng vào payload
     payload.variants = formattedVariants;
-
-    // 4. Gửi payload đã xử lý xuống Backend
     const res = await axios.post(
       "http://localhost:8080/api/sanpham/create",
       payload
     );
-
     showToast("Thêm sản phẩm thành công!");
     location.reload();
   } catch (error) {
@@ -1735,7 +1711,6 @@ const saveProduct = async () => {
     showToast("Lỗi khi lưu sản phẩm! Vui lòng kiểm tra lại console.");
   }
 };
-
 onMounted(() => {
   fetchCategories();
   fetchProducts();
@@ -1755,7 +1730,6 @@ onMounted(() => {
   min-height: 100vh;
 }
 
-/* Stats Cards */
 .stats-mini {
   padding: 25px 20px;
   border-radius: 12px;
@@ -1783,7 +1757,6 @@ onMounted(() => {
   background: linear-gradient(135deg, #212529, #000000);
 }
 
-/* Content Card */
 .content-card {
   background: white;
   border-radius: 16px;
@@ -1812,7 +1785,6 @@ onMounted(() => {
   border: 1px solid #eee;
 }
 
-/* Product Card */
 .product-card {
   background: white;
   border: 1px solid #e0e0e0;
@@ -1856,7 +1828,6 @@ onMounted(() => {
   gap: 8px;
 }
 
-/* Image Upload Area */
 .image-upload-area {
   border: 2px dashed #ddd;
   border-radius: 8px;
@@ -1872,7 +1843,6 @@ onMounted(() => {
   background: #f8f9ff;
 }
 
-/* Image Thumbnail */
 .image-thumbnail {
   position: relative;
   border: 2px solid #e0e0e0;
@@ -1908,7 +1878,6 @@ onMounted(() => {
   white-space: nowrap;
 }
 
-/* Badge */
 .badge {
   padding: 6px 12px;
   border-radius: 20px;
@@ -1916,7 +1885,6 @@ onMounted(() => {
   font-weight: 500;
 }
 
-/* UI mới cho Nút và Tag */
 .category-pills .btn-check:checked + .btn {
   background-color: #212529;
   color: white;
@@ -1939,26 +1907,22 @@ onMounted(() => {
   border-width: 2px !important;
 }
 
-/* Style cho sản phẩm bị ẩn */
 .product-card.product-hidden {
-  background-color: #f8f9fa; /* Thêm chút nền xám để dễ phân biệt hơn */
+  background-color: #f8f9fa;
   border-color: #eeeeee;
 }
 
-/* Chỉ làm mờ hình ảnh (col-md-1), thông tin (col-md-8) và badge trạng thái */
 .product-card.product-hidden .col-md-1,
 .product-card.product-hidden .col-md-8,
 .product-card.product-hidden .status-badge-corner {
   opacity: 1;
-  pointer-events: none; /* Tùy chọn: chặn không cho click bôi đen text ở phần đã mờ */
+  pointer-events: none;
 }
 
-/* --- TOAST & PROGRESS BAR CUSTOME CSS --- */
 .toast {
   position: relative;
 }
 
-/* Thanh tiến trình chạy ở dưới đáy Toast */
 .toast-progress-bar {
   height: 4px;
   background-color: rgba(255, 255, 255, 0.7);
@@ -1967,7 +1931,6 @@ onMounted(() => {
   bottom: 0;
   left: 0;
   border-bottom-left-radius: var(--bs-toast-border-radius);
-  /* Trùng khớp với 3s ở setTimeout */
   animation: shrinkProgress 3s linear forwards; 
 }
 
@@ -1976,7 +1939,6 @@ onMounted(() => {
   to { width: 0%; }
 }
 
-/* Hiệu ứng trượt từ trên xuống cho vị trí Center-Top */
 .toast-fade-enter-active,
 .toast-fade-leave-active {
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -1989,9 +1951,6 @@ onMounted(() => {
   opacity: 0;
   transform: translateY(-50px);
 }
-
-/* Phần cột chứa cụm nút bấm (.action-buttons) hoàn toàn không bị CSS này đụng tới 
-   nên nó sẽ giữ nguyên độ rõ nét và có thể click bình thường */
 
 /* Responsive */
 @media (max-width: 768px) {

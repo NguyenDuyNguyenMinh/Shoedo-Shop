@@ -9,17 +9,16 @@ import java.util.List;
 import java.util.Optional;
 
 public interface SanPhamChiTietDAO extends JpaRepository<SanPhamChiTiet, Integer> {
-	// Thêm dòng này vào trong interface
     List<SanPhamChiTiet> findBySanPham_MaSP(Integer maSP);
 
 	  @Modifying
 	  @Query("UPDATE SanPhamChiTiet sp SET sp.soLuong = sp.soLuong - :soLuong WHERE sp.maSKU = :maSKU AND sp.soLuong >= :soLuong")
 	  int truSoLuong(@Param("maSKU") Integer maSKU, @Param("soLuong") Integer soLuong);
-	    
+
 	  @Modifying
 	  @Query("UPDATE SanPhamChiTiet sp SET sp.soLuong = sp.soLuong + :soLuong WHERE sp.maSKU = :maSKU")
 	  int congSoLuong(@Param("maSKU") Integer maSKU, @Param("soLuong") Integer soLuong);
-	    
+	  
 	  @Query("SELECT sp.soLuong FROM SanPhamChiTiet sp WHERE sp.maSKU = :maSKU")
 	  Integer getSoLuong(@Param("maSKU") Integer maSKU);
 }

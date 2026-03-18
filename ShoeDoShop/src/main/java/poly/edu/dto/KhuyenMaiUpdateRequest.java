@@ -4,7 +4,6 @@ public class KhuyenMaiUpdateRequest {
     private Integer maSP;
     private Integer khuyenMai;
 
-    // Getters and Setters
     public Integer getMaSP() {
         return maSP;
     }

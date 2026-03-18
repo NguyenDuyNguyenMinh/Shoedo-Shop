@@ -1,4 +1,3 @@
-// File: src/main/java/poly/edu/controller/SanPhamController.java
 package poly.edu.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,47 +23,46 @@ public class SanPhamController {
 
     @Autowired
     private SanPhamService sanPhamService;
-
     @Autowired
     private poly.edu.dao.SizeDAO sizeDAO;
-    
+    @Autowired
+    private poly.edu.dao.DanhMucDAO danhMucDAO;
+
     @GetMapping("/list")
     public ResponseEntity<?> getAllProducts() {
         return ResponseEntity.ok(sanPhamService.getAllProductList());
     }
-    @Autowired
-    private poly.edu.dao.DanhMucDAO danhMucDAO;
 
     @GetMapping("/danhmuc")
     public ResponseEntity<?> getAllCategories() {
         return ResponseEntity.ok(danhMucDAO.findAll());
     }
+
     @PostMapping("/create")
     public ResponseEntity<?> create(@RequestBody SanPhamNDTO dto) {
         return ResponseEntity.ok(sanPhamService.createProduct(dto));
     }
+
     @Value("${file.upload-dir}")
     private String uploadDir;
 
-    // 1. API Lấy danh sách hình ảnh đã có trong thư mục
     @GetMapping("/images")
     public ResponseEntity<List<String>> getAllImages() {
         File dir = new File(uploadDir);
         if (!dir.exists()) {
-            dir.mkdirs(); // Tạo thư mục nếu chưa có
+            dir.mkdirs();
         }
         String[] files = dir.list((current, name) -> new File(current, name).isFile());
         return ResponseEntity.ok(files != null ? Arrays.asList(files) : new ArrayList<>());
     }
 
-    // 2. API Upload hình ảnh mới
     @PostMapping("/upload")
     public ResponseEntity<?> uploadImage(@RequestParam("file") MultipartFile file) {
         try {
             if (file.isEmpty()) {
                 return ResponseEntity.badRequest().body(Map.of("success", false, "message", "File trống"));
             }
-            String fileName = System.currentTimeMillis() + "_" + file.getOriginalFilename(); // Thêm timestamp để không trùng tên
+            String fileName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
             Path path = Paths.get(uploadDir + File.separator + fileName);
             Files.write(path, file.getBytes());
             
@@ -73,6 +71,7 @@ public class SanPhamController {
             return ResponseEntity.status(500).body(Map.of("success", false, "message", e.getMessage()));
         }
     }
+
     @GetMapping("/{id}")
     public ResponseEntity<?> getProductDetail(@PathVariable Integer id) {
         try {
@@ -94,7 +93,7 @@ public class SanPhamController {
     public ResponseEntity<?> getAllSizes() {
         return ResponseEntity.ok(sizeDAO.findAll());
     }
- // Thêm API Toggle trạng thái Ẩn/Hiện sản phẩm
+
     @PutMapping("/toggle-status/{id}")
     public ResponseEntity<?> toggleProductStatus(@PathVariable Integer id) {
         try {
@@ -108,6 +107,7 @@ public class SanPhamController {
             return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));
         }
     }
+
     @PostMapping("/danhmuc/create")
     public ResponseEntity<?> createCategory(@RequestBody Map<String, String> payload) {
         try {
@@ -118,7 +118,7 @@ public class SanPhamController {
             
             poly.edu.entity.DanhMuc newCategory = new poly.edu.entity.DanhMuc();
             newCategory.setTenDM(tenDM);
-            danhMucDAO.save(newCategory); // Lưu vào database
+            danhMucDAO.save(newCategory);
             
             return ResponseEntity.ok(Map.of("success", true, "data", newCategory));
         } catch (Exception e) {

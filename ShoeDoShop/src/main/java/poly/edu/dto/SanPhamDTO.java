@@ -1,4 +1,3 @@
-// File: src/main/java/poly/edu/dto/ProductListDTO.java
 package poly.edu.dto;
 
 import lombok.Data;

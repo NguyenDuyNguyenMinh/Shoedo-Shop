@@ -6,5 +6,4 @@ import poly.edu.entity.SanPhamDanhMuc.SanPhamDanhMucId;
 import java.util.List;
 
 public interface SanPhamDanhMucDAO extends JpaRepository<SanPhamDanhMuc, SanPhamDanhMucId> {
-	
 }
