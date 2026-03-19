@@ -112,8 +112,8 @@
               <thead>
               <tr>
                 <th>#</th>
-                <th>Username</th>
                 <th>Vai trò</th>
+                <th>Username</th>
                 <th>Họ tên</th>
                 <th>SĐT</th>
                 <th>Ngày tạo</th>
@@ -121,28 +121,52 @@
               </tr>
               </thead>
               <tbody>
-              <tr v-for="(user, index) in users" :key="user.maUser">
+              <tr v-for="(user, index) in users" :key="user.maUser"
+                  :class="{ 'inactive-row': !user.isActive }">
                 <td><span class="fw-semibold text-muted">{{ (pagination.currentPage - 1) * pagination.pageSize + index + 1 }}</span></td>
                 <td>
-                  <span class="fw-semibold">{{ user.userName }}</span>
+      <span class="badge role-badge" :class="getRoleClass(user.role)">
+        <i :class="getRoleIcon(user.role)" class="me-1"></i>{{ getRoleText(user.role) }}
+      </span>
                 </td>
                 <td>
-                  <span class="badge role-badge" :class="getRoleClass(user.role)">
-                    <i :class="getRoleIcon(user.role)" class="me-1"></i>{{ getRoleText(user.role) }}
-                  </span>
+                  <span class="fw-semibold">{{ user.userName }}</span>
                 </td>
                 <td>{{ user.hoTen || '—' }}</td>
                 <td>{{ user.sdt || '—' }}</td>
                 <td><span class="text-muted small">{{ formatDate(user.createAt) }}</span></td>
+                <!-- User Table - Action Buttons -->
                 <td class="text-center">
                   <div class="action-buttons justify-content-center">
                     <button class="btn btn-outline-primary btn-sm" @click="viewUserDetail(user.maUser)" title="Xem chi tiết">
                       <i class="bi bi-eye"></i>
                     </button>
-                    <button class="btn btn-outline-secondary btn-sm" @click="openEditModal(user)" title="Chỉnh sửa">
+
+                    <!-- Nút edit - Disable dựa trên quyền -->
+                    <button v-if="canEditUser(user)"
+                            class="btn btn-outline-secondary btn-sm"
+                            @click="openEditModal(user)"
+                            title="Chỉnh sửa">
                       <i class="bi bi-pencil"></i>
                     </button>
-                    <button v-if="user.role !== 'ADMIN'" class="btn btn-outline-danger btn-sm" @click="toggleUserStatus(user)" :title="user.isActive ? 'Khóa tài khoản' : 'Mở khóa'">
+                    <button v-else
+                            class="btn btn-outline-secondary btn-sm"
+                            disabled
+                            title="Bạn không có quyền sửa user này">
+                      <i class="bi bi-pencil"></i>
+                    </button>
+
+                    <!-- Nút toggle status cho tất cả (trừ ADMIN) -->
+                    <button v-if="user.role !== 'ADMIN' && canToggleStatus(user)"
+                            class="btn btn-outline-danger btn-sm"
+                            @click="toggleUserStatus(user)"
+                            :title="user.isActive ? 'Khóa tài khoản' : 'Mở khóa'">
+                      <i :class="user.isActive ? 'bi bi-lock' : 'bi bi-unlock'"></i>
+                    </button>
+                    <button v-else-if="user.role !== 'ADMIN'"
+                            class="btn btn-outline-danger btn-sm"
+                            disabled
+                            title="Bạn không có quyền thay đổi trạng thái">
                       <i :class="user.isActive ? 'bi bi-lock' : 'bi bi-unlock'"></i>
                     </button>
                   </div>
@@ -196,12 +220,13 @@
                 <i class="bi bi-person-lines-fill me-2"></i>Chi tiết người dùng
               </h5>
               <span class="badge status-badge ms-3" :class="selectedUser?.isActive ? 'badge-active' : 'badge-inactive'">
-                <i :class="selectedUser?.isActive ? 'bi bi-check-circle' : 'bi bi-x-circle'" class="me-1"></i>
-                {{ selectedUser?.isActive ? 'Hoạt động' : 'Bị khóa' }}
-              </span>
+              <i :class="selectedUser?.isActive ? 'bi bi-check-circle' : 'bi bi-x-circle'" class="me-1"></i>
+              {{ selectedUser?.isActive ? 'Hoạt động' : 'Bị khóa' }}
+            </span>
             </div>
             <button type="button" class="btn-close" @click="closeViewModal"></button>
           </div>
+
           <div class="modal-body" v-if="selectedUser">
             <!-- User Info Card -->
             <div class="user-detail-card mb-4">
@@ -232,17 +257,13 @@
                         <p>{{ selectedUser.sdt || '—' }}</p>
                       </div>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-6">
                       <div class="detail-item">
                         <label>Vai trò</label>
-                        <p>
-                          <span class="badge role-badge" :class="getRoleClass(selectedUser.role)">
-                            <i :class="getRoleIcon(selectedUser.role)" class="me-1"></i>{{ getRoleText(selectedUser.role) }}
-                          </span>
-                        </p>
+                        <p>{{ getRoleText(selectedUser.role) }}</p>
                       </div>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-6">
                       <div class="detail-item">
                         <label>Ngày tạo</label>
                         <p>{{ formatDate(selectedUser.createAt) }}</p>
@@ -254,9 +275,9 @@
             </div>
 
             <!-- Địa Chỉ - chỉ hiển thị cho CUSTOMER -->
-            <div v-if="selectedUser.role === 'CUSTOMER'">
+            <div v-if="selectedUser.role === 'CUSTOMER'" class="mb-4">
               <h6 class="section-title"><i class="bi bi-geo-alt me-2"></i>Danh sách địa chỉ</h6>
-              <div class="address-list mb-4 scrollable-content">
+              <div class="address-list-container">
                 <template v-if="selectedUser.diaChis && selectedUser.diaChis.length > 0">
                   <div v-for="address in selectedUser.diaChis" :key="address.maDC" class="address-item">
                     <div class="d-flex justify-content-between align-items-start">
@@ -275,41 +296,45 @@
             </div>
 
             <!-- Đơn hàng gần đây -->
-            <h6 class="section-title"><i class="bi bi-bag-check me-2"></i>Đơn hàng gần đây</h6>
-            <div class="table-responsive scrollable-content" style="max-height: 300px;">
-              <table class="table table-sm table-hover">
-                <thead>
-                <tr>
-                  <th>Mã HĐ</th>
-                  <th>Ngày mua</th>
-                  <th>Phương thức TT</th>
-                  <th>Trạng thái</th>
-                  <th>Ghi chú</th>
-                </tr>
-                </thead>
-                <tbody>
-                <template v-if="selectedUser.hoaDons && selectedUser.hoaDons.length > 0">
-                  <tr v-for="order in selectedUser.hoaDons" :key="order.maHD">
-                    <td class="fw-semibold">#{{ formatOrderId(order.maHD) }}</td>
-                    <td>{{ formatDate(order.ngayMua) }}</td>
-                    <td>{{ order.phuongThucTT || '—' }}</td>
-                    <td>
-                      <span class="badge" :class="getOrderStatusClass(order.trangThai)">
-                        {{ order.trangThai || '—' }}
-                      </span>
-                    </td>
-                    <td class="text-muted small">{{ order.ghiChu || '—' }}</td>
+            <div>
+              <h6 class="section-title">
+                <i class="bi bi-bag-check me-2"></i>
+                {{ selectedUser?.role === 'ADMIN' || selectedUser?.role === 'EMPLOYEE' ? 'Đơn hàng đã xử lý gần đây' : 'Đơn hàng gần đây' }}
+              </h6>
+              <div class="orders-container">
+                <table class="table table-sm table-hover">
+                  <thead>
+                  <tr>
+                    <th>Mã HĐ</th>
+                    <th>Ngày mua</th>
+                    <th>Phương thức TT</th>
+                    <th>Trạng thái</th>
+                    <th>Ghi chú</th>
                   </tr>
-                </template>
-                <tr v-else>
-                  <td colspan="5" class="text-center py-3 text-muted">
-                    Không có đơn hàng nào
-                  </td>
-                </tr>
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                  <template v-if="selectedUser.hoaDons && selectedUser.hoaDons.length > 0">
+                    <tr v-for="order in selectedUser.hoaDons" :key="order.maHD">
+                      <td class="fw-semibold">#{{ formatOrderId(order.maHD) }}</td>
+                      <td>{{ formatDate(order.ngayMua) }}</td>
+                      <td>{{ order.phuongThucTT || '—' }}</td>
+                      <td><span class="badge" :class="getOrderStatusClass(order.trangThai)">{{ order.trangThai || '—' }}</span>
+                      </td>
+                      <td class="text-muted small">{{ order.ghiChu || '—' }}</td>
+                    </tr>
+                  </template>
+                  <tr v-else>
+                    <td colspan="5" class="text-center py-3 text-muted">
+                      <span v-if="selectedUser?.role === 'ADMIN' || selectedUser?.role === 'EMPLOYEE'">Chưa xử lý đơn hàng nào</span>
+                      <span v-else>Không có đơn hàng nào</span>
+                    </td>
+                  </tr>
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
+
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" @click="closeViewModal">
               <i class="bi bi-x-circle me-2"></i>Đóng
@@ -335,13 +360,13 @@
             <div class="modal-body">
               <div class="mb-3">
                 <label class="form-label">Username <span class="text-danger">*</span></label>
-                <input type="text" class="form-control" v-model="form.userName" :disabled="isEdit" required>
-                <small class="text-muted" v-if="isEdit">Username không thể thay đổi</small>
+                <input type="text" class="form-control" v-model="form.userName" required>
+                <small class="text-muted" v-if="isEdit && currentUserRole === 'ADMIN'">Admin có thể sửa username</small>
               </div>
               <div class="mb-3">
                 <label class="form-label">Email <span class="text-danger">*</span></label>
-                <input type="email" class="form-control" v-model="form.mail" :disabled="isEdit" required>
-                <small class="text-muted" v-if="isEdit">Email không thể thay đổi</small>
+                <input type="email" class="form-control" v-model="form.mail" required>
+                <small class="text-muted" v-if="isEdit && currentUserRole === 'ADMIN'">Admin có thể sửa email</small>
               </div>
               <div class="mb-3" v-if="!isEdit">
                 <label class="form-label">Mật khẩu <span class="text-danger">*</span></label>
@@ -355,22 +380,44 @@
                 <label class="form-label">Số điện thoại</label>
                 <input type="text" class="form-control" v-model="form.sdt">
               </div>
+
+              <!-- Role Selection - Disable completely for restricted cases -->
               <div class="mb-3">
                 <label class="form-label">Vai trò <span class="text-danger">*</span></label>
                 <select class="form-select" v-model="form.role"
-                        :disabled="(!isEdit && currentUserRole === 'EMPLOYEE') || (isEdit && currentUserRole === 'EMPLOYEE' && (form.role === 'ADMIN' || form.role === 'EMPLOYEE'))"
-                        @change="handleRoleChange">
-                  <option value="CUSTOMER">Khách hàng</option>
-                  <option value="EMPLOYEE" :disabled="currentUserRole === 'EMPLOYEE'">Nhân viên</option>
-                  <option value="ADMIN" :disabled="currentUserRole === 'EMPLOYEE'">Admin</option>
+                        :disabled="isRoleSelectDisabled()">
+                  <!-- Employee creating new user: CUSTOMER, EMPLOYEE -->
+                  <option v-if="!isEdit && currentUserRole === 'EMPLOYEE'" value="CUSTOMER">Khách hàng</option>
+                  <option v-if="!isEdit && currentUserRole === 'EMPLOYEE'" value="EMPLOYEE">Nhân viên</option>
+
+                  <!-- Employee editing: only show current role (disabled) -->
+                  <template v-if="isEdit && currentUserRole === 'EMPLOYEE'">
+                    <option :value="selectedUserForEdit?.role">{{ getRoleText(selectedUserForEdit?.role) }}</option>
+                  </template>
+
+                  <!-- Admin creating new user: all roles -->
+                  <template v-if="!isEdit && currentUserRole === 'ADMIN'">
+                    <option value="CUSTOMER">Khách hàng</option>
+                    <option value="EMPLOYEE">Nhân viên</option>
+                    <option value="ADMIN">Admin</option>
+                  </template>
+
+                  <!-- Admin editing: conditional based on user type -->
+                  <template v-if="isEdit && currentUserRole === 'ADMIN'">
+                    <!-- If user is CUSTOMER: only show CUSTOMER (disabled) -->
+                    <template v-if="selectedUserForEdit?.role === 'CUSTOMER'">
+                      <option value="CUSTOMER">Khách hàng</option>
+                    </template>
+
+                    <!-- If user is EMPLOYEE or ADMIN: show all options (ENABLED even with orders) -->
+                    <template v-else>
+                      <option value="EMPLOYEE">Nhân viên</option>
+                      <option value="ADMIN">Admin</option>
+                    </template>
+                  </template>
                 </select>
-                <small v-if="!isEdit && currentUserRole === 'EMPLOYEE'" class="text-warning d-block mt-1">
-                  <i class="bi bi-info-circle"></i> Bạn chỉ có thể tạo tài khoản khách hàng
-                </small>
-                <small v-if="isEdit && currentUserRole === 'ADMIN'" class="text-info d-block mt-1">
-                  <i class="bi bi-info-circle"></i> Admin có thể thay đổi vai trò của tất cả user
-                </small>
               </div>
+
               <div class="mb-3">
                 <label class="form-label">Trạng thái tài khoản</label>
                 <div class="form-check form-switch">
@@ -468,9 +515,14 @@
             </h5>
             <button type="button" class="btn-close btn-close-white" @click="closeErrorModal"></button>
           </div>
-          <div class="modal-body text-center py-4">
-            <i class="bi bi-x-circle-fill text-danger" style="font-size: 4rem;"></i>
-            <h5 class="mt-3">{{ errorMessage }}</h5>
+          <div class="modal-body py-4">
+            <div class="text-center mb-3">
+              <i class="bi bi-x-circle-fill text-danger" style="font-size: 4rem;"></i>
+            </div>
+            <h5 class="text-center mb-3">{{ errorMessage }}</h5>
+            <div v-if="errorDetail" class="text-danger small mt-2 p-3 bg-light rounded" style="white-space: pre-line; max-height: 200px; overflow-y: auto;">
+              {{ errorDetail }}
+            </div>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-danger" @click="closeErrorModal">
@@ -480,7 +532,6 @@
         </div>
       </div>
     </div>
-    <div v-if="showErrorModal" class="modal-backdrop fade show"></div>
 
     <!-- Modal thông báo thông tin -->
     <div class="modal fade" :class="{ show: showInfoModal }" tabindex="-1" :style="{ display: showInfoModal ? 'block' : 'none' }">
@@ -519,6 +570,7 @@ const loading = ref(false);
 const submitting = ref(false);
 const confirmSubmitting = ref(false);
 const currentUserRole = ref('');
+const selectedUserForEdit = ref(null);
 
 const stats = reactive({
   totalUsers: 0,
@@ -578,6 +630,7 @@ const confirmConfig = reactive({
 
 const successMessage = ref('');
 const errorMessage = ref('');
+const errorDetail = ref('');
 const infoMessage = ref('');
 
 // Computed
@@ -618,7 +671,7 @@ const loadUsers = async () => {
 
     const params = {
       keyword: filters.keyword,
-      role: filters.role, // Đã là 'CUSTOMER', 'EMPLOYEE', 'ADMIN'
+      role: filters.role,
       status: filters.status,
       page: pagination.currentPage,
       size: pagination.pageSize,
@@ -626,10 +679,7 @@ const loadUsers = async () => {
       sortDir: sortDir
     };
 
-    //console.log('Loading users with params:', params);
-
     const response = await api.getUsers(params);
-    //console.log('API Response:', response.data);
 
     if (response.data.success) {
       users.value = response.data.data || [];
@@ -641,8 +691,6 @@ const loadUsers = async () => {
       pagination.currentPage = response.data.currentPage || 1;
       pagination.totalPages = response.data.totalPages || 1;
       pagination.totalItems = response.data.totalItems || 0;
-
-      //console.log('Updated users:', users.value);
     } else {
       users.value = [];
       openErrorModal(response.data.message || 'Không thể tải danh sách người dùng');
@@ -654,6 +702,45 @@ const loadUsers = async () => {
   } finally {
     loading.value = false;
   }
+};
+
+// Kiểm tra xem có được edit user không
+const canEditUser = (user) => {
+  // Admin có thể edit:
+  // - Chính mình
+  // - Nhân viên (EMPLOYEE)
+  if (currentUserRole.value === 'ADMIN') {
+    // Nếu là admin khác (không phải mình) thì không được edit
+    if (user.role === 'ADMIN' && user.maUser !== selectedUserForEdit?.maUser) {
+      return false;
+    }
+    return true;
+  }
+
+  // Employee chỉ được edit CUSTOMER
+  if (currentUserRole.value === 'EMPLOYEE') {
+    return user.role === 'CUSTOMER';
+  }
+
+  return false;
+};
+
+// Kiểm tra xem có được toggle status không
+const canToggleStatus = (user) => {
+  // Admin có thể toggle status cho:
+  // - Chính mình
+  // - Nhân viên (EMPLOYEE)
+  // - Khách hàng (CUSTOMER)
+  if (currentUserRole.value === 'ADMIN') {
+    return true;
+  }
+
+  // Employee chỉ được toggle status cho CUSTOMER
+  if (currentUserRole.value === 'EMPLOYEE') {
+    return user.role === 'CUSTOMER';
+  }
+
+  return false;
 };
 
 // Apply filters
@@ -698,6 +785,7 @@ const closeViewModal = () => {
 
 const openCreateModal = () => {
   isEdit.value = false;
+  selectedUserForEdit.value = null;
   Object.assign(form, {
     maUser: null,
     userName: '',
@@ -711,42 +799,75 @@ const openCreateModal = () => {
   showEditModal.value = true;
 };
 
-const openEditModal = (user) => {
+const openEditModal = async (user) => {
   isEdit.value = true;
 
-  // Kiểm tra quyền
-  if (currentUserRole.value === 'EMPLOYEE' && (user.role === 'ADMIN' || user.role === 'EMPLOYEE')) {
+  // Kiểm tra quyền edit
+  if (!canEditUser(user)) {
     openErrorModal('Bạn không có quyền sửa tài khoản này');
     return;
   }
 
-  Object.assign(form, {
-    maUser: user.maUser,
-    userName: user.userName,
-    mail: user.mail,
-    password: '',
-    hoTen: user.hoTen,
-    sdt: user.sdt,
-    role: user.role,
-    isActive: user.isActive
-  });
-  showEditModal.value = true;
+  // Lấy thông tin chi tiết để kiểm tra có hóa đơn không
+  try {
+    const detailResponse = await api.getUserDetails(user.maUser);
+    const hasOrders = detailResponse.data.data?.hoaDons?.length > 0;
+
+    selectedUserForEdit.value = {
+      ...user,
+      hasOrders: hasOrders,
+      originalRole: user.role
+    };
+
+    Object.assign(form, {
+      maUser: user.maUser,
+      userName: user.userName,
+      mail: user.mail,
+      password: '',
+      hoTen: user.hoTen,
+      sdt: user.sdt,
+      role: user.role,
+      isActive: user.isActive
+    });
+
+    showEditModal.value = true;
+  } catch (error) {
+    console.error('Error checking user orders:', error);
+    openErrorModal('Không thể kiểm tra thông tin đơn hàng của user');
+  }
 };
 
 const closeEditModal = () => {
   showEditModal.value = false;
+  selectedUserForEdit.value = null;
 };
 
 const handleRoleChange = () => {
   // Log để debug
   // console.log('Role changed to:', form.role);
-  // console.log('Current user role:', currentUserRole.value);
-  // console.log('Is edit mode:', isEdit.value);
+  // console.log('Has orders:', selectedUserForEdit.value?.hasOrders);
+};
+
+// Check if role select should be disabled
+const isRoleSelectDisabled = () => {
+  // Employee editing: completely disabled
+  if (isEdit.value && currentUserRole.value === 'EMPLOYEE') {
+    return true;
+  }
+
+  // Admin editing customer: completely disabled
+  if (isEdit.value && currentUserRole.value === 'ADMIN' && selectedUserForEdit.value?.role === 'CUSTOMER') {
+    return true;
+  }
+
+  return false;
 };
 
 const saveUser = async () => {
   submitting.value = true;
   try {
+    console.log('Form data before sending:', JSON.stringify(form, null, 2));
+
     let response;
     if (isEdit.value) {
       response = await api.updateUser(form.maUser, form);
@@ -754,16 +875,69 @@ const saveUser = async () => {
       response = await api.createUser(form);
     }
 
+    console.log('Response:', response.data);
+
     if (response.data.success) {
       closeEditModal();
       openSuccessModal(response.data.message);
       await loadUsers();
+    } else {
+      // Hiển thị lỗi từ response
+      handleErrorResponse(response.data);
     }
   } catch (error) {
-    openErrorModal(error.response?.data?.message || 'Có lỗi xảy ra');
+    console.error('Full error:', error);
+    console.error('Error response:', error.response?.data);
+
+    // Xử lý lỗi từ catch
+    if (error.response?.data) {
+      handleErrorResponse(error.response.data);
+    } else {
+      openErrorModal('Không thể kết nối đến server');
+    }
   } finally {
     submitting.value = false;
   }
+};
+
+// Hàm xử lý hiển thị lỗi
+const handleErrorResponse = (errorData) => {
+  let errorMessage = '';
+  let errorDetail = '';
+
+  // Nếu có errors object (validation errors)
+  if (errorData.errors) {
+    const errorList = Object.entries(errorData.errors)
+        .map(([field, msg]) => {
+          // Chuyển đổi tên field sang tiếng Việt
+          const fieldName = {
+            'userName': 'Tên đăng nhập',
+            'mail': 'Email',
+            'password': 'Mật khẩu',
+            'hoTen': 'Họ tên',
+            'sdt': 'Số điện thoại',
+            'role': 'Vai trò'
+          }[field] || field;
+
+          return `• ${fieldName}: ${msg}`;
+        })
+        .join('\n');
+
+    errorMessage = 'Vui lòng kiểm tra lại thông tin:';
+    errorDetail = errorList;
+  }
+  // Nếu có message đơn giản
+  else if (errorData.message) {
+    errorMessage = errorData.message;
+    errorDetail = errorData.error || '';
+  }
+  // Trường hợp khác
+  else {
+    errorMessage = 'Có lỗi xảy ra';
+    errorDetail = JSON.stringify(errorData);
+  }
+
+  openErrorModal(errorMessage, errorDetail);
 };
 
 const toggleUserStatus = (user) => {
@@ -853,13 +1027,15 @@ const closeSuccessModal = () => {
   showSuccessModal.value = false;
 };
 
-const openErrorModal = (message) => {
+const openErrorModal = (message, detail = '') => {
   errorMessage.value = message;
+  errorDetail.value = detail;
   showErrorModal.value = true;
 };
 
 const closeErrorModal = () => {
   showErrorModal.value = false;
+  errorDetail.value = '';
 };
 
 const openInfoModal = (message) => {
@@ -879,7 +1055,9 @@ const changePage = (page) => {
 };
 
 // Helper methods
-
+const isStaff = (role) => {
+  return role === 'ADMIN' || role === 'EMPLOYEE';
+};
 const getRoleClass = (role) => {
   switch (role) {
     case 'ADMIN': return 'badge-admin';
@@ -924,8 +1102,7 @@ const getOrderStatusClass = (status) => {
     case 'Đang giao': return 'bg-primary';
     case 'Đang xử lý': return 'bg-warning text-dark';
     case 'Đã từ chối': return 'bg-danger';
-    case 'Hoàn hàng/trả hàng': return 'bg-secondary';
-    case 'Báo lỗi': return 'bg-dark';
+    case 'Báo lỗi': return 'bg-info';
     default: return 'bg-secondary';
   }
 };
@@ -1032,6 +1209,25 @@ onMounted(() => {
   background: #f8f9ff;
 }
 
+/* Inactive row style */
+.user-table tbody tr.inactive-row {
+  opacity: 0.6;
+  background-color: #f8f9fa;
+}
+
+.user-table tbody tr.inactive-row:hover {
+  opacity: 0.8;
+  background-color: #e9ecef;
+}
+
+.user-table tbody tr.inactive-row td {
+  color: #6c757d;
+}
+
+.user-table tbody tr.inactive-row .badge {
+  opacity: 0.7;
+}
+
 /* Badges */
 .role-badge {
   padding: 5px 12px;
@@ -1079,7 +1275,7 @@ onMounted(() => {
   gap: 6px;
 }
 
-/* Detail Modal */
+/* Detail Modal - User Info Card */
 .user-detail-card {
   background: #f8f9fa;
   border-radius: 12px;
@@ -1098,6 +1294,7 @@ onMounted(() => {
   color: #6c757d;
   font-weight: 600;
   margin-bottom: 4px;
+  display: block;
 }
 
 .detail-item p {
@@ -1117,21 +1314,13 @@ onMounted(() => {
   margin-bottom: 16px;
 }
 
-/* Scrollable Content */
-.scrollable-content {
-  max-height: 250px;
+/* Address Container */
+.address-list-container {
+  max-height: 200px;
   overflow-y: auto;
-  overflow-x: hidden;
   border: 1px solid #eee;
   border-radius: 8px;
   padding: 10px;
-}
-
-/* Address List */
-.address-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
 }
 
 .address-item {
@@ -1140,11 +1329,123 @@ onMounted(() => {
   border-radius: 10px;
   padding: 14px 18px;
   transition: all 0.2s;
+  margin-bottom: 10px;
+}
+
+.address-item:last-child {
+  margin-bottom: 0;
 }
 
 .address-item:hover {
   border-color: #c0c0c0;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* Orders Container */
+.orders-container {
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid #eee;
+  border-radius: 8px;
+}
+
+.orders-container table {
+  margin-bottom: 0;
+  font-size: 0.9rem;
+  width: 100%;
+}
+
+.orders-container thead {
+  position: sticky;
+  top: 0;
+  background-color: #f8f9fa;
+  z-index: 5;
+}
+
+.orders-container th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+  color: #495057;
+  padding: 12px 10px;
+  white-space: nowrap;
+  border-bottom: 2px solid #dee2e6;
+}
+
+.orders-container td {
+  padding: 12px 10px;
+  vertical-align: middle;
+}
+
+.orders-container tbody tr:hover {
+  background-color: #f8f9ff;
+}
+
+/* Scrollbar Styles */
+.address-list-container::-webkit-scrollbar,
+.orders-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.address-list-container::-webkit-scrollbar-track,
+.orders-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.address-list-container::-webkit-scrollbar-thumb,
+.orders-container::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 10px;
+}
+
+.address-list-container::-webkit-scrollbar-thumb:hover,
+.orders-container::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Modal Styles */
+.modal {
+  z-index: 1050;
+}
+
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1040;
+}
+
+.modal-content {
+  border-radius: 12px;
+  border: none;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  max-height: none;
+  display: block;
+}
+
+.modal-header {
+  border-bottom: 1px solid #eee;
+  padding: 1rem 1.5rem;
+  background: white;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+}
+
+.modal-body {
+  padding: 1.5rem;
+  overflow-y: visible;
+  max-height: none;
+}
+
+.modal-footer {
+  border-top: 1px solid #eee;
+  padding: 1rem 1.5rem;
+  background: white;
+  border-bottom-left-radius: 12px;
+  border-bottom-right-radius: 12px;
 }
 
 /* Pagination */
@@ -1165,63 +1466,22 @@ onMounted(() => {
   border-color: #10b981;
 }
 
-/* Modal styles */
-.modal {
-  z-index: 1050;
-}
-
-.modal-backdrop {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background-color: rgba(0, 0, 0, 0.5);
-  z-index: 1040;
-}
-
-.modal-content {
-  border-radius: 12px;
-  border: none;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-  max-height: 90vh;
-  overflow-y: auto;
-}
-
-.modal-header {
-  border-bottom: 1px solid #eee;
-  padding: 1rem 1.5rem;
-  position: sticky;
-  top: 0;
-  background: white;
-  z-index: 10;
-}
-
-.modal-body {
-  padding: 1.5rem;
-}
-
-.modal-footer {
-  border-top: 1px solid #eee;
-  padding: 1rem 1.5rem;
-  position: sticky;
-  bottom: 0;
-  background: white;
-  z-index: 10;
-}
-
 /* Responsive */
 @media (max-width: 768px) {
-  .main-content {
-    margin-left: 0;
+  .modal-dialog {
+    margin: 0.5rem;
   }
 
-  .page-container {
-    padding: 15px;
+  .modal-body {
+    max-height: none;
   }
 
-  .action-buttons {
-    flex-direction: column;
+  .address-list-container {
+    max-height: 150px;
+  }
+
+  .user-detail-card {
+    padding: 16px;
   }
 }
 </style>
