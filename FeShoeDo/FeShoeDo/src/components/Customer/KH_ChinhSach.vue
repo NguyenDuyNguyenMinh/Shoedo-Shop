@@ -93,7 +93,7 @@ export default {
             <ul class="policy-list">
               <li><i class="bi bi-check-circle text-success me-2"></i>Sản phẩm lỗi do nhà sản xuất</li>
               <li><i class="bi bi-check-circle text-success me-2"></i>Giao sai mẫu, sai size</li>
-              <li><i class="bi bi-check-circle text-success me-2"></i>Thời gian: 3 – 7 ngày kể từ khi nhận hàng</li>
+              <li><i class="bi bi-check-circle text-success me-2"></i>Thời gian: 30 ngày kể từ khi nhận hàng</li>
               <li><i class="bi bi-check-circle text-success me-2"></i>Sản phẩm chưa sử dụng, còn nguyên tem</li>
               <li><i class="bi bi-check-circle text-success me-2"></i>Có vieo mở hàng để chứng minh đối chiếu</li>
             </ul>

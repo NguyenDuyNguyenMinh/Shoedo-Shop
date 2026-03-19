@@ -198,6 +198,18 @@ export default {
     return apiClient.post('/customer/orders/return', data);
   },
 
+  reportIssue(data) {
+    return axios.post('/api/customer/orders/report-issue', data);
+  },
+
+  addReview(data) {
+    return axios.post('/api/customer/orders/review', data);
+  },
+
+  getReview(maHDCT) {
+    return axios.get(`/api/customer/orders/review/${maHDCT}`);
+  },
+
   getAddresses() {
     return apiClient.get('/customer/addresses');
   },
