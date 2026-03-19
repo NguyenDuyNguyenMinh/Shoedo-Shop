@@ -168,7 +168,11 @@ export default {
   buyNow(data) {
     return apiClient.post('/customer/buy-now', data);
   },
-  
+
+  buyNowVNPay(data) {
+    return apiClient.post('/customer/buy-now/vnpay', data);
+  },
+
   checkoutBuyNow(data) {
     return apiClient.post('/customer/checkout/buy-now', data);
   },

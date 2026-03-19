@@ -19,25 +19,32 @@ public class VNPayService {
     @Autowired
     private HoaDonDAO hoaDonDAO;
 
-    public String createPaymentUrl(Integer maHD, long amount, String orderInfo) throws Exception {
+    public String createPaymentUrl(Integer maHD, long amount, String orderInfo, boolean isQRCode) throws Exception {
         Map<String, String> vnpParams = new LinkedHashMap<>();
         vnpParams.put("vnp_Version", "2.1.0");
         vnpParams.put("vnp_Command", "pay");
         vnpParams.put("vnp_TmnCode", VNPayConfig.vnp_TmnCode_Static);
         vnpParams.put("vnp_Amount", String.valueOf(amount * 100));
         vnpParams.put("vnp_CurrCode", "VND");
-        vnpParams.put("vnp_BankCode", "NCB");
+
+        // Nếu là QR code, sử dụng QR thanh toán
+        if (isQRCode) {
+            vnpParams.put("vnp_BankCode", "VNPAYQR");
+        } else {
+            vnpParams.put("vnp_BankCode", "NCB");
+        }
+
         vnpParams.put("vnp_TxnRef", maHD.toString());
         vnpParams.put("vnp_OrderInfo", orderInfo);
         vnpParams.put("vnp_OrderType", "topup");
         vnpParams.put("vnp_Locale", "vn");
         vnpParams.put("vnp_ReturnUrl", VNPayConfig.vnp_ReturnUrl_Static);
         vnpParams.put("vnp_IpAddr", "127.0.0.1");
-        
+
         SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
         Calendar cld = Calendar.getInstance(TimeZone.getTimeZone("Etc/GMT+7"));
         vnpParams.put("vnp_CreateDate", sdf.format(cld.getTime()));
-        
+
         cld.add(Calendar.MINUTE, 15);
         vnpParams.put("vnp_ExpireDate", sdf.format(cld.getTime()));
 
@@ -46,7 +53,7 @@ public class VNPayService {
 
         StringBuilder url = new StringBuilder(VNPayConfig.vnp_Url_Static);
         url.append("?");
-        
+
         int i = 0;
         for (Map.Entry<String, String> entry : vnpParams.entrySet()) {
             if (i > 0) {

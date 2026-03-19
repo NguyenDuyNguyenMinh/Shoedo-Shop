@@ -198,7 +198,7 @@
 </template>
 
 <script>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import axios from 'axios'
 import KH_Navbar from '@/components/shared/KH_Navbar.vue'
 import Footer from '@/components/shared/Footer.vue'
@@ -218,6 +218,11 @@ export default {
     const showAddModal = ref(false)
     const editingAddress = ref(null)
     const addressForm = ref({ maDC: null, tenNN: '', sdt: '', diemGiao: '', macDinh: false })
+
+    // Computed properties for template
+    const profileLoading = computed(() => loading.value.profile)
+    const passwordLoading = computed(() => loading.value.password)
+    const addressLoading = computed(() => loading.value.address)
 
     const fetchProfile = async () => {
       try {
@@ -383,6 +388,7 @@ export default {
     return {
       user, customer, addresses, password,
       loading, message, error, showAddModal, editingAddress, addressForm,
+      profileLoading, passwordLoading, addressLoading,
       updateProfile, changePassword, saveAddress, deleteAddress,
       setDefaultAddress, editAddress, closeModal
     }

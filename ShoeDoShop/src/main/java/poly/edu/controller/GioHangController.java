@@ -3,11 +3,13 @@ package poly.edu.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import poly.edu.dto.BuyNowDTO;
 import poly.edu.dto.CheckoutDTO;
 import poly.edu.dto.GioHangDTO;
 import poly.edu.entity.Users;
 import poly.edu.service.AuthService;
 import poly.edu.service.GioHangService;
+import poly.edu.service.VNPayService;
 
 import java.util.Map;
 
@@ -20,6 +22,9 @@ public class GioHangController {
 
     @Autowired
     private AuthService authService;
+
+    @Autowired
+    private VNPayService vnPayService;
 
     /**
      * Lấy giỏ hàng
@@ -160,6 +165,89 @@ public class GioHangController {
             return ResponseEntity.status(500).body(Map.of(
                     "success", false,
                     "message", "Lỗi khi đặt hàng: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * Mua ngay - COD
+     * POST /api/customer/buy-now
+     */
+    @PostMapping("/buy-now")
+    public ResponseEntity<Map<String, Object>> buyNow(@RequestBody BuyNowDTO dto) {
+        try {
+            Users user = authService.getCurrentUser();
+            if (user == null) {
+                return ResponseEntity.status(401).body(Map.of(
+                        "success", false,
+                        "message", "Vui lòng đăng nhập"));
+            }
+
+            CheckoutDTO checkoutDto = new CheckoutDTO();
+            checkoutDto.setMaDC(dto.getMaDC());
+            checkoutDto.setPhuongThucTT("COD");
+            checkoutDto.setGhiChu(dto.getGhiChu());
+
+            Map<String, Object> result = gioHangService.buyNow(
+                    user, dto.getMaSKU(), dto.getSoLuong(), checkoutDto);
+
+            if (!(boolean) result.get("success")) {
+                return ResponseEntity.badRequest().body(result);
+            }
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(Map.of(
+                    "success", false,
+                    "message", "Lỗi khi mua ngay: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * Mua ngay - VNPay (tạo đơn chờ thanh toán)
+     * POST /api/customer/buy-now/vnpay
+     */
+    @PostMapping("/buy-now/vnpay")
+    public ResponseEntity<Map<String, Object>> buyNowVNPay(@RequestBody BuyNowDTO dto) {
+        try {
+            Users user = authService.getCurrentUser();
+            if (user == null) {
+                return ResponseEntity.status(401).body(Map.of(
+                        "success", false,
+                        "message", "Vui lòng đăng nhập"));
+            }
+
+            CheckoutDTO checkoutDto = new CheckoutDTO();
+            checkoutDto.setMaDC(dto.getMaDC());
+            checkoutDto.setPhuongThucTT("VNPAY");
+            checkoutDto.setGhiChu(dto.getGhiChu());
+            checkoutDto.setIsVNPay(true);
+
+            Map<String, Object> result = gioHangService.buyNowVNPay(
+                    user, dto.getMaSKU(), dto.getSoLuong(), checkoutDto);
+
+            if (!(boolean) result.get("success")) {
+                return ResponseEntity.badRequest().body(result);
+            }
+
+            Integer maHD = (Integer) result.get("maHD");
+            Double tongTien = (Double) result.get("tongTien");
+
+            String orderInfo = "Thanh toan don hang #" + maHD;
+            boolean isQRCode = Boolean.TRUE.equals(dto.getIsQRCode());
+            String paymentUrl = vnPayService.createPaymentUrl(maHD, tongTien.longValue(), orderInfo, isQRCode);
+
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "paymentUrl", paymentUrl,
+                    "maHD", maHD,
+                    "tongTien", tongTien.longValue(),
+                    "isQRCode", isQRCode
+            ));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(Map.of(
+                    "success", false,
+                    "message", "Lỗi khi mua ngay VNPay: " + e.getMessage()));
         }
     }
 }

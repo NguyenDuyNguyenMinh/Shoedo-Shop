@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import KH_Navbar from '@/components/Shared/KH_Navbar.vue'
 import Footer from '@/components/Shared/Footer.vue'
 import api from '@/services/api.js'
+import { useAuthStore } from '@/stores/auth.js'
 
 const route  = useRoute()
 const router = useRouter()
@@ -157,11 +158,12 @@ const product = computed(() => {
     priceNum:      coKM ? giaSauKM : giaGoc,
     oldPrice:      coKM ? formatPrice(giaGoc) : null,
     stock:         d.tongSoLuong || 0,
-    daBan:         d.daBan || 0,   // ← THÊM MỚI
+    daBan:         d.daBan || 0,
     images,
     sizes,
     colors,
     isFreesize,
+    chiTiets:      d.chiTiets || [], // Danh sách SKU để lấy maSKU
   }
 })
 
@@ -172,10 +174,18 @@ const related = computed(() =>
     image:    getImageUrl(p.hinhAnh),
     price:    formatPrice(p.khuyenMai > 0 ? p.giaSauKM : p.giaGoc),
     stock:    p.tongSoLuong || 0,
-    daBan:    p.daBan || 0,        // ← THÊM MỚI
+    daBan:    p.daBan || 0,
     category: p.tenDanhMuc || '',
   }))
 )
+
+// Lấy tên màu từ hex code đã chọn
+const selectedColorName = computed(() => {
+  if (!selectedColor.value || !product.value) return null
+  const colors = product.value.colors || []
+  const found = colors.find(c => c.code === selectedColor.value)
+  return found ? found.name : null
+})
 
 const averageRating = computed(() => {
   if (reviews.value.length === 0) return 0
@@ -193,13 +203,54 @@ const getRatingCount = (star) => thongKeSao.value[star] || 0
 const increaseQty = () => quantity.value++
 const decreaseQty = () => { if (quantity.value > 1) quantity.value-- }
 
-const addToCart = () => {
+const addToCart = async () => {
   if (!product.value?.isFreesize && !selectedSize.value) {
     alert('Vui lòng chọn size!'); return
   }
   if (!selectedColor.value) { alert('Vui lòng chọn màu sắc!'); return }
-  addedToCart.value = true
-  setTimeout(() => addedToCart.value = false, 2000)
+
+  // Tìm maSKU dựa trên màu (tên) và size đã chọn
+  const chiTiets = product.value.chiTiets || []
+  const selectedSKU = chiTiets.find(ct =>
+    ct.tenMau === selectedColorName.value &&
+    (product.value.isFreesize || ct.coGiay === selectedSize.value)
+  )
+
+  if (!selectedSKU) {
+    alert('Sản phẩm này không tồn tại với màu/size đã chọn!')
+    return
+  }
+
+  // Kiểm tra tồn kho
+  if (!selectedSKU.soLuong || selectedSKU.soLuong < quantity.value) {
+    alert(`Sản phẩm này chỉ còn ${selectedSKU.soLuong} sản phẩm trong kho!`)
+    return
+  }
+
+  try {
+    const response = await api.addToCart({
+      maSKU: selectedSKU.maSKU,
+      soLuong: quantity.value
+    })
+
+    if (response.data.success) {
+      // Cập nhật số lượng giỏ hàng trong store
+      const authStore = useAuthStore()
+      authStore.cartCount = response.data.cartCount || (authStore.cartCount || 0) + quantity.value
+
+      addedToCart.value = true
+      setTimeout(() => addedToCart.value = false, 2000)
+    } else {
+      alert(response.data.message || 'Thêm vào giỏ hàng thất bại!')
+    }
+  } catch (error) {
+    console.error('Lỗi thêm vào giỏ hàng:', error)
+    if (error.response?.status === 401) {
+      alert('Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng!')
+    } else {
+      alert('Lỗi khi thêm vào giỏ hàng. Vui lòng thử lại!')
+    }
+  }
 }
 
 const goToDetail = (id) => {
@@ -212,7 +263,53 @@ const submitReview = () => {
   alert('Cảm ơn bạn đã đánh giá sản phẩm!')
 }
 
-const likeItem = (type, id) => console.log(`Liked ${type} ${id}`)
+const buyNow = async () => {
+  // Validate: kiểm tra đã chọn màu và size chưa
+  if (!product.value?.isFreesize && !selectedSize.value) {
+    alert('Vui lòng chọn size!'); return
+  }
+  if (!selectedColor.value) { alert('Vui lòng chọn màu sắc!'); return }
+
+  // Tìm maSKU dựa trên màu (tên) và size đã chọn
+  const chiTiets = product.value.chiTiets || []
+  const selectedSKU = chiTiets.find(ct =>
+    ct.tenMau === selectedColorName.value &&
+    (product.value.isFreesize || ct.coGiay === selectedSize.value)
+  )
+
+  if (!selectedSKU) {
+    alert('Sản phẩm này không tồn tại với màu/size đã chọn!')
+    return
+  }
+
+  // Kiểm tra tồn kho
+  if (!selectedSKU.soLuong || selectedSKU.soLuong < quantity.value) {
+    alert(`Sản phẩm này chỉ còn ${selectedSKU.soLuong} sản phẩm trong kho!`)
+    return
+  }
+
+  // Tạo item cho checkout (giống format của giỏ hàng)
+  const checkoutItem = {
+    maGH: selectedSKU.maSKU, // dùng maSKU làm maGH tạm
+    maSKU: selectedSKU.maSKU,
+    tenSP: product.value.name,
+    hinhAnh: product.value.images[0],
+    tenMau: selectedColorName.value,
+    coGiay: product.value.isFreesize ? 'Freesize' : selectedSize.value,
+    soLuong: quantity.value,
+    donGia: product.value.priceNum,
+    thanhTien: product.value.priceNum * quantity.value
+  }
+
+  // Lưu vào sessionStorage để trang checkout hiển thị
+  sessionStorage.setItem('checkoutItems', JSON.stringify([checkoutItem]))
+  // Đánh dấu đây là flow "mua ngay" (không có trong giỏ hàng DB)
+  sessionStorage.setItem('checkoutItemIds', JSON.stringify([selectedSKU.maSKU]))
+  sessionStorage.setItem('isBuyNow', 'true')
+
+  // Chuyển sang trang thanh toán
+  router.push('/customer/checkout')
+}
 const setTab = (tab) => { activeTab.value = tab }
 
 watch(() => route.params.id, (newId) => {
@@ -388,7 +485,7 @@ onMounted(() => {
                 <i :class="addedToCart ? 'bi bi-check-lg' : 'bi bi-cart-plus'"></i>
                 {{ addedToCart ? 'Đã thêm vào giỏ!' : 'Thêm vào giỏ hàng' }}
               </button>
-              <button class="btn-buy">
+              <button class="btn-buy" @click="buyNow">
                 <i class="bi bi-lightning-fill"></i> Mua ngay
               </button>
             </div>

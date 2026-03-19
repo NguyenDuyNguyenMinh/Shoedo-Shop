@@ -59,10 +59,13 @@
             <div class="checkout-section">
               <div class="section-header">
                 <h5><i class="bi bi-geo-alt me-2"></i>Địa chỉ giao hàng</h5>
+                <button class="btn btn-outline-dark btn-sm" @click="showAddAddressModal = true">
+                  <i class="bi bi-plus-lg me-1"></i>Thêm địa chỉ mới
+                </button>
               </div>
 
               <div v-if="addresses.length === 0" class="text-muted text-center py-3">
-                Chưa có địa chỉ nào. Vui lòng thêm địa chỉ trong phần Hồ sơ.
+                Chưa có địa chỉ nào. Vui lòng thêm địa chỉ mới.
               </div>
 
               <div v-for="addr in addresses" :key="addr.maDC" 
@@ -111,7 +114,7 @@
                 </div>
               </div>
 
-              <div class="payment-option" 
+              <div class="payment-option"
                    :class="{ selected: paymentMethod === 'Chuyển khoản' }"
                    @click="paymentMethod = 'Chuyển khoản'">
                 <div class="d-flex align-items-center gap-3">
@@ -122,11 +125,22 @@
                       <i class="bi bi-bank"></i>
                     </div>
                     <div>
-                      <div class="fw-bold">Chuyển khoản ngân hàng</div>
-                      <div class="text-muted small">Chuyển khoản qua tài khoản ngân hàng</div>
+                      <div class="fw-bold">Chuyển khoản ngân hàng (VNPay)</div>
+                      <div class="text-muted small">Thanh toán qua VNPay - Quét QR hoặc chuyển khoản</div>
                     </div>
                   </label>
                 </div>
+              </div>
+
+              <!-- QR Code Option - chỉ hiện khi chọn chuyển khoản -->
+              <div v-if="paymentMethod === 'Chuyển khoản'" class="qr-option ms-4 mt-2">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="qrCodeOption" v-model="useQRCode">
+                  <label class="form-check-label" for="qrCodeOption">
+                    <i class="bi bi-qr-code me-1"></i>Quét mã QR để thanh toán
+                  </label>
+                </div>
+                <small class="text-muted ms-4">Quét mã QR trên ứng dụng ngân hàng để thanh toán nhanh</small>
               </div>
             </div>
           </div>
@@ -196,6 +210,45 @@
     </main>
 
     <Footer />
+
+    <!-- Modal Thêm địa chỉ mới -->
+    <div v-if="showAddAddressModal" class="modal-overlay" @click.self="showAddAddressModal = false">
+      <div class="modal-container">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="bi bi-geo-alt me-2"></i>Thêm địa chỉ mới</h5>
+          <button type="button" class="btn-close" @click="showAddAddressModal = false"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Họ và tên người nhận <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" v-model="newAddress.tenNN" placeholder="Nguyễn Văn A">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Số điện thoại <span class="text-danger">*</span></label>
+            <input type="tel" class="form-control" v-model="newAddress.sdt" placeholder="0123456789">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Địa chỉ nhận hàng <span class="text-danger">*</span></label>
+            <textarea class="form-control" v-model="newAddress.diemGiao" rows="3" placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành phố"></textarea>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="setDefaultAddr" v-model="newAddress.macDinh">
+            <label class="form-check-label" for="setDefaultAddr">
+              Đặt làm địa chỉ mặc định
+            </label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-dark" @click="showAddAddressModal = false">Hủy</button>
+          <button type="button" class="btn btn-dark" @click="addNewAddress" :disabled="savingAddress">
+            <span v-if="savingAddress">
+              <span class="spinner-border spinner-border-sm me-1"></span>Đang lưu...
+            </span>
+            <span v-else><i class="bi bi-check-lg me-1"></i>Lưu địa chỉ</span>
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -215,11 +268,22 @@ export default {
       addresses: [],
       selectedAddress: null,
       paymentMethod: 'COD',
+      useQRCode: false,
       note: '',
       loading: true,
       ordering: false,
       orderSuccess: false,
       orderResult: {},
+      isBuyNowFlow: false,
+      // Modal thêm địa chỉ
+      showAddAddressModal: false,
+      savingAddress: false,
+      newAddress: {
+        tenNN: '',
+        sdt: '',
+        diemGiao: '',
+        macDinh: false,
+      },
     };
   },
   computed: {
@@ -231,25 +295,41 @@ export default {
     async loadData() {
       this.loading = true;
       try {
-        // Lấy items từ sessionStorage (từ cart page)
-        const storedItems = sessionStorage.getItem('checkoutItems');
-        const storedIds = sessionStorage.getItem('checkoutItemIds');
-        
-        if (storedItems) {
-          this.checkoutItems = JSON.parse(storedItems);
-        }
-        if (storedIds) {
-          this.checkoutItemIds = JSON.parse(storedIds);
-        }
+        // Kiểm tra flow "mua ngay" trước — items nằm trong sessionStorage (không có trong DB cart)
+        const isBuyNow = sessionStorage.getItem('isBuyNow') === 'true';
+        // Lưu vào state để placeOrder() luôn dùng giá trị chính xác, không phụ thuộc sessionStorage
+        this.isBuyNowFlow = isBuyNow;
+        console.log('[loadData] isBuyNow:', isBuyNow);
 
-        // Nếu không có items, thử lấy toàn bộ cart
-        if (this.checkoutItems.length === 0) {
+        if (isBuyNow) {
+          // Flow mua ngay: dùng trực tiếp từ sessionStorage
+          const storedItems = sessionStorage.getItem('checkoutItems');
+          const storedIds = sessionStorage.getItem('checkoutItemIds');
+          console.log('[loadData] buyNow storedItems:', storedItems);
+          console.log('[loadData] buyNow storedIds:', storedIds);
+          if (storedItems) {
+            this.checkoutItems = JSON.parse(storedItems);
+          }
+          if (storedIds) {
+            this.checkoutItemIds = JSON.parse(storedIds);
+          }
+        } else {
+          // Flow giỏ hàng: luôn lấy từ DB để đảm bảo đồng bộ, xóa sessionStorage cũ
+          sessionStorage.removeItem('checkoutItems');
+          sessionStorage.removeItem('checkoutItemIds');
+          console.log('[loadData] cart flow: cleared sessionStorage, fetching from DB...');
           const cartResp = await api.getCart();
           if (cartResp.data.success && cartResp.data.items) {
             this.checkoutItems = cartResp.data.items;
             this.checkoutItemIds = this.checkoutItems.map(item => item.maGH);
+            // Lưu lại vào sessionStorage để đồng bộ
+            sessionStorage.setItem('checkoutItems', JSON.stringify(this.checkoutItems));
+            sessionStorage.setItem('checkoutItemIds', JSON.stringify(this.checkoutItemIds));
           }
         }
+
+        console.log('[loadData] final checkoutItems:', this.checkoutItems);
+        console.log('[loadData] final checkoutItemIds:', this.checkoutItemIds);
 
         // Lấy danh sách địa chỉ
         const addrResp = await api.getAddresses();
@@ -317,7 +397,78 @@ export default {
       return new Intl.NumberFormat('vi-VN').format(Math.round(value)) + '₫';
     },
 
+    async addNewAddress() {
+      // Validate
+      if (!this.newAddress.tenNN?.trim()) {
+        alert('Vui lòng nhập họ tên người nhận');
+        return;
+      }
+      if (!this.newAddress.sdt?.trim()) {
+        alert('Vui lòng nhập số điện thoại');
+        return;
+      }
+      if (!this.newAddress.diemGiao?.trim()) {
+        alert('Vui lòng nhập địa chỉ nhận hàng');
+        return;
+      }
+
+      this.savingAddress = true;
+      try {
+        const response = await api.addAddress({
+          tenNN: this.newAddress.tenNN.trim(),
+          sdt: this.newAddress.sdt.trim(),
+          diemGiao: this.newAddress.diemGiao.trim(),
+          macDinh: this.newAddress.macDinh,
+        });
+
+        if (response.data.success) {
+          // Reload addresses
+          await this.loadAddresses();
+
+          // Select the new address if it's the only one or default
+          if (this.addresses.length > 0) {
+            this.selectedAddress = this.addresses[this.addresses.length - 1].maDC;
+          }
+
+          // Close modal and reset form
+          this.showAddAddressModal = false;
+          this.newAddress = {
+            tenNN: '',
+            sdt: '',
+            diemGiao: '',
+            macDinh: false,
+          };
+        } else {
+          alert(response.data.message || 'Lỗi khi thêm địa chỉ');
+        }
+      } catch (error) {
+        console.error('Add address error:', error);
+        alert(error.response?.data?.message || 'Lỗi khi thêm địa chỉ');
+      } finally {
+        this.savingAddress = false;
+      }
+    },
+
+    async loadAddresses() {
+      try {
+        const addrResp = await api.getAddresses();
+        if (addrResp.data.success) {
+          this.addresses = addrResp.data.addresses || addrResp.data.data || [];
+        } else if (Array.isArray(addrResp.data)) {
+          this.addresses = addrResp.data;
+        }
+      } catch (error) {
+        console.error('Error loading addresses:', error);
+      }
+    },
+
     async placeOrder() {
+      // Defensive: kiểm tra có sản phẩm không trước khi gọi API
+      if (!this.checkoutItems || this.checkoutItems.length === 0) {
+        alert('Không có sản phẩm nào để đặt hàng. Vui lòng quay lại trang sản phẩm.');
+        return;
+      }
+
       if (this.addresses.length === 0) {
         alert('Vui lòng thêm địa chỉ giao hàng trong phần Hồ sơ');
         return;
@@ -331,41 +482,100 @@ export default {
       this.ordering = true;
       try {
         let response;
+        // Dùng this.isBuyNowFlow đã được lưu từ loadData(), không phụ thuộc sessionStorage
+        const isBuyNow = this.isBuyNowFlow;
+        console.log('[placeOrder] isBuyNow:', isBuyNow);
+        console.log('[placeOrder] checkoutItems:', this.checkoutItems);
+        console.log('[placeOrder] checkoutItemIds:', this.checkoutItemIds);
+        console.log('[placeOrder] paymentMethod:', this.paymentMethod);
 
-        // Nếu chọn thanh toán VNPay (Chuyển khoản), gọi API tạo thanh toán VNPay
+        // Nếu là flow mua ngay, dùng endpoint buy-now riêng
+        if (isBuyNow) {
+          if (this.paymentMethod === 'Chuyển khoản') {
+            const buyNowPayload = {
+              maSKU: this.checkoutItemIds[0], // mua ngay chỉ có 1 sản phẩm
+              soLuong: this.checkoutItems[0]?.soLuong,
+              maDC: this.selectedAddress,
+              phuongThucTT: 'VNPAY',
+              isVNPay: true,
+              isQRCode: this.useQRCode,
+              ghiChu: this.note,
+            };
+            console.log('[placeOrder] buyNow VNPay payload:', buyNowPayload);
+            response = await api.buyNowVNPay(buyNowPayload);
+          } else {
+            const buyNowPayload = {
+              maSKU: this.checkoutItemIds[0],
+              soLuong: this.checkoutItems[0]?.soLuong,
+              maDC: this.selectedAddress,
+              phuongThucTT: 'COD',
+              ghiChu: this.note,
+            };
+            console.log('[placeOrder] buyNow COD payload:', buyNowPayload);
+            response = await api.buyNow(buyNowPayload);
+          }
+
+          console.log('[placeOrder] buyNow response:', response.data);
+
+          if (response.data.success) {
+            if (response.data.paymentUrl) {
+              window.location.href = response.data.paymentUrl;
+              return;
+            }
+            this.orderSuccess = true;
+            this.orderResult = response.data;
+            sessionStorage.removeItem('checkoutItems');
+            sessionStorage.removeItem('checkoutItemIds');
+            sessionStorage.removeItem('isBuyNow');
+            const authStore = useAuthStore();
+            authStore.updateCartCount();
+          } else {
+            alert(response.data.message || 'Đặt hàng thất bại');
+          }
+          this.ordering = false;
+          return;
+        }
+
+        // === Flow giỏ hàng thông thường ===
         if (this.paymentMethod === 'Chuyển khoản') {
-          response = await api.createVNPayOrder({
+          const payload = {
             maDC: this.selectedAddress,
             phuongThucTT: 'VNPAY',
             isVNPay: true,
+            isQRCode: this.useQRCode,
             ghiChu: this.note,
-            cartItemIds: this.checkoutItemIds,
-          });
+          };
+          if (this.checkoutItemIds.length > 0) {
+            payload.cartItemIds = this.checkoutItemIds;
+          }
+          console.log('[placeOrder] VNPay payload:', payload);
+          response = await api.createVNPayOrder(payload);
 
           if (response.data.success && response.data.paymentUrl) {
-            // Redirect đến trang thanh toán VNPay
             window.location.href = response.data.paymentUrl;
             return;
           }
         } else {
-          // Thanh toán COD - gọi API checkout thông thường
-          response = await api.checkout({
+          const payload = {
             maDC: this.selectedAddress,
             phuongThucTT: this.paymentMethod,
             ghiChu: this.note,
-            cartItemIds: this.checkoutItemIds,
-          });
+          };
+          if (this.checkoutItemIds.length > 0) {
+            payload.cartItemIds = this.checkoutItemIds;
+          }
+          console.log('[placeOrder] COD payload:', payload);
+          response = await api.checkout(payload);
         }
+
+        console.log('[placeOrder] response:', response.data);
 
         if (response.data.success) {
           this.orderSuccess = true;
           this.orderResult = response.data;
-          
-          // Clear sessionStorage
           sessionStorage.removeItem('checkoutItems');
           sessionStorage.removeItem('checkoutItemIds');
-
-          // Update cart count
+          sessionStorage.removeItem('isBuyNow');
           const authStore = useAuthStore();
           authStore.updateCartCount();
         } else {
@@ -373,13 +583,59 @@ export default {
         }
       } catch (error) {
         console.error('Checkout error:', error);
+        console.error('Checkout error response:', error.response?.data);
         alert(error.response?.data?.message || 'Lỗi khi đặt hàng');
       } finally {
         this.ordering = false;
       }
     },
   },
-  mounted() {
+  async mounted() {
+    // Khởi tạo auth trước khi load data
+    const authStore = useAuthStore();
+    await authStore.fetchCurrentUser();
+
+    if (!authStore.isAuthenticated) {
+      // Nếu chưa đăng nhập, chuyển về trang login
+      window.location.href = '/auth/login';
+      return;
+    }
+
+    // Kiểm tra query params từ VNPay redirect
+    const urlParams = new URLSearchParams(window.location.search);
+
+    if (urlParams.get('success') === 'true') {
+      // Thanh toán thành công
+      this.orderSuccess = true;
+      this.orderResult = {
+        maHD: urlParams.get('maHD'),
+        tongTien: 0 // Sẽ được load lại từ API nếu cần
+      };
+
+      // Clear sessionStorage
+      sessionStorage.removeItem('checkoutItems');
+      sessionStorage.removeItem('checkoutItemIds');
+      sessionStorage.removeItem('isBuyNow');
+
+      // Update cart count
+      const authStore = useAuthStore();
+      authStore.updateCartCount();
+
+      // Clean URL
+      window.history.replaceState({}, document.title, '/customer/checkout');
+    } else if (urlParams.get('cancelled') === 'true') {
+      // Khách hủy thanh toán
+      alert('Bạn đã hủy thanh toán. Đơn hàng đã được hủy.');
+
+      // Xóa sessionStorage để không hiển thị sản phẩm đã hủy
+      sessionStorage.removeItem('checkoutItems');
+      sessionStorage.removeItem('checkoutItemIds');
+      sessionStorage.removeItem('isBuyNow');
+
+      // Clean URL
+      window.history.replaceState({}, document.title, '/customer/checkout');
+    }
+
     this.loadData();
   },
 };
@@ -620,6 +876,19 @@ export default {
   opacity: 0.6;
 }
 
+/* QR Option */
+.qr-option {
+  padding: 12px 16px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px dashed #ccc;
+}
+
+.qr-option .form-check-input:checked {
+  background-color: #000;
+  border-color: #000;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .section-header {
@@ -627,5 +896,57 @@ export default {
     align-items: flex-start;
     gap: 10px;
   }
+}
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 20px;
+}
+
+.modal-container {
+  background: #fff;
+  border-radius: 14px;
+  width: 100%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid #eee;
+}
+
+.modal-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #000;
+  margin: 0;
+}
+
+.modal-body {
+  padding: 24px;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 24px;
+  border-top: 1px solid #eee;
 }
 </style>

@@ -80,25 +80,11 @@ public class QLHoaDonService {
         checkStatus(hd, "Đang xử lý", "Chỉ có thể xác nhận đơn hàng ở trạng thái 'Đang xử lý'");
         checkEmployee();
 
-        List<String> outOfStock = new ArrayList<>();
-        for (HoaDonCT ct : hd.getHoaDonCTs()) {
-            if (ct.getSanPhamChiTiet().getSoLuong() < ct.getSoLuong()) {
-                outOfStock.add(ct.getSanPhamChiTiet().getSanPham().getTenSP());
-            }
-        }
-        if (!outOfStock.isEmpty()) {
-            return error("Sản phẩm không đủ số lượng: " + String.join(", ", outOfStock));
-        }
-
-        for (HoaDonCT ct : hd.getHoaDonCTs()) {
-            spctDAO.truSoLuong(ct.getSanPhamChiTiet().getMaSKU(), ct.getSoLuong());
-        }
-
         hd.setQuanTri(getCurrentEmployee());
         hd.setTrangThai("Đang giao");
         hoaDonDAO.save(hd);
 
-        return success("Đã vận chuyển đơn hàng và trừ số lượng trong kho");
+        return success("Đã xác nhận đơn hàng");
     }
 
     @Transactional
@@ -113,20 +99,12 @@ public class QLHoaDonService {
 
         String lyDo = payload.getOrDefault("lyDo", "Không có lý do");
 
-        if ("Đang giao".equals(current)) {
-            for (HoaDonCT ct : hd.getHoaDonCTs()) {
-                spctDAO.congSoLuong(ct.getSanPhamChiTiet().getMaSKU(), ct.getSoLuong());
-            }
-        }
-
         hd.setQuanTri(getCurrentEmployee());
         hd.setTrangThai("Đã từ chối");
         hd.setGhiChu(lyDo);
         hoaDonDAO.save(hd);
 
-        String msg = "Đã từ chối đơn hàng";
-        if ("Đang giao".equals(current)) msg += " và hoàn trả số lượng về kho";
-        return success(msg);
+        return success("Đã từ chối đơn hàng");
     }
 
     @Transactional
@@ -134,16 +112,12 @@ public class QLHoaDonService {
         HoaDon hd = findOrder(id);
         checkStatus(hd, "Đang giao", "Chỉ có thể đánh dấu thất bại cho đơn hàng đang giao");
 
-        for (HoaDonCT ct : hd.getHoaDonCTs()) {
-            spctDAO.congSoLuong(ct.getSanPhamChiTiet().getMaSKU(), ct.getSoLuong());
-        }
-
         hd.setTrangThai("Đã từ chối");
         hd.setGhiChu(payload.getOrDefault("lyDo", "Giao hàng thất bại"));
         hd.setQuanTri(getCurrentEmployee());
         hoaDonDAO.save(hd);
 
-        return success("Đã cập nhật giao hàng thất bại và hoàn trả số lượng về kho");
+        return success("Đã cập nhật giao hàng thất bại");
     }
 
     @Transactional
@@ -154,16 +128,6 @@ public class QLHoaDonService {
         hd.setTrangThai("Hoàn tất");
         hd.setNgayDen(new Date());
         hd.setQuanTri(getCurrentEmployee());
-        for (HoaDonCT ct : hd.getHoaDonCTs()) {
-            SanPhamChiTiet spct = ct.getSanPhamChiTiet();
-            SanPham sp = spct.getSanPham();
-
-            int soLuongMoi = sp.getDaBan() + ct.getSoLuong();
-            sp.setDaBan(soLuongMoi);
-            
-            sanPhamDAO.save(sp);
-        }
-        
         hoaDonDAO.save(hd);
 
         try {

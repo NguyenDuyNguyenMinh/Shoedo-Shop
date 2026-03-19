@@ -310,6 +310,8 @@ export default {
         if (response.data.success) {
           item.soLuong = newQty;
           item.thanhTien = item.giaSauKM * newQty;
+          const authStore = useAuthStore();
+          authStore.cartCount = response.data.cartCount;
         } else {
           alert(response.data.message);
         }
@@ -333,6 +335,9 @@ export default {
         if (response.data.success) {
           item.soLuong = newQty;
           item.thanhTien = item.giaSauKM * newQty;
+          // Cập nhật badge số giỏ hàng trên navbar
+          const authStore = useAuthStore();
+          authStore.cartCount = response.data.cartCount;
         } else {
           alert(response.data.message);
         }
@@ -381,6 +386,8 @@ export default {
         alert('Vui lòng chọn ít nhất một sản phẩm để đặt hàng');
         return;
       }
+      // Luôn xóa isBuyNow khi checkout từ giỏ hàng (cart flow)
+      sessionStorage.removeItem('isBuyNow');
       // Lưu selected items vào sessionStorage để checkout page sử dụng
       sessionStorage.setItem('checkoutItems', JSON.stringify(this.selectedItems));
       sessionStorage.setItem('checkoutItemIds', JSON.stringify(this.selectedIds));

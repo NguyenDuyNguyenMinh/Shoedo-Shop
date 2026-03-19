@@ -9,11 +9,6 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-// #region DEBUG - ThongKeService logging
-import java.io.FileWriter;
-import java.io.PrintWriter;
-// #endregion
-
 @Service
 public class ThongKeService {
 
@@ -218,21 +213,9 @@ public class ThongKeService {
      * @return Map chứa các chỉ số tổng quan
      */
     public Map<String, Object> thongKeTongQuan(Date startDate, Date endDate) {
-        // #region DEBUG - Log input params
-        try {
-            String logPath = "c:\\Users\\dothanhphong\\Downloads\\Shoedo-Shop\\.cursor\\debug.log";
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-            String msg = "thongKeTongQuan called: startDate=" + sdf.format(startDate) + ", endDate=" + sdf.format(endDate);
-            try (FileWriter fw = new FileWriter(logPath, true);
-                 PrintWriter pw = new PrintWriter(fw)) {
-                pw.println("{\"timestamp\":" + System.currentTimeMillis() + ",\"location\":\"ThongKeService:thongKeTongQuan\",\"message\":\"" + msg + "\",\"hypothesisId\":\"H2\"}");
-            }
-        } catch (Exception e) {}
-        // #endregion
-        
         List<Object[]> results = thongKeDAO.thongKeTongQuan(startDate, endDate);
         Map<String, Object> dashboard = new HashMap<>();
-        
+
         if (!results.isEmpty()) {
             Object[] row = results.get(0);
             dashboard.put("tongDoanhThu", row[0] != null ? ((Number) row[0]).doubleValue() : 0.0);
@@ -243,35 +226,9 @@ public class ThongKeService {
             dashboard.put("donDangGiao", row[5] != null ? ((Number) row[5]).intValue() : 0);
             dashboard.put("donHoanTat", row[6] != null ? ((Number) row[6]).intValue() : 0);
             dashboard.put("donBiTuChoi", row[7] != null ? ((Number) row[7]).intValue() : 0);
-            
-            // #region DEBUG - Log output
-            try {
-                String logPath = "c:\\Users\\dothanhphong\\Downloads\\Shoedo-Shop\\.cursor\\debug.log";
-                String msg = "thongKeTongQuan result: tongDoanhThu=" + dashboard.get("tongDoanhThu") 
-                    + ", tongDonHang=" + dashboard.get("tongDonHang")
-                    + ", donDangXuLy=" + dashboard.get("donDangXuLy")
-                    + ", donDangGiao=" + dashboard.get("donDangGiao")
-                    + ", donHoanTat=" + dashboard.get("donHoanTat")
-                    + ", donBiTuChoi=" + dashboard.get("donBiTuChoi");
-                try (FileWriter fw = new FileWriter(logPath, true);
-                     PrintWriter pw = new PrintWriter(fw)) {
-                    pw.println("{\"timestamp\":" + System.currentTimeMillis() + ",\"location\":\"ThongKeService:thongKeTongQuan\",\"message\":\"" + msg + "\",\"hypothesisId\":\"H1\"}");
-                }
-            } catch (Exception e) {}
-            // #endregion
-        } else {
-            // #region DEBUG - Log empty results
-            try {
-                String logPath = "c:\\Users\\dothanhphong\\Downloads\\Shoedo-Shop\\.cursor\\debug.log";
-                String msg = "thongKeTongQuan: NO RESULTS returned";
-                try (FileWriter fw = new FileWriter(logPath, true);
-                     PrintWriter pw = new PrintWriter(fw)) {
-                    pw.println("{\"timestamp\":" + System.currentTimeMillis() + ",\"location\":\"ThongKeService:thongKeTongQuan\",\"message\":\"" + msg + "\",\"hypothesisId\":\"H1\"}");
-                }
-            } catch (Exception e) {}
-            // #endregion
+            dashboard.put("donBaoLoi", row[8] != null ? ((Number) row[8]).intValue() : 0);
         }
-        
+
         return dashboard;
     }
 

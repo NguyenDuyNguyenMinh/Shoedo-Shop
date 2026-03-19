@@ -107,9 +107,9 @@ public interface ThongKeDAO extends JpaRepository<HoaDon, Integer> {
     @Query(value = """
             SELECT
                 dm.TenDM AS tenDanhMuc,
-                ISNULL(SUM(hdct.DonGia * hdct.SoLuong), 0) AS doanhThu,
-                COUNT(DISTINCT hd.MaHD) AS soDonHang,
-                SUM(hdct.SoLuong) AS soSP,
+                ISNULL(SUM(CASE WHEN hd.TrangThai = N'Hoàn tất' THEN hdct.DonGia * hdct.SoLuong ELSE 0 END), 0) AS doanhThu,
+                COUNT(DISTINCT CASE WHEN hd.TrangThai = N'Hoàn tất' THEN hd.MaHD END) AS soDonHang,
+                ISNULL(SUM(CASE WHEN hd.TrangThai = N'Hoàn tất' THEN hdct.SoLuong ELSE 0 END), 0) AS soSP,
                 COUNT(DISTINCT sp.MaSP) AS soSanPham
             FROM DanhMuc dm
             LEFT JOIN SanPham_DanhMuc spdm ON dm.MaDM = spdm.MaDM
@@ -117,7 +117,6 @@ public interface ThongKeDAO extends JpaRepository<HoaDon, Integer> {
             LEFT JOIN SanPham_ChiTiet spct ON sp.MaSP = spct.MaSP
             LEFT JOIN HoaDonCT hdct ON spct.MaSKU = hdct.MaSKU
             LEFT JOIN HoaDon hd ON hdct.MaHD = hd.MaHD
-                AND hd.TrangThai = N'Hoàn tất'
                 AND hd.NgayMua BETWEEN :startDate AND :endDate
             GROUP BY dm.MaDM, dm.TenDM
             ORDER BY doanhThu DESC
@@ -133,22 +132,28 @@ public interface ThongKeDAO extends JpaRepository<HoaDon, Integer> {
      */
     @Query(value = """
             SELECT
-                ISNULL(SUM(hdct.DonGia * hdct.SoLuong), 0) AS tongDoanhThu,
+                -- Doanh thu chỉ tính đơn Hoàn tất
+                ISNULL(SUM(CASE WHEN hd.TrangThai = N'Hoàn tất' THEN hdct.DonGia * hdct.SoLuong ELSE 0 END), 0) AS tongDoanhThu,
+                -- Tổng số đơn (tất cả trạng thái)
                 COUNT(DISTINCT hd.MaHD) AS tongDonHang,
+                -- Giá trị đơn TB (chỉ đơn Hoàn tất)
                 CASE
-                    WHEN COUNT(DISTINCT hd.MaHD) > 0
-                    THEN SUM(hdct.DonGia * hdct.SoLuong) / COUNT(DISTINCT hd.MaHD)
+                    WHEN COUNT(DISTINCT CASE WHEN hd.TrangThai = N'Hoàn tất' THEN hd.MaHD END) > 0
+                    THEN ISNULL(SUM(CASE WHEN hd.TrangThai = N'Hoàn tất' THEN hdct.DonGia * hdct.SoLuong ELSE 0 END), 0)
+                        / COUNT(DISTINCT CASE WHEN hd.TrangThai = N'Hoàn tất' THEN hd.MaHD END)
                     ELSE 0
                 END AS giaTriDonTB,
-                SUM(hdct.SoLuong) AS tongSP,
+                -- Số sản phẩm bán (tổng SoLuong trong HoaDonCT theo date range, chỉ Hoàn tất)
+                ISNULL(SUM(CASE WHEN hd.TrangThai = N'Hoàn tất' THEN hdct.SoLuong ELSE 0 END), 0) AS tongSP,
+                -- Đếm theo từng trạng thái
                 COUNT(DISTINCT CASE WHEN hd.TrangThai = N'Đang xử lý' THEN hd.MaHD END) AS donDangXuLy,
                 COUNT(DISTINCT CASE WHEN hd.TrangThai = N'Đang giao' THEN hd.MaHD END) AS donDangGiao,
                 COUNT(DISTINCT CASE WHEN hd.TrangThai = N'Hoàn tất' THEN hd.MaHD END) AS donHoanTat,
-                COUNT(DISTINCT CASE WHEN hd.TrangThai = N'Đã từ chối' THEN hd.MaHD END) AS donBiTuChoi
+                COUNT(DISTINCT CASE WHEN hd.TrangThai = N'Đã từ chối' THEN hd.MaHD END) AS donBiTuChoi,
+                COUNT(DISTINCT CASE WHEN hd.TrangThai = N'Báo lỗi' THEN hd.MaHD END) AS donBaoLoi
             FROM HoaDon hd
             LEFT JOIN HoaDonCT hdct ON hd.MaHD = hdct.MaHD
-            WHERE hd.TrangThai = N'Hoàn tất'
-                AND hd.NgayMua BETWEEN :startDate AND :endDate
+            WHERE hd.NgayMua BETWEEN :startDate AND :endDate
             """, nativeQuery = true)
     List<Object[]> thongKeTongQuan(
             @Param("startDate") Date startDate,
@@ -161,18 +166,41 @@ public interface ThongKeDAO extends JpaRepository<HoaDon, Integer> {
      */
     @Query(value = """
             SELECT TOP (:limit)
-                sp.MaSP,
+                spctOuter.MaSP AS MaSP,
                 sp.TenSP,
-                SUM(hdct.SoLuong) AS tongSoLuong,
-                SUM(hdct.DonGia * hdct.SoLuong) AS tongDoanhThu,
-                COUNT(DISTINCT hd.MaHD) AS soDonMua
+                ISNULL((
+                    SELECT SUM(hdct.SoLuong)
+                    FROM HoaDonCT hdct
+                    INNER JOIN HoaDon hd ON hdct.MaHD = hd.MaHD
+                    WHERE hd.TrangThai = N'Hoàn tất'
+                        AND hd.NgayMua BETWEEN :startDate AND :endDate
+                        AND hdct.MaSKU IN (SELECT MaSKU FROM SanPham_ChiTiet WHERE MaSP = sp.MaSP)
+                ), 0) AS tongSoLuong,
+                ISNULL((
+                    SELECT SUM(hdct.DonGia * hdct.SoLuong)
+                    FROM HoaDonCT hdct
+                    INNER JOIN HoaDon hd ON hdct.MaHD = hd.MaHD
+                    WHERE hd.TrangThai = N'Hoàn tất'
+                        AND hd.NgayMua BETWEEN :startDate AND :endDate
+                        AND hdct.MaSKU IN (SELECT MaSKU FROM SanPham_ChiTiet WHERE MaSP = sp.MaSP)
+                ), 0) AS tongDoanhThu,
+                (SELECT COUNT(DISTINCT hd.MaHD)
+                    FROM HoaDon hd
+                    INNER JOIN HoaDonCT hdct ON hd.MaHD = hdct.MaHD
+                    INNER JOIN SanPham_ChiTiet spct2 ON hdct.MaSKU = spct2.MaSKU
+                    WHERE hd.TrangThai = N'Hoàn tất'
+                        AND hd.NgayMua BETWEEN :startDate AND :endDate
+                        AND spct2.MaSP = sp.MaSP) AS soDonMua
             FROM SanPham sp
-            INNER JOIN SanPham_ChiTiet spct ON sp.MaSP = spct.MaSP
-            INNER JOIN HoaDonCT hdct ON spct.MaSKU = hdct.MaSKU
-            INNER JOIN HoaDon hd ON hdct.MaHD = hd.MaHD
-                AND hd.TrangThai = N'Hoàn tất'
-                AND hd.NgayMua BETWEEN :startDate AND :endDate
-            GROUP BY sp.MaSP, sp.TenSP
+            INNER JOIN SanPham_ChiTiet spctOuter ON sp.MaSP = spctOuter.MaSP
+            WHERE EXISTS (
+                SELECT 1 FROM HoaDonCT hdct
+                INNER JOIN HoaDon hd ON hdct.MaHD = hd.MaHD
+                INNER JOIN SanPham_ChiTiet spct3 ON hdct.MaSKU = spct3.MaSKU
+                WHERE hd.TrangThai = N'Hoàn tất'
+                    AND hd.NgayMua BETWEEN :startDate AND :endDate
+                    AND spct3.MaSP = sp.MaSP
+            )
             ORDER BY tongSoLuong DESC
             """, nativeQuery = true)
     List<Object[]> topSanPhamBanChay(
@@ -190,15 +218,15 @@ public interface ThongKeDAO extends JpaRepository<HoaDon, Integer> {
                 kh.MaKH,
                 kh.TenKH,
                 kh.SDT,
-                COUNT(DISTINCT hd.MaHD) AS soDonMua,
-                SUM(hdct.DonGia * hdct.SoLuong) AS tongChiTieu
+                (SELECT COUNT(*) FROM HoaDon hd2 WHERE hd2.MaKH = kh.MaKH AND hd2.NgayMua BETWEEN :startDate AND :endDate) AS soDonMua,
+                ISNULL((SELECT SUM(hdct.DonGia * hdct.SoLuong)
+                    FROM HoaDon hd3
+                    INNER JOIN HoaDonCT hdct ON hd3.MaHD = hdct.MaHD
+                    WHERE hd3.MaKH = kh.MaKH
+                        AND hd3.TrangThai = N'Hoàn tất'
+                        AND hd3.NgayMua BETWEEN :startDate AND :endDate), 0) AS tongChiTieu
             FROM KhachHang kh
-            LEFT JOIN HoaDon hd ON kh.MaKH = hd.MaKH
-                AND hd.TrangThai = N'Hoàn tất'
-                AND hd.NgayMua BETWEEN :startDate AND :endDate
-            LEFT JOIN HoaDonCT hdct ON hd.MaHD = hdct.MaHD
-            GROUP BY kh.MaKH, kh.TenKH, kh.SDT
-            HAVING COUNT(DISTINCT hd.MaHD) > 0
+            WHERE EXISTS (SELECT 1 FROM HoaDon hd4 WHERE hd4.MaKH = kh.MaKH AND hd4.NgayMua BETWEEN :startDate AND :endDate)
             ORDER BY tongChiTieu DESC
             """, nativeQuery = true)
     List<Object[]> topKhachHang(

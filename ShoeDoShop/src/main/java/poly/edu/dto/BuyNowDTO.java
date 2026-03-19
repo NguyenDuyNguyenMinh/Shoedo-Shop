@@ -1,14 +1,14 @@
 package poly.edu.dto;
 
 import lombok.Data;
-import java.util.List;
 
 @Data
-public class CheckoutDTO {
+public class BuyNowDTO {
+    private Integer maSKU;
+    private Integer soLuong;
     private Integer maDC;
     private String phuongThucTT;
     private String ghiChu;
-    private List<Integer> cartItemIds;
     private Boolean isVNPay;
     private Boolean isQRCode;
 }

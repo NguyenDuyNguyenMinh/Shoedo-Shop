@@ -440,19 +440,21 @@ const initCharts = () => {
   new Chart(orderStatusChart.value, {
     type: 'doughnut',
     data: {
-      labels: ['Hoàn tất', 'Đang giao', 'Đang xử lý', 'Đã từ chối'],
+      labels: ['Hoàn tất', 'Đang giao', 'Đang xử lý', 'Đã từ chối', 'Báo lỗi'],
       datasets: [{
         data: [
           tongQuan.donHoanTat || 0,
           tongQuan.donDangGiao || 0,
           tongQuan.donDangXuLy || 0,
-          tongQuan.donBiTuChoi || 0
+          tongQuan.donBiTuChoi || 0,
+          tongQuan.donBaoLoi || 0
         ],
         backgroundColor: [
           '#10b981',
           '#3b82f6',
           '#f59e0b',
-          '#ef4444'
+          '#ef4444',
+          '#8b5cf6'
         ],
         borderWidth: 3,
         borderColor: '#fff',
