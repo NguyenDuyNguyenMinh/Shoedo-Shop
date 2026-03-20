@@ -237,6 +237,16 @@ onMounted(async () => {
   if (q && typeof q === 'string') {
     searchKeyword.value = q
   }
+  // ── THÊM MỚI: Đọc section từ KH_index viewAll ──
+  const sectionMap = {
+  'flash-sales': '🔥 Flash Sale',
+  'noi-bat'    : 'Mới nhất',
+  'ban-chay'   : '📈 Bán Chạy',
+}
+  const sec = route.query.section
+  if (sec && sectionMap[sec]) {
+    selectedSort.value = sectionMap[sec]
+  }
   await fetchProducts()
 })
 onUnmounted(() => document.removeEventListener('click', closeDropdowns))
@@ -280,7 +290,8 @@ onUnmounted(() => document.removeEventListener('click', closeDropdowns))
         </button>
 
         <div class="filter-right">
-          <button class="filter-btn" :class="{ 'stock-active': onlyInStock }" @click.stop="onlyInStock = !onlyInStock">
+          <!-- ── nút Còn Hàng: giữ nguyên code, thêm class btn-con-hang để ẩn bằng CSS ── -->
+          <button class="filter-btn btn-con-hang" :class="{ 'stock-active': onlyInStock }" @click.stop="onlyInStock = !onlyInStock">
             <i class="bi" :class="onlyInStock ? 'bi-check-circle-fill' : 'bi-circle'"></i>
             Còn Hàng
           </button>
@@ -355,6 +366,8 @@ onUnmounted(() => document.removeEventListener('click', closeDropdowns))
                 {{ formatPrice(p.giaGoc) }}
               </span>
             </div>
+            <!-- ── THÊM MỚI: Đã bán ── -->
+            <div class="pcard-da-ban"><i class="bi bi-bag-check-fill"></i> Đã bán {{ (p.daBan || 0).toLocaleString('vi-VN') }}</div>
           </div>
         </div>
       </div>
@@ -513,6 +526,13 @@ onUnmounted(() => document.removeEventListener('click', closeDropdowns))
 .pcard-price-row { display: flex; align-items: baseline; gap: 8px; }
 .pcard-price     { font-size: 14px; font-weight: 700; color: #e53935; }
 .pcard-old-price { font-size: 11px; color: #bbb; text-decoration: line-through; }
+
+/* ── THÊM MỚI: Ẩn nút Còn Hàng ── */
+.btn-con-hang { display: none !important; }
+
+/* ── THÊM MỚI: Đã bán ── */
+.pcard-da-ban { font-size: 10px; color: #f57c00; font-weight: 600; margin-top: 5px; display: flex; align-items: center; gap: 4px; }
+.pcard-da-ban i { font-size: 10px; }
 
 .empty-state { text-align: center; padding: 80px 0; color: #aaa; }
 .empty-state i { font-size: 48px; display: block; margin-bottom: 12px; }

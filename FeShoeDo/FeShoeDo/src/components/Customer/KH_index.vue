@@ -74,7 +74,7 @@ const goToDetail = (id) => {
   router.push({ name: 'DetailProduct', params: { id } })
 }
 const viewAll = (section) => {
-  router.push({ name: 'ProductList', query: { section } })
+  router.push({ name: 'Sanpham', query: { section } })
 }
 
 onMounted(() => fetchTrangChu())
@@ -143,6 +143,8 @@ onMounted(() => fetchTrangChu())
                   <span class="pcard-price">{{ formatPrice(product.giaSauKM) }}</span>
                   <span v-if="product.khuyenMai > 0" class="pcard-price-old">{{ formatPrice(product.giaGoc) }}</span>
                 </div>
+                <!-- ── THÊM MỚI: Đã bán ── -->
+                <div class="pcard-da-ban"><i class="bi bi-bag-check-fill"></i> Đã bán {{ (product.daBan || 0).toLocaleString('vi-VN') }}</div>
               </div>
             </div>
           </div>
@@ -169,6 +171,8 @@ onMounted(() => fetchTrangChu())
                 <div class="pcard-price-wrap">
                   <span class="pcard-price">{{ formatPrice(product.giaSauKM) }}</span>
                 </div>
+                <!-- ── THÊM MỚI: Đã bán ── -->
+                <div class="pcard-da-ban"><i class="bi bi-bag-check-fill"></i> Đã bán {{ (product.daBan || 0).toLocaleString('vi-VN') }}</div>
               </div>
             </div>
           </div>
@@ -196,6 +200,8 @@ onMounted(() => fetchTrangChu())
                 <div class="pcard-price-wrap">
                   <span class="pcard-price">{{ formatPrice(product.giaSauKM) }}</span>
                 </div>
+                <!-- ── THÊM MỚI: Đã bán ── -->
+                <div class="pcard-da-ban"><i class="bi bi-bag-check-fill"></i> Đã bán {{ (product.daBan || 0).toLocaleString('vi-VN') }}</div>
               </div>
             </div>
           </div>
@@ -311,6 +317,10 @@ onMounted(() => fetchTrangChu())
 .pcard-price-wrap { display: flex; flex-direction: column; gap: 2px; margin-top: auto; }
 .pcard-price { font-size: 15px; font-weight: 700; color: #d32f2f; }
 .pcard-price-old { font-size: 12px; color: #999; text-decoration: line-through; }
+
+/* ── THÊM MỚI: Đã bán ── */
+.pcard-da-ban { font-size: 11px; color: #f57c00; font-weight: 600; display: flex; align-items: center; gap: 4px; }
+.pcard-da-ban i { font-size: 10px; }
 
 /* ════════ RESPONSIVE ════════ */
 @media (max-width: 1200px) { .product-grid { grid-template-columns: repeat(4, 1fr); } }
