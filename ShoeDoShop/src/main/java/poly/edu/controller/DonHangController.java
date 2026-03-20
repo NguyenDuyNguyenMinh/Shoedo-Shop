@@ -145,10 +145,10 @@ public class DonHangController {
     }
 
     /**
-     * Yêu cầu trả hàng
+     * Báo lỗi đơn hàng
      */
-    @PostMapping("/return")
-    public ResponseEntity<Map<String, Object>> requestReturn(@RequestBody Map<String, Object> request) {
+    @PostMapping("/report-issue")
+    public ResponseEntity<Map<String, Object>> reportIssue(@RequestBody Map<String, Object> request) {
         try {
             Users currentUser = authService.getCurrentUser();
             if (currentUser == null) {
@@ -158,7 +158,7 @@ public class DonHangController {
                 ));
             }
 
-            Map<String, Object> result = donHangService.requestReturn(request, currentUser);
+            Map<String, Object> result = donHangService.reportIssue(request, currentUser);
 
             if (!(boolean) result.get("success")) {
                 return ResponseEntity.badRequest().body(result);
@@ -175,7 +175,74 @@ public class DonHangController {
             e.printStackTrace();
             return ResponseEntity.status(500).body(Map.of(
                     "success", false,
-                    "message", "Lỗi khi xử lý yêu cầu trả hàng: " + e.getMessage()
+                    "message", "Lỗi khi xử lý báo lỗi: " + e.getMessage()
+            ));
+        }
+    }
+
+    /**
+     * Đánh giá sản phẩm
+     */
+    @PostMapping("/review")
+    public ResponseEntity<Map<String, Object>> addReview(@RequestBody Map<String, Object> request) {
+        try {
+            Users currentUser = authService.getCurrentUser();
+            if (currentUser == null) {
+                return ResponseEntity.status(401).body(Map.of(
+                        "success", false,
+                        "message", "Vui lòng đăng nhập"
+                ));
+            }
+
+            Map<String, Object> result = donHangService.addReview(request, currentUser);
+
+            if (!(boolean) result.get("success")) {
+                return ResponseEntity.badRequest().body(result);
+            }
+
+            return ResponseEntity.ok(result);
+
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(404).body(Map.of(
+                    "success", false,
+                    "message", e.getMessage()
+            ));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(Map.of(
+                    "success", false,
+                    "message", "Lỗi khi đánh giá sản phẩm: " + e.getMessage()
+            ));
+        }
+    }
+
+    /**
+     * Lấy đánh giá của chi tiết đơn hàng
+     */
+    @GetMapping("/review/{maHDCT}")
+    public ResponseEntity<Map<String, Object>> getReview(@PathVariable("maHDCT") Integer maHDCT) {
+        try {
+            Users currentUser = authService.getCurrentUser();
+            if (currentUser == null) {
+                return ResponseEntity.status(401).body(Map.of(
+                        "success", false,
+                        "message", "Vui lòng đăng nhập"
+                ));
+            }
+
+            Map<String, Object> result = donHangService.getReview(maHDCT, currentUser);
+            return ResponseEntity.ok(result);
+
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(404).body(Map.of(
+                    "success", false,
+                    "message", e.getMessage()
+            ));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(Map.of(
+                    "success", false,
+                    "message", "Lỗi khi lấy đánh giá: " + e.getMessage()
             ));
         }
     }

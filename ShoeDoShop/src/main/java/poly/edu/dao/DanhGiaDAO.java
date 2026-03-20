@@ -4,6 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import poly.edu.entity.DanhGia;
+import poly.edu.entity.HoaDonCT;
 import java.util.List;
 import java.util.Optional;
 
@@ -20,4 +21,12 @@ public interface DanhGiaDAO extends JpaRepository<DanhGia, Integer> {
            "WHERE sct.sanPham.maSP = :maSP " +
            "ORDER BY dg.ngayDG DESC")
     List<DanhGia> findBySanPhamMaSP(@Param("maSP") Integer maSP);
+
+    DanhGia findByHoaDonCT(HoaDonCT hoaDonCT);
+
+    @Query("SELECT dg FROM DanhGia dg WHERE dg.hoaDonCT.hoaDon.khachHang.maKH = :maKH")
+    List<DanhGia> findByKhachHang(@Param("maKH") Integer maKH);
+
+    @Query("SELECT dg FROM DanhGia dg WHERE dg.hoaDonCT.sanPhamChiTiet.sanPham.maSP = :maSP")
+    List<DanhGia> findBySanPham(@Param("maSP") Integer maSP);
 }

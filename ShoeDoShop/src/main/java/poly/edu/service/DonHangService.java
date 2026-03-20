@@ -3,6 +3,7 @@ package poly.edu.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import poly.edu.dao.*;
 import poly.edu.dto.DiaChiJsonDTO;
 import poly.edu.entity.*;
@@ -21,6 +22,9 @@ public class DonHangService {
 
     @Autowired
     private HoaDonCTDAO hoaDonCTDAO;
+
+    @Autowired
+    private DanhGiaDAO danhGiaDAO;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -137,7 +141,9 @@ public class DonHangService {
         );
     }
 
-    public Map<String, Object> requestReturn(Map<String, Object> request, Users currentUser) {
+    // Báo lỗi đơn hàng
+    @Transactional
+    public Map<String, Object> reportIssue(Map<String, Object> request, Users currentUser) {
         KhachHang khachHang = khachHangDAO.findByUser_MaUser(currentUser.getMaUser());
         if (khachHang == null) {
             return Map.of("success", false, "message", "Không tìm thấy thông tin khách hàng");
@@ -155,43 +161,124 @@ public class DonHangService {
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn hàng"));
 
         if (!hoaDon.getKhachHang().getMaKH().equals(khachHang.getMaKH())) {
-            throw new RuntimeException("Bạn không có quyền yêu cầu trả hàng cho đơn này");
+            throw new RuntimeException("Bạn không có quyền báo lỗi cho đơn này");
         }
 
-        if (!"Hoàn tất".equals(hoaDon.getTrangThai())) {
-            return Map.of("success", false, "message", "Chỉ có thể yêu cầu trả hàng cho đơn đã hoàn tất");
+        // Chỉ cho phép báo lỗi cho đơn đã nhận (Hoàn tất) hoặc đang giao
+        if (!"Hoàn tất".equals(hoaDon.getTrangThai()) && !"Đang giao".equals(hoaDon.getTrangThai())) {
+            return Map.of("success", false, "message", "Chỉ có thể báo lỗi cho đơn hàng đang giao hoặc đã nhận");
         }
 
-        // Kiểm tra thời gian (7 ngày kể từ ngày nhận)
-        Date receivedDate = hoaDon.getNgayDen() != null ? hoaDon.getNgayDen() : hoaDon.getNgayMua();
-        Calendar cal = Calendar.getInstance();
-        cal.setTime(receivedDate);
-        cal.add(Calendar.DAY_OF_MONTH, 7);
-        Date deadline = cal.getTime();
+        // Chuyển trạng thái sang Báo lỗi
+        hoaDon.setTrangThai("Báo lỗi");
 
-        if (new Date().after(deadline)) {
-            return Map.of("success", false, "message", "Đã quá thời hạn trả hàng (7 ngày kể từ ngày nhận)");
-        }
-
-        hoaDon.setTrangThai("Hoàn hàng/trả hàng");
-
+        // Thêm ghi chú
         String currentNote = hoaDon.getGhiChu() != null ? hoaDon.getGhiChu() : "";
-        String returnInfo = String.format("[YÊU CẦU TRẢ HÀNG - %s] Lý do: %s. %s",
+        String reportInfo = String.format("[BÁO LỖI - %s] Lý do: %s. %s",
                 new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm").format(new Date()),
                 reason,
                 note != null ? note : "");
 
         if (currentNote.isEmpty()) {
-            hoaDon.setGhiChu(returnInfo);
+            hoaDon.setGhiChu(reportInfo);
         } else {
-            hoaDon.setGhiChu(currentNote + "\n" + returnInfo);
+            hoaDon.setGhiChu(currentNote + "\n" + reportInfo);
         }
 
         hoaDonDAO.save(hoaDon);
 
         return Map.of(
                 "success", true,
-                "message", "Yêu cầu trả hàng đã được ghi nhận. Chúng tôi sẽ xử lý trong thời gian sớm nhất."
+                "message", "Báo lỗi đã được ghi nhận. Chúng tôi sẽ xử lý trong thời gian sớm nhất."
+        );
+    }
+
+    // Đánh giá sản phẩm
+    @Transactional
+    public Map<String, Object> addReview(Map<String, Object> request, Users currentUser) {
+        KhachHang khachHang = khachHangDAO.findByUser_MaUser(currentUser.getMaUser());
+        if (khachHang == null) {
+            return Map.of("success", false, "message", "Không tìm thấy thông tin khách hàng");
+        }
+
+        Integer maHDCT = (Integer) request.get("maHDCT");
+        Integer sao = (Integer) request.get("sao");
+        String danhGiaCT = (String) request.get("danhGiaCT");
+
+        if (maHDCT == null) {
+            return Map.of("success", false, "message", "Thiếu mã chi tiết đơn hàng");
+        }
+
+        if (sao == null || sao < 1 || sao > 5) {
+            return Map.of("success", false, "message", "Đánh giá phải từ 1-5 sao");
+        }
+
+        HoaDonCT hoaDonCT = hoaDonCTDAO.findById(maHDCT)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy chi tiết đơn hàng"));
+
+        HoaDon hoaDon = hoaDonCT.getHoaDon();
+
+        // Kiểm tra quyền sở hữu
+        if (!hoaDon.getKhachHang().getMaKH().equals(khachHang.getMaKH())) {
+            throw new RuntimeException("Bạn không có quyền đánh giá sản phẩm này");
+        }
+
+        // Chỉ cho phép đánh giá đơn đã hoàn tất
+        if (!"Hoàn tất".equals(hoaDon.getTrangThai())) {
+            return Map.of("success", false, "message", "Chỉ có thể đánh giá đơn hàng đã hoàn tất");
+        }
+
+        // Kiểm tra đã đánh giá chưa
+        if (hoaDonCT.getDanhGia() != null) {
+            return Map.of("success", false, "message", "Sản phẩm này đã được đánh giá");
+        }
+
+        // Tạo đánh giá mới
+        DanhGia danhGia = new DanhGia();
+        danhGia.setHoaDonCT(hoaDonCT);
+        danhGia.setSao(sao);
+        danhGia.setDanhGiaCT(danhGiaCT);
+        danhGia.setNgayDG(new Date());
+
+        danhGiaDAO.save(danhGia);
+
+        return Map.of(
+                "success", true,
+                "message", "Cảm ơn bạn đã đánh giá sản phẩm!",
+                "danhGia", Map.of(
+                        "maDG", danhGia.getMaDG(),
+                        "sao", danhGia.getSao(),
+                        "danhGiaCT", danhGia.getDanhGiaCT(),
+                        "ngayDG", danhGia.getNgayDG()
+                )
+        );
+    }
+
+    // Lấy đánh giá của chi tiết đơn hàng
+    public Map<String, Object> getReview(Integer maHDCT, Users currentUser) {
+        KhachHang khachHang = khachHangDAO.findByUser_MaUser(currentUser.getMaUser());
+        if (khachHang == null) {
+            return Map.of("success", false, "message", "Không tìm thấy thông tin khách hàng");
+        }
+
+        HoaDonCT hoaDonCT = hoaDonCTDAO.findById(maHDCT)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy chi tiết đơn hàng"));
+
+        DanhGia danhGia = hoaDonCT.getDanhGia();
+
+        if (danhGia == null) {
+            return Map.of("success", true, "daDanhGia", false);
+        }
+
+        return Map.of(
+                "success", true,
+                "daDanhGia", true,
+                "danhGia", Map.of(
+                        "maDG", danhGia.getMaDG(),
+                        "sao", danhGia.getSao(),
+                        "danhGiaCT", danhGia.getDanhGiaCT(),
+                        "ngayDG", danhGia.getNgayDG()
+                )
         );
     }
 
@@ -274,6 +361,9 @@ public class DonHangService {
                 orderMap.put("productImage", firstItem.getSanPhamChiTiet().getHinhAnh());
                 orderMap.put("productName", firstItem.getSanPhamChiTiet().getSanPham() != null ?
                         firstItem.getSanPhamChiTiet().getSanPham().getTenSP() : "");
+
+                // Thêm thông tin đánh giá
+                orderMap.put("daDanhGia", firstItem.getDanhGia() != null);
             }
         }
 
@@ -321,6 +411,7 @@ public class DonHangService {
                 SanPhamChiTiet spct = ct.getSanPhamChiTiet();
                 if (spct != null) {
                     ctMap.put("maSKU", spct.getMaSKU());
+                    ctMap.put("maHDCT", ct.getMaHDCT());
 
                     if (spct.getSanPham() != null) {
                         ctMap.put("tenSP", spct.getSanPham().getTenSP());
@@ -340,9 +431,15 @@ public class DonHangService {
                 double thanhTien = ct.getSoLuong() * ct.getDonGia();
                 ctMap.put("thanhTien", thanhTien);
 
+                // Thông tin đánh giá
                 if (ct.getDanhGia() != null) {
                     ctMap.put("daDanhGia", true);
-                    ctMap.put("maDanhGia", ct.getDanhGia().getMaDG());
+                    ctMap.put("danhGia", Map.of(
+                            "maDG", ct.getDanhGia().getMaDG(),
+                            "sao", ct.getDanhGia().getSao(),
+                            "danhGiaCT", ct.getDanhGia().getDanhGiaCT(),
+                            "ngayDG", ct.getDanhGia().getNgayDG()
+                    ));
                 } else {
                     ctMap.put("daDanhGia", false);
                 }
