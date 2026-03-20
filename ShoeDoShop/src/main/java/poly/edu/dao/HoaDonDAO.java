@@ -7,6 +7,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import poly.edu.controller.QLHoaDonController;
 import poly.edu.entity.HoaDon;
+import poly.edu.entity.KhachHang;
+import poly.edu.entity.QuanTri;
 import java.util.Date;
 import java.util.List;
 
@@ -25,4 +27,7 @@ public interface HoaDonDAO extends JpaRepository<HoaDon, Integer> {
 
     @Query("SELECT h FROM HoaDon h WHERE h.khachHang.maKH = :maKH")
     List<HoaDon> findHoaDonsByCustomerId(@Param("maKH") Integer maKH);
+
+    List<HoaDon> findByKhachHang(KhachHang khachHang);
+    List<HoaDon> findByQuanTri(QuanTri quanTri);
 }

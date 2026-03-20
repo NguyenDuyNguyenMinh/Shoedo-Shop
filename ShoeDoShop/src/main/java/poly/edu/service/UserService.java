@@ -13,8 +13,6 @@ import poly.edu.entity.*;
 
 import java.util.*;
 import java.util.stream.Collectors;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.util.StreamUtils;
 
 @Service
 public class UserService {
@@ -27,6 +25,9 @@ public class UserService {
 
     @Autowired
     private QuanTriDAO quanTriDAO;
+
+    @Autowired
+    private HoaDonDAO hoaDonDAO;
 
     @Autowired
     private DiaChiDAO diaChiDAO;
@@ -99,8 +100,6 @@ public class UserService {
             errors.put("mail", "Email không được để trống");
         } else if (!mail.matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
             errors.put("mail", "Email không hợp lệ");
-        } else if (!isUpdate && usersDAO.existsByMail(mail)) {
-            errors.put("mail", "Email đã tồn tại");
         }
 
         if (!isUpdate && (password == null || password.trim().isEmpty())) {
@@ -234,6 +233,98 @@ public class UserService {
         return map;
     }
 
+    @Transactional
+    public void convertUserRole(Users targetUser, String newRole) {
+        String currentRole = getCurrentRole(targetUser);
+
+        if (currentRole.equals(newRole)) {
+            throw new RuntimeException("Người dùng đã ở vai trò này");
+        }
+
+        // Kiểm tra quyền
+        AuthInfo auth = checkPermission();
+        if (!auth.isSuccess() || !auth.isAdmin()) {
+            throw new RuntimeException("Chỉ admin mới có quyền chuyển đổi vai trò");
+        }
+
+        // Lưu lại thông tin cần chuyển đổi
+        String hoTen = "";
+        String sdt = "";
+        Date createAt = targetUser.getCreateAt();
+        Boolean isActive = targetUser.getIsActive();
+
+        // Lưu lại lịch sử đơn hàng
+        List<HoaDon> hoaDons = new ArrayList<>();
+
+        if (targetUser.getKhachHang() != null) {
+            KhachHang kh = targetUser.getKhachHang();
+            hoTen = kh.getTenKH();
+            sdt = kh.getSdt() != null ? kh.getSdt() : "";
+            hoaDons = new ArrayList<>(kh.getHoaDons()); // Tạo bản sao để tránh lỗi khi xóa
+        } else if (targetUser.getQuanTri() != null) {
+            QuanTri qt = targetUser.getQuanTri();
+            hoTen = qt.getTenQT();
+            sdt = ""; // Quản trị không có SĐT
+            hoaDons = new ArrayList<>(qt.getHoaDons()); // Tạo bản sao để tránh lỗi khi xóa
+        }
+
+        // Xóa dữ liệu cũ
+        if (targetUser.getKhachHang() != null) {
+            // Cập nhật các hóa đơn để không bị mất tham chiếu
+            for (HoaDon hd : hoaDons) {
+                hd.setKhachHang(null);
+                hoaDonDAO.save(hd);
+            }
+            khachHangDAO.delete(targetUser.getKhachHang());
+            targetUser.setKhachHang(null);
+        }
+
+        if (targetUser.getQuanTri() != null) {
+            // Cập nhật các hóa đơn đã xử lý
+            for (HoaDon hd : hoaDons) {
+                hd.setQuanTri(null);
+                hoaDonDAO.save(hd);
+            }
+            quanTriDAO.delete(targetUser.getQuanTri());
+            targetUser.setQuanTri(null);
+        }
+
+        // Tạo dữ liệu mới theo role mới
+        if ("CUSTOMER".equals(newRole)) {
+            // Chuyển thành khách hàng
+            KhachHang kh = new KhachHang();
+            kh.setUser(targetUser);
+            kh.setTenKH(hoTen);
+            kh.setSdt(sdt);
+            khachHangDAO.save(kh);
+
+            // Gán lại đơn hàng cũ (nếu có) cho khách hàng mới
+            for (HoaDon hd : hoaDons) {
+                hd.setKhachHang(kh);
+                hoaDonDAO.save(hd);
+            }
+
+        } else if ("EMPLOYEE".equals(newRole) || "ADMIN".equals(newRole)) {
+            // Chuyển thành nhân viên/admin
+            QuanTri qt = new QuanTri();
+            qt.setUser(targetUser);
+            qt.setTenQT(hoTen);
+            qt.setRole("ADMIN".equals(newRole));
+            quanTriDAO.save(qt);
+
+            // Gán lại đơn hàng đã xử lý cho nhân viên mới
+            for (HoaDon hd : hoaDons) {
+                hd.setQuanTri(qt);
+                hoaDonDAO.save(hd);
+            }
+        }
+
+        // Cập nhật thông tin user
+        targetUser.setCreateAt(createAt);
+        targetUser.setIsActive(isActive);
+        usersDAO.save(targetUser);
+    }
+
     // ==================== BUSINESS LOGIC ====================
 
     public Page<Users> getUsersByFilter(String keyword, String role, Boolean isActive, Pageable pageable, boolean isAdmin) {
@@ -282,11 +373,29 @@ public class UserService {
         String role = (String) userData.get("role");
         String userName = (String) userData.get("userName");
         String mail = (String) userData.get("mail");
+        String password = (String) userData.get("password");
+        String hoTen = (String) userData.get("hoTen");
+        String sdt = (String) userData.get("sdt");
+
+        // Kiểm tra username đã tồn tại
+        if (usersDAO.existsByUserName(userName)) {
+            throw new RuntimeException("Username đã tồn tại trong hệ thống");
+        }
+
+        // Kiểm tra email đã tồn tại
+        if (usersDAO.existsByMail(mail)) {
+            throw new RuntimeException("Email đã tồn tại trong hệ thống");
+        }
+
+        // Kiểm tra mật khẩu
+        if (password == null || password.length() < 6) {
+            throw new RuntimeException("Mật khẩu phải có ít nhất 6 ký tự");
+        }
 
         Users newUser = new Users();
         newUser.setUserName(userName);
         newUser.setMail(mail);
-        newUser.setPassWord(passwordEncoder.encode((String) userData.get("password")));
+        newUser.setPassWord(passwordEncoder.encode(password));
         newUser.setIsActive(true);
         newUser.setCreateAt(new Date());
         usersDAO.save(newUser);
@@ -294,13 +403,18 @@ public class UserService {
         if ("CUSTOMER".equals(role)) {
             KhachHang kh = new KhachHang();
             kh.setUser(newUser);
-            kh.setTenKH((String) userData.get("hoTen"));
-            kh.setSdt((String) userData.get("sdt"));
+            kh.setTenKH(hoTen);
+            kh.setSdt(sdt);
             khachHangDAO.save(kh);
-        } else if (isAdmin && ("EMPLOYEE".equals(role) || "ADMIN".equals(role))) {
+        } else if ("EMPLOYEE".equals(role) || "ADMIN".equals(role)) {
+            // Employee chỉ được tạo EMPLOYEE, không được tạo ADMIN
+            if (!isAdmin && "ADMIN".equals(role)) {
+                throw new RuntimeException("Bạn không có quyền tạo tài khoản Admin");
+            }
+
             QuanTri qt = new QuanTri();
             qt.setUser(newUser);
-            qt.setTenQT((String) userData.get("hoTen"));
+            qt.setTenQT(hoTen);
             qt.setRole("ADMIN".equals(role));
             quanTriDAO.save(qt);
         }
@@ -310,11 +424,36 @@ public class UserService {
 
     @Transactional
     public void updateUser(Users targetUser, Map<String, Object> userData) {
+        // Cập nhật username nếu có và user hiện tại là admin
+        if (userData.containsKey("userName")) {
+            String newUserName = (String) userData.get("userName");
+            if (!targetUser.getUserName().equals(newUserName)) {
+                // Kiểm tra username mới đã tồn tại chưa
+                if (usersDAO.existsByUserName(newUserName)) {
+                    throw new RuntimeException("Username đã tồn tại");
+                }
+                targetUser.setUserName(newUserName);
+            }
+        }
+
+        // Cập nhật email nếu có và user hiện tại là admin
+        if (userData.containsKey("mail")) {
+            String newMail = (String) userData.get("mail");
+            if (!targetUser.getMail().equals(newMail)) {
+                // Kiểm tra email mới đã tồn tại chưa
+                if (usersDAO.existsByMail(newMail)) {
+                    throw new RuntimeException("Email đã tồn tại");
+                }
+                targetUser.setMail(newMail);
+            }
+        }
+
         // Cập nhật trạng thái active
         if (userData.containsKey("isActive")) {
             targetUser.setIsActive((Boolean) userData.get("isActive"));
-            usersDAO.save(targetUser);
         }
+
+        usersDAO.save(targetUser);
 
         // Xử lý thay đổi role
         if (userData.containsKey("role")) {
@@ -323,6 +462,22 @@ public class UserService {
 
             // Nếu role thay đổi
             if (!currentRole.equals(newRole)) {
+                // Kiểm tra xem user có hóa đơn không
+                boolean hasOrders = false;
+                if (targetUser.getQuanTri() != null) {
+                    // Kiểm tra nhân viên đã xử lý đơn hàng chưa
+                    hasOrders = !targetUser.getQuanTri().getHoaDons().isEmpty();
+                    if (hasOrders) {
+                        throw new RuntimeException("Không thể thay đổi vai trò của nhân viên đã xử lý đơn hàng");
+                    }
+                } else if (targetUser.getKhachHang() != null) {
+                    // Kiểm tra khách hàng đã có đơn hàng chưa
+                    hasOrders = !targetUser.getKhachHang().getHoaDons().isEmpty();
+                    if (hasOrders) {
+                        throw new RuntimeException("Không thể thay đổi vai trò của khách hàng đã có đơn hàng");
+                    }
+                }
+
                 // Xóa dữ liệu cũ
                 if (targetUser.getKhachHang() != null) {
                     khachHangDAO.delete(targetUser.getKhachHang());
