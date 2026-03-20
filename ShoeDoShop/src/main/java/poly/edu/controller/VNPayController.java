@@ -78,14 +78,25 @@ public class VNPayController {
     @GetMapping("/vnpay-return")
     public ResponseEntity<Map<String, String>> vnpayReturn(
             @RequestParam Map<String, String> params) {
-        
+
         Map<String, String> result = vnPayService.processReturn(params);
-        
-        // Chuyển hướng về frontend với kết quả
-        String redirectUrl = "http://localhost:4200/payment-result?success=" + result.get("success") 
-            + "&maHD=" + result.get("maHD") 
-            + "&message=" + (result.get("message") != null ? result.get("message").replace(" ", "%20") : "");
-        
+
+        // Lấy thêm thông tin đơn hàng để truyền về frontend
+        String maHD = result.get("maHD");
+        String tongTien = result.get("tongTien") != null ? result.get("tongTien") : "0";
+        String transactionNo = result.get("transactionNo") != null ? result.get("transactionNo") : "";
+        String responseCode = result.get("responseCode") != null ? result.get("responseCode") : "";
+
+        // Chuyển hướng về frontend với kết quả đầy đủ
+        String redirectUrl = "http://localhost:4200/payment-result"
+            + "?success=" + result.get("success")
+            + "&maHD=" + maHD
+            + "&tongTien=" + tongTien
+            + "&transactionNo=" + transactionNo
+            + "&responseCode=" + responseCode
+            + "&message=" + (result.get("message") != null
+                ? java.net.URLEncoder.encode(result.get("message"), java.nio.charset.StandardCharsets.UTF_8) : "");
+
         // Redirect về frontend
         return ResponseEntity.status(302).header("Location", redirectUrl).build();
     }

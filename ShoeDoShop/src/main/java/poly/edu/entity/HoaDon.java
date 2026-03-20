@@ -36,6 +36,9 @@ public class HoaDon {
     @Column(name = "TrangThai")
     private String trangThai;
 
+    @Column(name = "DaTruKho")
+    private Boolean daTruKho = false;
+
     @Column(name = "GhiChu", columnDefinition = "nvarchar(max)")
     private String ghiChu;
 

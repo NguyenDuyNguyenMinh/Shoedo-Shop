@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mvn spring-boot:run)",
+      "Bash(dir /s /b \"c:\\\\Users\\\\dothanhphong\\\\Shoedo-Shop\\\\ShoeDoShop\\\\src\\\\main\\\\resources\")",
+      "Bash(npm install:*)"
+    ]
+  }
+}

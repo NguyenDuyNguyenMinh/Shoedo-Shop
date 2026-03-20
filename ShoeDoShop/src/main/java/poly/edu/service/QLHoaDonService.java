@@ -9,6 +9,7 @@ import poly.edu.dao.*;
 import poly.edu.dto.DiaChiJsonDTO;
 import poly.edu.entity.*;
 
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -23,6 +24,7 @@ public class QLHoaDonService {
     @Autowired private AuthService authService;
     @Autowired private EmailService emailService;
     @Autowired private PdfService pdfService;
+    @Autowired private VNPayService vnPayService;
     
     
     private final ObjectMapper mapper = new ObjectMapper();
@@ -80,25 +82,30 @@ public class QLHoaDonService {
         checkStatus(hd, "Đang xử lý", "Chỉ có thể xác nhận đơn hàng ở trạng thái 'Đang xử lý'");
         checkEmployee();
 
-        List<String> outOfStock = new ArrayList<>();
-        for (HoaDonCT ct : hd.getHoaDonCTs()) {
-            if (ct.getSanPhamChiTiet().getSoLuong() < ct.getSoLuong()) {
-                outOfStock.add(ct.getSanPhamChiTiet().getSanPham().getTenSP());
+        // Nếu đã trừ kho khi checkout (VNPay) → bỏ qua trừ kho
+        if (!Boolean.TRUE.equals(hd.getDaTruKho())) {
+            List<String> outOfStock = new ArrayList<>();
+            for (HoaDonCT ct : hd.getHoaDonCTs()) {
+                if (ct.getSanPhamChiTiet().getSoLuong() < ct.getSoLuong()) {
+                    outOfStock.add(ct.getSanPhamChiTiet().getSanPham().getTenSP());
+                }
             }
-        }
-        if (!outOfStock.isEmpty()) {
-            return error("Sản phẩm không đủ số lượng: " + String.join(", ", outOfStock));
-        }
-
-        for (HoaDonCT ct : hd.getHoaDonCTs()) {
-            spctDAO.truSoLuong(ct.getSanPhamChiTiet().getMaSKU(), ct.getSoLuong());
+            if (!outOfStock.isEmpty()) {
+                return error("Sản phẩm không đủ số lượng: " + String.join(", ", outOfStock));
+            }
+            for (HoaDonCT ct : hd.getHoaDonCTs()) {
+                spctDAO.truSoLuong(ct.getSanPhamChiTiet().getMaSKU(), ct.getSoLuong());
+            }
         }
 
         hd.setQuanTri(getCurrentEmployee());
         hd.setTrangThai("Đang giao");
         hoaDonDAO.save(hd);
 
-        return success("Đã vận chuyển đơn hàng và trừ số lượng trong kho");
+        String msg = Boolean.TRUE.equals(hd.getDaTruKho())
+                ? "Đã xác nhận đơn hàng (đã trừ kho khi thanh toán VNPay)"
+                : "Đã vận chuyển đơn hàng và trừ số lượng trong kho";
+        return success(msg);
     }
 
     @Transactional
@@ -114,8 +121,26 @@ public class QLHoaDonService {
         String lyDo = payload.getOrDefault("lyDo", "Không có lý do");
 
         if ("Đang giao".equals(current)) {
+            // Đã trừ kho khi confirm → restore
             for (HoaDonCT ct : hd.getHoaDonCTs()) {
                 spctDAO.congSoLuong(ct.getSanPhamChiTiet().getMaSKU(), ct.getSoLuong());
+            }
+        } else if (Boolean.TRUE.equals(hd.getDaTruKho())) {
+            // Đã trừ kho khi checkout (VNPay) → restore + refund
+            for (HoaDonCT ct : hd.getHoaDonCTs()) {
+                spctDAO.congSoLuong(ct.getSanPhamChiTiet().getMaSKU(), ct.getSoLuong());
+            }
+            // Gọi refund VNPay
+            try {
+                String transactionNo = extractTransactionNo(hd.getGhiChu());
+                String transactionDate = new SimpleDateFormat("yyyyMMddHHmmss").format(hd.getNgayMua());
+                double amount = hd.getHoaDonCTs().stream()
+                        .mapToDouble(ct -> ct.getSoLuong() * ct.getDonGia()).sum();
+                vnPayService.refund(transactionNo, hd.getMaHD().toString(),
+                        (long) amount, transactionDate, "Huy don hang - Refund");
+                lyDo = (lyDo != null ? lyDo : "") + " | Đã hoàn tiền VNPay";
+            } catch (Exception e) {
+                System.err.println("Lỗi refund VNPay: " + e.getMessage());
             }
         }
 
@@ -125,7 +150,11 @@ public class QLHoaDonService {
         hoaDonDAO.save(hd);
 
         String msg = "Đã từ chối đơn hàng";
-        if ("Đang giao".equals(current)) msg += " và hoàn trả số lượng về kho";
+        if ("Đang giao".equals(current)) {
+            msg += " và hoàn trả số lượng về kho";
+        } else if (Boolean.TRUE.equals(hd.getDaTruKho())) {
+            msg += ", hoàn trả số lượng về kho và hoàn tiền VNPay";
+        }
         return success(msg);
     }
 
@@ -391,5 +420,13 @@ public class QLHoaDonService {
 
     private Map<String, Object> error(String message) {
         return Map.of("success", false, "message", message);
+    }
+
+    private String extractTransactionNo(String ghiChu) {
+        if (ghiChu == null) return "";
+        // Tìm mã giao dịch VNPay trong GhiChu: "Mã giao dịch: 1234567"
+        java.util.regex.Pattern p = java.util.regex.Pattern.compile("Mã giao dịch:\\s*(\\d+)");
+        java.util.regex.Matcher m = p.matcher(ghiChu);
+        return m.find() ? m.group(1) : "";
     }
 }

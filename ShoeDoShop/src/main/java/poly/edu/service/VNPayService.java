@@ -4,6 +4,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import poly.edu.config.VNPayConfig;
 import poly.edu.dao.HoaDonDAO;
+import poly.edu.dao.HoaDonCTDAO;
+import poly.edu.entity.HoaDon;
+import poly.edu.entity.HoaDonCT;
+import poly.edu.entity.KhachHang;
 
 import java.io.*;
 import java.net.HttpURLConnection;
@@ -18,6 +22,15 @@ public class VNPayService {
 
     @Autowired
     private HoaDonDAO hoaDonDAO;
+
+    @Autowired
+    private HoaDonCTDAO hoaDonCTDAO;
+
+    @Autowired
+    private EmailService emailService;
+
+    @Autowired
+    private PdfService pdfService;
 
     public String createPaymentUrl(Integer maHD, long amount, String orderInfo) throws Exception {
         Map<String, String> vnpParams = new LinkedHashMap<>();
@@ -63,42 +76,72 @@ public class VNPayService {
 
     public Map<String, String> processReturn(Map<String, String> params) {
         Map<String, String> result = new HashMap<>();
-        
+
         String vnp_SecureHash = params.get("vnp_SecureHash");
         params.remove("vnp_SecureHash");
-        
+
         String signValue = VNPayConfig.hashAllFields(params);
-        
-        if (signValue.equals(vnp_SecureHash)) {
-            String vnp_ResponseCode = params.get("vnp_ResponseCode");
-            String vnp_TxnRef = params.get("vnp_TxnRef");
-            
-            result.put("success", "00".equals(vnp_ResponseCode) ? "true" : "false");
-            result.put("responseCode", vnp_ResponseCode);
-            result.put("maHD", vnp_TxnRef);
-            
-            if ("00".equals(vnp_ResponseCode)) {
-                try {
-                    Integer maHD = Integer.parseInt(vnp_TxnRef);
-                    hoaDonDAO.findById(maHD).ifPresent(hoaDon -> {
-                        hoaDon.setTrangThai("Đang xử lý");
-                        hoaDon.setPhuongThucTT("VNPAY");
-                        hoaDon.setGhiChu((hoaDon.getGhiChu() != null ? hoaDon.getGhiChu() + " | " : "") 
-                            + "Thanh toán VNPAY thành công - Mã giao dịch: " + params.get("vnp_TransactionNo"));
-                        hoaDonDAO.save(hoaDon);
-                    });
-                    result.put("message", "Thanh toán thành công");
-                } catch (Exception e) {
-                    result.put("message", "Lỗi cập nhật đơn hàng: " + e.getMessage());
-                }
-            } else {
-                result.put("message", getResponseMessage(vnp_ResponseCode));
-            }
-        } else {
+
+        if (!signValue.equals(vnp_SecureHash)) {
             result.put("success", "false");
             result.put("message", "Chữ ký không hợp lệ");
+            return result;
         }
-        
+
+        String vnp_ResponseCode = params.get("vnp_ResponseCode");
+        String vnp_TxnRef = params.get("vnp_TxnRef");
+        String vnp_TransactionNo = params.get("vnp_TransactionNo");
+
+        result.put("responseCode", vnp_ResponseCode != null ? vnp_ResponseCode : "");
+        result.put("transactionNo", vnp_TransactionNo != null ? vnp_TransactionNo : "");
+        result.put("maHD", vnp_TxnRef != null ? vnp_TxnRef : "");
+
+        if (!"00".equals(vnp_ResponseCode)) {
+            // Thanh toán THẤT BẠI — ghi nhận lỗi vào GhiChu
+            result.put("success", "false");
+            result.put("message", getResponseMessage(vnp_ResponseCode));
+
+            try {
+                Integer maHD = Integer.parseInt(vnp_TxnRef);
+                hoaDonDAO.findById(maHD).ifPresent(hoaDon -> {
+                    String ghiChuMoi = (hoaDon.getGhiChu() != null ? hoaDon.getGhiChu() + " | " : "")
+                        + "Thanh toán VNPAY thất bại - Mã lỗi: " + vnp_ResponseCode
+                        + " (" + getResponseMessage(vnp_ResponseCode) + ")";
+                    hoaDon.setGhiChu(ghiChuMoi);
+                    hoaDonDAO.save(hoaDon);
+                });
+            } catch (Exception e) {
+                System.err.println("Lỗi cập nhật đơn thất bại: " + e.getMessage());
+            }
+            return result;
+        }
+
+        // Thanh toán THÀNH CÔNG
+        result.put("success", "true");
+        result.put("message", "Thanh toán thành công");
+
+        try {
+            Integer maHD = Integer.parseInt(vnp_TxnRef);
+            HoaDon hoaDon = hoaDonDAO.findById(maHD).orElse(null);
+            if (hoaDon != null) {
+                hoaDon.setPhuongThucTT("VNPAY");
+                hoaDon.setGhiChu((hoaDon.getGhiChu() != null ? hoaDon.getGhiChu() + " | " : "")
+                    + "Thanh toán VNPAY thành công - Mã giao dịch: " + vnp_TransactionNo);
+                hoaDonDAO.save(hoaDon);
+
+                // Tính tổng tiền để trả về frontend
+                double tongTien = hoaDonCTDAO.findByHoaDon_MaHD(maHD).stream()
+                    .mapToDouble(ct -> ct.getSoLuong() * ct.getDonGia())
+                    .sum();
+                result.put("tongTien", String.valueOf((long) tongTien));
+
+                // Gửi email xác nhận thanh toán
+                sendPaymentConfirmationEmail(hoaDon, vnp_TransactionNo);
+            }
+        } catch (Exception e) {
+            System.err.println("Lỗi xử lý thanh toán thành công: " + e.getMessage());
+        }
+
         return result;
     }
 
@@ -229,5 +272,86 @@ public class VNPayService {
 
     private String getResponseMessage(String vnp_ResponseCode) {
         return getResponseCode(vnp_ResponseCode);
+    }
+
+    private void sendPaymentConfirmationEmail(HoaDon hoaDon, String transactionNo) {
+        try {
+            KhachHang kh = hoaDon.getKhachHang();
+            if (kh == null || kh.getUser() == null || kh.getUser().getMail() == null) return;
+
+            String email = kh.getUser().getMail();
+            String tenKH = kh.getTenKH();
+            String maHDStr = String.format("%04d", hoaDon.getMaHD());
+
+            List<HoaDonCT> chiTiet = hoaDonCTDAO.findByHoaDon_MaHD(hoaDon.getMaHD());
+            double tongTien = chiTiet.stream().mapToDouble(ct -> ct.getSoLuong() * ct.getDonGia()).sum();
+
+            String subject = "SHOEDO SHOP - Xác nhận thanh toán đơn hàng #HD" + maHDStr;
+
+            StringBuilder itemsHtml = new StringBuilder();
+            for (HoaDonCT ct : chiTiet) {
+                String tenSP = ct.getSanPhamChiTiet().getSanPham() != null
+                    ? ct.getSanPhamChiTiet().getSanPham().getTenSP()
+                    : "Sản phẩm";
+                itemsHtml.append("<tr>")
+                    .append("<td style='padding:8px;border:1px solid #ddd;'>").append(tenSP).append("</td>")
+                    .append("<td style='padding:8px;border:1px solid #ddd;text-align:center;'>").append(ct.getSoLuong()).append("</td>")
+                    .append("<td style='padding:8px;border:1px solid #ddd;text-align:right;'>")
+                    .append(formatVND(ct.getDonGia())).append("</td>")
+                    .append("<td style='padding:8px;border:1px solid #ddd;text-align:right;'>")
+                    .append(formatVND(ct.getSoLuong() * ct.getDonGia())).append("</td>")
+                    .append("</tr>");
+            }
+
+            String htmlContent = "<!DOCTYPE html>"
+                + "<html><head><meta charset='UTF-8'></head>"
+                + "<body style='font-family:Arial,sans-serif;background:#f5f5f5;margin:0;padding:20px;'>"
+                + "<div style='max-width:600px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.1);'>"
+                + "<div style='background:#000;color:#fff;padding:24px;text-align:center;'>"
+                + "<h2 style='margin:0;'>ShoeDo Shop</h2>"
+                + "<p style='margin:4px 0 0;color:#aaa;'>Xác nhận thanh toán online</p>"
+                + "</div>"
+                + "<div style='padding:24px;'>"
+                + "<p>Xin chào <strong>" + tenKH + "</strong>,</p>"
+                + "<p>Chúng tôi đã nhận được thanh toán cho đơn hàng <strong>#HD" + maHDStr + "</strong>.</p>"
+
+                + "<div style='background:#f9f9f9;border-radius:8px;padding:16px;margin:16px 0;'>"
+                + "<table style='width:100%;border-collapse:collapse;font-size:14px;'>"
+                + "<thead><tr style='background:#eee;'>"
+                + "<th style='padding:8px;border:1px solid #ddd;text-align:left;'>Sản phẩm</th>"
+                + "<th style='padding:8px;border:1px solid #ddd;'>SL</th>"
+                + "<th style='padding:8px;border:1px solid #ddd;text-align:right;'>Đơn giá</th>"
+                + "<th style='padding:8px;border:1px solid #ddd;text-align:right;'>Thành tiền</th>"
+                + "</tr></thead><tbody>"
+                + itemsHtml
+                + "<tr style='background:#f0f0f0;font-weight:bold;'>"
+                + "<td colspan='3' style='padding:10px;border:1px solid #ddd;text-align:right;'>Tổng cộng:</td>"
+                + "<td style='padding:10px;border:1px solid #ddd;text-align:right;color:#198754;'>"
+                + formatVND(tongTien) + "</td>"
+                + "</tr></tbody></table>"
+                + "</div>"
+
+                + "<p style='font-size:14px;color:#555;'><strong>Mã giao dịch VNPay:</strong> " + transactionNo + "</p>"
+                + "<p style='font-size:14px;color:#555;'><strong>Phương thức:</strong> Thanh toán qua VNPay</p>"
+                + "<p style='font-size:14px;color:#555;'><strong>Ngày thanh toán:</strong> " + new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm").format(hoaDon.getNgayMua()) + "</p>"
+
+                + "<div style='background:#d4edda;border:1px solid #c3e6cb;border-radius:8px;padding:14px;margin:16px 0;color:#155724;font-size:14px;'>"
+                + " Đơn hàng của bạn đang được xử lý và sẽ được giao trong thời gian sớm nhất.<br>"
+                + " Nhân viên sẽ liên hệ bạn để xác nhận thông tin giao hàng."
+                + "</div>"
+                + "<p>Cảm ơn bạn đã mua sắm tại <strong>ShoeDo Shop</strong>!</p>"
+                + "</div></div></body></html>";
+
+            emailService.sendHtmlEmail(email, subject, htmlContent);
+            System.out.println("Đã gửi email xác nhận thanh toán cho: " + email);
+
+        } catch (Exception e) {
+            System.err.println("Lỗi gửi email xác nhận thanh toán: " + e.getMessage());
+        }
+    }
+
+    private String formatVND(double amount) {
+        java.text.NumberFormat nf = java.text.NumberFormat.getCurrencyInstance(new java.util.Locale("vi", "VN"));
+        return nf.format(amount);
     }
 }

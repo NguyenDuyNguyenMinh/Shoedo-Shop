@@ -4,9 +4,11 @@ import { useRoute, useRouter } from 'vue-router'
 import KH_Navbar from '@/components/Shared/KH_Navbar.vue'
 import Footer from '@/components/Shared/Footer.vue'
 import api from '@/services/api.js'
+import { useAuthStore } from '@/stores/auth'
 
 const route  = useRoute()
 const router = useRouter()
+const authStore = useAuthStore()
 
 const apiProduct = ref(null)
 const apiRelated = ref([])
@@ -177,6 +179,8 @@ const related = computed(() =>
   }))
 )
 
+const variants = computed(() => apiProduct.value?.chiTiets || [])
+
 const averageRating = computed(() => {
   if (reviews.value.length === 0) return 0
   const sum = reviews.value.reduce((acc, r) => acc + (r.sao || 0), 0)
@@ -193,13 +197,79 @@ const getRatingCount = (star) => thongKeSao.value[star] || 0
 const increaseQty = () => quantity.value++
 const decreaseQty = () => { if (quantity.value > 1) quantity.value-- }
 
-const addToCart = () => {
+const hexToColorName = (hex) => {
+  const colorEntry = product.value?.colors?.find(c => c.code === hex)
+  return colorEntry?.name || null
+}
+
+const findSKU = (size, hexColor) => {
+  if (product.value?.isFreesize) {
+    return variants.value.find(v => v.soLuong > 0) || null
+  }
+  const tenMau = hexToColorName(hexColor)
+  if (!tenMau) return null
+  return variants.value.find(v =>
+    v.coGiay === size && v.tenMau === tenMau && v.soLuong > 0
+  ) || null
+}
+
+const addToCart = async () => {
+  if (!authStore.isAuthenticated) {
+    router.push({ name: 'Login' }); return
+  }
   if (!product.value?.isFreesize && !selectedSize.value) {
     alert('Vui lòng chọn size!'); return
   }
   if (!selectedColor.value) { alert('Vui lòng chọn màu sắc!'); return }
-  addedToCart.value = true
-  setTimeout(() => addedToCart.value = false, 2000)
+
+  const sku = findSKU(selectedSize.value, selectedColor.value)
+  if (!sku) { alert('Sản phẩm này không có SKU phù hợp hoặc đã hết hàng'); return }
+
+  try {
+    const { data } = await api.addToCart({ maSKU: sku.maSKU, soLuong: quantity.value })
+    if (data.success) {
+      addedToCart.value = true
+      authStore.cartCount = data.cartCount ?? (authStore.cartCount + 1)
+      setTimeout(() => addedToCart.value = false, 2000)
+    } else {
+      alert(data.message || 'Thêm vào giỏ hàng thất bại')
+    }
+  } catch (e) {
+    console.error('Lỗi thêm giỏ hàng:', e)
+    alert('Có lỗi xảy ra khi thêm vào giỏ hàng')
+  }
+}
+
+const buyNow = async () => {
+  if (!authStore.isAuthenticated) {
+    router.push({ name: 'Login' }); return
+  }
+  if (!product.value?.isFreesize && !selectedSize.value) {
+    alert('Vui lòng chọn size!'); return
+  }
+  if (!selectedColor.value) { alert('Vui lòng chọn màu sắc!'); return }
+
+  const sku = findSKU(selectedSize.value, selectedColor.value)
+  if (!sku) { alert('Sản phẩm này không có SKU phù hợp hoặc đã hết hàng'); return }
+
+  try {
+    const { data } = await api.addToCart({ maSKU: sku.maSKU, soLuong: quantity.value })
+    if (data.success) {
+      authStore.cartCount = data.cartCount ?? (authStore.cartCount + 1)
+      const cartRes = await api.getCart()
+      if (cartRes.data.success && cartRes.data.items?.length > 0) {
+        const latestItem = cartRes.data.items[cartRes.data.items.length - 1]
+        sessionStorage.setItem('checkoutItems', JSON.stringify([latestItem]))
+        sessionStorage.setItem('checkoutItemIds', JSON.stringify([latestItem.maGH]))
+        router.push('/customer/checkout')
+      }
+    } else {
+      alert(data.message || 'Mua ngay thất bại')
+    }
+  } catch (e) {
+    console.error('Lỗi mua ngay:', e)
+    alert('Có lỗi xảy ra khi xử lý mua ngay')
+  }
 }
 
 const goToDetail = (id) => {
@@ -388,7 +458,7 @@ onMounted(() => {
                 <i :class="addedToCart ? 'bi bi-check-lg' : 'bi bi-cart-plus'"></i>
                 {{ addedToCart ? 'Đã thêm vào giỏ!' : 'Thêm vào giỏ hàng' }}
               </button>
-              <button class="btn-buy">
+              <button class="btn-buy" @click="buyNow">
                 <i class="bi bi-lightning-fill"></i> Mua ngay
               </button>
             </div>
