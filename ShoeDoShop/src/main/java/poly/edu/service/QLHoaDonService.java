@@ -102,9 +102,9 @@ public class QLHoaDonService {
         hd.setTrangThai("Đang giao");
         hoaDonDAO.save(hd);
 
-        String msg = Boolean.TRUE.equals(hd.getDaTruKho())
-                ? "Đã xác nhận đơn hàng (đã trừ kho khi thanh toán VNPay)"
-                : "Đã vận chuyển đơn hàng và trừ số lượng trong kho";
+        String msg = Boolean.TRUE.equals(hd.getDaTruKho()) && "VNPAY".equals(hd.getPhuongThucTT())
+                ? "Đã xác nhận đơn hàng (kho đã trừ khi thanh toán VNPay)"
+                : "Đã xác nhận và chuyển giao đơn hàng";
         return success(msg);
     }
 
@@ -121,16 +121,15 @@ public class QLHoaDonService {
         String lyDo = payload.getOrDefault("lyDo", "Không có lý do");
 
         if ("Đang giao".equals(current)) {
-            // Đã trừ kho khi confirm → restore
+            // Đã trừ kho khi confirm (VNPay hoặc COD) → restore stock
             for (HoaDonCT ct : hd.getHoaDonCTs()) {
                 spctDAO.congSoLuong(ct.getSanPhamChiTiet().getMaSKU(), ct.getSoLuong());
             }
-        } else if (Boolean.TRUE.equals(hd.getDaTruKho())) {
-            // Đã trừ kho khi checkout (VNPay) → restore + refund
+        } else if (Boolean.TRUE.equals(hd.getDaTruKho()) && "VNPAY".equals(hd.getPhuongThucTT())) {
+            // VNPay đã trừ kho khi checkout → restore stock + refund
             for (HoaDonCT ct : hd.getHoaDonCTs()) {
                 spctDAO.congSoLuong(ct.getSanPhamChiTiet().getMaSKU(), ct.getSoLuong());
             }
-            // Gọi refund VNPay
             try {
                 String transactionNo = extractTransactionNo(hd.getGhiChu());
                 String transactionDate = new SimpleDateFormat("yyyyMMddHHmmss").format(hd.getNgayMua());
@@ -143,6 +142,7 @@ public class QLHoaDonService {
                 System.err.println("Lỗi refund VNPay: " + e.getMessage());
             }
         }
+        // COD "Đang xử lý": daTruKho=true nhưng CHƯA trừ kho → KHÔNG cần hoàn gì
 
         hd.setQuanTri(getCurrentEmployee());
         hd.setTrangThai("Đã từ chối");
@@ -152,7 +152,7 @@ public class QLHoaDonService {
         String msg = "Đã từ chối đơn hàng";
         if ("Đang giao".equals(current)) {
             msg += " và hoàn trả số lượng về kho";
-        } else if (Boolean.TRUE.equals(hd.getDaTruKho())) {
+        } else if (Boolean.TRUE.equals(hd.getDaTruKho()) && "VNPAY".equals(hd.getPhuongThucTT())) {
             msg += ", hoàn trả số lượng về kho và hoàn tiền VNPay";
         }
         return success(msg);
@@ -277,6 +277,7 @@ public class QLHoaDonService {
         map.put("ngayDen", hd.getNgayDen());
         map.put("trangThai", hd.getTrangThai());
         map.put("phuongThucTT", hd.getPhuongThucTT());
+        map.put("daTruKho", Boolean.TRUE.equals(hd.getDaTruKho()));
         map.put("ghiChu", hd.getGhiChu());
 
         if (hd.getKhachHang() != null) {
@@ -329,6 +330,7 @@ public class QLHoaDonService {
             item.put("thanhTien", ct.getSoLuong() * ct.getDonGia());
             items.add(item);
         }
+        detail.put("daTruKho", Boolean.TRUE.equals(hd.getDaTruKho()));
         detail.put("chiTiet", items);
         
         return detail;

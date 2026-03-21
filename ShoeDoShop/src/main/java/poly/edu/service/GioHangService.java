@@ -281,18 +281,21 @@ public class GioHangService {
         
         hoaDon.setGhiChu(dto.getGhiChu());
         hoaDon.setNgayMua(new Date());
+        // Đánh dấu đã xử lý kho = true cho TẤT CẢ đơn hàng
+        // VNPay: trừ kho ngay tại đây (đã thanh toán trước online)
+        // COD: nhân viên confirm sẽ trừ kho → flag này ngăn bị trừ lại khi reject sau đó
+        hoaDon.setDaTruKho(true);
         hoaDon = hoaDonDAO.save(hoaDon);
 
-        // Trừ kho ngay khi thanh toán VNPay (đã thanh toán online → cần giữ chỗ)
+        // Trừ kho ngay cho VNPay (đã thanh toán trước)
         if (isVNPay) {
             for (GioHang item : selectedItems) {
                 sanPhamChiTietDAO.truSoLuong(item.getSanPhamChiTiet().getMaSKU(), item.getSoLuong());
             }
-            hoaDon.setDaTruKho(true);
             hoaDon = hoaDonDAO.save(hoaDon);
         }
 
-        // Tạo chi tiết hóa đơn + trừ kho (chỉ khi không phải VNPAY hoặc đã thanh toán)
+        // Tạo chi tiết hóa đơn
         double tongTien = 0;
         for (GioHang item : selectedItems) {
             SanPhamChiTiet spct = item.getSanPhamChiTiet();
