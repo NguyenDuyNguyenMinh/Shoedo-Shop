@@ -127,12 +127,41 @@ const getImageUrl = (hinhAnh) => {
   return `http://localhost:8080/images/${hinhAnh}`
 }
 
+// ── BUILD map: tenMau → danh sách hình ảnh riêng biệt từ chiTiets ──
+const colorImageMap = computed(() => {
+  const d = apiProduct.value
+  if (!d || !d.chiTiets) return {}
+  const map = {}
+  d.chiTiets.forEach(sku => {
+    if (!sku.tenMau || !sku.hinhAnh) return
+    if (!map[sku.tenMau]) map[sku.tenMau] = []
+    if (!map[sku.tenMau].includes(sku.hinhAnh)) {
+      map[sku.tenMau].push(sku.hinhAnh)
+    }
+  })
+  return map
+})
+
+// ── Hình hiển thị: nếu đã chọn màu → dùng hình của màu đó
+//    chưa chọn → dùng toàn bộ danhSachHinhAnh ──
+const currentImages = computed(() => {
+  const d = apiProduct.value
+  if (!d) return []
+  if (selectedColor.value && colorImageMap.value[selectedColor.value]) {
+    return colorImageMap.value[selectedColor.value].map(getImageUrl)
+  }
+  const all = (d.danhSachHinhAnh || []).map(getImageUrl)
+  return all.length > 0 ? all : ['https://placehold.co/600x600?text=No+Image']
+})
+
+// ── Khi đổi màu → reset ảnh về ảnh đầu tiên của màu đó ──
+watch(selectedColor, () => {
+  selectedImage.value = 0
+})
+
 const product = computed(() => {
   const d = apiProduct.value
   if (!d) return null
-
-  const images = (d.danhSachHinhAnh || []).map(getImageUrl)
-  if (images.length === 0) images.push('https://placehold.co/600x600?text=No+Image')
 
   const colors = (d.danhSachMau || []).map(mau => ({
     name: mau,
@@ -159,8 +188,7 @@ const product = computed(() => {
     priceNum:      coKM ? giaSauKM : giaGoc,
     oldPrice:      coKM ? formatPrice(giaGoc) : null,
     stock:         d.tongSoLuong || 0,
-    daBan:         d.daBan || 0,   // ← THÊM MỚI
-    images,
+    daBan:         d.daBan || 0,
     sizes,
     colors,
     isFreesize,
@@ -174,7 +202,7 @@ const related = computed(() =>
     image:    getImageUrl(p.hinhAnh),
     price:    formatPrice(p.khuyenMai > 0 ? p.giaSauKM : p.giaGoc),
     stock:    p.tongSoLuong || 0,
-    daBan:    p.daBan || 0,        // ← THÊM MỚI
+    daBan:    p.daBan || 0,
     category: p.tenDanhMuc || '',
   }))
 )
@@ -342,12 +370,12 @@ onMounted(() => {
           <!-- Cột trái: ảnh -->
           <div class="detail-images">
             <div class="main-img-wrap">
-              <img :src="product.images[selectedImage]" :alt="product.name" class="main-img" />
+              <img :src="currentImages[selectedImage] || currentImages[0]" :alt="product.name" class="main-img" />
               <span v-if="product.oldPrice" class="sale-badge">SALE</span>
             </div>
             <div class="thumb-list">
               <div
-                v-for="(img, i) in product.images"
+                v-for="(img, i) in currentImages"
                 :key="i"
                 class="thumb"
                 :class="{ active: selectedImage === i }"
@@ -372,7 +400,7 @@ onMounted(() => {
               </span>
             </div>
 
-            <!-- ── META ROW: thêm "Đã bán" ── -->
+            <!-- ── META ROW ── -->
             <div class="meta-row">
               <span class="meta-item"><i class="bi bi-box-seam"></i> Còn {{ product.stock }} đôi</span>
               <span class="meta-item sold-count">
@@ -402,14 +430,12 @@ onMounted(() => {
             <div class="color-grid">
               <div
                 v-for="color in product.colors"
-                :key="color.code"
-                class="color-btn"
-                :class="{ selected: selectedColor === color.code }"
-                :style="{ backgroundColor: color.code }"
-                @click="selectedColor = color.code"
-                :title="color.name"
+                :key="color.name"
+                class="color-tag"
+                :class="{ selected: selectedColor === color.name }"
+                @click="selectedColor = color.name"
               >
-                <i v-if="selectedColor === color.code" class="bi bi-check-lg"></i>
+                {{ color.name }}
               </div>
             </div>
             <p v-if="!selectedColor" class="size-hint">
@@ -505,7 +531,6 @@ onMounted(() => {
                 <i class="bi bi-info-circle"></i> Sản phẩm chưa có mô tả.
               </p>
 
-              <!-- Thông số kỹ thuật: thêm dòng Đã bán -->
               <div class="product-specs">
                 <h4>Thông số kỹ thuật</h4>
                 <table class="specs-table">
@@ -532,7 +557,6 @@ onMounted(() => {
                       {{ product.stock > 0 ? 'Còn hàng (' + product.stock + ' đôi)' : 'Hết hàng' }}
                     </td>
                   </tr>
-                  <!-- ── THÊM MỚI: Đã bán ── -->
                   <tr>
                     <td>Đã bán</td>
                     <td class="sold-spec">
@@ -674,7 +698,6 @@ onMounted(() => {
                 <div class="pcard-name">{{ p.name }}</div>
                 <div class="pcard-price">{{ p.price }}</div>
                 <div class="pcard-meta"><i class="bi bi-box-seam"></i> Kho: {{ p.stock }}</div>
-                <!-- ── THÊM MỚI: Đã bán trong card liên quan ── -->
                 <div class="pcard-meta sold-count"><i class="bi bi-bag-check-fill"></i> Đã bán: {{ p.daBan.toLocaleString('vi-VN') }}</div>
                 <div class="pcard-meta"><i class="bi bi-tag"></i> {{ p.category }}</div>
               </div>
@@ -725,7 +748,7 @@ onMounted(() => {
   font-size: 11px; font-weight: 700; padding: 4px 10px; letter-spacing: 1px;
 }
 
-.thumb-list { display: flex; gap: 8px; margin-top: 10px; }
+.thumb-list { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
 .thumb {
   width: 64px; height: 64px; border: 2px solid #eee;
   overflow: hidden; cursor: pointer; transition: border-color 0.2s; flex-shrink: 0;
@@ -747,7 +770,6 @@ onMounted(() => {
 .in-stock  { color: #2e7d32 !important; }
 .out-stock { color: #e53935 !important; }
 
-/* ── Đã bán: màu cam nổi bật ── */
 .sold-count { color: #f57c00 !important; font-weight: 600; }
 .sold-spec  { color: #f57c00; font-weight: 600; display: flex; align-items: center; gap: 6px; }
 
@@ -813,14 +835,49 @@ onMounted(() => {
 }
 .count { font-size: 11px; color: #888; font-weight: 400; }
 
-.product-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
-.pcard { border: 1px solid #e0e0e0; background: #fff; cursor: pointer; transition: box-shadow 0.2s, transform 0.2s; }
+/* ── PRODUCT GRID: align-items stretch để các card cùng hàng đồng đều chiều cao ── */
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  align-items: stretch;
+}
+
+/* ── PCARD: flex column để body giãn đều, hình không bị lệch ── */
+.pcard {
+  border: 1px solid #e0e0e0;
+  background: #fff;
+  cursor: pointer;
+  transition: box-shadow 0.2s, transform 0.2s;
+  display: flex;
+  flex-direction: column;
+}
 .pcard:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.12); transform: translateY(-2px); }
-.pcard-img-wrap { width: 100%; aspect-ratio: 1/1; overflow: hidden; background: #f8f8f8; }
+
+/* ── ẢNH: aspect-ratio 1/1 cố định, không bị kéo dãn ── */
+.pcard-img-wrap {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  background: #f8f8f8;
+  flex-shrink: 0;
+}
 .pcard-img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.3s; }
 .pcard:hover .pcard-img { transform: scale(1.05); }
-.pcard-body { padding: 8px 10px 10px; }
-.pcard-name { font-size: 12px; font-weight: 500; color: #222; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ── BODY: flex grow để lấp đầy phần còn lại của card ── */
+.pcard-body {
+  padding: 8px 10px 10px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+.pcard-name {
+  font-size: 12px; font-weight: 500; color: #222; margin-bottom: 4px;
+  /* Giới hạn 2 dòng để các card đồng đều */
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  overflow: hidden; line-height: 1.4; min-height: 2.8em;
+}
 .pcard-price { font-size: 12px; font-weight: 700; color: #e53935; margin-bottom: 5px; }
 .pcard-meta { font-size: 10px; color: #888; display: flex; align-items: center; gap: 4px; margin-bottom: 2px; }
 .pcard-meta i { font-size: 10px; }
@@ -828,6 +885,7 @@ onMounted(() => {
 
 .required { color: #e53935; margin-left: 4px; }
 
+/* ── Màu sắc cũ: giữ nguyên không xóa ── */
 .color-grid { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
 .color-btn {
   width: 36px; height: 36px; border-radius: 50%; border: 2px solid #ddd;
@@ -837,6 +895,21 @@ onMounted(() => {
 .color-btn:hover { transform: scale(1.1); border-color: #999; }
 .color-btn.selected { border-color: #111; box-shadow: 0 0 0 2px #fff, 0 0 0 4px #111; }
 .color-btn i { color: #fff; font-size: 18px; text-shadow: 0 0 2px rgba(0,0,0,0.5); }
+
+/* ── Màu sắc hiển thị dạng chữ tag ── */
+.color-tag {
+  padding: 6px 14px;
+  border: 1.5px solid #ddd;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.2s;
+  user-select: none;
+}
+.color-tag:hover { border-color: #111; color: #111; }
+.color-tag.selected { background: #111; color: #fff; border-color: #111; font-weight: 700; }
 
 .rating-row { display: flex; align-items: center; gap: 8px; margin: 8px 0; cursor: pointer; padding: 4px 0; }
 .stars { display: flex; gap: 2px; }
