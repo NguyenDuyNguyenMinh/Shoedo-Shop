@@ -147,8 +147,12 @@ const colorImageMap = computed(() => {
 const currentImages = computed(() => {
   const d = apiProduct.value
   if (!d) return []
-  if (selectedColor.value && colorImageMap.value[selectedColor.value]) {
-    return colorImageMap.value[selectedColor.value].map(getImageUrl)
+  // selectedColor.value là hex → convert về tên màu để tra colorImageMap (key = tenMau)
+  if (selectedColor.value) {
+    const tenMau = hexToColorName(selectedColor.value)
+    if (tenMau && colorImageMap.value[tenMau]) {
+      return colorImageMap.value[tenMau].map(getImageUrl)
+    }
   }
   const all = (d.danhSachHinhAnh || []).map(getImageUrl)
   return all.length > 0 ? all : ['https://placehold.co/600x600?text=No+Image']
@@ -255,16 +259,18 @@ const addToCart = async () => {
 
   try {
     const { data } = await api.addToCart({ maSKU: sku.maSKU, soLuong: quantity.value })
-    if (data.success) {
+    if (data && data.success) {
       addedToCart.value = true
       authStore.cartCount = data.cartCount ?? (authStore.cartCount + 1)
       setTimeout(() => addedToCart.value = false, 2000)
     } else {
-      alert(data.message || 'Thêm vào giỏ hàng thất bại')
+      alert(data?.message || 'Thêm vào giỏ hàng thất bại')
     }
   } catch (e) {
     console.error('Lỗi thêm giỏ hàng:', e)
-    alert('Có lỗi xảy ra khi thêm vào giỏ hàng')
+    // Hiển thị message thực từ backend, không phải generic
+    const msg = e.response?.data?.message || e.message || 'Có lỗi xảy ra khi thêm vào giỏ hàng'
+    alert(msg)
   }
 }
 
@@ -282,7 +288,7 @@ const buyNow = async () => {
 
   try {
     const { data } = await api.addToCart({ maSKU: sku.maSKU, soLuong: quantity.value })
-    if (data.success) {
+    if (data && data.success) {
       authStore.cartCount = data.cartCount ?? (authStore.cartCount + 1)
       const cartRes = await api.getCart()
       if (cartRes.data.success && cartRes.data.items?.length > 0) {
@@ -292,11 +298,12 @@ const buyNow = async () => {
         router.push('/customer/checkout')
       }
     } else {
-      alert(data.message || 'Mua ngay thất bại')
+      alert(data?.message || 'Mua ngay thất bại')
     }
   } catch (e) {
     console.error('Lỗi mua ngay:', e)
-    alert('Có lỗi xảy ra khi xử lý mua ngay')
+    const msg = e.response?.data?.message || e.message || 'Có lỗi xảy ra khi xử lý mua ngay'
+    alert(msg)
   }
 }
 
@@ -432,8 +439,8 @@ onMounted(() => {
                 v-for="color in product.colors"
                 :key="color.name"
                 class="color-tag"
-                :class="{ selected: selectedColor === color.name }"
-                @click="selectedColor = color.name"
+                :class="{ selected: selectedColor === color.code }"
+                @click="selectedColor = color.code"
               >
                 {{ color.name }}
               </div>

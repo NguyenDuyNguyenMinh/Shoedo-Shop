@@ -30,14 +30,30 @@ apiClient.interceptors.response.use(
     return response;
   },
   (error) => {
-    if (error.response?.status === 401) {
+    const status = error.response?.status;
+    const responseUrl = error.response?.request?.responseURL || '';
+
+    // Case 1: Backend redirect 302 → /auth/login → axios returns HTML with status 200
+    // => Detect via response URL containing '/auth/login'
+    if (responseUrl.includes('/auth/login')) {
       localStorage.removeItem('user');
       localStorage.removeItem('auth_token');
-      
       if (window.location.pathname !== '/auth/login') {
         window.location.href = '/auth/login';
       }
+      return Promise.reject(error);
     }
+
+    // Case 2: Explicit 401 Unauthorized
+    if (status === 401) {
+      localStorage.removeItem('user');
+      localStorage.removeItem('auth_token');
+      if (window.location.pathname !== '/auth/login') {
+        window.location.href = '/auth/login';
+      }
+      return Promise.reject(error);
+    }
+
     return Promise.reject(error);
   }
 );
@@ -163,6 +179,13 @@ export default {
   // VNPay Payment
   createVNPayOrder(data) {
     return apiClient.post('/payment/create-order', data);
+  },
+
+  /** Verify payment với backend — chống spoof URL params trên PaymentResult.vue */
+  verifyPayment(maHD, transactionNo) {
+    return apiClient.get(`/payment/verify/${maHD}`, {
+      params: { transactionNo }
+    });
   },
 
   buyNow(data) {

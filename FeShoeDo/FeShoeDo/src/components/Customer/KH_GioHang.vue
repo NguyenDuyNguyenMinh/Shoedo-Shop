@@ -314,7 +314,8 @@ export default {
           alert(response.data.message);
         }
       } catch (error) {
-        alert('Lỗi khi cập nhật số lượng');
+        const msg = error.response?.data?.message || error.message || 'Lỗi khi cập nhật số lượng';
+        alert(msg);
       } finally {
         item.updating = false;
       }
@@ -337,7 +338,8 @@ export default {
           alert(response.data.message);
         }
       } catch (error) {
-        alert('Lỗi khi cập nhật số lượng');
+        const msg = error.response?.data?.message || error.message || 'Lỗi khi cập nhật số lượng';
+        alert(msg);
       } finally {
         item.updating = false;
       }
@@ -355,7 +357,8 @@ export default {
           authStore.cartCount = response.data.cartCount || this.cartItems.length;
         }
       } catch (error) {
-        alert('Lỗi khi xóa sản phẩm');
+        const msg = error.response?.data?.message || error.message || 'Lỗi khi xóa sản phẩm';
+        alert(msg);
       }
     },
 

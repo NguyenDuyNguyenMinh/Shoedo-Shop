@@ -111,7 +111,7 @@
                 </div>
               </div>
 
-              <div class="payment-option" 
+              <div class="payment-option"
                    :class="{ selected: paymentMethod === 'Chuyển khoản' }"
                    @click="paymentMethod = 'Chuyển khoản'">
                 <div class="d-flex align-items-center gap-3">
@@ -128,6 +128,7 @@
                   </label>
                 </div>
               </div>
+
             </div>
           </div>
 
@@ -332,23 +333,23 @@ export default {
       try {
         let response;
 
-        // Nếu chọn thanh toán VNPay (Chuyển khoản), gọi API tạo thanh toán VNPay
         if (this.paymentMethod === 'Chuyển khoản') {
+          // Redirect sang VNPay (giữ nguyên flow cũ)
           response = await api.createVNPayOrder({
             maDC: this.selectedAddress,
             phuongThucTT: 'VNPAY',
             isVNPay: true,
             ghiChu: this.note,
             cartItemIds: this.checkoutItemIds,
+            paymentType: 'REDIRECT',
           });
 
           if (response.data.success && response.data.paymentUrl) {
-            // Redirect đến trang thanh toán VNPay
             window.location.href = response.data.paymentUrl;
             return;
           }
         } else {
-          // Thanh toán COD - gọi API checkout thông thường
+          // COD
           response = await api.checkout({
             maDC: this.selectedAddress,
             phuongThucTT: this.paymentMethod,
@@ -360,12 +361,8 @@ export default {
         if (response.data.success) {
           this.orderSuccess = true;
           this.orderResult = response.data;
-          
-          // Clear sessionStorage
           sessionStorage.removeItem('checkoutItems');
           sessionStorage.removeItem('checkoutItemIds');
-
-          // Update cart count
           const authStore = useAuthStore();
           authStore.updateCartCount();
         } else {
@@ -628,4 +625,5 @@ export default {
     gap: 10px;
   }
 }
+
 </style>

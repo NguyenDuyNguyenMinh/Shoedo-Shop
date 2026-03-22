@@ -1,10 +1,13 @@
 package poly.edu.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import poly.edu.config.VNPayConfig;
 import poly.edu.dao.HoaDonDAO;
 import poly.edu.dao.HoaDonCTDAO;
+import poly.edu.dao.SanPhamChiTietDAO;
 import poly.edu.entity.HoaDon;
 import poly.edu.entity.HoaDonCT;
 import poly.edu.entity.KhachHang;
@@ -15,6 +18,7 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
@@ -32,6 +36,9 @@ public class VNPayService {
     @Autowired
     private PdfService pdfService;
 
+    @Autowired
+    private SanPhamChiTietDAO sanPhamChiTietDAO;
+
     public String createPaymentUrl(Integer maHD, long amount, String orderInfo) throws Exception {
         Map<String, String> vnpParams = new LinkedHashMap<>();
         vnpParams.put("vnp_Version", "2.1.0");
@@ -47,10 +54,12 @@ public class VNPayService {
         vnpParams.put("vnp_ReturnUrl", VNPayConfig.vnp_ReturnUrl_Static);
         vnpParams.put("vnp_IpAddr", "127.0.0.1");
         
+        TimeZone vnTz = TimeZone.getTimeZone("Asia/Ho_Chi_Minh");
         SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
-        Calendar cld = Calendar.getInstance(TimeZone.getTimeZone("Etc/GMT+7"));
+        sdf.setTimeZone(vnTz);
+        Calendar cld = Calendar.getInstance(vnTz);
         vnpParams.put("vnp_CreateDate", sdf.format(cld.getTime()));
-        
+
         cld.add(Calendar.MINUTE, 15);
         vnpParams.put("vnp_ExpireDate", sdf.format(cld.getTime()));
 
@@ -147,49 +156,59 @@ public class VNPayService {
 
     public Map<String, String> processIpn(Map<String, String> params) {
         Map<String, String> result = new HashMap<>();
-        
+
         String vnp_SecureHash = params.get("vnp_SecureHash");
         params.remove("vnp_SecureHash");
-        
+
         String signValue = VNPayConfig.hashAllFields(params);
-        
-        if (signValue.equals(vnp_SecureHash)) {
-            String vnp_ResponseCode = params.get("vnp_ResponseCode");
-            String vnp_TxnRef = params.get("vnp_TxnRef");
-            String vnp_TransactionStatus = params.get("vnp_TransactionStatus");
-            
-            try {
-                Integer maHD = Integer.parseInt(vnp_TxnRef);
-                var hoaDonOpt = hoaDonDAO.findById(maHD);
-                
-                if (hoaDonOpt.isPresent()) {
-                    var hoaDon = hoaDonOpt.get();
-                    
-                    if ("00".equals(vnp_ResponseCode) && "00".equals(vnp_TransactionStatus)) {
-                        hoaDon.setTrangThai("Đang xử lý");
-                        hoaDon.setPhuongThucTT("VNPAY");
-                        hoaDon.setGhiChu((hoaDon.getGhiChu() != null ? hoaDon.getGhiChu() + " | " : "") 
-                            + "Thanh toán VNPAY IPN thành công - Mã GD: " + params.get("vnp_TransactionNo"));
-                        hoaDonDAO.save(hoaDon);
-                        result.put("RspCode", "00");
-                        result.put("Message", "Confirm Success");
-                    } else {
-                        result.put("RspCode", vnp_ResponseCode);
-                        result.put("Message", getResponseMessage(vnp_ResponseCode));
-                    }
-                } else {
-                    result.put("RspCode", "01");
-                    result.put("Message", "Order not found");
-                }
-            } catch (Exception e) {
-                result.put("RspCode", "99");
-                result.put("Message", "Error: " + e.getMessage());
-            }
-        } else {
+
+        if (!signValue.equals(vnp_SecureHash)) {
             result.put("RspCode", "97");
             result.put("Message", "Invalid signature");
+            return result;
         }
-        
+
+        String vnp_ResponseCode = params.get("vnp_ResponseCode");
+        String vnp_TxnRef = params.get("vnp_TxnRef");
+        String vnp_TransactionStatus = params.get("vnp_TransactionStatus");
+        String vnp_TransactionNo = params.get("vnp_TransactionNo");
+
+        try {
+            Integer maHD = Integer.parseInt(vnp_TxnRef);
+            HoaDon hoaDon = hoaDonDAO.findById(maHD).orElse(null);
+
+            if (hoaDon == null) {
+                result.put("RspCode", "01");
+                result.put("Message", "Order not found");
+                return result;
+            }
+
+            // ── Idempotency: đơn đã được IPN success rồi → return success, không xử lý lại ──
+            if ("VNPAY".equals(hoaDon.getPhuongThucTT())
+                    && hoaDon.getGhiChu() != null
+                    && hoaDon.getGhiChu().contains("vnp_TransactionNo")) {
+                result.put("RspCode", "00");
+                result.put("Message", "Order already confirmed");
+                return result;
+            }
+
+            if ("00".equals(vnp_ResponseCode) && "00".equals(vnp_TransactionStatus)) {
+                hoaDon.setTrangThai("Đang xử lý");
+                hoaDon.setPhuongThucTT("VNPAY");
+                hoaDon.setGhiChu((hoaDon.getGhiChu() != null ? hoaDon.getGhiChu() + " | " : "")
+                    + "Thanh toán VNPAY IPN thành công - Mã GD: " + vnp_TransactionNo);
+                hoaDonDAO.save(hoaDon);
+                result.put("RspCode", "00");
+                result.put("Message", "Confirm Success");
+            } else {
+                result.put("RspCode", vnp_ResponseCode != null ? vnp_ResponseCode : "99");
+                result.put("Message", getResponseMessage(vnp_ResponseCode));
+            }
+        } catch (Exception e) {
+            result.put("RspCode", "99");
+            result.put("Message", "Error: " + e.getMessage());
+        }
+
         return result;
     }
 
@@ -353,5 +372,35 @@ public class VNPayService {
     private String formatVND(double amount) {
         java.text.NumberFormat nf = java.text.NumberFormat.getCurrencyInstance(new java.util.Locale("vi", "VN"));
         return nf.format(amount);
+    }
+
+    /**
+     * Cron job: hủy đơn VNPay quá hạn thanh toán (15 phút).
+     * Chạy mỗi 5 phút. Đơn có trạng thái "Đang xử lý" + phương thức "VNPAY"
+     * mà đã tạo quá 15 phút sẽ bị đánh dấu "Đã từ chối" và stock được restore.
+     */
+    @Scheduled(fixedRate = 300000) // 5 phút
+    @Transactional(rollbackFor = Exception.class)
+    public void cancelExpiredVNPayOrders() {
+        LocalDateTime expiry = LocalDateTime.now().minusMinutes(15);
+        Date expiryDate = Date.from(expiry.atZone(java.time.ZoneId.systemDefault()).toInstant());
+
+        List<HoaDon> expired = hoaDonDAO.findExpiredUnpaidVNPayOrders(
+                "VNPAY", "Đang xử lý", expiryDate);
+
+        for (HoaDon hd : expired) {
+            List<HoaDonCT> items = hoaDonCTDAO.findByHoaDon_MaHD(hd.getMaHD());
+            for (HoaDonCT item : items) {
+                sanPhamChiTietDAO.congSoLuong(
+                        item.getSanPhamChiTiet().getMaSKU(), item.getSoLuong());
+            }
+
+            hd.setTrangThai("Đã từ chối");
+            hd.setGhiChu((hd.getGhiChu() != null ? hd.getGhiChu() + " | " : "")
+                    + "Hệ thống tự hủy: hết hạn thanh toán VNPay (quá 15 phút)");
+            hoaDonDAO.save(hd);
+
+            System.out.println("[VNPayScheduler] Đã hủy đơn quá hạn: HD#" + hd.getMaHD());
+        }
     }
 }

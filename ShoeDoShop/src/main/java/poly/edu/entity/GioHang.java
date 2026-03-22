@@ -26,4 +26,11 @@ public class GioHang {
 
     @Column(name = "SoLuong")
     private Integer soLuong;
+
+    /**
+     * Optimistic locking — ngăn race condition khi nhiều request cùng cập nhật giỏ hàng.
+     * Khi 2 thread đồng thời update, thread thứ 2 sẽ throw OptimisticLockException.
+     */
+    @Version
+    private Integer version;
 }

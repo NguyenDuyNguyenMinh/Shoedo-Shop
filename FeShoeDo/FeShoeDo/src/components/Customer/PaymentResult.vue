@@ -110,6 +110,7 @@
 <script>
 import KH_Navbar from '@/components/shared/KH_Navbar.vue';
 import Footer from '@/components/shared/Footer.vue';
+import api from '@/services/api';
 
 export default {
   name: 'PaymentResult',
@@ -132,41 +133,65 @@ export default {
       if (value == null) return '0₫';
       return new Intl.NumberFormat('vi-VN').format(Math.round(value)) + '₫';
     },
+    async verifyPaymentResult() {
+      if (!this.maHD) {
+        this.loading = false;
+        return;
+      }
+
+      // Đọc query params từ URL để lấy thông tin hiển thị ban đầu
+      const params = new URLSearchParams(window.location.search);
+      this.tongTien = params.get('tongTien') ? parseFloat(params.get('tongTien')) : 0;
+      this.transactionNo = params.get('transactionNo') || '';
+      this.responseCode = params.get('responseCode') || '';
+
+      const successParam = params.get('success');
+      const urlSuccess = successParam === 'true' || successParam === true;
+
+      let message = params.get('message') || '';
+      try { message = decodeURIComponent(message); } catch (e) { /* ignore */ }
+
+      // Phân loại lỗi
+      if (this.responseCode === '24') {
+        this.isCancelled = true;
+        this.errorMessage = 'Bạn đã hủy giao dịch thanh toán';
+      } else if (this.responseCode === '11') {
+        this.isExpired = true;
+        this.errorMessage = 'Phiên thanh toán đã hết hạn (15 phút)';
+      } else {
+        this.errorMessage = message || 'Đã xảy ra lỗi không xác định';
+      }
+
+      // LUÔN xác minh với backend trước khi hiển thị thành công — chống spoof URL params
+      if (urlSuccess && this.maHD) {
+        try {
+          const res = await api.verifyPayment(this.maHD, this.transactionNo || null);
+          if (res.data.success && res.data.valid) {
+            this.success = true;
+            this.tongTien = res.data.tongTien || this.tongTien;
+          } else {
+            // Backend không xác nhận thanh toán thành công
+            this.success = false;
+            this.errorMessage = 'Không xác nhận được thanh toán. Vui lòng liên hệ hỗ trợ.';
+          }
+        } catch (e) {
+          console.error('Lỗi xác minh thanh toán:', e);
+          this.success = false;
+          this.errorMessage = 'Không thể xác minh thanh toán. Vui lòng liên hệ hỗ trợ.';
+        }
+      } else {
+        this.success = false;
+      }
+
+      // Clear cart sessionStorage
+      sessionStorage.removeItem('checkoutItems');
+      sessionStorage.removeItem('checkoutItemIds');
+
+      this.loading = false;
+    },
   },
   mounted() {
-    // Đọc query params từ URL
-    const params = new URLSearchParams(window.location.search);
-
-    this.maHD = params.get('maHD') ? parseInt(params.get('maHD')) : null;
-    this.tongTien = params.get('tongTien') ? parseFloat(params.get('tongTien')) : 0;
-    this.transactionNo = params.get('transactionNo') || '';
-    this.responseCode = params.get('responseCode') || '';
-
-    const successParam = params.get('success');
-    this.success = successParam === 'true' || successParam === true;
-
-    let message = params.get('message') || '';
-    // Decode URL-encoded message
-    try {
-      message = decodeURIComponent(message);
-    } catch (e) { /* ignore */ }
-
-    // Xác định loại lỗi
-    if (this.responseCode === '24') {
-      this.isCancelled = true;
-      this.errorMessage = 'Bạn đã hủy giao dịch thanh toán';
-    } else if (this.responseCode === '11') {
-      this.isExpired = true;
-      this.errorMessage = 'Phiên thanh toán đã hết hạn (15 phút)';
-    } else {
-      this.errorMessage = message || 'Đã xảy ra lỗi không xác định';
-    }
-
-    // Clear cart sessionStorage
-    sessionStorage.removeItem('checkoutItems');
-    sessionStorage.removeItem('checkoutItemIds');
-
-    this.loading = false;
+    this.verifyPaymentResult();
   },
 };
 </script>

@@ -53,4 +53,11 @@ public class HoaDon {
     @OneToMany(mappedBy = "hoaDon", fetch = FetchType.LAZY)
     @JsonIgnore
     private List<HoaDonCT> hoaDonCTs;
+
+    /**
+     * Optimistic locking — ngăn race condition khi employee confirm/reject đơn đồng thời.
+     * Khi 2 thread đồng thời thao tác trên cùng 1 đơn hàng, thread thứ 2 sẽ throw OptimisticLockException.
+     */
+    @Version
+    private Integer version;
 }

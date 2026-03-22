@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 import poly.edu.dao.DanhGiaDAO;
 import poly.edu.dto.DanhGiaDTO;
 import poly.edu.entity.DanhGia;
+import poly.edu.entity.HoaDonCT;
 
 import java.util.HashMap;
 import java.util.List;
@@ -45,13 +46,13 @@ public class DanhGiaService {
 
     // ── Entity → DTO ─────────────────────────────────────────────
     private DanhGiaDTO toDTO(DanhGia dg) {
-        // HoaDonCT EAGER → HoaDon EAGER → KhachHang EAGER → tenKH
+        // Chain: DanhGia → HoaDonCT → HoaDon → KhachHang → tenKH
         String tenKH = "Khách hàng";
         try {
-            tenKH = dg.getHoaDonCT()
-                      .getHoaDon()
-                      .getKhachHang()
-                      .getTenKH();
+            HoaDonCT hdct = dg.getHoaDonCT();
+            if (hdct != null && hdct.getHoaDon() != null && hdct.getHoaDon().getKhachHang() != null) {
+                tenKH = hdct.getHoaDon().getKhachHang().getTenKH();
+            }
         } catch (Exception ignored) {}
 
         return DanhGiaDTO.builder()

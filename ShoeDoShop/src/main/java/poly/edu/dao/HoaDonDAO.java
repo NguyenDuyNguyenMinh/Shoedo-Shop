@@ -30,4 +30,14 @@ public interface HoaDonDAO extends JpaRepository<HoaDon, Integer> {
 
     List<HoaDon> findByKhachHang(KhachHang khachHang);
     List<HoaDon> findByQuanTri(QuanTri quanTri);
+
+    /**
+     * Tìm đơn VNPay đang chờ thanh toán đã quá hạn (timeout 15 phút).
+     * Dùng cho cron job cancelExpiredVNPayOrders().
+     */
+    @Query("SELECT h FROM HoaDon h WHERE h.phuongThucTT = :pttt AND h.trangThai = :trangThai AND h.ngayMua <= :expiry")
+    List<HoaDon> findExpiredUnpaidVNPayOrders(
+            @Param("pttt") String phuongThucTT,
+            @Param("trangThai") String trangThai,
+            @Param("expiry") Date expiryDate);
 }

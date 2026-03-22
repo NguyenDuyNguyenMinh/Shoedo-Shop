@@ -14,8 +14,9 @@ public class AuthInterceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(HttpServletRequest req, HttpServletResponse res, Object handler) throws Exception {
         String uri = req.getRequestURI();
-        
-        if (uri.startsWith("/auth/") || 
+
+        // ── 1. Public paths: cho phép qua ngay ───────────────────────
+        if (uri.startsWith("/auth/") ||
             uri.startsWith("/api/auth/") ||
             uri.startsWith("/api/oauth2/") ||
             uri.startsWith("/oauth2/") ||
@@ -27,56 +28,76 @@ public class AuthInterceptor implements HandlerInterceptor {
             uri.startsWith("/api/sanpham/trang-chu") ||
             uri.startsWith("/api/sanpham/detail") ||
             uri.startsWith("/api/san-pham/") ||
-            uri.startsWith("/api/danh-gia/") ||    // ← THÊM: đánh giá sản phẩm
-            uri.startsWith("/api/public/") ||       // ← THÊM: danh sách SP public
+            uri.startsWith("/api/danh-gia/") ||
+            uri.startsWith("/api/public/") ||
             uri.equals("/") ||
             uri.equals("/customer/index") ||
             uri.equals("/customer/chinhsach") ||
             uri.equals("/customer/sanpham")) {
             return true;
         }
-        
-        if (req.getSession().getAttribute("user") == null) {
-            boolean autoLoggedIn = authService.autoLoginFromCookie();
-            if (!autoLoggedIn) {
-                res.sendRedirect("/auth/login");
-                return false;
-            }
-        }
-        
+
+        // ── 2. Xác thực: thử auto-login từ cookie trước ─────────────
         if (authService.getCurrentUser() == null) {
             boolean autoLoggedIn = authService.autoLoginFromCookie();
             if (!autoLoggedIn) {
-                res.sendRedirect("/auth/login");
+                // API request → trả 401 JSON, page request → redirect
+                if (isApiRequest(uri)) {
+                    res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    res.setContentType("application/json");
+                    res.getWriter().write("{\"success\":false,\"message\":\"Chưa đăng nhập\"}");
+                } else {
+                    res.sendRedirect("/auth/login");
+                }
                 return false;
             }
         }
 
         return checkRoleAccess(uri, req, res);
     }
-    
+
     private boolean checkRoleAccess(String uri, HttpServletRequest req, HttpServletResponse res) throws Exception {
         if (uri.startsWith("/employee")) {
             if (!authService.isEmployee()) {
-                res.sendRedirect("/auth/login");
+                if (isApiRequest(uri)) {
+                    res.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                    res.setContentType("application/json");
+                    res.getWriter().write("{\"success\":false,\"message\":\"Không có quyền truy cập\"}");
+                } else {
+                    res.sendRedirect("/auth/login");
+                }
                 return false;
             }
-            
-            if ((uri.equals("/employee/dashboard") || uri.startsWith("/employee/dashboard/")) 
+
+            if ((uri.equals("/employee/dashboard") || uri.startsWith("/employee/dashboard/"))
                     && !authService.isAdmin()) {
                 res.sendRedirect("/employee/products");
                 return false;
             }
-            return true; 
+            return true;
         }
 
         if (uri.startsWith("/customer") && !uri.equals("/customer/index")) {
             if (!authService.isCustomer()) {
-                res.sendRedirect("/auth/login");
+                if (isApiRequest(uri)) {
+                    res.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                    res.setContentType("application/json");
+                    res.getWriter().write("{\"success\":false,\"message\":\"Tài khoản không phải khách hàng\"}");
+                } else {
+                    res.sendRedirect("/auth/login");
+                }
                 return false;
             }
         }
-        
+
         return true;
+    }
+
+    /**
+     * API request = path bắt đầu bằng /api/
+     * Trả về JSON thay vì HTML redirect để axios xử lý đúng.
+     */
+    private boolean isApiRequest(String uri) {
+        return uri.startsWith("/api/");
     }
 }

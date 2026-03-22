@@ -33,4 +33,10 @@ public class HoaDonCT {
     @OneToOne(mappedBy = "hoaDonCT", fetch = FetchType.LAZY)
     @JsonIgnoreProperties("hoaDonCT")
     private DanhGia danhGia;
+
+    /**
+     * Optimistic locking — đảm bảo concurrency khi nhiều process cùng thao tác trên chi tiết đơn hàng.
+     */
+    @Version
+    private Integer version;
 }

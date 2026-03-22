@@ -305,32 +305,27 @@ public class AuthService {
 
     // ==================== PRIVATE METHODS ====================
     private Map<String, Object> doLogin(Users user, boolean remember) {
-    	try { 
-	        QuanTri qt = quanTriDAO.findByUser_MaUser(user.getMaUser());
-	        KhachHang kh = khachHangDAO.findByUser_MaUser(user.getMaUser());
-	
-	        if (qt != null) {
-	            sessionService.set("userRole", qt.getRole() ? "ADMIN" : "EMPLOYEE");
-	            sessionService.set("userName", qt.getTenQT());
-	            sessionService.set("user", user);
-	            sessionService.set("isGoogleUser", true);
-	        } else if (kh != null) {
-	            sessionService.set("userRole", "CUSTOMER");
-	            sessionService.set("userName", kh.getTenKH());
-	            sessionService.set("user", user);
-	            sessionService.set("isGoogleUser", true);
-	        }
-	        
-	        sessionService.set("user", user);
-	        sessionService.set("userMail", user.getMail());
-	        
-	        if (remember) saveRememberMe(user);
-	        
-	        return getUserInfo(user);
-    	}catch (Exception e){
-    		e.printStackTrace();
-    	}      
-    	return null;  
+        QuanTri qt = quanTriDAO.findByUser_MaUser(user.getMaUser());
+        KhachHang kh = khachHangDAO.findByUser_MaUser(user.getMaUser());
+
+        if (qt != null) {
+            sessionService.set("userRole", qt.getRole() ? "ADMIN" : "EMPLOYEE");
+            sessionService.set("userName", qt.getTenQT());
+            sessionService.set("user", user);
+            sessionService.set("isGoogleUser", true);
+        } else if (kh != null) {
+            sessionService.set("userRole", "CUSTOMER");
+            sessionService.set("userName", kh.getTenKH());
+            sessionService.set("user", user);
+            sessionService.set("isGoogleUser", true);
+        }
+
+        sessionService.set("user", user);
+        sessionService.set("userMail", user.getMail());
+
+        if (remember) saveRememberMe(user);
+
+        return getUserInfo(user);
     }
 
     private void saveRememberMe(Users user) {

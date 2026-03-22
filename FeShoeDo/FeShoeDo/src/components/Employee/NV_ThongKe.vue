@@ -283,8 +283,9 @@ const loadThongKeData = async () => {
   const endDateStr = endDate.toISOString().split('T')[0];
   
     try {
-    // Fetch all required data in parallel
-    const [tongQuan, theoNgay, theoDanhMuc, topSanPham, topKhachHang, donHangGanDay] = await Promise.all([
+    // Fetch all required data in parallel — dùng Promise.allSettled để
+    // 1 API fail không làm crash toàn bộ dashboard
+    const settled = await Promise.allSettled([
       api.getThongKeTongQuan(startDateStr, endDateStr),
       api.getThongKeNgay(startDateStr, endDateStr),
       api.getThongKeDanhMuc(startDateStr, endDateStr),
@@ -292,14 +293,18 @@ const loadThongKeData = async () => {
       api.getTopKhachHang(startDateStr, endDateStr, 5),
       api.getDonHangGanDay(5)
     ]);
-    
+
+    // Extract resolved values; failed requests → null (partial failure graceful)
+    const [tongQuan, theoNgay, theoDanhMuc, topSanPham, topKhachHang, donHangGanDay] =
+      settled.map(r => r.status === 'fulfilled' ? r.value.data : null);
+
     thongKeData.value = {
-      tongQuan: tongQuan.data,
-      theoNgay: theoNgay.data,
-      theoDanhMuc: theoDanhMuc.data,
-      topSanPham: topSanPham.data,
-      topKhachHang: topKhachHang.data,
-      donHangGanday: donHangGanDay.data
+      tongQuan: tongQuan,
+      theoNgay: theoNgay,
+      theoDanhMuc: theoDanhMuc,
+      topSanPham: topSanPham,
+      topKhachHang: topKhachHang,
+      donHangGanday: donHangGanDay
     };
     
     // Initialize charts after data loaded

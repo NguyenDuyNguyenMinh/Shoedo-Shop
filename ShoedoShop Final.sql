@@ -105,6 +105,7 @@ MaGH INT IDENTITY(1,1) PRIMARY KEY,
 MaKH INT,
 MaSKU INT,
 SoLuong INT CHECK (SoLuong > 0),
+Version INT DEFAULT 0, -- Optimistic locking (JPA @Version)
 -- Ràng buộc: 1 khách chỉ có 1 dòng cho 1 sản phẩm trong giỏ.
 CONSTRAINT UQ_GioHang UNIQUE (MaKH, MaSKU),
 CONSTRAINT FK_GioHang_KhachHang FOREIGN KEY (MaKH) REFERENCES KhachHang(MaKH),
@@ -122,6 +123,7 @@ TrangThai NVARCHAR(50) CHECK (TrangThai IN (N'Đang xử lý', N'Đang giao', N'
 DaTruKho BIT DEFAULT 0,
 NgayMua DATETIME DEFAULT GETDATE(),
 NgayDen DATETIME,
+Version INT DEFAULT 0, -- Optimistic locking (JPA @Version)
 CONSTRAINT FK_HoaDon_KhachHang FOREIGN KEY (MaKH) REFERENCES KhachHang(MaKH),
 CONSTRAINT FK_HoaDon_QuanTri FOREIGN KEY (MaQT) REFERENCES QuanTri(MaQT)
 );
@@ -133,6 +135,7 @@ MaHD INT,
 MaSKU INT,
 SoLuong INT CHECK (SoLuong > 0),
 DonGia DECIMAL(18,2) CHECK (DonGia > 0), -- Giá tại thời điểm mua
+Version INT DEFAULT 0, -- Optimistic locking (JPA @Version)
 CONSTRAINT FK_HoaDonCT_HoaDon FOREIGN KEY (MaHD) REFERENCES HoaDon(MaHD),
 CONSTRAINT FK_HoaDonCT_SKU FOREIGN KEY (MaSKU) REFERENCES SanPham_ChiTiet(MaSKU)
 );
