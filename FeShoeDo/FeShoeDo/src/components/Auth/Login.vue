@@ -1,6 +1,9 @@
 <template>
   <div class="auth-page">
     <div class="bg-overlay"></div>
+    <router-link to="/customer/index" class="btn btn-outline-white btn-sm">
+      Trang chủ
+    </router-link>
 
     <!-- Google Password Modal -->
     <div class="modal fade" id="googlePasswordModal" tabindex="-1" aria-hidden="true">
@@ -957,5 +960,19 @@ input[type="text"].text-center {
 small {
   font-size: 0.8rem;
   color: #666;
+}
+
+.btn-outline-white {
+  border-color: #f6f6f6;
+  color: #ffffff;
+  position: fixed; 
+  top: 20px; 
+  left: 20px; 
+  z-index: 1000;
+}
+
+.btn-outline-white:hover {
+  background-color: #ffffff;
+  color: #000000;
 }
 </style>
