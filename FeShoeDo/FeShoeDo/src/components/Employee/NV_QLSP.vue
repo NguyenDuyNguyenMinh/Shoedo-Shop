@@ -1,42 +1,44 @@
 <template>
-  <div class="toast-container position-fixed top-0 start-50 translate-middle-x p-3 mt-2" style="z-index: 1090;">
-  <transition name="toast-fade">
-    <div
-      v-if="toast.show"
-      :key="toast.id"
-      class="toast show align-items-center text-white border-0 shadow-lg overflow-hidden"
-      :class="`bg-${toast.type}`"
-      role="alert"
-    >
-      <div class="d-flex position-relative z-1">
-        <div class="toast-body d-flex align-items-center fs-6">
-          <i
-            class="bi me-2 fs-5"
-            :class="{
-              'bi-check-circle-fill': toast.type === 'success',
-              'bi-exclamation-triangle-fill': toast.type === 'warning',
-              'bi-x-circle-fill': toast.type === 'danger',
-              'bi-info-circle-fill': toast.type === 'info'
-            }"
-          ></i>
-          {{ toast.message }}
+  <div
+    class="toast-container position-fixed top-0 start-50 translate-middle-x p-3 mt-2"
+    style="z-index: 1090"
+  >
+    <transition name="toast-fade">
+      <div
+        v-if="toast.show"
+        :key="toast.id"
+        class="toast show align-items-center text-white border-0 shadow-lg overflow-hidden"
+        :class="`bg-${toast.type}`"
+        role="alert"
+      >
+        <div class="d-flex position-relative z-1">
+          <div class="toast-body d-flex align-items-center fs-6">
+            <i
+              class="bi me-2 fs-5"
+              :class="{
+                'bi-check-circle-fill': toast.type === 'success',
+                'bi-exclamation-triangle-fill': toast.type === 'warning',
+                'bi-x-circle-fill': toast.type === 'danger',
+                'bi-info-circle-fill': toast.type === 'info',
+              }"
+            ></i>
+            {{ toast.message }}
+          </div>
+          <button
+            type="button"
+            class="btn-close btn-close-white me-2 m-auto"
+            @click="toast.show = false"
+          ></button>
         </div>
-        <button
-          type="button"
-          class="btn-close btn-close-white me-2 m-auto"
-          @click="toast.show = false"
-        ></button>
+        <div class="toast-progress-bar"></div>
       </div>
-      <div class="toast-progress-bar"></div>
-    </div>
-  </transition>
-</div>
-
+    </transition>
+  </div>
 
   <div class="employee-layout">
     <NV_Sidebar />
 
-<!-- page content -->
+    <!-- page content -->
 
     <main class="main-content">
       <div class="page-container">
@@ -54,7 +56,7 @@
           ></button>
         </div>
 
-<!-- tổng quan sản phẩm -->
+        <!-- tổng quan sản phẩm -->
 
         <div class="row g-3 mb-4">
           <div class="col-md-3">
@@ -83,7 +85,7 @@
           </div>
         </div>
 
-<!-- sản phẩm -->
+        <!-- sản phẩm -->
 
         <div class="content-card">
           <div class="d-flex justify-content-between align-items-center mb-4">
@@ -102,7 +104,7 @@
             </button>
           </div>
 
-<!-- bộ lọc sản phẩm -->
+          <!-- bộ lọc sản phẩm -->
 
           <div class="filter-section">
             <div class="row g-3">
@@ -168,7 +170,7 @@
             </div>
           </div>
 
-<!-- list sản phẩm -->
+          <!-- list sản phẩm -->
 
           <div class="products-list">
             <div class="row">
@@ -409,7 +411,7 @@
       </div>
     </main>
 
-<!-- modal thêm danh mục -->
+    <!-- modal thêm danh mục -->
 
     <div
       class="modal fade"
@@ -469,7 +471,7 @@
       </div>
     </div>
 
-<!-- modal thêm sản phẩm -->
+    <!-- modal thêm sản phẩm -->
 
     <div
       class="modal fade"
@@ -674,9 +676,8 @@
                     <div class="col-md-6">
                       <label class="form-label small">Trạng thái</label>
                       <select class="form-select" v-model="v.trangThai">
-                        <option value="Còn hàng">Còn hàng</option>
-                        <option value="Hết hàng">Hết hàng</option>
-                        <option value="Sắp hết">Sắp hết</option>
+                        <option value="Hiển thị">Hiển thị</option>
+                        <option value="Đã ẩn">Đã ẩn (Ngừng bán)</option>
                       </select>
                     </div>
                     <div class="col-md-6">
@@ -733,7 +734,7 @@
       </div>
     </div>
 
-<!-- modal chỉnh sửa sản phẩm -->
+    <!-- modal chỉnh sửa sản phẩm -->
 
     <div
       class="modal fade"
@@ -846,26 +847,43 @@
               </div>
               <hr />
               <h6>Phân loại sản phẩm (Biến thể)</h6>
-              <div
+<div
                 v-for="(v, index) in editProductData.variants"
                 :key="index"
-                class="card mb-3 bg-light"
+                class="card mb-3"
+                :class="v.trangThai === 'Đã ẩn' ? 'bg-secondary-subtle border-secondary' : 'bg-light'"
               >
                 <div class="card-body">
-                  <div class="d-flex justify-content-between align-items-center mb-3">
+                  <div
+                    class="d-flex justify-content-between align-items-center mb-3"
+                  >
                     <span class="badge bg-dark fs-6"
                       >Phân loại #{{ index + 1 }}</span
                     >
                     <button
                       type="button"
-                      class="btn btn-outline-danger btn-sm"
+                      class="btn btn-sm d-flex align-items-center"
+                      :class="
+                        v.trangThai === 'Đã ẩn'
+                          ? 'btn-outline-success fw-bold'
+                          : 'btn-outline-danger'
+                      "
                       @click="removeEditVariant(index)"
                       v-if="editProductData.variants.length > 1"
-                    ><i class="bi bi-trash me-1"></i>
-                      Xóa
+                    >
+                      <i
+                        class="bi me-1"
+                        :class="
+                          v.trangThai === 'Đã ẩn'
+                            ? 'bi-arrow-counterclockwise'
+                            : 'bi-eye-slash'
+                        "
+                      ></i>
+                      {{ v.trangThai === "Đã ẩn" ? "Khôi phục" : "Ẩn đi" }}
                     </button>
                   </div>
-                  <div class="row g-2">
+                  
+                  <div class="row g-2" :class="{ 'opacity-50': v.trangThai === 'Đã ẩn' }">
                     <div class="col-md-3">
                       <label class="form-label small">Màu *</label>
                       <input
@@ -953,9 +971,8 @@
                     <div class="col-md-6">
                       <label class="form-label small">Trạng thái</label>
                       <select class="form-select" v-model="v.trangThai">
-                        <option value="Còn hàng">Còn hàng</option>
-                        <option value="Hết hàng">Hết hàng</option>
-                        <option value="Sắp hết">Sắp hết</option>
+                        <option value="Hiển thị">Hiển thị</option>
+                        <option value="Đã ẩn">Đã ẩn (Ngừng bán)</option>
                       </select>
                     </div>
                     <div class="col-md-6">
@@ -1005,7 +1022,7 @@
       </div>
     </div>
 
-<!-- modal list phân loại -->
+    <!-- modal list phân loại -->
 
     <div class="modal fade" id="variantsModal" tabindex="-1" aria-hidden="true">
       <div class="modal-dialog modal-lg">
@@ -1029,7 +1046,7 @@
                     <th>#</th>
                     <th>Hình ảnh</th>
                     <th>Phân loại (Màu - Size)</th>
-                    <th>Số lượng kho</th>
+                    <th class="text-center">Số lượng kho</th>
                     <th>Đơn giá</th>
                     <th>Trạng thái</th>
                   </tr>
@@ -1074,7 +1091,7 @@
                         Size: {{ getSizeName(v.maSize) }}
                       </div>
                     </td>
-                    <td>
+                    <td class="text-center">
                       <span :class="{ 'text-danger fw-bold': v.soLuong === 0 }">
                         {{ v.soLuong }}
                       </span>
@@ -1086,14 +1103,12 @@
                       <span
                         :class="[
                           'badge',
-                          v.trangThai === 'Còn hàng'
+                          v.trangThai === 'Hiển thị'
                             ? 'bg-success'
-                            : v.trangThai === 'Sắp hết'
-                            ? 'bg-warning text-dark'
-                            : 'bg-danger',
+                            : 'bg-secondary',
                         ]"
                       >
-                        {{ v.trangThai }}
+                        {{ v.trangThai === "Hiển thị" ? "Đang bán" : "Đã ẩn" }}
                       </span>
                     </td>
                   </tr>
@@ -1114,7 +1129,7 @@
       </div>
     </div>
 
-<!-- modal chọn ảnh -->
+    <!-- modal chọn ảnh -->
 
     <div
       class="modal fade"
@@ -1217,7 +1232,6 @@ import NV_Sidebar from "@/components/Shared/NV_Sidebar.vue";
 
 axios.defaults.withCredentials = true;
 
-
 const successMessage = ref("");
 const products = ref([]);
 const categories = ref([]);
@@ -1227,16 +1241,16 @@ const filterCategory = ref("");
 const filterGender = ref("");
 const filterStatus = ref("");
 
-//Trạng thái sản phẩm
-const autoUpdateStatus = (variant) => {
-  const quantity = parseInt(variant.soLuong) || 0;
-  if (quantity <= 0) {
-    variant.soLuong = 0;
-    variant.trangThai = "Hết hàng";
-  } else if (quantity > 0 && variant.trangThai === "Hết hàng") {
-    variant.trangThai = "Còn hàng";
-  }
-};
+// //Trạng thái sản phẩm
+// const autoUpdateStatus = (variant) => {
+//   const quantity = parseInt(variant.soLuong) || 0;
+//   if (quantity <= 0) {
+//     variant.soLuong = 0;
+//     variant.trangThai = "Hết hàng";
+//   } else if (quantity > 0 && variant.trangThai === "Hết hàng") {
+//     variant.trangThai = "Còn hàng";
+//   }
+// };
 
 //phân trang
 const currentPage = ref(1);
@@ -1371,7 +1385,7 @@ const prepareAddCategory = (mode) => {
 // lưu danh mục và kiểm tra dữ liệu
 const saveNewCategory = async () => {
   if (!newCategoryName.value || newCategoryName.value.trim() === "") {
-    showToast("Vui lòng nhập tên danh mục!","warning");
+    showToast("Vui lòng nhập tên danh mục!", "warning");
     return;
   }
   try {
@@ -1396,7 +1410,9 @@ const saveNewCategory = async () => {
     }
   } catch (error) {
     console.error("Lỗi thêm danh mục:", error);
-    showToast(error.response?.data?.message || "Có lỗi xảy ra khi thêm danh mục!");
+    showToast(
+      error.response?.data?.message || "Có lỗi xảy ra khi thêm danh mục!"
+    );
   }
 };
 
@@ -1413,7 +1429,7 @@ const newProduct = ref({
       donGia: 0,
       soLuong: 0,
       hinhAnh: "",
-      trangThai: "Còn hàng",
+      trangThai: "Hiển thị",
     },
   ],
 });
@@ -1426,7 +1442,7 @@ const addVariant = () => {
     donGia: 0,
     soLuong: 0,
     hinhAnh: "",
-    trangThai: "Còn hàng",
+    trangThai: "Hiển thị",
   });
 };
 
@@ -1524,7 +1540,7 @@ const handleFileUpload = async (event) => {
       selectedImageName.value = res.data.fileName; // Chọn sẵn ảnh vừa tải
     }
   } catch (error) {
-    showToast("Lỗi tải ảnh lên!","danger");
+    showToast("Lỗi tải ảnh lên!", "danger");
     console.error(error);
   }
 };
@@ -1546,7 +1562,7 @@ const openEditModal = async (maSP) => {
     const res = await axios.get(`http://localhost:8080/api/sanpham/${maSP}`);
     editProductData.value = res.data;
   } catch (error) {
-    showToast("Lỗi tải thông tin sản phẩm!","danger");
+    showToast("Lỗi tải thông tin sản phẩm!", "danger");
   }
 };
 
@@ -1563,7 +1579,8 @@ const saveEditProduct = async () => {
           showToast(
             `Vui lòng chọn ít nhất 1 size cho màu "${
               v.tenMau || "chưa nhập tên"
-            }"`,"warning"
+            }"`,
+            "warning"
           );
           return;
         }
@@ -1574,7 +1591,7 @@ const saveEditProduct = async () => {
             donGia: v.donGia,
             soLuong: v.soLuong,
             hinhAnh: v.hinhAnh,
-            trangThai: v.soLuong <= 0 ? "Hết hàng" : "Còn hàng",
+            trangThai: group.trangThai || "Hiển thị",
           });
         });
       } else {
@@ -1585,10 +1602,11 @@ const saveEditProduct = async () => {
     payload.variants = formattedVariants;
     await axios.put("http://localhost:8080/api/sanpham/update", payload);
     showToast("Cập nhật sản phẩm thành công!");
-    location.reload();
+document.querySelector('#editProductModal .btn-close').click();
+    await fetchProducts();
   } catch (error) {
     console.error(error);
-    showToast("Lỗi cập nhật sản phẩm!","danger");
+    showToast("Lỗi cập nhật sản phẩm!", "danger");
   }
 };
 // thêm phân loại mới trong edit
@@ -1600,23 +1618,21 @@ const addEditVariant = () => {
     donGia: 0,
     soLuong: 0,
     hinhAnh: "",
-    trangThai: "Còn hàng",
+    trangThai: "Hiển thị",
   });
 };
 // xóa phân loại chỉ set số lượng về 0 và trạng thái hết chứ không xóa hẳn
+// Thay thế hàm removeEditVariant cũ
 const removeEditVariant = (index) => {
   if (editProductData.value.variants.length > 1) {
     const variant = editProductData.value.variants[index];
     if (variant.isNewGroup) {
-      // Nếu là dòng mới bấm "+ Thêm phân loại" (chưa có trong DB) -> Xóa hẳn cho đỡ rác form
       editProductData.value.variants.splice(index, 1);
     } else {
-      variant.soLuong = 0;
-      variant.trangThai = "Hết hàng";
-      showToast(`Đã chuyển phân loại "${variant.tenMau || 'này'}" về 0 - Hết hàng!`);
+variant.trangThai = variant.trangThai === "Đã ẩn" ? "Hiển thị" : "Đã ẩn";
     }
   } else {
-    showToast("Sản phẩm phải có ít nhất 1 phân loại!","warning");
+    showToast("Sản phẩm phải có ít nhất 1 phân loại!", "warning");
   }
 };
 // Biến lưu trữ dữ liệu cho Modal Xem phân loại
@@ -1663,11 +1679,11 @@ const toggleProductStatus = async (maSP, currentStatus) => {
       if (productIndex !== -1) {
         products.value[productIndex].isActive = res.data.isActive;
       }
-      showToast(`Sản phẩm đã được ${actionText} thành công!`,"success");
+      showToast(`Sản phẩm đã được ${actionText} thành công!`, "success");
     }
   } catch (error) {
     console.error(error);
-    showToast(`Lỗi khi ${actionText} sản phẩm!`,"danger");
+    showToast(`Lỗi khi ${actionText} sản phẩm!`, "danger");
   }
 };
 
@@ -1684,7 +1700,8 @@ const saveProduct = async () => {
         showToast(
           `Vui lòng chọn ít nhất 1 size cho màu "${
             group.tenMau || "chưa nhập tên"
-          }"`,"warning"
+          }"`,
+          "warning"
         );
         return;
       }
@@ -1695,7 +1712,7 @@ const saveProduct = async () => {
           donGia: group.donGia,
           soLuong: group.soLuong,
           hinhAnh: group.hinhAnh,
-          trangThai: group.soLuong <= 0 ? "Hết hàng" : "Còn hàng",
+          trangThai: group.trangThai || "Hiển thị",
         });
       });
     }
@@ -1931,12 +1948,16 @@ onMounted(() => {
   bottom: 0;
   left: 0;
   border-bottom-left-radius: var(--bs-toast-border-radius);
-  animation: shrinkProgress 3s linear forwards; 
+  animation: shrinkProgress 3s linear forwards;
 }
 
 @keyframes shrinkProgress {
-  from { width: 100%; }
-  to { width: 0%; }
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0%;
+  }
 }
 
 .toast-fade-enter-active,
