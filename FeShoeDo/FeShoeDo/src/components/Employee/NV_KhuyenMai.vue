@@ -404,6 +404,7 @@ const handleBulkSave = async () => {
       `Đã cập nhật khuyến mãi thành công cho ${selectedItems.length} sản phẩm!`
     );
     unselectAll();
+    filterFlashSale.value = "DangSale";
     await fetchProducts();
   } catch (error) {
     showToast("Có lỗi xảy ra khi cập nhật khuyến mãi!","danger");
@@ -422,6 +423,7 @@ const handleSingleSave = async (item) => {
       khuyenMai: item.khuyenMaiMoi,
     });
     showToast("Cập nhật khuyến mãi thành công!");
+    filterFlashSale.value = "DangSale";
     await fetchProducts();
   } catch (error) {
     showToast("Có lỗi xảy ra!","danger");

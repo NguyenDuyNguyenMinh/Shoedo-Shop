@@ -1591,7 +1591,7 @@ const saveEditProduct = async () => {
             donGia: v.donGia,
             soLuong: v.soLuong,
             hinhAnh: v.hinhAnh,
-            trangThai: group.trangThai || "Hiển thị",
+            trangThai: v.trangThai || "Hiển thị",
           });
         });
       } else {
