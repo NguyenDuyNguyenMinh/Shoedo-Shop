@@ -22,6 +22,7 @@ public class QLHoaDonService {
     @Autowired private QuanTriDAO quanTriDAO;
     @Autowired private AuthService authService;
     @Autowired private EmailService emailService;
+    @Autowired private EmailAsyncService emailAsyncService; 
     @Autowired private PdfService pdfService;
     
     
@@ -98,11 +99,7 @@ public class QLHoaDonService {
         hd.setTrangThai("Đang giao");
         hoaDonDAO.save(hd);
 
-        try {
-            sendShippingEmail(hd);
-        } catch (Exception e) {
-            System.err.println("Lỗi gửi email thông báo vận chuyển: " + e.getMessage());
-        }
+        emailAsyncService.sendShippingEmail(hd);
         return success("Đã vận chuyển đơn hàng và trừ số lượng trong kho");
     }
 
@@ -171,11 +168,7 @@ public class QLHoaDonService {
         
         hoaDonDAO.save(hd);
 
-        try {
-            sendSuccessEmail(hd);
-        } catch (Exception e) {
-            System.err.println("Lỗi gửi email: " + e.getMessage());
-        }
+        emailAsyncService.sendSuccessEmail(hd);
 
         return success("Đã cập nhật giao hàng thành công. KH có 1 tháng để báo lỗi/bảo hành");
     }
@@ -190,7 +183,7 @@ public class QLHoaDonService {
             return error("Không tìm thấy email khách hàng");
         }
 
-        sendApologyEmailWithPdf(hd);
+        emailAsyncService.sendApologyEmail(hd);
         hd.setTrangThai("Hoàn tất");
         hd.setQuanTri(getCurrentEmployee());
         hoaDonDAO.save(hd);
@@ -310,123 +303,6 @@ public class QLHoaDonService {
         return detail;
     }
 
-    private void sendSuccessEmail(HoaDon hd) {
-    	try {
-            KhachHang kh = hd.getKhachHang();
-            if (kh == null || kh.getUser() == null || kh.getUser().getMail() == null) return;
-            
-            String email = kh.getUser().getMail();
-            String tenKH = kh.getTenKH();
-            Integer maHD = hd.getMaHD();
-            
-            byte[] pdfBytes = pdfService.generateInvoice(hd);
-            
-            String subject = "SHOEDO SHOP - Đơn hàng #HD" + String.format("%04d", hd.getMaHD()) + " đã giao thành công";
-            String htmlContent = "<!DOCTYPE html>"
-                    + "<html><head><meta charset='UTF-8'>"
-                    + "<style>body{font-family:Arial,sans-serif}.container{max-width:600px;margin:0 auto;padding:20px;border:1px solid #ddd;border-radius:10px}.header{background:#000;color:#fff;padding:20px;text-align:center;border-radius:10px 10px 0 0}.content{ padding: 20px; background: #f9f9f9;}.warning{background:#fff3cd;padding:10px;border-radius:5px;margin:15px 0}</style>"
-                    + "</head><body>"
-                    + "<div class='container'>"
-                    + "<div class='header'><h2>ShoeDo Shop - Giao hàng thành công</h2></div>"
-                    + "<div class='content'>"
-                    + "<p>Xin chào <strong>" + tenKH + "</strong>,</p>"
-                    + "<p>Đơn hàng <strong>#HD" + String.format("%04d", hd.getMaHD()) + "</strong> của bạn đã được giao thành công.</p>"
-                    + "<p>Bạn có thể xem chi tiết hóa đơn trong file đính kèm của email này.</p>"
-                    + "<div class='warning'>"
-                    + "<p><strong>Lưu ý:</strong> Bạn có <strong>1 THÁNG</strong> để báo lỗi/ bảo hành kể từ ngày đơn hàng được giao thành công</p>" + hd.getNgayDen()
-                    + "<p>Sau 1 tháng, đơn hàng sẽ được xác nhận hoàn tất và không thể thay đổi.</p>"
-                    + "</div>"
-                    + "<p>Cảm ơn bạn đã tin tưởng và mua sắm tại SHOEDO SHOP!</p>"
-                    + "<p>Truy cập <a href='http://localhost:5173/customer/orders/" + maHD + "'>ShoeDo Shop</a> để biết thêm chi tiết</p>"
-                    + "</div></div></body></html>";
-            
-            emailService.sendHtmlEmailWithAttachment(email, subject, htmlContent, 
-                "HD" + String.format("%04d", hd.getMaHD()) + ".pdf", pdfBytes);
-            
-        } catch (Exception e) {
-            System.err.println("Lỗi gửi email: " + e.getMessage());
-        }
-    }
-
-    private void sendApologyEmailWithPdf(HoaDon hd) {
-    	try {
-            KhachHang kh = hd.getKhachHang();
-            if (kh == null || kh.getUser() == null || kh.getUser().getMail() == null) return;
-            
-            String email = kh.getUser().getMail();
-            String tenKH = kh.getTenKH();
-            Integer maHD = hd.getMaHD();
-            byte[] pdfBytes = pdfService.generateInvoice(hd);
-            
-            String subject = "SHOEDO SHOP - Xin lỗi về sự cố đơn hàng #HD" + String.format("%04d", hd.getMaHD());
-            String htmlContent = "<!DOCTYPE html>"
-                    + "<html><head><meta charset='UTF-8'>"
-                    + "<style>body{font-family:Arial,sans-serif}.container{max-width:600px;margin:0 auto;padding:20px;border:1px solid #ddd;border-radius:10px}.header{background:#000;color:#fff;padding:20px;text-align:center;border-radius:10px 10px 0 0}.content{ padding: 20px; background: #f9f9f9; }.apology{background:#f8d7da;color:#721c24;padding:15px;border-radius:5px;margin:15px 0}</style>"
-                    + "</head><body>"
-                    + "<div class='container'>"
-                    + "<div class='header'><h2>ShoeDo Shop - Xin lỗi quý khách</h2></div>"
-                    + "<div class='content'>"
-                    + "<p>Xin chào <strong>" + tenKH + "</strong>,</p>"
-                    + "<div class='apology'>"
-                    + "<p>Chúng tôi chân thành xin lỗi về sự cố đơn hàng <strong>#HD" + String.format("%04d", hd.getMaHD()) + "</strong> mà bạn đã gặp phải.</p>"
-                    + "<p><strong>Lỗi:</strong> " + (hd.getGhiChu() != null ? hd.getGhiChu() : "Không xác định") + "</p>"
-                    + "</div>"
-                    + "<p>Đội ngũ ShoeDo Shop đã xử lý sự cố này và đã khắc phục thành công. Vui lòng xem file hóa đơn đính kèm để kiểm tra chi tiết.</p>"
-                    + "<p>Nếu bạn cần hỗ trợ thêm, vui lòng liên hệ hotline 1900 0001 của chúng tôi.</p>"
-                    + "<p>Một lần nữa, chúng tôi xin lỗi về sự bất tiện này và hy vọng sẽ phục vụ bạn tốt hơn trong tương lai.</p>"
-                    + "<p>Truy cập <a href='http://localhost:5173/customer/orders/" + maHD + "'>ShoeDo Shop</a> để biết thêm chi tiết</p>"
-                    + "</div></div></body></html>";
-            
-            emailService.sendHtmlEmailWithAttachment(email, subject, htmlContent,
-                "HD" + String.format("%04d", hd.getMaHD()) + ".pdf", pdfBytes);
-            
-        } catch (Exception e) {
-            System.err.println("Lỗi gửi email: " + e.getMessage());
-        }
-    }
-
-    private void sendShippingEmail(HoaDon hd) {
-        try {
-            KhachHang kh = hd.getKhachHang();
-            if (kh == null || kh.getUser() == null || kh.getUser().getMail() == null) return;
-            
-            String email = kh.getUser().getMail();
-            String tenKH = kh.getTenKH();
-            Integer maHD = hd.getMaHD();
-            byte[] pdfBytes = pdfService.generateInvoice(hd);
-            
-            String subject = "SHOEDO SHOP - Đơn hàng #HD" + String.format("%04d", hd.getMaHD()) + " đang được vận chuyển";
-            String htmlContent = "<!DOCTYPE html>"
-                    + "<html><head><meta charset='UTF-8'>"
-                    + "<style>body{font-family:Arial,sans-serif}.container{max-width:600px;margin:0 auto;padding:20px;border:1px solid #ddd;border-radius:10px}.header{background:#000;color:#fff;padding:20px;text-align:center;border-radius:10px 10px 0 0}.content{padding:20px;background:#f9f9f9;}.shipping-info{background:#e8f4fd;padding:15px;border-radius:5px;margin:15px 0;border-left:4px solid #000;}.tracking{background:#fff3cd;padding:10px;border-radius:5px;margin:15px 0}</style>"
-                    + "</head><body>"
-                    + "<div class='container'>"
-                    + "<div class='header'><h2>ShoeDo Shop - Thông báo vận chuyển</h2></div>"
-                    + "<div class='content'>"
-                    + "<p>Xin chào <strong>" + tenKH + "</strong>,</p>"
-                    + "<div class='shipping-info'>"
-                    + "<p><strong>Đơn hàng #HD" + String.format("%04d", hd.getMaHD()) + "</strong> đã được xác nhận và đang trong quá trình vận chuyển đến bạn.</p>"
-                    + "<p>Dự kiến thời gian giao hàng: 3 - 7 ngày tùy vào khu vực và điều kiện thời tiết</p>"
-                    + "</div>"
-                    + "<p>Chi tiết đơn hàng của bạn đã được đính kèm trong file PDF bên dưới. Vui lòng kiểm tra lại thông tin đơn hàng và địa chỉ nhận hàng.</p>"
-                    + "<div class='tracking'>"
-                    + "<p><strong>Lưu ý:</strong></p>"
-                    + "<p>• Vui lòng theo dõi email để nhận thông báo khi đơn hàng được giao thành công</p>"
-                    + "<p>• Nếu có bất kỳ thay đổi về thông tin nhận hàng, vui lòng liên hệ ngay với chúng tôi qua hotline 1900 0001</p>"
-                    + "<p>• Truy cập <a href='http://localhost:5173/customer/orders/" + maHD + "'>ShoeDo Shop</a> để biết thêm chi tiết</p>"
-                    + "</div>"
-                    + "<p>Cảm ơn bạn đã tin tưởng và mua sắm tại ShoeDo Shop!</p>"
-                    + "<p>Trân trọng,<br/>Đội ngũ ShoeDo Shop</p>"
-                    + "</div></div></body></html>";
-            
-            emailService.sendHtmlEmailWithAttachment(email, subject, htmlContent, 
-                "HD" + String.format("%04d", hd.getMaHD()) + ".pdf", pdfBytes);
-            
-        } catch (Exception e) {
-            System.err.println("Lỗi gửi email thông báo vận chuyển: " + e.getMessage());
-        }
-    }
-    
     private Map<String, Object> success(String key, Object value) {
         return Map.of("success", true, key, value);
     }

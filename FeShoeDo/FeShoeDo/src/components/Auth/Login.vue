@@ -632,7 +632,8 @@ export default {
           if (data.success) {
             this.message = 'Mật khẩu mới đã được gửi đến email của bạn!';
             
-            this.resetForgotPasswordOtp();
+            this.closeForgotPasswordModal();
+            
           } else {
             this.error = data.message || 'Mã OTP không chính xác';
           }
@@ -643,6 +644,21 @@ export default {
         }
       }
     },
+
+closeForgotPasswordModal() {
+  const modal = bootstrap.Modal.getInstance(document.getElementById('forgotPasswordOtpModal'));
+  if (modal) {
+    modal.hide();
+  }
+
+  const backdrops = document.querySelectorAll('.modal-backdrop');
+  backdrops.forEach(backdrop => backdrop.remove());
+  document.body.classList.remove('modal-open');
+  document.body.style.removeProperty('overflow');
+  document.body.style.removeProperty('padding-right');
+  
+  this.resetForgotPasswordOtp();
+},
 
     async resendForgotPasswordOtp() {
       this.loading = true;
