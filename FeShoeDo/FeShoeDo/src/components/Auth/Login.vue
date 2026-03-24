@@ -2,7 +2,7 @@
   <div class="auth-page">
     <div class="bg-overlay"></div>
     <router-link to="/customer/index" class="btn btn-outline-white btn-sm">
-      Trang chủ
+      <i class="bi bi-house"></i>
     </router-link>
 
     <!-- Google Password Modal -->
