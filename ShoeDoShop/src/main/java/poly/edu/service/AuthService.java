@@ -4,7 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
+import java.security.SecureRandom;
 import java.util.Base64;
 
 import jakarta.servlet.http.HttpSession;
@@ -28,6 +28,8 @@ public class AuthService {
     @Autowired private SessionService sessionService;
     @Autowired private CookieService cookieService;
     @Autowired private EmailService emailService;
+    @Autowired private EmailAsyncService emailAsyncService;
+    
     @Autowired private PasswordEncoder passwordEncoder;
     @Autowired private GioHangDAO gioHangDAO;
     
@@ -115,7 +117,7 @@ public class AuthService {
         info.setExpiryTime(System.currentTimeMillis() + 10 * 60 * 1000); 
         
         registrationConfirmations.put(mail, info);
-        sendRegistrationConfirmationEmail(mail, fullname, confirmationCode);
+        emailAsyncService.sendRegistrationConfirmationEmail(mail, fullname, confirmationCode);
         
         return success("Mã xác nhận đã được gửi đến email của bạn. Vui lòng kiểm tra email.");
     }
@@ -235,7 +237,7 @@ public class AuthService {
         String fullname = Optional.ofNullable(khachHangDAO.findByUser_MaUser(user.getMaUser()))
             .map(KhachHang::getTenKH).orElse("Quý khách");
         
-        sendForgotPasswordConfirmationEmail(email, fullname, confirmationCode);
+        emailAsyncService.sendForgotPasswordConfirmationEmail(email, fullname, confirmationCode);
         
         return success("Mã xác nhận đã được gửi đến email của bạn. Vui lòng kiểm tra email.");
     }
@@ -268,7 +270,7 @@ public class AuthService {
         String fullname = Optional.ofNullable(khachHangDAO.findByUser_MaUser(user.getMaUser()))
             .map(KhachHang::getTenKH).orElse("Quý khách");
         
-        sendPasswordResetEmail(email, fullname, info.getNewPasswordRaw());
+        emailAsyncService.sendPasswordResetEmail(email, fullname, info.getNewPasswordRaw());
         forgotPasswordConfirmations.remove(email);
         
         return success("Mật khẩu mới đã được gửi đến email của bạn. Vui lòng kiểm tra email.");
@@ -369,10 +371,10 @@ public class AuthService {
     private String generateRandomCode(int length) {
         String chars = "0123456789";
         StringBuilder code = new StringBuilder();
-        java.util.Random random = new java.util.Random();
+        SecureRandom secureRandom = new SecureRandom();
         
         for (int i = 0; i < length; i++) {
-            code.append(chars.charAt(random.nextInt(chars.length())));
+            code.append(chars.charAt(secureRandom.nextInt(chars.length())));
         }
         return code.toString();
     }
@@ -380,62 +382,12 @@ public class AuthService {
     private String generateRandomPassword() {
         String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
         StringBuilder password = new StringBuilder();
-        java.util.Random random = new java.util.Random();
+        SecureRandom secureRandom = new SecureRandom();
         
         for (int i = 0; i < 6; i++) {
-            password.append(chars.charAt(random.nextInt(chars.length())));
+            password.append(chars.charAt(secureRandom.nextInt(chars.length())));
         }
         return password.toString();
-    }
-
-    private void sendPasswordResetEmail(String email, String fullname, String newPassword) {
-        try {
-        	String subject = "SHOEDO SHOP - Khôi phục mật khẩu";
-            
-            String htmlContent = "<!DOCTYPE html>"
-                    + "<html>"
-                    + "<head>"
-                    + "<meta charset='UTF-8'>"
-                    + "<style>"
-                    + "body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }"
-                    + ".container { max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px; }"
-                    + ".header { background: #000; color: #fff; padding: 20px; text-align: center; border-radius: 10px 10px 0 0; }"
-                    + ".content { padding: 20px; background: #f9f9f9; }"
-                    + ".password-box { background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 5px; text-align: center; margin: 20px 0; font-size: 24px; font-weight: bold; letter-spacing: 2px; }"
-                    + ".footer { text-align: center; padding: 20px; font-size: 12px; color: #666; }"
-                    + ".warning { background: #f8d7da; color: #721c24; padding: 10px; border-radius: 5px; margin: 15px 0; }"
-                    + "</style>"
-                    + "</head>"
-                    + "<body>"
-                    + "<div class='container'>"
-                    + "<div class='header'>"
-                    + "<h2>ShoeDo Shop - Khôi phục mật khẩu</h2>"
-                    + "</div>"
-                    + "<div class='content'>"
-                    + "<p>Xin chào <strong>" + fullname + "</strong>,</p>"
-                    + "<p>Chúng tôi đã nhận được yêu cầu khôi phục mật khẩu cho tài khoản của bạn.</p>"
-                    + "<p>Mật khẩu mới của bạn là:</p>"
-                    + "<div class='password-box'>"
-                    + newPassword
-                    + "</div>"
-                    + "<div class='warning'>"
-                    + "<p><strong>Lưu ý quan trọng:</strong></p>"
-                    + "<p>• Vui lòng đăng nhập và thay đổi mật khẩu ngay sau khi truy cập hệ thống</p>"
-                    + "<p>• Không chia sẻ mật khẩu này với bất kỳ ai</p>"
-                    + "</div>"
-                    + "<p>Nếu bạn không thực hiện yêu cầu này, vui lòng bỏ qua email.</p>"
-                    + "</div>"
-                    + "<div class='footer'>"
-                    + "<p>Email này được gửi tự động từ hệ thống ShoeDo Shop.</p>"
-                    + "<p>© 2026 ShoeDo Shop. All rights reserved.</p>"
-                    + "</div>"
-                    + "</div>"
-                    + "</body>"
-                    + "</html>";
-            emailService.sendHtmlEmail(email, subject, htmlContent);
-        } catch (Exception e) {
-            throw new RuntimeException("Lỗi khi gửi email: " + e.getMessage());
-        }
     }
     
     // ==================== GETTERS ====================
@@ -520,105 +472,6 @@ public class AuthService {
         
         return "OK";
     }
-    // ==================== EMAIL SENDING METHODS ====================
-    private void sendRegistrationConfirmationEmail(String email, String fullname, String confirmationCode) {
-        try {
-            String subject = "SHOEDO SHOP - Xác nhận đăng ký tài khoản";
-            
-            String htmlContent = "<!DOCTYPE html>"
-                    + "<html>"
-                    + "<head>"
-                    + "<meta charset='UTF-8'>"
-                    + "<style>"
-                    + "body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }"
-                    + ".container { max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px; }"
-                    + ".header { background: #000; color: #fff; padding: 20px; text-align: center; border-radius: 10px 10px 0 0; }"
-                    + ".content { padding: 20px; background: #f9f9f9; }"
-                    + ".code-box { background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 5px; text-align: center; margin: 20px 0; font-size: 24px; font-weight: bold; letter-spacing: 2px;  }"
-                    + ".footer { text-align: center; padding: 20px; font-size: 12px; color: #666; }"
-                    + ".warning { background: #f8d7da; color: #721c24; padding: 10px; border-radius: 5px; margin: 15px 0; }"
-                    + "</style>"
-                    + "</head>"
-                    + "<body>"
-                    + "<div class='container'>"
-                    + "<div class='header'>"
-                    + "<h2>ShoeDo Shop - Xác nhận đăng ký tài khoản</h2>"
-                    + "</div>"
-                    + "<div class='content'>"
-                    + "<p>Xin chào <strong>" + fullname + "</strong>,</p>"
-                    + "<p>Cảm ơn bạn đã đăng ký tài khoản tại ShoeDo Shop.</p>"
-                    + "<p>Vui lòng nhập mã xác nhận bên dưới để hoàn tất quá trình đăng ký:</p>"
-                    + "<div class='code-box'>"
-                    + confirmationCode
-                    + "</div>"
-                    + "<p>Mã xác nhận này có hiệu lực trong <strong>10 phút</strong>.</p>"
-                    + "<div class='warning'>"
-                    + "<p><strong>Lưu ý:</strong> Nếu bạn không yêu cầu đăng ký tài khoản, vui lòng bỏ qua email này.</p>"
-                    + "</div>"
-                    + "</div>"
-                    + "<div class='footer'>"
-                    + "<p>Email này được gửi tự động từ hệ thống ShoeDo Shop.</p>"
-                    + "<p>© 2026 ShoeDo Shop. All rights reserved.</p>"
-                    + "</div>"
-                    + "</div>"
-                    + "</body>"
-                    + "</html>";
-            
-            emailService.sendHtmlEmail(email, subject, htmlContent);
-        } catch (Exception e) {
-            throw new RuntimeException("Lỗi khi gửi email xác nhận: " + e.getMessage());
-        }
-    }
-    
-    private void sendForgotPasswordConfirmationEmail(String email, String fullname, String confirmationCode) {
-        try {
-            String subject = "SHOEDO SHOP - Xác nhận khôi phục mật khẩu";
-            
-            String htmlContent = "<!DOCTYPE html>"
-                    + "<html>"
-                    + "<head>"
-                    + "<meta charset='UTF-8'>"
-                    + "<style>"
-                    + "body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }"
-                    + ".container { max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px; }"
-                    + ".header { background: #000; color: #fff; padding: 20px; text-align: center; border-radius: 10px 10px 0 0; }"
-                    + ".content { padding: 20px; background: #f9f9f9; }"
-                    + ".code-box { background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 5px; text-align: center; margin: 20px 0; font-size: 24px; font-weight: bold; letter-spacing: 2px;  }"
-                    + ".footer { text-align: center; padding: 20px; font-size: 12px; color: #666; }"
-                    + ".warning { background: #f8d7da; color: #721c24; padding: 10px; border-radius: 5px; margin: 15px 0; }"
-                    + "</style>"
-                    + "</head>"
-                    + "<body>"
-                    + "<div class='container'>"
-                    + "<div class='header'>"
-                    + "<h2>ShoeDo Shop - Khôi phục mật khẩu</h2>"
-                    + "</div>"
-                    + "<div class='content'>"
-                    + "<p>Xin chào <strong>" + fullname + "</strong>,</p>"
-                    + "<p>Chúng tôi đã nhận được yêu cầu khôi phục mật khẩu cho tài khoản của bạn.</p>"
-                    + "<p>Vui lòng nhập mã xác nhận bên dưới để xác nhận yêu cầu:</p>"
-                    + "<div class='code-box'>"
-                    + confirmationCode
-                    + "</div>"
-                    + "<p>Mã xác nhận này có hiệu lực trong <strong>10 phút</strong>.</p>"
-                    + "<div class='warning'>"
-                    + "<p><strong>Lưu ý:</strong> Nếu bạn không yêu cầu khôi phục mật khẩu, vui lòng bỏ qua email này.</p>"
-                    + "</div>"
-                    + "</div>"
-                    + "<div class='footer'>"
-                    + "<p>Email này được gửi tự động từ hệ thống ShoeDo Shop.</p>"
-                    + "<p>© 2026 ShoeDo Shop. All rights reserved.</p>"
-                    + "</div>"
-                    + "</div>"
-                    + "</body>"
-                    + "</html>";
-            
-            emailService.sendHtmlEmail(email, subject, htmlContent);
-        } catch (Exception e) {
-            throw new RuntimeException("Lỗi khi gửi email xác nhận: " + e.getMessage());
-        }
-    }
-    
     
     // ==================== HELPER CLASSES ====================
     public static class RegistrationInfo {
