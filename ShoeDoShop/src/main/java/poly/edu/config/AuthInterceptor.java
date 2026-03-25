@@ -27,8 +27,9 @@ public class AuthInterceptor implements HandlerInterceptor {
             uri.startsWith("/api/sanpham/trang-chu") ||
             uri.startsWith("/api/sanpham/detail") ||
             uri.startsWith("/api/san-pham/") ||
-            uri.startsWith("/api/danh-gia/") ||    // ← THÊM: đánh giá sản phẩm
-            uri.startsWith("/api/public/") ||       // ← THÊM: danh sách SP public
+            uri.startsWith("/api/danh-gia/") || 
+            uri.startsWith("/api/public/") ||
+            uri.startsWith("/api/chat/") ||
             uri.equals("/") ||
             uri.equals("/customer/index") ||
             uri.equals("/customer/chinhsach") ||

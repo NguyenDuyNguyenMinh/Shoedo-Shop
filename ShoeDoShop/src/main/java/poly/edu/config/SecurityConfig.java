@@ -55,7 +55,8 @@ public class SecurityConfig {
                     "/anh/**", 
                     "/oauth2/**",
                     "/login/oauth2/**",
-                    "/error"
+                    "/error",
+                    "/api/chat/**"
                 ).permitAll()
                 .anyRequest().authenticated()
             )
