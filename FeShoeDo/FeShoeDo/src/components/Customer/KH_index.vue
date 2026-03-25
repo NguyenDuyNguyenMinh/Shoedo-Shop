@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import KH_Navbar from '@/components/Shared/KH_Navbar.vue'
 import Footer from '@/components/Shared/Footer.vue'
+import ChatBox from '@/components/Shared/ChatBox.vue'
 import axios from 'axios'
 
 const router = useRouter()
@@ -209,8 +210,8 @@ onMounted(() => fetchTrangChu())
 
       </template>
     </div>
-
     <Footer />
+    <ChatBox />
   </div>
 </template>
 

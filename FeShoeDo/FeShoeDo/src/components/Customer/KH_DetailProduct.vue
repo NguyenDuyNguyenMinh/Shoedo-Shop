@@ -3,6 +3,7 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import KH_Navbar from '@/components/Shared/KH_Navbar.vue'
 import Footer from '@/components/Shared/Footer.vue'
+import ChatBox from '@/components/Shared/ChatBox.vue'
 import api from '@/services/api.js'
 
 const route  = useRoute()
@@ -640,6 +641,7 @@ onMounted(() => {
     </div>
 
     <Footer />
+        <ChatBox />
   </div>
 </template>
 
