@@ -41,6 +41,7 @@
       </div>
     </main>
     <Footer />
+  <ChatBox />
   </div>
 </template>
 
@@ -48,6 +49,8 @@
 import { ref } from 'vue';
 import KH_Navbar from '@/components/shared/KH_Navbar.vue';
 import Footer from '@/components/shared/Footer.vue';
+import ChatBox from '@/components/Shared/ChatBox.vue'
+
 export default {
   name: 'KH_ChinhSach',
   components: {
