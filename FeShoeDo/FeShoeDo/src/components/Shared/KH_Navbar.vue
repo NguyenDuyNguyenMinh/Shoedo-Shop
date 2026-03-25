@@ -119,7 +119,18 @@
           </span>
         </router-link>
 
-        <div class="dropdown" ref="accountDropdown">
+        <!-- Khi chưa đăng nhập -->
+        <template v-if="!isAuthenticated">
+          <router-link to="/auth/login" class="btn-login">
+            Đăng nhập
+          </router-link>
+          <router-link to="/auth/login#register" class="btn-register">
+            Đăng ký
+          </router-link>
+        </template>
+
+        <!-- Khi đã đăng nhập -->
+        <div v-else class="dropdown" ref="accountDropdown">
           <button
             class="user-box d-flex align-items-center gap-2 px-3 py-2 rounded-0 cursor-pointer text-white bg-transparent"
             @click.prevent="toggleAccountDropdown"
@@ -135,43 +146,28 @@
             :class="{ show: showAccountDropdown }"
             v-show="showAccountDropdown"
           >
-            <template v-if="!isAuthenticated">
-              <li>
-                <router-link class="dropdown-item d-flex align-items-center gap-2" to="/auth/login">
-                  <i class="bi bi-box-arrow-in-right"></i> Đăng nhập
-                </router-link>
-              </li>
-              <li>
-                <router-link class="dropdown-item d-flex align-items-center gap-2" to="/auth/login#register">
-                  <i class="bi bi-person-plus"></i> Đăng ký
-                </router-link>
-              </li>
-            </template>
-
-            <template v-else>
-              <li>
-                <span class="dropdown-item-text">
-                  Xin chào, <span class="fw-bold">{{ lastName }}</span>
-                </span>
-              </li>
-              <li><hr class="dropdown-divider border-secondary"></li>
-              <li>
-                <router-link class="dropdown-item d-flex align-items-center gap-2" to="/customer/profile">
-                  <i class="bi bi-person-gear"></i> Quản lý tài khoản
-                </router-link>
-              </li>
-              <li>
-                <router-link class="dropdown-item d-flex align-items-center gap-2" to="/customer/orders">
-                  <i class="bi bi-box-seam"></i> Đơn hàng của tôi
-                </router-link>
-              </li>
-              <li><hr class="dropdown-divider border-secondary"></li>
-              <li>
-                <a class="dropdown-item d-flex align-items-center gap-2 text-danger" href="#" @click.prevent="logout">
-                  <i class="bi bi-box-arrow-right"></i> Đăng Xuất
-                </a>
-              </li>
-            </template>
+            <li>
+              <span class="dropdown-item-text">
+                Xin chào, <span class="fw-bold">{{ lastName }}</span>
+              </span>
+            </li>
+            <li><hr class="dropdown-divider border-secondary"></li>
+            <li>
+              <router-link class="dropdown-item d-flex align-items-center gap-2" to="/customer/profile">
+                <i class="bi bi-person-gear"></i> Quản lý tài khoản
+              </router-link>
+            </li>
+            <li>
+              <router-link class="dropdown-item d-flex align-items-center gap-2" to="/customer/orders">
+                <i class="bi bi-box-seam"></i> Đơn hàng của tôi
+              </router-link>
+            </li>
+            <li><hr class="dropdown-divider border-secondary"></li>
+            <li>
+              <a class="dropdown-item d-flex align-items-center gap-2 text-danger" href="#" @click.prevent="logout">
+                <i class="bi bi-box-arrow-right"></i> Đăng Xuất
+              </a>
+            </li>
           </ul>
         </div>
 
@@ -204,7 +200,7 @@ const lastName = computed(() => {
 })
 const maKH = computed(() => authStore.user?.maKH ?? null)
 
-// ── Cart (Giữ logic từ File 1) ──────────────────────────────────
+// ── Cart ──────────────────────────────────
 const cartCount = computed(() => authStore.cartCount || 0)
 
 const fetchCartCount = async () => {
@@ -224,7 +220,6 @@ const toggleAccountDropdown = () => { showAccountDropdown.value = !showAccountDr
 const logout = async () => {
   try {
     await authStore.logout()
-    // Không gán cartCount.value = 0 ở đây nữa vì nó là computed
     showAccountDropdown.value = false
     historyList.value = []
     router.push('/auth/login')
@@ -232,7 +227,7 @@ const logout = async () => {
 }
 
 // ═══════════════════════════════════════════════════════════════
-//  SEARCH (Giữ nguyên từ File 2)
+//  SEARCH 
 // ═══════════════════════════════════════════════════════════════
 const searchQuery        = ref('')
 const showDropdownSearch = ref(false)
@@ -358,7 +353,6 @@ watch(isAuthenticated, async (v) => {
     await fetchCartCount()
     await fetchHistory() 
   } else { 
-    // cartCount là computed nên ko cần reset thủ công
     historyList.value = [] 
   }
 })
@@ -478,5 +472,56 @@ input:focus { outline: none; box-shadow: none; }
 .dropdown-menu-dark .dropdown-item:hover { background-color: #222; }
 .dropdown-menu-dark .dropdown-item.text-danger:hover { background-color: #2b0000; color: #ff6b6b !important; }
 
-@media (max-width: 991px) { .search-wrapper { display: none; } }
+/* ─── Buttons Login & Register ─────────────────────────────────── */
+.btn-login,
+.btn-register {
+  padding: 0 20px;
+  border-radius: 50px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: all 0.3s ease;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.btn-login {
+  background-color: transparent;
+  border: 1px solid #fff;
+  color: #fff;
+}
+
+.btn-login:hover {
+  background-color: #fff;
+  color: #000;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255,255,255,0.2);
+}
+
+.btn-register {
+  background: linear-gradient(135deg, #fff 0%, #f0f0f0 100%);
+  border: none;
+  color: #000;
+  box-shadow: 0 2px 8px rgba(255,255,255,0.2);
+}
+
+.btn-register:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(255,255,255,0.3);
+  background: linear-gradient(135deg, #f0f0f0 0%, #fff 100%);
+}
+
+@media (max-width: 991px) { 
+  .search-wrapper { display: none; }
+  .btn-login,
+  .btn-register {
+    padding: 0 16px;
+    font-size: 0.85rem;
+    border-radius: 50px;
+  }
+}
 </style>
