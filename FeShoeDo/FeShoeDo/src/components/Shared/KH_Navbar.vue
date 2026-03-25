@@ -42,7 +42,7 @@
 
           <Transition name="dropdown-fade">
             <div v-if="showDropdownSearch" class="search-history-dropdown">
-
+              <!-- Nội dung dropdown search giữ nguyên -->
               <template v-if="searchQuery.trim().length > 0">
                 <div v-if="filteredHistory.length > 0">
                   <div class="sh-section-title px-3 py-2">
@@ -107,7 +107,6 @@
                   để lưu lịch sử
                 </div>
               </template>
-
             </div>
           </Transition>
         </div>
@@ -124,7 +123,7 @@
           <router-link to="/auth/login" class="btn-login">
             Đăng nhập
           </router-link>
-          <router-link to="/auth/login#register" class="btn-register">
+          <router-link to="/auth/login?tab=register" class="btn-register">
             Đăng ký
           </router-link>
         </template>
@@ -231,7 +230,7 @@ const logout = async () => {
 // ═══════════════════════════════════════════════════════════════
 const searchQuery        = ref('')
 const showDropdownSearch = ref(false)
-const historyList        = ref([])   // [{ keyword, thoiGian }]
+const historyList        = ref([])
 const historyLoading     = ref(false)
 const searchWrapper      = ref(null)
 const searchInputEl      = ref(null)
@@ -294,7 +293,6 @@ const performSearch = async (q) => {
   if (isAuthenticated.value && maKH.value) {
     try {
       await api.luuTimKiem(maKH.value, q)
-      // Cập nhật local history ngay (đưa lên đầu hoặc thêm mới)
       const idx = historyList.value.findIndex(h => h.keyword.toLowerCase() === q.toLowerCase())
       if (idx !== -1) {
         const item = historyList.value.splice(idx, 1)[0]
@@ -372,7 +370,7 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-/* Toàn bộ CSS từ File 2 */
+/* Giữ nguyên CSS như cũ */
 .bg-black { background-color: #000000 !important; }
 
 .logo-box { width: 120px; height: 48px; transition: all 0.3s ease; padding: 5px; }
@@ -396,7 +394,6 @@ onBeforeUnmount(() => {
   transition: border-radius 0.15s;
 }
 
-/* Khi dropdown mở → vuông góc dưới */
 .search-wrapper .input-group.dropdown-open {
   border-bottom-left-radius: 0;
   border-bottom-right-radius: 0;
