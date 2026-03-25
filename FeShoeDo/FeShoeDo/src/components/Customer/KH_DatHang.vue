@@ -204,14 +204,13 @@ import KH_Navbar from '@/components/shared/KH_Navbar.vue';
 import Footer from '@/components/shared/Footer.vue';
 import api from '@/services/api';
 import { useAuthStore } from '@/stores/auth';
+import { useCartStore } from '@/stores/cart';
 
 export default {
   name: 'KH_DatHang',
   components: { KH_Navbar, Footer },
   data() {
     return {
-      checkoutItems: [],
-      checkoutItemIds: [],
       addresses: [],
       selectedAddress: null,
       paymentMethod: 'COD',
@@ -223,6 +222,21 @@ export default {
     };
   },
   computed: {
+    // Lấy items từ sessionStorage (ưu tiên) hoặc cartStore
+    checkoutItems() {
+      const stored = sessionStorage.getItem('checkoutItems');
+      if (stored) {
+        try { return JSON.parse(stored); } catch { /* ignore */ }
+      }
+      return useCartStore().items;
+    },
+    checkoutItemIds() {
+      const stored = sessionStorage.getItem('checkoutItemIds');
+      if (stored) {
+        try { return JSON.parse(stored); } catch { /* ignore */ }
+      }
+      return useCartStore().selectedIds;
+    },
     totalAmount() {
       return this.checkoutItems.reduce((sum, item) => sum + (item.thanhTien || 0), 0);
     },
@@ -231,23 +245,14 @@ export default {
     async loadData() {
       this.loading = true;
       try {
-        // Lấy items từ sessionStorage (từ cart page)
+        // Nếu sessionStorage trống, lấy từ cartStore
         const storedItems = sessionStorage.getItem('checkoutItems');
         const storedIds = sessionStorage.getItem('checkoutItemIds');
-        
-        if (storedItems) {
-          this.checkoutItems = JSON.parse(storedItems);
-        }
-        if (storedIds) {
-          this.checkoutItemIds = JSON.parse(storedIds);
-        }
 
-        // Nếu không có items, thử lấy toàn bộ cart
-        if (this.checkoutItems.length === 0) {
-          const cartResp = await api.getCart();
-          if (cartResp.data.success && cartResp.data.items) {
-            this.checkoutItems = cartResp.data.items;
-            this.checkoutItemIds = this.checkoutItems.map(item => item.maGH);
+        if (!storedItems || !storedIds) {
+          // cartStore chưa load → fetch
+          if (!useCartStore().isLoaded) {
+            await useCartStore().fetchCart();
           }
         }
 
@@ -259,8 +264,8 @@ export default {
           this.addresses = addrResp.data;
         }
 
-        // Chọn địa chỉ mặc định
-        const defaultAddr = this.addresses.find(a => a.macDinh);
+        // Fix: ưu tiên chọn địa chỉ mặc định (macDinh = true)
+        const defaultAddr = this.addresses.find(a => a.macDinh === true || a.macDinh === 1);
         if (defaultAddr) {
           this.selectedAddress = defaultAddr.maDC;
         } else if (this.addresses.length > 0) {
@@ -300,12 +305,10 @@ export default {
     },
 
     getProductName(item) {
-      // Ưu tiên hiển thị tenSP, nếu không có thì mới dùng moTa
       if (item.tenSP && item.tenSP.trim() !== '') {
         const cleaned = item.tenSP.replace(/^SP\d+-ShoeDo\s*-\s*/, '');
         return cleaned || item.tenSP;
       }
-      // Fallback: nếu tenSP không có thì dùng moTa
       if (item.moTa && item.moTa.trim() !== '') {
         return item.moTa;
       }
@@ -332,8 +335,8 @@ export default {
       try {
         let response;
 
-        // Nếu chọn thanh toán VNPay (Chuyển khoản), gọi API tạo thanh toán VNPay
         if (this.paymentMethod === 'Chuyển khoản') {
+          // VNPay — redirect sang trang thanh toán
           response = await api.createVNPayOrder({
             maDC: this.selectedAddress,
             phuongThucTT: 'VNPAY',
@@ -343,12 +346,11 @@ export default {
           });
 
           if (response.data.success && response.data.paymentUrl) {
-            // Redirect đến trang thanh toán VNPay
             window.location.href = response.data.paymentUrl;
             return;
           }
         } else {
-          // Thanh toán COD - gọi API checkout thông thường
+          // COD — checkout thông thường
           response = await api.checkout({
             maDC: this.selectedAddress,
             phuongThucTT: this.paymentMethod,
@@ -360,12 +362,13 @@ export default {
         if (response.data.success) {
           this.orderSuccess = true;
           this.orderResult = response.data;
-          
-          // Clear sessionStorage
+
+          // Clear cart store + sessionStorage
           sessionStorage.removeItem('checkoutItems');
           sessionStorage.removeItem('checkoutItemIds');
+          useCartStore().clearCart();
 
-          // Update cart count
+          // Update auth badge
           const authStore = useAuthStore();
           authStore.updateCartCount();
         } else {

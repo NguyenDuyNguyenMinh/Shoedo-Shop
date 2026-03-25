@@ -199,15 +199,20 @@ export default {
   },
 
   reportIssue(data) {
-    return axios.post('/api/customer/orders/report-issue', data);
+    return apiClient.post('/customer/orders/report-issue', data);
   },
 
   addReview(data) {
-    return axios.post('/api/customer/orders/review', data);
+    return apiClient.post('/customer/orders/review', data);
   },
 
   getReview(maHDCT) {
-    return axios.get(`/api/customer/orders/review/${maHDCT}`);
+    return apiClient.get(`/customer/orders/review/${maHDCT}`);
+  },
+
+  // Check stock for a single SKU
+  checkStock(maSKU) {
+    return apiClient.get(`/customer/cart/stock/${maSKU}`);
   },
 
   getAddresses() {
@@ -262,7 +267,7 @@ export default {
   },
 
   updateUser(id, userData) {
-    return axios.put(`/api/employee/users/${id}`, userData);
+    return apiClient.put(`/employee/users/${id}`, userData);
   },
 
   toggleUserStatus(id) {

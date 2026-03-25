@@ -279,11 +279,16 @@ public class GioHangService {
             hoaDon.setTrangThai("Đang xử lý");
         }
         
-        hoaDon.setGhiChu(dto.getGhiChu());
+        hoaDon.setGhiChu(dto.getGhiChu() != null ? dto.getGhiChu() : "");
+        // Đánh dấu đã trừ tồn kho tại checkout — để confirmOrder() bỏ qua stock deduction
+        hoaDon.setGhiChu(hoaDon.getGhiChu() + "[DA_TRU_KHO]");
         hoaDon.setNgayMua(new Date());
         hoaDon = hoaDonDAO.save(hoaDon);
 
-        // Tạo chi tiết hóa đơn + trừ kho (chỉ khi không phải VNPAY hoặc đã thanh toán)
+        // Tạo chi tiết hóa đơn + trừ kho NGAY tại thời điểm checkout
+        // VNPay: trừ kho luôn vì user đã commit thanh toán khi gọi /create-order
+        // COD: trừ kho luôn để tránh race condition khi nhiều người cùng mua 1 sản phẩm cuối
+        // confirmOrder() sẽ kiểm tra daTruKho để không trừ lại
         double tongTien = 0;
         for (GioHang item : selectedItems) {
             SanPhamChiTiet spct = item.getSanPhamChiTiet();
@@ -301,6 +306,15 @@ public class GioHangService {
             hdct.setSoLuong(item.getSoLuong());
             hdct.setDonGia(donGia);
             hoaDonCTDAO.save(hdct);
+
+            // TRỪ TỒN KHO NGAY tại checkout
+            // @Transactional đảm bảo rollback toàn bộ nếu bất kỳ item nào thất bại
+            int updated = sanPhamChiTietDAO.truSoLuong(spct.getMaSKU(), item.getSoLuong());
+            if (updated == 0) {
+                throw new RuntimeException("Sản phẩm \"" +
+                    (spct.getSanPham() != null ? spct.getSanPham().getTenSP() : "SKU " + spct.getMaSKU()) +
+                    "\" không đủ tồn kho!");
+            }
 
             tongTien += donGia * item.getSoLuong();
         }

@@ -38,23 +38,23 @@ public class DonHangService {
 
         List<HoaDon> allHoaDons = hoaDonDAO.findHoaDonsByCustomerId(khachHang.getMaKH());
 
-        // Phân loại theo trạng thái
+        // Phân loại theo trạng thái — filter 1 lần duy nhất bằng Map
         Map<String, List<Map<String, Object>>> allOrders = new LinkedHashMap<>();
-        allOrders.put("dangxuly", mapHoaDonToResponse(filterByTrangThai(allHoaDons, "Đang xử lý")));
-        allOrders.put("danggiao", mapHoaDonToResponse(filterByTrangThai(allHoaDons, "Đang giao")));
-        allOrders.put("datuchoi", mapHoaDonToResponse(filterByTrangThai(allHoaDons, "Đã từ chối")));
-        allOrders.put("hoantat", mapHoaDonToResponse(filterByTrangThai(allHoaDons, "Hoàn tất")));
-        allOrders.put("baoloi", mapHoaDonToResponse(filterByTrangThai(allHoaDons, "Báo lỗi")));
-        allOrders.put("hoanhang", mapHoaDonToResponse(filterByTrangThai(allHoaDons, "Hoàn hàng/trả hàng")));
-
-        // Đếm số lượng theo từng trạng thái
         Map<String, Integer> orderCounts = new HashMap<>();
-        orderCounts.put("dangxuly", filterByTrangThai(allHoaDons, "Đang xử lý").size());
-        orderCounts.put("danggiao", filterByTrangThai(allHoaDons, "Đang giao").size());
-        orderCounts.put("datuchoi", filterByTrangThai(allHoaDons, "Đã từ chối").size());
-        orderCounts.put("hoantat", filterByTrangThai(allHoaDons, "Hoàn tất").size());
-        orderCounts.put("baoloi", filterByTrangThai(allHoaDons, "Báo lỗi").size());
-        orderCounts.put("hoanhang", filterByTrangThai(allHoaDons, "Hoàn hàng/trả hàng").size());
+        Map<String, String> statusMap = Map.of(
+            "dangxuly", "Đang xử lý",
+            "danggiao", "Đang giao",
+            "datuchoi", "Đã từ chối",
+            "hoantat", "Hoàn tất",
+            "baoloi", "Báo lỗi",
+            "hoanhang", "Hoàn hàng/trả hàng"
+        );
+
+        for (var entry : statusMap.entrySet()) {
+            List<HoaDon> filtered = filterByTrangThai(allHoaDons, entry.getValue());
+            allOrders.put(entry.getKey(), mapHoaDonToResponse(filtered));
+            orderCounts.put(entry.getKey(), filtered.size());
+        }
 
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
@@ -108,6 +108,7 @@ public class DonHangService {
 
     // ==================== ORDER ACTIONS ====================
 
+    @Transactional
     public Map<String, Object> updateOrderStatus(Integer orderId, String status, Users currentUser) {
         KhachHang khachHang = khachHangDAO.findByUser_MaUser(currentUser.getMaUser());
         if (khachHang == null) {
@@ -141,9 +142,9 @@ public class DonHangService {
         );
     }
 
-    // Báo lỗi đơn hàng
+    // Cập nhật trạng thái đơn (xác nhận đã nhận hàng)
     @Transactional
-    public Map<String, Object> reportIssue(Map<String, Object> request, Users currentUser) {
+    public Map<String, Object> updateOrderStatus(Map<String, Object> request, Users currentUser) {
         KhachHang khachHang = khachHangDAO.findByUser_MaUser(currentUser.getMaUser());
         if (khachHang == null) {
             return Map.of("success", false, "message", "Không tìm thấy thông tin khách hàng");
