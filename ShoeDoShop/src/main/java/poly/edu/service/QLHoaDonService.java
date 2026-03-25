@@ -167,7 +167,7 @@ public class QLHoaDonService {
         }
         
         hoaDonDAO.save(hd);
-
+        
         emailAsyncService.sendSuccessEmail(hd);
 
         return success("Đã cập nhật giao hàng thành công. KH có 1 tháng để báo lỗi/bảo hành");
@@ -182,12 +182,26 @@ public class QLHoaDonService {
         if (kh == null || kh.getUser() == null || kh.getUser().getMail() == null) {
             return error("Không tìm thấy email khách hàng");
         }
+        for (HoaDonCT ct : hd.getHoaDonCTs()) {
+            SanPhamChiTiet spct = ct.getSanPhamChiTiet();
+            spct.getMaSKU();
+            spct.getTenMau();
+            spct.getHinhAnh();
+            spct.getSoLuong();
+            
+            SanPham sp = spct.getSanPham();
+            sp.getTenSP();
+            sp.getDaBan();
 
-        emailAsyncService.sendApologyEmail(hd);
+            if (spct.getSize() != null) {
+                spct.getSize().getCoGiay();
+            }
+        }
         hd.setTrangThai("Hoàn tất");
         hd.setQuanTri(getCurrentEmployee());
         hoaDonDAO.save(hd);
 
+        emailAsyncService.sendApologyEmail(hd);
         return success("Đã gửi email xin lỗi kèm hóa đơn PDF");
     }
 
