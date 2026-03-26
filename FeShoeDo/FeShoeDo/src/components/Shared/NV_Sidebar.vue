@@ -51,13 +51,19 @@
         <li>
           <router-link to="/employee/users" :class="{ active: $route.path === '/employee/users' }">
             <i class="fa-regular fa-circle-user"></i>
-            <span>Quản lý user</span>
+            <span>Quản lý tài khoản</span>
           </router-link>
         </li>
         <li>
           <router-link to="/employee/orders" :class="{ active: $route.path === '/employee/orders' }">
             <i class="bi bi-cart-check"></i>
-            <span>Đơn hàng</span>
+            <span>Quản lý đơn hàng</span>
+          </router-link>
+        </li>
+        <li>
+          <router-link to="/employee/danhgia" :class="{ active: $route.path === '/employee/danhgia' }">
+            <i class="fa-regular fa-comments"></i>
+            <span>Quản lý đánh giá</span>
           </router-link>
         </li>
         <li>

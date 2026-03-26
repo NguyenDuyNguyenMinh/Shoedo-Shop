@@ -872,8 +872,8 @@ INSERT INTO DanhGia (MaHDCT, Sao, DanhGiaCT) VALUES
 -- HD10 có 2 dòng:
 -- Dòng 1: Boot nâu 42 (MaSKU 37) - MaHDCT = 19
 -- Dòng 2: Vớ chạy bộ Performance (MaSKU 43) - MaHDCT = 20
-(19, 5, N'Mua tặng chồng, chồng rất thích. Boot nâu đẹp, da mềm, đi êm.'),
-(20, 4, N'Vớ chạy bộ chất tốt, thấm hút mồ hôi. Giá hơi cao so với mặt bằng chung.'),
+(20, 5, N'Mua tặng chồng, chồng rất thích. Boot nâu đẹp, da mềm, đi êm.'),
+(21, 4, N'Vớ chạy bộ chất tốt, thấm hút mồ hôi. Giá hơi cao so với mặt bằng chung.'),
 
 -- ===== ĐÁNH GIÁ CỦA KHÁCH HÀNG 3 (MaKH = 3) - Hóa đơn HD3 và HD7 =====
 -- HD3 có 2 dòng:
@@ -885,8 +885,8 @@ INSERT INTO DanhGia (MaHDCT, Sao, DanhGiaCT) VALUES
 -- HD7 có 2 dòng:
 -- Dòng 1: Boot combat đen 38 (MaSKU 38) - MaHDCT = 13
 -- Dòng 2: Dây giày basic đen (MaSKU 44) - MaHDCT = 14
-(13, 4, N'Boot combat đen phong cách, đi chơi rất ngầu. Trừ 1 sao vì hơi nặng.'),
-(14, 5, N'Dây giày basic đen chất lượng tốt, giá rẻ, thay cho dây cũ hỏng.');
+(14, 4, N'Boot combat đen phong cách, đi chơi rất ngầu. Trừ 1 sao vì hơi nặng.'),
+(15, 5, N'Dây giày basic đen chất lượng tốt, giá rẻ, thay cho dây cũ hỏng.');
 GO
 
 -- 15. Dữ liệu mẫu cho bảng TimKiem
