@@ -202,7 +202,7 @@
                       <i class="fas fa-eye me-1"></i>Xem chi tiết
                     </button>
                     <button class="btn btn-outline-primary btn-sm w-100 mt-2" @click="printOrder(order)">
-                      <i class="fas fa-print me-1"></i>In hóa đơn
+                      <i class="fas fa-print me-1"></i>Xuất hóa đơn
                     </button>
                   </div>
                 </div>
@@ -276,7 +276,7 @@
                       <i class="fas fa-eye me-1"></i>Xem chi tiết
                     </button>
                     <button class="btn btn-outline-primary btn-sm w-100 mt-2" @click="printOrder(order)">
-                      <i class="fas fa-print me-1"></i>In hóa đơn
+                      <i class="fas fa-print me-1"></i>Xuất hóa đơn
                     </button>
                   </div>
                 </div>
@@ -347,7 +347,7 @@
                       <i class="fas fa-eye me-1"></i>Xem chi tiết
                     </button>
                     <button class="btn btn-outline-primary btn-sm w-100 mt-2" @click="printOrder(order)">
-                      <i class="fas fa-print me-1"></i>In hóa đơn
+                      <i class="fas fa-print me-1"></i>Xuất hóa đơn
                     </button>
                   </div>
                 </div>
@@ -413,7 +413,7 @@
                       <i class="fas fa-eye me-1"></i>Xem chi tiết
                     </button>
                     <button class="btn btn-outline-primary btn-sm w-100 mt-2" @click="printOrder(order)">
-                      <i class="fas fa-print me-1"></i>In hóa đơn
+                      <i class="fas fa-print me-1"></i>Xuất hóa đơn
                     </button>
                   </div>
                 </div>
@@ -487,7 +487,7 @@
                       <i class="fas fa-eye me-1"></i>Xem chi tiết
                     </button>
                     <button class="btn btn-outline-primary btn-sm w-100 mt-2" @click="printOrder(order)">
-                      <i class="fas fa-print me-1"></i>In hóa đơn
+                      <i class="fas fa-print me-1"></i>Xuất hóa đơn
                     </button>
                   </div>
                 </div>
@@ -625,7 +625,7 @@
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-primary" @click="printOrder(orderDetail)">
-              <i class="fas fa-print me-2"></i>In hóa đơn
+              <i class="fas fa-print me-2"></i>Xuất hóa đơn
             </button>
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
           </div>
@@ -971,8 +971,8 @@ export default {
         message.value = 'Đã tải xuống hóa đơn thành công!';
 
       } catch (err) {
-        console.error('Lỗi in hóa đơn:', err);
-        error.value = 'Lỗi khi in hóa đơn';
+        console.error('Lỗi xuất hóa đơn:', err);
+        error.value = 'Lỗi khi xuất hóa đơn';
       } finally {
         processing.value = false;
       }
