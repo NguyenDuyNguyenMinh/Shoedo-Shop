@@ -71,6 +71,8 @@ public class ChatService {
                 if ("completed".equals(status)) {
                     isCompleted = true; // Bot đã gõ xong!
                 } else if ("failed".equals(status) || "canceled".equals(status)) {
+                	System.out.println("=== LỖI TỪ COZE API ===");
+                    System.out.println(retrieveNode.toPrettyString());
                     return "Xin lỗi, hệ thống Shoedo Assistant đang bận. Bạn thử lại nhé!";
                 }
             }

@@ -2,6 +2,22 @@
 import { ref, nextTick } from 'vue'
 import axios from 'axios'
 
+// Hàm chuyển đổi Markdown sang HTML (Link và Xuống dòng)
+const formatBotMessage = (text) => {
+  if (!text) return ''
+  
+  // 1. Biến cú pháp [Tên hiển thị](Link) thành thẻ <a> màu xanh, in đậm, mở tab mới
+  let htmlText = text.replace(
+    /\[([^\]]+)\]\((https?:\/\/[^\s\)]+)\)/g, 
+    '<a href="$2" target="_blank" style="color: #007bff; text-decoration: underline; font-weight: 600;">$1</a>'
+  )
+  
+  // 2. Chuyển cả các ký tự xuống dòng (\n) thành thẻ <br> để đoạn chat nhìn thoáng hơn
+  htmlText = htmlText.replace(/\n/g, '<br>')
+  
+  return htmlText
+}
+
 const isOpen = ref(false)
 const userInput = ref('')
 const messages = ref([
@@ -46,6 +62,7 @@ const sendMessage = async () => {
     scrollToBottom()
   }
 }
+
 </script>
 
 <template>
@@ -64,7 +81,7 @@ const sendMessage = async () => {
 
         <div class="chat-body" ref="chatBodyRef">
           <div v-for="(msg, index) in messages" :key="index" :class="['message-row', msg.role]">
-            <div class="message-bubble">{{ msg.text }}</div>
+            <div class="message-bubble" v-html="formatBotMessage(msg.text)"></div>
           </div>
           <div v-if="isLoading" class="message-row bot">
             <div class="message-bubble typing">Đang gõ...</div>
