@@ -80,7 +80,7 @@ CONSTRAINT FK_ChiTiet_Size FOREIGN KEY (MaSize) REFERENCES Size(MaSize)
 );
 
 -- 11. Bảng Nhập Kho
-CREATE TABLE NhapKho (
+CREATE TABLE PhieuNhap (
 MaNK INT IDENTITY(1,1) PRIMARY KEY,
 MaSKU INT,
 SoLuong INT CHECK (SoLuong > 0),
@@ -150,7 +150,7 @@ CONSTRAINT FK_DanhGia_HoaDonCT FOREIGN KEY (MaHDCT) REFERENCES HoaDonCT(MaHDCT)
 );
 
 -- 17. Bảng Tìm Kiếm
-CREATE TABLE TimKiem (
+CREATE TABLE LSTimKiem (
 MaTK INT IDENTITY(1,1) PRIMARY KEY,
 MaKH INT,
 NoiDungTimKiem NVARCHAR(225) NOT NULL,
@@ -158,6 +158,18 @@ NoiDungTimKiem NVARCHAR(225) NOT NULL,
 CONSTRAINT UQ_User_Keyword UNIQUE (MaKH, NoiDungTimKiem),
 ThoiGian DATETIME DEFAULT GETDATE(), -- Bổ sung thời gian tìm
 CONSTRAINT FK_TimKiem_KhachHang FOREIGN KEY (MaKH) REFERENCES KhachHang(MaKH)
+);
+GO
+
+-- 18. Bảng Chiến Dịch
+CREATE TABLE ChienDich (
+    MaCD INT IDENTITY(1,1) PRIMARY KEY,
+    TenChienDich NVARCHAR(255) NOT NULL,
+    MaSP INT NOT NULL,
+    ThoiGianBatDau DATETIME NOT NULL,
+    ThoiGianKetThuc DATETIME NOT NULL,
+    TrangThai NVARCHAR(50) DEFAULT N'Đang chạy' CHECK (TrangThai IN (N'Đang chạy', N'Đã dừng', N'Kết thúc')),
+    CONSTRAINT FK_ChienDich_SanPham FOREIGN KEY (MaSP) REFERENCES SanPham(MaSP)
 );
 GO
 
@@ -878,7 +890,7 @@ INSERT INTO DanhGia (MaHDCT, Sao, DanhGiaCT) VALUES
 GO
 
 -- 15. Dữ liệu mẫu cho bảng TimKiem
-INSERT INTO TimKiem (MaKH, NoiDungTimKiem) VALUES
+INSERT INTO LSTimKiem (MaKH, NoiDungTimKiem) VALUES
 (1, N'Giày da nam'),
 (1, N'Giày tây công sở'),
 (2, N'Giày sneaker nữ trắng'),
