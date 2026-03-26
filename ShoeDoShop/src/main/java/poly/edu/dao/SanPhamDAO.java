@@ -74,4 +74,5 @@ public interface SanPhamDAO extends JpaRepository<SanPham, Integer> {
            "    SELECT lk2.danhMuc.maDM FROM SanPhamDanhMuc lk2 WHERE lk2.sanPham.maSP = :maSP" +
            "  ))")
     List<SanPham> findLienQuan(@Param("maSP") Integer maSP);
+    List<SanPham> findByTenSPContainingIgnoreCase(String tenSP);
 }
