@@ -222,13 +222,47 @@ const getRatingCount = (star) => thongKeSao.value[star] || 0
 const increaseQty = () => quantity.value++
 const decreaseQty = () => { if (quantity.value > 1) quantity.value-- }
 
-const addToCart = () => {
+const addToCart = async () => {
   if (!product.value?.isFreesize && !selectedSize.value) {
     alert('Vui lòng chọn size!'); return
   }
   if (!selectedColor.value) { alert('Vui lòng chọn màu sắc!'); return }
-  addedToCart.value = true
-  setTimeout(() => addedToCart.value = false, 2000)
+
+  const sku = (apiProduct.value.chiTiets || []).find(s =>
+    s.tenMau === selectedColor.value &&
+    (product.value.isFreesize || s.coGiay === selectedSize.value)
+  )
+  if (!sku) { alert('Không tìm thấy SKU phù hợp!'); return }
+
+  try {
+    await api.addToCart({ maSKU: sku.maSKU, soLuong: quantity.value })
+    addedToCart.value = true
+    setTimeout(() => addedToCart.value = false, 2000)
+  } catch (e) {
+    console.error('Lỗi thêm giỏ hàng:', e)
+    alert('Không thể thêm vào giỏ hàng.')
+  }
+}
+
+const buyNow = async () => {
+  if (!product.value?.isFreesize && !selectedSize.value) {
+    alert('Vui lòng chọn size!'); return
+  }
+  if (!selectedColor.value) { alert('Vui lòng chọn màu sắc!'); return }
+
+  const sku = (apiProduct.value.chiTiets || []).find(s =>
+    s.tenMau === selectedColor.value &&
+    (product.value.isFreesize || s.coGiay === selectedSize.value)
+  )
+  if (!sku) { alert('Không tìm thấy SKU phù hợp!'); return }
+
+  try {
+    await api.addToCart({ maSKU: sku.maSKU, soLuong: quantity.value })
+    router.push({ name: 'Cart' })
+  } catch (e) {
+    console.error('Lỗi mua ngay:', e)
+    alert('Không thể thực hiện.')
+  }
 }
 
 const goToDetail = (id) => {
@@ -415,7 +449,7 @@ onMounted(() => {
                 <i :class="addedToCart ? 'bi bi-check-lg' : 'bi bi-cart-plus'"></i>
                 {{ addedToCart ? 'Đã thêm vào giỏ!' : 'Thêm vào giỏ hàng' }}
               </button>
-              <button class="btn-buy">
+              <button class="btn-buy" @click="buyNow">
                 <i class="bi bi-lightning-fill"></i> Mua ngay
               </button>
             </div>
@@ -423,14 +457,6 @@ onMounted(() => {
             <div class="divider"></div>
 
             <div class="policy-row">
-              <div class="policy-item">
-                <i class="bi bi-truck"></i>
-                <span>Miễn phí ship<br/><small>Đơn từ 500k</small></span>
-              </div>
-              <div class="policy-item">
-                <i class="bi bi-arrow-counterclockwise"></i>
-                <span>Đổi trả 30 ngày<br/><small>Miễn phí đổi trả</small></span>
-              </div>
               <div class="policy-item">
                 <i class="bi bi-shield-check"></i>
                 <span>Hàng chính hãng<br/><small>Cam kết 100%</small></span>
@@ -750,9 +776,9 @@ onMounted(() => {
 }
 .btn-buy:hover { background: #c62828; }
 
-.policy-row { display: flex; margin-top: 16px; border: 1px solid #eee; }
+.policy-row { display: flex; margin-top: 16px; border: 1px solid #eee; justify-content: center;}
 .policy-item {
-  flex: 1; display: flex; align-items: center; gap: 10px;
+  flex: 1; display: flex; align-items: center; gap: 10px; justify-content: center;
   padding: 12px; border-right: 1px solid #eee; font-size: 12px; color: #555;
 }
 .policy-item:last-child { border-right: none; }

@@ -10,14 +10,18 @@ const apiClient = axios.create({
 
 apiClient.interceptors.request.use(
   (config) => {
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
-    const token = localStorage.getItem('auth_token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    } else if (user?.token) {
-      config.headers.Authorization = `Bearer ${user.token}`;
+    try {
+      const userRaw = localStorage.getItem('user');
+      const user = userRaw ? JSON.parse(userRaw) : null;
+      const token = localStorage.getItem('auth_token');
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      } else if (user?.token) {
+        config.headers.Authorization = `Bearer ${user.token}`;
+      }
+    } catch (e) {
+      // ignore parse errors
     }
-    
     return config;
   },
   (error) => {
@@ -194,8 +198,8 @@ export default {
     return apiClient.put(`/customer/orders/${id}/status?status=${encodeURIComponent(status)}`);
   },
 
-  requestReturn(data) {
-    return apiClient.post('/customer/orders/return', data);
+  cancelOrder(id, cancelReason) {
+    return apiClient.post(`/customer/orders/${id}/cancel`, { cancelReason });
   },
 
   reportIssue(data) {
@@ -204,6 +208,10 @@ export default {
 
   addReview(data) {
     return apiClient.post('/customer/orders/review', data);
+  },
+
+  updateReview(data) {
+    return apiClient.put('/customer/orders/review', data);
   },
 
   getReview(maHDCT) {

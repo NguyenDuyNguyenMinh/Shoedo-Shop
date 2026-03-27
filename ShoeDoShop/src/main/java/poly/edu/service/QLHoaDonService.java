@@ -93,6 +93,13 @@ public class QLHoaDonService {
                             ? ct.getSanPhamChiTiet().getSanPham().getTenSP()
                             : "SKU " + ct.getSanPhamChiTiet().getMaSKU();
                     outOfStock.add(tenSP);
+        String phuongThucTT = hd.getPhuongThucTT();
+        
+        if ("COD".equals(phuongThucTT)) {
+            List<String> outOfStock = new ArrayList<>();
+            for (HoaDonCT ct : hd.getHoaDonCTs()) {
+                if (ct.getSanPhamChiTiet().getSoLuong() < ct.getSoLuong()) {
+                    outOfStock.add(ct.getSanPhamChiTiet().getSanPham().getTenSP());
                 }
             }
             if (!outOfStock.isEmpty()) {
@@ -107,15 +114,23 @@ public class QLHoaDonService {
                             : "SKU " + ct.getSanPhamChiTiet().getMaSKU();
                     return error("Sản phẩm \"" + tenSP + "\" không đủ tồn kho!");
                 }
+                spctDAO.truSoLuong(ct.getSanPhamChiTiet().getMaSKU(), ct.getSoLuong());
             }
         }
-
         hd.setQuanTri(getCurrentEmployee());
         hd.setTrangThai("Đang giao");
         hoaDonDAO.save(hd);
 
         emailAsyncService.sendShippingEmail(hd);
         return success("Đã vận chuyển đơn hàng");
+        
+        String message = "Đã vận chuyển đơn hàng";
+        if ("COD".equals(phuongThucTT)) {
+            message += " và trừ số lượng trong kho";
+        } else {
+            message += " (VNPAY - đã trừ số lượng khi đặt hàng)";
+        }
+        return success(message);
     }
 
     @Transactional
@@ -129,10 +144,18 @@ public class QLHoaDonService {
         }
 
         String lyDo = payload.getOrDefault("lyDo", "Không có lý do");
+        String phuongThucTT = hd.getPhuongThucTT();
 
         // Hoàn trả kho nếu đơn đã trừ kho (checkout) hoặc đang giao
         boolean daTruKho = hd.getGhiChu() != null && hd.getGhiChu().contains("[DA_TRU_KHO]");
         if (daTruKho || "Đang giao".equals(current)) {
+        if ("Đang xử lý".equals(current)) {
+            if ("VNPAY".equals(phuongThucTT)) {
+                for (HoaDonCT ct : hd.getHoaDonCTs()) {
+                    spctDAO.congSoLuong(ct.getSanPhamChiTiet().getMaSKU(), ct.getSoLuong());
+                }
+            }
+        } else if ("Đang giao".equals(current)) {
             for (HoaDonCT ct : hd.getHoaDonCTs()) {
                 spctDAO.congSoLuong(ct.getSanPhamChiTiet().getMaSKU(), ct.getSoLuong());
             }
@@ -146,6 +169,17 @@ public class QLHoaDonService {
         String msg = "Đã từ chối đơn hàng";
         if (daTruKho || "Đang giao".equals(current)) msg += " và hoàn trả số lượng về kho";
         return success(msg);
+        StringBuilder msg = new StringBuilder("Đã từ chối đơn hàng");
+
+        if ("Đang xử lý".equals(current) && "VNPAY".equals(phuongThucTT)) {
+            msg.append(" và hoàn trả số lượng về kho (VNPAY)");
+        } else if ("Đang giao".equals(current)) {
+            msg.append(" và hoàn trả số lượng về kho");
+        } else if ("Đang xử lý".equals(current) && "COD".equals(phuongThucTT)) {
+            msg.append(" (COD - chưa trừ số lượng)");
+        }
+        
+        return success(msg.toString());
     }
 
     @Transactional
@@ -159,6 +193,9 @@ public class QLHoaDonService {
             for (HoaDonCT ct : hd.getHoaDonCTs()) {
                 spctDAO.congSoLuong(ct.getSanPhamChiTiet().getMaSKU(), ct.getSoLuong());
             }
+        // Cả COD và VNPAY đều đã trừ số lượng, cần hoàn trả
+        for (HoaDonCT ct : hd.getHoaDonCTs()) {
+            spctDAO.congSoLuong(ct.getSanPhamChiTiet().getMaSKU(), ct.getSoLuong());
         }
 
         hd.setTrangThai("Đã từ chối");
@@ -177,6 +214,8 @@ public class QLHoaDonService {
         hd.setTrangThai("Hoàn tất");
         hd.setNgayDen(new Date());
         hd.setQuanTri(getCurrentEmployee());
+        
+        // Cập nhật số lượng đã bán cho sản phẩm
         for (HoaDonCT ct : hd.getHoaDonCTs()) {
             SanPhamChiTiet spct = ct.getSanPhamChiTiet();
             SanPham sp = spct.getSanPham();

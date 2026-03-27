@@ -289,6 +289,12 @@ public class GioHangService {
         // VNPay: trừ kho luôn vì user đã commit thanh toán khi gọi /create-order
         // COD: trừ kho luôn để tránh race condition khi nhiều người cùng mua 1 sản phẩm cuối
         // confirmOrder() sẽ kiểm tra daTruKho để không trừ lại
+        hoaDon.setTrangThai("Đang xử lý");
+        hoaDon.setGhiChu(dto.getGhiChu());
+        hoaDon.setNgayMua(new Date());
+        hoaDon = hoaDonDAO.save(hoaDon);
+
+        // Tạo chi tiết hóa đơn
         double tongTien = 0;
         for (GioHang item : selectedItems) {
             SanPhamChiTiet spct = item.getSanPhamChiTiet();
@@ -317,6 +323,11 @@ public class GioHangService {
             }
 
             tongTien += donGia * item.getSoLuong();
+
+            // VNPAY: trừ stock ngay tại checkout vì đã chuyển khoản đặt cọc
+            if (isVNPay) {
+                sanPhamChiTietDAO.truSoLuong(spct.getMaSKU(), item.getSoLuong());
+            }
         }
 
         // Xóa các item đã checkout khỏi giỏ hàng

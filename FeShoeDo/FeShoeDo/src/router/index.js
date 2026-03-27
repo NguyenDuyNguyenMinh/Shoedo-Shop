@@ -98,6 +98,12 @@ const routes = [
     meta: { requiresAuth: true, roles: ['ADMIN', 'EMPLOYEE'] }
   },
   {
+    path: '/employee/danhgia',
+    name: 'DanhGiaManagement',
+    component: () => import('@/components/employee/NV_QLDanhGia.vue'),
+    meta: { requiresAuth: true, roles: ['ADMIN', 'EMPLOYEE'] }
+  },
+  {
     path: '/employee/import',
     name: 'ImportStock',
     component: () => import('@/components/employee/NV_NhapKho.vue'),

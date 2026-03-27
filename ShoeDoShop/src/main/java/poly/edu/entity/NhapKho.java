@@ -7,7 +7,7 @@ import java.util.Date;
 
 @Entity
 @Data
-@Table(name = "NhapKho")
+@Table(name = "PhieuNhap")
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class NhapKho {
     @Id
@@ -17,7 +17,7 @@ public class NhapKho {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "MaSKU")
-    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "nhapKhos"})
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "phieuNhaps"})
     private SanPhamChiTiet sanPhamChiTiet;
 
     @Column(name = "SoLuong")

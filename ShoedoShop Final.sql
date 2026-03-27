@@ -80,12 +80,12 @@ CONSTRAINT FK_ChiTiet_Size FOREIGN KEY (MaSize) REFERENCES Size(MaSize)
 );
 
 -- 11. Bảng Nhập Kho
-CREATE TABLE NhapKho (
+CREATE TABLE PhieuNhap (
 MaNK INT IDENTITY(1,1) PRIMARY KEY,
 MaSKU INT,
 SoLuong INT CHECK (SoLuong > 0),
 NgayNhap DATE DEFAULT GETDATE(),
-CONSTRAINT FK_NhapKho_SKU FOREIGN KEY (MaSKU) REFERENCES SanPham_ChiTiet(MaSKU)
+CONSTRAINT FK_PhieuNhap_SKU FOREIGN KEY (MaSKU) REFERENCES SanPham_ChiTiet(MaSKU)
 );
 
 -- 12. Bảng Địa Chỉ
@@ -150,7 +150,7 @@ CONSTRAINT FK_DanhGia_HoaDonCT FOREIGN KEY (MaHDCT) REFERENCES HoaDonCT(MaHDCT)
 );
 
 -- 17. Bảng Tìm Kiếm
-CREATE TABLE TimKiem (
+CREATE TABLE LSTimKiem (
 MaTK INT IDENTITY(1,1) PRIMARY KEY,
 MaKH INT,
 NoiDungTimKiem NVARCHAR(225) NOT NULL,
@@ -158,6 +158,19 @@ NoiDungTimKiem NVARCHAR(225) NOT NULL,
 CONSTRAINT UQ_User_Keyword UNIQUE (MaKH, NoiDungTimKiem),
 ThoiGian DATETIME DEFAULT GETDATE(), -- Bổ sung thời gian tìm
 CONSTRAINT FK_TimKiem_KhachHang FOREIGN KEY (MaKH) REFERENCES KhachHang(MaKH)
+);
+GO
+
+-- 18. Bảng Chiến Dịch
+CREATE TABLE ChienDich (
+    MaCD INT IDENTITY(1,1) PRIMARY KEY,
+    TenChienDich NVARCHAR(255) NOT NULL,
+    MaSP INT NOT NULL,
+    KhuyenMaiCD INT NOT NULL,
+    ThoiGianBatDau DATETIME NOT NULL,
+    ThoiGianKetThuc DATETIME NOT NULL,
+    TrangThai NVARCHAR(50) DEFAULT N'Đang chạy' CHECK (TrangThai IN (N'Chưa bắt đầu', N'Đang chạy', N'Đã dừng', N'Kết thúc')) NOT NULL,
+    CONSTRAINT FK_ChienDich_SanPham FOREIGN KEY (MaSP) REFERENCES SanPham(MaSP)
 );
 GO
 
@@ -732,7 +745,7 @@ INSERT INTO HoaDon (MaKH, MaQT, PhuongThucTT, DiaChiJson, TrangThai, GhiChu, Nga
  N'Đã từ chối', N'Đơn hàng đặt số lượng quá lớn nhân viên miễn cưỡng từ chối vì gọi không ghe máy', '2025-01-10', NULL),
 
 -- HD 2
-(2, NULL, N'Chuyển khoản',
+(2, NULL, N'VNPAY',
  N'{"DiemGiao":"789 Cách Mạng Tháng 8Z, Tân Bình","TenNN":"Trần Thị Hi A","SDT":"0912345678"}',
  N'Đang xử lý', NULL, '2026-01-11', NULL),
 
@@ -752,7 +765,7 @@ INSERT INTO HoaDon (MaKH, MaQT, PhuongThucTT, DiaChiJson, TrangThai, GhiChu, Nga
  N'Đã từ chối', N'Khách hủy đơn', '2026-01-14', NULL),
 
 -- HD 6
-(2, 1, N'Chuyển khoản',
+(2, 1, N'VNPAY',
  N'{"DiemGiao":"789 Cách Mạng Tháng 8Y","TenNN":"Trần Thị Hi B","SDT":"0912345678"}',
  N'Báo lỗi', N'Khách hàng không nhận được hàng', '2026-01-15', '2026-01-19'),
 
@@ -772,7 +785,7 @@ INSERT INTO HoaDon (MaKH, MaQT, PhuongThucTT, DiaChiJson, TrangThai, GhiChu, Nga
  N'Đang xử lý', NULL, '2026-01-18', NULL),
 
 -- HD 10
-(2, 1, N'Chuyển khoản',
+(2, 1, N'VNPAY',
  N'{"DiemGiao":"789 Cách Mạng Tháng 8Z","TenNN":"Trần Thị Hi A","SDT":"0912345678"}',
  N'Hoàn tất', NULL, '2026-01-19', '2026-01-24');
 
@@ -860,8 +873,8 @@ INSERT INTO DanhGia (MaHDCT, Sao, DanhGiaCT) VALUES
 -- HD10 có 2 dòng:
 -- Dòng 1: Boot nâu 42 (MaSKU 37) - MaHDCT = 19
 -- Dòng 2: Vớ chạy bộ Performance (MaSKU 43) - MaHDCT = 20
-(19, 5, N'Mua tặng chồng, chồng rất thích. Boot nâu đẹp, da mềm, đi êm.'),
-(20, 4, N'Vớ chạy bộ chất tốt, thấm hút mồ hôi. Giá hơi cao so với mặt bằng chung.'),
+(20, 5, N'Mua tặng chồng, chồng rất thích. Boot nâu đẹp, da mềm, đi êm.'),
+(21, 4, N'Vớ chạy bộ chất tốt, thấm hút mồ hôi. Giá hơi cao so với mặt bằng chung.'),
 
 -- ===== ĐÁNH GIÁ CỦA KHÁCH HÀNG 3 (MaKH = 3) - Hóa đơn HD3 và HD7 =====
 -- HD3 có 2 dòng:
@@ -873,12 +886,12 @@ INSERT INTO DanhGia (MaHDCT, Sao, DanhGiaCT) VALUES
 -- HD7 có 2 dòng:
 -- Dòng 1: Boot combat đen 38 (MaSKU 38) - MaHDCT = 13
 -- Dòng 2: Dây giày basic đen (MaSKU 44) - MaHDCT = 14
-(13, 4, N'Boot combat đen phong cách, đi chơi rất ngầu. Trừ 1 sao vì hơi nặng.'),
-(14, 5, N'Dây giày basic đen chất lượng tốt, giá rẻ, thay cho dây cũ hỏng.');
+(14, 4, N'Boot combat đen phong cách, đi chơi rất ngầu. Trừ 1 sao vì hơi nặng.'),
+(15, 5, N'Dây giày basic đen chất lượng tốt, giá rẻ, thay cho dây cũ hỏng.');
 GO
 
 -- 15. Dữ liệu mẫu cho bảng TimKiem
-INSERT INTO TimKiem (MaKH, NoiDungTimKiem) VALUES
+INSERT INTO LSTimKiem (MaKH, NoiDungTimKiem) VALUES
 (1, N'Giày da nam'),
 (1, N'Giày tây công sở'),
 (2, N'Giày sneaker nữ trắng'),

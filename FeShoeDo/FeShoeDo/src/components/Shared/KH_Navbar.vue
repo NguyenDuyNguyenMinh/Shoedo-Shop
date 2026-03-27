@@ -493,8 +493,6 @@ input:focus { outline: none; box-shadow: none; }
 }
 
 .btn-login:hover {
-  background-color: #fff;
-  color: #000;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(255,255,255,0.2);
 }

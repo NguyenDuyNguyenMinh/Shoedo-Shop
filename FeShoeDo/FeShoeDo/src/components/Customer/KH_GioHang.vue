@@ -146,18 +146,10 @@
               </div>
 
               <!-- Trust badges -->
-              <div class="trust-badges mt-4">
-                <div class="trust-item">
+              <div class="trust-badges mt-4 d-flex justify-content-center">
+                <div class="trust-item d-flex align-items-center gap-2">
                   <i class="bi bi-shield-check"></i>
                   <span>Bảo mật thanh toán</span>
-                </div>
-                <div class="trust-item">
-                  <i class="bi bi-truck"></i>
-                  <span>Giao hàng toàn quốc</span>
-                </div>
-                <div class="trust-item">
-                  <i class="bi bi-arrow-repeat"></i>
-                  <span>Đổi trả 30 ngày</span>
                 </div>
               </div>
             </div>

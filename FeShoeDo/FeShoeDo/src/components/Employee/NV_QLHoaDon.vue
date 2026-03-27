@@ -202,7 +202,7 @@
                       <i class="fas fa-eye me-1"></i>Xem chi tiết
                     </button>
                     <button class="btn btn-outline-primary btn-sm w-100 mt-2" @click="printOrder(order)">
-                      <i class="fas fa-print me-1"></i>In hóa đơn
+                      <i class="fas fa-print me-1"></i>Xuất hóa đơn
                     </button>
                   </div>
                 </div>
@@ -276,7 +276,7 @@
                       <i class="fas fa-eye me-1"></i>Xem chi tiết
                     </button>
                     <button class="btn btn-outline-primary btn-sm w-100 mt-2" @click="printOrder(order)">
-                      <i class="fas fa-print me-1"></i>In hóa đơn
+                      <i class="fas fa-print me-1"></i>Xuất hóa đơn
                     </button>
                   </div>
                 </div>
@@ -347,7 +347,7 @@
                       <i class="fas fa-eye me-1"></i>Xem chi tiết
                     </button>
                     <button class="btn btn-outline-primary btn-sm w-100 mt-2" @click="printOrder(order)">
-                      <i class="fas fa-print me-1"></i>In hóa đơn
+                      <i class="fas fa-print me-1"></i>Xuất hóa đơn
                     </button>
                   </div>
                 </div>
@@ -413,7 +413,7 @@
                       <i class="fas fa-eye me-1"></i>Xem chi tiết
                     </button>
                     <button class="btn btn-outline-primary btn-sm w-100 mt-2" @click="printOrder(order)">
-                      <i class="fas fa-print me-1"></i>In hóa đơn
+                      <i class="fas fa-print me-1"></i>Xuất hóa đơn
                     </button>
                   </div>
                 </div>
@@ -487,7 +487,7 @@
                       <i class="fas fa-eye me-1"></i>Xem chi tiết
                     </button>
                     <button class="btn btn-outline-primary btn-sm w-100 mt-2" @click="printOrder(order)">
-                      <i class="fas fa-print me-1"></i>In hóa đơn
+                      <i class="fas fa-print me-1"></i>Xuất hóa đơn
                     </button>
                   </div>
                 </div>
@@ -625,7 +625,7 @@
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-primary" @click="printOrder(orderDetail)">
-              <i class="fas fa-print me-2"></i>In hóa đơn
+              <i class="fas fa-print me-2"></i>Xuất hóa đơn
             </button>
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
           </div>
@@ -848,7 +848,7 @@ export default {
     };
 
     const confirmOrder = async (orderId) => {
-      if (!confirm('Xác nhận đơn hàng này? Số lượng sản phẩm sẽ bị trừ khỏi kho.')) return;
+      if (!confirm('Xác nhận đơn hàng này? Số lượng sản phẩm sẽ bị trừ khỏi kho. (VNPAY được ưu tiên)')) return;
       processing.value = true;
       try {
         const response = await axios.post(`/api/employee/orders/${orderId}/confirm`);
@@ -971,8 +971,8 @@ export default {
         message.value = 'Đã tải xuống hóa đơn thành công!';
 
       } catch (err) {
-        console.error('Lỗi in hóa đơn:', err);
-        error.value = 'Lỗi khi in hóa đơn';
+        console.error('Lỗi xuất hóa đơn:', err);
+        error.value = 'Lỗi khi xuất hóa đơn';
       } finally {
         processing.value = false;
       }
@@ -1032,7 +1032,7 @@ export default {
       if (status === 'Đang giao') {
         return 'Hệ thống sẽ hoàn trả số lượng sản phẩm về kho.';
       }
-      return 'Đơn hàng sẽ bị từ chối mà không ảnh hưởng đến kho.';
+      return 'Đơn hàng sẽ bị từ chối mà với lý do trên';
     };
 
     onMounted(() => {
