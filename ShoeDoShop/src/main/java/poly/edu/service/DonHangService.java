@@ -282,6 +282,111 @@ public class DonHangService {
         );
     }
 
+    //Hủy đơn hàng
+    @Transactional
+    public Map<String, Object> cancelOrder(Integer orderId, String cancelReason, Users currentUser) {
+        try {
+            // Lấy thông tin khách hàng
+            KhachHang khachHang = khachHangDAO.findByUser_MaUser(currentUser.getMaUser());
+            if (khachHang == null) {
+                System.out.println("ERROR: Không tìm thấy khách hàng");
+                return Map.of("success", false, "message", "Không tìm thấy thông tin khách hàng");
+            }
+
+            // Lấy đơn hàng
+            HoaDon hoaDon = hoaDonDAO.findById(orderId)
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn hàng với ID: " + orderId));
+
+            // Kiểm tra quyền sở hữu
+            if (!hoaDon.getKhachHang().getMaKH().equals(khachHang.getMaKH())) {
+                System.out.println("ERROR: Không có quyền - order KH=" + hoaDon.getKhachHang().getMaKH() + ", current KH=" + khachHang.getMaKH());
+                return Map.of("success", false, "message", "Bạn không có quyền hủy đơn hàng này");
+            }
+
+            // Kiểm tra trạng thái
+            if (!"Đang xử lý".equals(hoaDon.getTrangThai())) {
+                System.out.println("ERROR: Trạng thái không thể hủy: " + hoaDon.getTrangThai());
+                return Map.of("success", false, "message", "Chỉ có thể hủy đơn hàng đang ở trạng thái 'Đang xử lý'");
+            }
+
+            // Cập nhật trạng thái
+            hoaDon.setTrangThai("Đã từ chối");
+
+            // Thêm lý do hủy
+            String currentNote = hoaDon.getGhiChu() != null ? hoaDon.getGhiChu() : "";
+            String timestamp = new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date());
+            String cancelInfo = String.format("[HỦY ĐƠN - %s] Lý do hủy: %s", timestamp, cancelReason);
+
+            if (currentNote.isEmpty()) {
+                hoaDon.setGhiChu(cancelInfo);
+            } else {
+                hoaDon.setGhiChu(currentNote + "\n" + cancelInfo);
+            }
+
+            hoaDonDAO.save(hoaDon);
+
+            return Map.of(
+                    "success", true,
+                    "message", "Đơn hàng đã được hủy thành công",
+                    "order", buildOrderSummary(hoaDon)
+            );
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Map.of("success", false, "message", "Lỗi hệ thống: " + e.getMessage());
+        }
+    }
+
+    // Chỉnh sửa đánh giá sản phẩm
+    @Transactional
+    public Map<String, Object> updateReview(Map<String, Object> request, Users currentUser) {
+        KhachHang khachHang = khachHangDAO.findByUser_MaUser(currentUser.getMaUser());
+        if (khachHang == null) {
+            return Map.of("success", false, "message", "Không tìm thấy thông tin khách hàng");
+        }
+
+        Integer maDG = (Integer) request.get("maDG");
+        Integer sao = (Integer) request.get("sao");
+        String danhGiaCT = (String) request.get("danhGiaCT");
+
+        if (maDG == null) {
+            return Map.of("success", false, "message", "Thiếu mã đánh giá");
+        }
+
+        if (sao == null || sao < 1 || sao > 5) {
+            return Map.of("success", false, "message", "Đánh giá phải từ 1-5 sao");
+        }
+
+        DanhGia danhGia = danhGiaDAO.findById(maDG)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy đánh giá"));
+
+        HoaDonCT hoaDonCT = danhGia.getHoaDonCT();
+        HoaDon hoaDon = hoaDonCT.getHoaDon();
+
+        // Kiểm tra quyền sở hữu
+        if (!hoaDon.getKhachHang().getMaKH().equals(khachHang.getMaKH())) {
+            throw new RuntimeException("Bạn không có quyền chỉnh sửa đánh giá này");
+        }
+
+        // Cập nhật đánh giá
+        danhGia.setSao(sao);
+        danhGia.setDanhGiaCT(danhGiaCT);
+        danhGia.setNgayDG(new Date());
+
+        danhGiaDAO.save(danhGia);
+
+        return Map.of(
+                "success", true,
+                "message", "Đánh giá đã được cập nhật thành công",
+                "danhGia", Map.of(
+                        "maDG", danhGia.getMaDG(),
+                        "sao", danhGia.getSao(),
+                        "danhGiaCT", danhGia.getDanhGiaCT(),
+                        "ngayDG", danhGia.getNgayDG()
+                )
+        );
+    }
+
     // ==================== PRIVATE METHODS ====================
 
     private String mapStatusParam(String status) {

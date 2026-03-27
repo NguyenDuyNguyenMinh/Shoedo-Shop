@@ -194,20 +194,24 @@ export default {
     return apiClient.put(`/customer/orders/${id}/status?status=${encodeURIComponent(status)}`);
   },
 
-  requestReturn(data) {
-    return apiClient.post('/customer/orders/return', data);
+  cancelOrder(id, cancelReason) {
+    return apiClient.post(`/customer/orders/${id}/cancel`, { cancelReason });
   },
 
   reportIssue(data) {
-    return axios.post('/api/customer/orders/report-issue', data);
+    return apiClient.post('/customer/orders/report-issue', data);
   },
 
   addReview(data) {
-    return axios.post('/api/customer/orders/review', data);
+    return apiClient.post('/customer/orders/review', data);
+  },
+
+  updateReview(data) {
+    return apiClient.put('/customer/orders/review', data);
   },
 
   getReview(maHDCT) {
-    return axios.get(`/api/customer/orders/review/${maHDCT}`);
+    return apiClient.get(`/customer/orders/review/${maHDCT}`);
   },
 
   getAddresses() {
