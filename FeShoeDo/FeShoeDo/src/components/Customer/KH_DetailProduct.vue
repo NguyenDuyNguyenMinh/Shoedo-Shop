@@ -240,7 +240,7 @@ const addToCart = async () => {
     setTimeout(() => addedToCart.value = false, 2000)
   } catch (e) {
     console.error('Lỗi thêm giỏ hàng:', e)
-    alert('Không thể thêm vào giỏ hàng. Vui lòng đăng nhập.')
+    alert('Không thể thêm vào giỏ hàng.')
   }
 }
 
@@ -261,7 +261,7 @@ const buyNow = async () => {
     router.push({ name: 'Cart' })
   } catch (e) {
     console.error('Lỗi mua ngay:', e)
-    alert('Không thể thực hiện. Vui lòng đăng nhập.')
+    alert('Không thể thực hiện.')
   }
 }
 
@@ -457,14 +457,6 @@ onMounted(() => {
             <div class="divider"></div>
 
             <div class="policy-row">
-              <div class="policy-item">
-                <i class="bi bi-truck"></i>
-                <span>Miễn phí ship<br/><small>Đơn từ 500k</small></span>
-              </div>
-              <div class="policy-item">
-                <i class="bi bi-arrow-counterclockwise"></i>
-                <span>Đổi trả 30 ngày<br/><small>Miễn phí đổi trả</small></span>
-              </div>
               <div class="policy-item">
                 <i class="bi bi-shield-check"></i>
                 <span>Hàng chính hãng<br/><small>Cam kết 100%</small></span>
@@ -784,9 +776,9 @@ onMounted(() => {
 }
 .btn-buy:hover { background: #c62828; }
 
-.policy-row { display: flex; margin-top: 16px; border: 1px solid #eee; }
+.policy-row { display: flex; margin-top: 16px; border: 1px solid #eee; justify-content: center;}
 .policy-item {
-  flex: 1; display: flex; align-items: center; gap: 10px;
+  flex: 1; display: flex; align-items: center; gap: 10px; justify-content: center;
   padding: 12px; border-right: 1px solid #eee; font-size: 12px; color: #555;
 }
 .policy-item:last-child { border-right: none; }

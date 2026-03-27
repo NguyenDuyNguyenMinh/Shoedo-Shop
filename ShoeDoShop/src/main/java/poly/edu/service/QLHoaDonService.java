@@ -81,26 +81,36 @@ public class QLHoaDonService {
         checkStatus(hd, "Đang xử lý", "Chỉ có thể xác nhận đơn hàng ở trạng thái 'Đang xử lý'");
         checkEmployee();
 
-        List<String> outOfStock = new ArrayList<>();
-        for (HoaDonCT ct : hd.getHoaDonCTs()) {
-            if (ct.getSanPhamChiTiet().getSoLuong() < ct.getSoLuong()) {
-                outOfStock.add(ct.getSanPhamChiTiet().getSanPham().getTenSP());
+        String phuongThucTT = hd.getPhuongThucTT();
+        
+        if ("COD".equals(phuongThucTT)) {
+            List<String> outOfStock = new ArrayList<>();
+            for (HoaDonCT ct : hd.getHoaDonCTs()) {
+                if (ct.getSanPhamChiTiet().getSoLuong() < ct.getSoLuong()) {
+                    outOfStock.add(ct.getSanPhamChiTiet().getSanPham().getTenSP());
+                }
+            }
+            if (!outOfStock.isEmpty()) {
+                return error("Sản phẩm không đủ số lượng: " + String.join(", ", outOfStock));
+            }
+
+            for (HoaDonCT ct : hd.getHoaDonCTs()) {
+                spctDAO.truSoLuong(ct.getSanPhamChiTiet().getMaSKU(), ct.getSoLuong());
             }
         }
-        if (!outOfStock.isEmpty()) {
-            return error("Sản phẩm không đủ số lượng: " + String.join(", ", outOfStock));
-        }
-
-        for (HoaDonCT ct : hd.getHoaDonCTs()) {
-            spctDAO.truSoLuong(ct.getSanPhamChiTiet().getMaSKU(), ct.getSoLuong());
-        }
-
         hd.setQuanTri(getCurrentEmployee());
         hd.setTrangThai("Đang giao");
         hoaDonDAO.save(hd);
 
         emailAsyncService.sendShippingEmail(hd);
-        return success("Đã vận chuyển đơn hàng và trừ số lượng trong kho");
+        
+        String message = "Đã vận chuyển đơn hàng";
+        if ("COD".equals(phuongThucTT)) {
+            message += " và trừ số lượng trong kho";
+        } else {
+            message += " (VNPAY - đã trừ số lượng khi đặt hàng)";
+        }
+        return success(message);
     }
 
     @Transactional
@@ -114,8 +124,15 @@ public class QLHoaDonService {
         }
 
         String lyDo = payload.getOrDefault("lyDo", "Không có lý do");
+        String phuongThucTT = hd.getPhuongThucTT();
 
-        if ("Đang giao".equals(current)) {
+        if ("Đang xử lý".equals(current)) {
+            if ("VNPAY".equals(phuongThucTT)) {
+                for (HoaDonCT ct : hd.getHoaDonCTs()) {
+                    spctDAO.congSoLuong(ct.getSanPhamChiTiet().getMaSKU(), ct.getSoLuong());
+                }
+            }
+        } else if ("Đang giao".equals(current)) {
             for (HoaDonCT ct : hd.getHoaDonCTs()) {
                 spctDAO.congSoLuong(ct.getSanPhamChiTiet().getMaSKU(), ct.getSoLuong());
             }
@@ -126,9 +143,17 @@ public class QLHoaDonService {
         hd.setGhiChu(lyDo);
         hoaDonDAO.save(hd);
 
-        String msg = "Đã từ chối đơn hàng";
-        if ("Đang giao".equals(current)) msg += " và hoàn trả số lượng về kho";
-        return success(msg);
+        StringBuilder msg = new StringBuilder("Đã từ chối đơn hàng");
+
+        if ("Đang xử lý".equals(current) && "VNPAY".equals(phuongThucTT)) {
+            msg.append(" và hoàn trả số lượng về kho (VNPAY)");
+        } else if ("Đang giao".equals(current)) {
+            msg.append(" và hoàn trả số lượng về kho");
+        } else if ("Đang xử lý".equals(current) && "COD".equals(phuongThucTT)) {
+            msg.append(" (COD - chưa trừ số lượng)");
+        }
+        
+        return success(msg.toString());
     }
 
     @Transactional
@@ -136,6 +161,7 @@ public class QLHoaDonService {
         HoaDon hd = findOrder(id);
         checkStatus(hd, "Đang giao", "Chỉ có thể đánh dấu thất bại cho đơn hàng đang giao");
 
+        // Cả COD và VNPAY đều đã trừ số lượng, cần hoàn trả
         for (HoaDonCT ct : hd.getHoaDonCTs()) {
             spctDAO.congSoLuong(ct.getSanPhamChiTiet().getMaSKU(), ct.getSoLuong());
         }
@@ -156,6 +182,8 @@ public class QLHoaDonService {
         hd.setTrangThai("Hoàn tất");
         hd.setNgayDen(new Date());
         hd.setQuanTri(getCurrentEmployee());
+        
+        // Cập nhật số lượng đã bán cho sản phẩm
         for (HoaDonCT ct : hd.getHoaDonCTs()) {
             SanPhamChiTiet spct = ct.getSanPhamChiTiet();
             SanPham sp = spct.getSanPham();
