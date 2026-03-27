@@ -222,13 +222,47 @@ const getRatingCount = (star) => thongKeSao.value[star] || 0
 const increaseQty = () => quantity.value++
 const decreaseQty = () => { if (quantity.value > 1) quantity.value-- }
 
-const addToCart = () => {
+const addToCart = async () => {
   if (!product.value?.isFreesize && !selectedSize.value) {
     alert('Vui lòng chọn size!'); return
   }
   if (!selectedColor.value) { alert('Vui lòng chọn màu sắc!'); return }
-  addedToCart.value = true
-  setTimeout(() => addedToCart.value = false, 2000)
+
+  const sku = (apiProduct.value.chiTiets || []).find(s =>
+    s.tenMau === selectedColor.value &&
+    (product.value.isFreesize || s.coGiay === selectedSize.value)
+  )
+  if (!sku) { alert('Không tìm thấy SKU phù hợp!'); return }
+
+  try {
+    await api.addToCart({ maSKU: sku.maSKU, soLuong: quantity.value })
+    addedToCart.value = true
+    setTimeout(() => addedToCart.value = false, 2000)
+  } catch (e) {
+    console.error('Lỗi thêm giỏ hàng:', e)
+    alert('Không thể thêm vào giỏ hàng. Vui lòng đăng nhập.')
+  }
+}
+
+const buyNow = async () => {
+  if (!product.value?.isFreesize && !selectedSize.value) {
+    alert('Vui lòng chọn size!'); return
+  }
+  if (!selectedColor.value) { alert('Vui lòng chọn màu sắc!'); return }
+
+  const sku = (apiProduct.value.chiTiets || []).find(s =>
+    s.tenMau === selectedColor.value &&
+    (product.value.isFreesize || s.coGiay === selectedSize.value)
+  )
+  if (!sku) { alert('Không tìm thấy SKU phù hợp!'); return }
+
+  try {
+    await api.addToCart({ maSKU: sku.maSKU, soLuong: quantity.value })
+    router.push({ name: 'Cart' })
+  } catch (e) {
+    console.error('Lỗi mua ngay:', e)
+    alert('Không thể thực hiện. Vui lòng đăng nhập.')
+  }
 }
 
 const goToDetail = (id) => {
@@ -415,7 +449,7 @@ onMounted(() => {
                 <i :class="addedToCart ? 'bi bi-check-lg' : 'bi bi-cart-plus'"></i>
                 {{ addedToCart ? 'Đã thêm vào giỏ!' : 'Thêm vào giỏ hàng' }}
               </button>
-              <button class="btn-buy">
+              <button class="btn-buy" @click="buyNow">
                 <i class="bi bi-lightning-fill"></i> Mua ngay
               </button>
             </div>

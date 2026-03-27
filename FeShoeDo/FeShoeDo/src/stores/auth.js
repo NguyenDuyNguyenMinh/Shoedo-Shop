@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import axios from 'axios';
+import api from '@/services/api';
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
@@ -27,7 +27,6 @@ export const useAuthStore = defineStore('auth', {
     isAdmin: (state) => state.user?.vaiTro === 'Admin',
     isActive: (state) => state.user?.isActive === true,
     maUser: (state) => state.user?.maUser,
-    userName: (state) => state.user?.userName,
   },
   
   actions: {
@@ -67,10 +66,8 @@ export const useAuthStore = defineStore('auth', {
 
     async checkSession() {
       try {
-        const response = await axios.get('/api/auth/check-session', {
-          withCredentials: true
-        });
-        
+        const response = await api.getCurrentUser();
+
         if (response.data.success && response.data.user) {
           this.user = response.data.user;
           this.cartCount = response.data.user.cartCount || 0;
@@ -93,10 +90,8 @@ export const useAuthStore = defineStore('auth', {
 
     async autoLoginFromCookie() {
       try {
-        const response = await axios.get('/api/auth/auto-login', {
-          withCredentials: true
-        });
-        
+        const response = await api.getCurrentUser();
+
         if (response.data.success && response.data.user) {
           this.user = response.data.user;
           this.cartCount = response.data.user.cartCount || 0;
@@ -116,9 +111,7 @@ export const useAuthStore = defineStore('auth', {
 
     async logout() {
       try {
-        await axios.post('/api/auth/logout', {}, {
-          withCredentials: true
-        });
+        await api.logout();
         localStorage.removeItem('user');
         localStorage.removeItem('auth_token');
       } catch (error) {
@@ -127,16 +120,14 @@ export const useAuthStore = defineStore('auth', {
         this.clearAuth();
       }
     },
-    
+
     async fetchCurrentUser() {
       try {
-        const response = await axios.get('/api/auth/current-user', {
-          withCredentials: true
-        });
+        const response = await api.getCurrentUser();
         if (response.data.success) {
           this.user = response.data.user;
           this.cartCount = response.data.user.cartCount || 0;
-          
+
           const token = btoa(JSON.stringify({
             maUser: response.data.user.maUser,
             exp: Date.now() + 24 * 60 * 60 * 1000
@@ -149,13 +140,11 @@ export const useAuthStore = defineStore('auth', {
       }
       return false;
     },
-    
+
     async updateCartCount() {
       if (this.isAuthenticated) {
         try {
-          const response = await axios.get('/api/auth/current-user', {
-            withCredentials: true
-          });
+          const response = await api.getCurrentUser();
           if (response.data.success) {
             this.cartCount = response.data.user.cartCount || 0;
           }
@@ -164,19 +153,19 @@ export const useAuthStore = defineStore('auth', {
         }
       }
     },
-    
+
     async loadUserFromToken() {
       if (!this.token) return false;
-      
+
       try {
         const tokenData = JSON.parse(atob(this.token));
-        
+
         if (tokenData.exp < Date.now()) {
           this.clearAuth();
           return false;
         }
 
-        const response = await axios.get('/api/auth/current-user');
+        const response = await api.getCurrentUser();
         if (response.data.success) {
           this.user = response.data.user;
           this.cartCount = response.data.user.cartCount || 0;
