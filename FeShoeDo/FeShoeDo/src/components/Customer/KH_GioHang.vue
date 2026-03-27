@@ -165,61 +165,36 @@
 <script>
 import KH_Navbar from '@/components/shared/KH_Navbar.vue';
 import Footer from '@/components/shared/Footer.vue';
-import api from '@/services/api';
-import { useAuthStore } from '@/stores/auth';
+import { useCartStore } from '@/stores/cart';
 
 export default {
   name: 'KH_GioHang',
   components: { KH_Navbar, Footer },
-  data() {
-    return {
-      cartItems: [],
-      selectedIds: [],
-      loading: true,
-    };
+  created() {
+    // Nếu cart store chưa load hoặc đã expired, fetch lại
+    if (!this.cartStore.isLoaded || this.cartStore.items.length === 0) {
+      this.cartStore.fetchCart();
+    }
   },
   computed: {
-    selectedItems() {
-      return this.cartItems.filter(item => this.selectedIds.includes(item.maGH));
+    // Delegate to cartStore — template giữ nguyên không đổi
+    cartStore() { return useCartStore(); },
+    cartItems() { return this.cartStore.items; },
+    selectedIds: {
+      get() { return this.cartStore.selectedIds; },
+      set(val) { this.cartStore.setSelectedIds(val); }
     },
-    allSelected() {
-      return this.cartItems.length > 0 && this.selectedIds.length === this.cartItems.length;
-    },
-    subtotal() {
-      return this.selectedItems.reduce((sum, item) => sum + (item.thanhTien || 0), 0);
-    },
-    totalDiscount() {
-      return this.selectedItems.reduce((sum, item) => {
-        let discount = (item.giaGoc - item.giaSauKM) * item.soLuong;
-        return sum + (discount > 0 ? discount : 0);
-      }, 0);
-    },
+    loading() { return this.cartStore.loading; },
+    selectedItems() { return this.cartStore.selectedItems; },
+    allSelected() { return this.cartStore.allSelected; },
+    subtotal() { return this.cartStore.subtotal; },
+    totalDiscount() { return this.cartStore.totalDiscount; },
   },
   methods: {
-    async loadCart() {
-      this.loading = true;
-      try {
-        const response = await api.getCart();
-        if (response.data.success) {
-          this.cartItems = (response.data.items || []).map(item => ({
-            ...item,
-            updating: false,
-          }));
-          // Mặc định chọn tất cả
-          this.selectedIds = this.cartItems.map(item => item.maGH);
-        }
-      } catch (error) {
-        console.error('Error loading cart:', error);
-      } finally {
-        this.loading = false;
-      }
-    },
-
     getImageUrl(item) {
       const hinhAnh = item.hinhAnh;
       if (!hinhAnh) return 'https://via.placeholder.com/200?text=No+Image';
       if (hinhAnh.startsWith('http')) return hinhAnh;
-      // Thử tải từ backend
       return `http://localhost:8080/images/${hinhAnh}`;
     },
 
@@ -227,36 +202,26 @@ export default {
       const img = event.target;
       const currentSrc = img.src;
       const maSP = item.maSP;
-      
-      // Danh sách fallback URLs thử theo thứ tự
       const fallbacks = [
         `http://localhost:8080/images/sp${maSP}.jpg`,
         `http://localhost:8080/images/sp${maSP}_black.jpg`,
         `http://localhost:8080/images/sp${maSP}_white.jpg`,
         'https://via.placeholder.com/200?text=No+Image'
       ];
-      
-      // Tìm URL tiếp theo chưa thử
+      if (currentSrc.includes('placeholder.com')) return;
       const currentIndex = fallbacks.indexOf(currentSrc);
-      const nextIndex = currentIndex + 1;
-      
-      if (currentSrc.includes('placeholder.com')) return; // Đã dùng placeholder rồi
-      
       if (currentIndex === -1) {
-        // Đang dùng URL gốc từ DB, thử fallback đầu tiên
         img.src = fallbacks[0];
-      } else if (nextIndex < fallbacks.length) {
-        img.src = fallbacks[nextIndex];
+      } else if (currentIndex + 1 < fallbacks.length) {
+        img.src = fallbacks[currentIndex + 1];
       }
     },
 
     getProductName(item) {
-      // Ưu tiên hiển thị tenSP, nếu không có thì mới dùng moTa
       if (item.tenSP && item.tenSP.trim() !== '') {
         const cleaned = item.tenSP.replace(/^SP\d+-ShoeDo\s*-\s*/, '');
         return cleaned || item.tenSP;
       }
-      // Fallback: nếu tenSP không có thì dùng moTa
       if (item.moTa && item.moTa.trim() !== '') {
         return item.moTa;
       }
@@ -269,118 +234,71 @@ export default {
     },
 
     isSelected(maGH) {
-      return this.selectedIds.includes(maGH);
+      return this.cartStore.selectedIds.includes(maGH);
     },
 
     toggleSelect(maGH) {
-      const index = this.selectedIds.indexOf(maGH);
+      const ids = [...this.cartStore.selectedIds];
+      const index = ids.indexOf(maGH);
       if (index > -1) {
-        this.selectedIds.splice(index, 1);
+        ids.splice(index, 1);
       } else {
-        this.selectedIds.push(maGH);
+        ids.push(maGH);
       }
+      this.cartStore.setSelectedIds(ids);
     },
 
     toggleSelectAll() {
-      if (this.allSelected) {
-        this.selectedIds = [];
+      if (this.cartStore.allSelected) {
+        this.cartStore.setSelectedIds([]);
       } else {
-        this.selectedIds = this.cartItems.map(item => item.maGH);
+        this.cartStore.setSelectedIds(this.cartStore.items.map(item => item.maGH));
       }
     },
 
     async changeQty(item, delta) {
       const newQty = item.soLuong + delta;
       if (newQty < 1) return;
-      if (newQty > item.soLuongTon) {
+      if (newQty > (item.soLuongTon || 0)) {
         alert(`Số lượng tồn kho chỉ còn ${item.soLuongTon}`);
         return;
       }
-      item.updating = true;
-      try {
-        const response = await api.updateCartItem(item.maGH, newQty);
-        if (response.data.success) {
-          item.soLuong = newQty;
-          item.thanhTien = item.giaSauKM * newQty;
-        } else {
-          alert(response.data.message);
-        }
-      } catch (error) {
-        alert('Lỗi khi cập nhật số lượng');
-      } finally {
-        item.updating = false;
-      }
+      await this.cartStore.updateItem(item.maGH, newQty);
     },
 
     async setQty(item, value) {
       const newQty = parseInt(value);
       if (isNaN(newQty) || newQty < 1) return;
-      if (newQty > item.soLuongTon) {
+      if (newQty > (item.soLuongTon || 0)) {
         alert(`Số lượng tồn kho chỉ còn ${item.soLuongTon}`);
         return;
       }
-      item.updating = true;
-      try {
-        const response = await api.updateCartItem(item.maGH, newQty);
-        if (response.data.success) {
-          item.soLuong = newQty;
-          item.thanhTien = item.giaSauKM * newQty;
-        } else {
-          alert(response.data.message);
-        }
-      } catch (error) {
-        alert('Lỗi khi cập nhật số lượng');
-      } finally {
-        item.updating = false;
-      }
+      await this.cartStore.updateItem(item.maGH, newQty);
     },
 
     async removeItem(maGH) {
       if (!confirm('Bạn có chắc muốn xóa sản phẩm này khỏi giỏ hàng?')) return;
-      try {
-        const response = await api.removeFromCart(maGH);
-        if (response.data.success) {
-          this.cartItems = this.cartItems.filter(item => item.maGH !== maGH);
-          this.selectedIds = this.selectedIds.filter(id => id !== maGH);
-          // Update cart count in store
-          const authStore = useAuthStore();
-          authStore.cartCount = response.data.cartCount || this.cartItems.length;
-        }
-      } catch (error) {
+      const result = await this.cartStore.removeItem(maGH);
+      if (!result.success) {
         alert('Lỗi khi xóa sản phẩm');
       }
     },
 
     async removeSelected() {
-      if (this.selectedIds.length === 0) return;
-      if (!confirm(`Bạn có chắc muốn xóa ${this.selectedIds.length} sản phẩm đã chọn?`)) return;
-      
-      for (const maGH of [...this.selectedIds]) {
-        try {
-          await api.removeFromCart(maGH);
-          this.cartItems = this.cartItems.filter(item => item.maGH !== maGH);
-        } catch (error) {
-          console.error('Error removing item:', maGH, error);
-        }
-      }
-      this.selectedIds = [];
-      const authStore = useAuthStore();
-      authStore.cartCount = this.cartItems.length;
+      if (this.cartStore.selectedIds.length === 0) return;
+      if (!confirm(`Bạn có chắc muốn xóa ${this.cartStore.selectedIds.length} sản phẩm đã chọn?`)) return;
+      await this.cartStore.removeSelected();
     },
 
     goToCheckout() {
-      if (this.selectedItems.length === 0) {
+      if (this.cartStore.selectedItems.length === 0) {
         alert('Vui lòng chọn ít nhất một sản phẩm để đặt hàng');
         return;
       }
-      // Lưu selected items vào sessionStorage để checkout page sử dụng
-      sessionStorage.setItem('checkoutItems', JSON.stringify(this.selectedItems));
-      sessionStorage.setItem('checkoutItemIds', JSON.stringify(this.selectedIds));
+      sessionStorage.setItem('checkoutItems', JSON.stringify(this.cartStore.selectedItems));
+      sessionStorage.setItem('checkoutItemIds', JSON.stringify(this.cartStore.selectedIds));
       this.$router.push('/customer/checkout');
     },
-  },
-  mounted() {
-    this.loadCart();
   },
 };
 </script>
