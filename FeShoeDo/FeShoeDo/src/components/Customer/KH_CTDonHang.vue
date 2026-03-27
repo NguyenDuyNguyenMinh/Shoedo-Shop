@@ -149,6 +149,11 @@
         </div>
 
         <div class="mt-3 d-flex justify-content-end align-items-center gap-2 flex-wrap">
+          <!-- Nút Hủy đơn hàng -->
+          <button v-if="canCancelOrder(order)" class="btn btn-danger" @click="openCancelModal(order)" :disabled="cancellingOrderId === order.maHD">
+            <span v-if="cancellingOrderId === order.maHD" class="spinner-border spinner-border-sm me-2"></span>
+            <i class="bi bi-x-circle me-1"></i> Hủy đơn hàng
+          </button>
           <button class="btn btn-success" @click="openConfirmModal(order?.maHD)" :disabled="confirmingOrderId === order?.maHD" v-if="order?.trangThai === 'Đang giao'">
             <span v-if="confirmingOrderId === order?.maHD" class="spinner-border spinner-border-sm me-2"></span>
             <i class="bi bi-check-circle me-1"></i> Xác nhận đã nhận hàng
@@ -199,6 +204,54 @@
             <button type="button" class="btn btn-success" @click="handleConfirmReceived" :disabled="confirming">
               <span v-if="confirming" class="spinner-border spinner-border-sm me-2"></span>
               <i class="bi bi-check-circle me-1"></i>Xác nhận
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Hủy đơn hàng -->
+    <div v-if="showCancelModal" class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header bg-danger text-white">
+            <h5 class="modal-title">
+              <i class="bi bi-x-circle me-2"></i>Hủy đơn hàng
+            </h5>
+            <button type="button" class="btn-close btn-close-white" @click="closeCancelModal"></button>
+          </div>
+          <div class="modal-body">
+            <div v-if="selectedCancelOrder">
+              <p class="mb-3"><strong>Mã đơn hàng:</strong> #{{ selectedCancelOrder.maHD }}</p>
+              <p class="mb-3"><strong>Ngày đặt:</strong> {{ formatDate(selectedCancelOrder.ngayMua) }}</p>
+              <p class="mb-3"><strong>Tổng tiền:</strong> {{ formatPrice(totalPrice) }}</p>
+
+              <div class="mb-3">
+                <label class="form-label fw-bold">Lý do hủy đơn <span class="text-danger">*</span></label>
+                <select class="form-select" v-model="cancelReason">
+                  <option value="">-- Chọn lý do hủy --</option>
+                  <option value="Đặt nhầm sản phẩm">Đặt nhầm sản phẩm</option>
+                  <option value="Thay đổi ý định mua hàng">Thay đổi ý định mua hàng</option>
+                  <option value="Tìm thấy sản phẩm giá tốt hơn">Tìm thấy sản phẩm giá tốt hơn</option>
+                  <option value="Thời gian giao hàng quá lâu">Thời gian giao hàng quá lâu</option>
+                  <option value="Sản phẩm không còn nhu cầu">Sản phẩm không còn nhu cầu</option>
+                  <option value="Lý do khác">Lý do khác</option>
+                </select>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Mô tả chi tiết (tùy chọn)</label>
+                <textarea class="form-control" rows="3" v-model="cancelNote" placeholder="Vui lòng mô tả chi tiết lý do hủy đơn hàng..."></textarea>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" @click="closeCancelModal">
+              <i class="bi bi-arrow-left me-1"></i>Quay lại
+            </button>
+            <button type="button" class="btn btn-danger" @click="submitCancelOrder" :disabled="!cancelReason || cancelling">
+              <span v-if="cancelling" class="spinner-border spinner-border-sm me-2"></span>
+              <i class="bi bi-check-circle me-1"></i>Xác nhận hủy
             </button>
           </div>
         </div>
@@ -445,11 +498,19 @@ const error = ref('');
 const diaChiError = ref('');
 const reportingOrderId = ref(null);
 const confirmingOrderId = ref(null);
+const cancellingOrderId = ref(null);
 
 // Modal xác nhận
 const showConfirmModal = ref(false);
 const confirming = ref(false);
 const pendingOrderId = ref(null);
+
+// Modal hủy đơn
+const showCancelModal = ref(false);
+const cancelling = ref(false);
+const selectedCancelOrder = ref(null);
+const cancelReason = ref('');
+const cancelNote = ref('');
 
 // Modal báo lỗi
 const showReportIssueModal = ref(false);
@@ -544,6 +605,12 @@ const fetchOrderDetail = async () => {
   } finally {
     loading.value = false;
   }
+};
+
+// Kiểm tra có thể hủy đơn không
+const canCancelOrder = (order) => {
+  if (!order) return false;
+  return order.trangThai === 'Đang xử lý';
 };
 
 const canReportIssue = (order) => {
@@ -642,6 +709,67 @@ const canReview = (item) => {
   return !item.daDanhGia;
 };
 
+// Mở modal hủy đơn
+const openCancelModal = (orderItem) => {
+  selectedCancelOrder.value = orderItem;
+  cancelReason.value = '';
+  cancelNote.value = '';
+  showCancelModal.value = true;
+};
+
+const closeCancelModal = () => {
+  showCancelModal.value = false;
+  selectedCancelOrder.value = null;
+  cancelReason.value = '';
+  cancelNote.value = '';
+};
+
+// Gửi hủy đơn
+const submitCancelOrder = async () => {
+  if (!cancelReason.value) {
+    errorMessage.value = 'Vui lòng chọn lý do hủy đơn';
+    showErrorModal.value = true;
+    return;
+  }
+
+  cancelling.value = true;
+  cancellingOrderId.value = selectedCancelOrder.value?.maHD;
+
+  try {
+    const fullReason = cancelNote.value
+        ? `${cancelReason.value} - ${cancelNote.value}`
+        : cancelReason.value;
+
+    const response = await api.cancelOrder(selectedCancelOrder.value?.maHD, fullReason);
+
+    if (response.data.success) {
+      closeCancelModal();
+      successMessage.value = 'Đơn hàng đã được hủy thành công!';
+      showSuccessModal.value = true;
+
+      // Cập nhật trạng thái đơn hàng trong view
+      if (order.value && order.value.maHD === selectedCancelOrder.value?.maHD) {
+        order.value.trangThai = 'Đã từ chối';
+        order.value.ghiChu = fullReason;
+      }
+
+      // Reload lại dữ liệu sau 1.5 giây
+      setTimeout(() => {
+        fetchOrderDetail();
+      }, 1500);
+    } else {
+      errorMessage.value = response.data.message || 'Không thể hủy đơn hàng';
+      showErrorModal.value = true;
+    }
+  } catch (err) {
+    errorMessage.value = err.response?.data?.message || err.message || 'Lỗi khi hủy đơn hàng';
+    showErrorModal.value = true;
+  } finally {
+    cancelling.value = false;
+    cancellingOrderId.value = null;
+  }
+};
+
 const openReportIssueModal = (orderItem) => {
   selectedOrder.value = orderItem;
   reportReason.value = '';
@@ -677,7 +805,7 @@ const submitReportIssue = async () => {
       if (order.value && order.value.maHD === selectedOrder.value?.maHD) {
         order.value.trangThai = 'Báo lỗi';
       }
-      setTimeout(() => window.location.reload(), 1000);
+      setTimeout(() => fetchOrderDetail(), 1000);
     } else {
       errorMessage.value = response.data.message || 'Không thể gửi báo lỗi';
       showErrorModal.value = true;
@@ -885,6 +1013,7 @@ onMounted(() => {
   fetchOrderDetail();
 });
 </script>
+
 <style scoped>
 /* ========== CARD STYLES ========== */
 .card {
@@ -1050,6 +1179,20 @@ onMounted(() => {
   background-color: #e0a800;
   border-color: #d39e00;
   color: #000000;
+}
+
+.btn-danger {
+  background-color: #dc3545;
+  border-color: #dc3545;
+  color: #ffffff;
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  transition: all 0.3s ease;
+}
+
+.btn-danger:hover {
+  background-color: #c82333;
+  border-color: #bd2130;
 }
 
 .btn-outline-warning {
