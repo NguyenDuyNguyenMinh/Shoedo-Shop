@@ -1,8 +1,7 @@
 <template>
   
   <div class="employee-layout">
-    <NV_Sidebar />
-
+<NV_Sidebar @toggle-collapse="handleSidebarCollapse" />
     <!-- modal xem chi tiết -->
     <div class="modal fade" id="detailModal" tabindex="-1" aria-hidden="true" ref="detailModal">
       <div class="modal-dialog modal-dialog-centered modal-lg">
@@ -115,7 +114,7 @@
   </div>
 
 
-    <main class="main-content">
+<main class="main-content" :class="{ 'expanded': isSidebarCollapsed }">
       <div class="page-container">
         <div v-if="successMessage" class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
           <i class="bi bi-check-circle-fill me-2"></i>
@@ -595,6 +594,12 @@ watch([filterKeyword, filterRating, filterDate, sortOrder], () => {
   handleFilterChange();
 });
 
+const isSidebarCollapsed = ref(false);
+
+const handleSidebarCollapse = (collapsedState) => {
+  isSidebarCollapsed.value = collapsedState;
+};
+
 onMounted(() => {
   fetchReviews();
 
@@ -769,5 +774,16 @@ onMounted(() => {
     justify-content: flex-start;
     margin-top: 15px;
   }
+}
+.main-content {
+  margin-left: 260px; /* Trạng thái Sidebar mặc định */
+  min-height: 100vh;
+  background: #f8f9fa;
+  transition: margin-left 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); /* Thêm dòng này để mượt */
+}
+
+/* Khi Sidebar thu nhỏ thì nới rộng nội dung chính ra */
+.main-content.expanded {
+  margin-left: 80px; 
 }
 </style>

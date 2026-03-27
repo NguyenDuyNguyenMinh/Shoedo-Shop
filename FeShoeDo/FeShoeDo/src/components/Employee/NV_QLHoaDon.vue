@@ -1,8 +1,7 @@
 <template>
   <div class="employee-layout">
-    <NV_Sidebar />
-    
-    <main class="main-content">
+<NV_Sidebar @toggle-collapse="handleSidebarCollapse" />
+<main class="main-content" :class="{ 'expanded': isSidebarCollapsed }">
       <div class="page-container">
         <!-- Thông báo -->
         <div v-if="message" class="alert alert-success alert-dismissible fade show" role="alert">
@@ -707,6 +706,7 @@ import NV_Sidebar from '@/components/shared/NV_Sidebar.vue';
 import { Modal } from 'bootstrap';
 import axios from 'axios';
 
+
 export default {
   name: 'QLDonHang',
   components: {
@@ -1035,6 +1035,12 @@ export default {
       return 'Đơn hàng sẽ bị từ chối mà với lý do trên';
     };
 
+    const isSidebarCollapsed = ref(false);
+
+const handleSidebarCollapse = (collapsedState) => {
+  isSidebarCollapsed.value = collapsedState;
+};
+
     onMounted(() => {
       loadOrders();
       loadEmployees();
@@ -1059,6 +1065,7 @@ export default {
       rejectReason,
       orderToFail,
       failReason,
+      isSidebarCollapsed,
       
       // Computed
       orderCounts,
@@ -1084,7 +1091,8 @@ export default {
       showDeliveryFailedModal,
       confirmDeliveryFailed,
       sendApologyEmail,
-      printOrder
+      printOrder,
+      handleSidebarCollapse
     };
   }
 };
@@ -1225,5 +1233,15 @@ export default {
   background-color: #007bff;
   color: #fff;
 }
+.main-content {
+  margin-left: 260px; /* Trạng thái Sidebar mặc định */
+  min-height: 100vh;
+  background: #f8f9fa;
+  transition: margin-left 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); /* Thêm dòng này để mượt */
+}
 
+/* Khi Sidebar thu nhỏ thì nới rộng nội dung chính ra */
+.main-content.expanded {
+  margin-left: 80px; 
+}
 </style>
