@@ -10,14 +10,18 @@ const apiClient = axios.create({
 
 apiClient.interceptors.request.use(
   (config) => {
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
-    const token = localStorage.getItem('auth_token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    } else if (user?.token) {
-      config.headers.Authorization = `Bearer ${user.token}`;
+    try {
+      const userRaw = localStorage.getItem('user');
+      const user = userRaw ? JSON.parse(userRaw) : null;
+      const token = localStorage.getItem('auth_token');
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      } else if (user?.token) {
+        config.headers.Authorization = `Bearer ${user.token}`;
+      }
+    } catch (e) {
+      // ignore parse errors
     }
-    
     return config;
   },
   (error) => {

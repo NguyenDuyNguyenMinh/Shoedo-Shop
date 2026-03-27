@@ -271,19 +271,12 @@ public class GioHangService {
         hoaDon.setKhachHang(kh);
         hoaDon.setPhuongThucTT(isVNPay ? "VNPAY" : phuongThucTT);
         hoaDon.setDiaChiJson(diaChiJson);
-        
-        // Nếu là VNPAY, đặt trạng thái chờ thanh toán (dùng Đang xử lý vì DB chỉ có giá trị này)
-        if (isVNPay) {
-            hoaDon.setTrangThai("Đang xử lý");
-        } else {
-            hoaDon.setTrangThai("Đang xử lý");
-        }
-        
+        hoaDon.setTrangThai("Đang xử lý");
         hoaDon.setGhiChu(dto.getGhiChu());
         hoaDon.setNgayMua(new Date());
         hoaDon = hoaDonDAO.save(hoaDon);
 
-        // Tạo chi tiết hóa đơn + trừ kho (chỉ khi không phải VNPAY hoặc đã thanh toán)
+        // Tạo chi tiết hóa đơn
         double tongTien = 0;
         for (GioHang item : selectedItems) {
             SanPhamChiTiet spct = item.getSanPhamChiTiet();
@@ -303,6 +296,11 @@ public class GioHangService {
             hoaDonCTDAO.save(hdct);
 
             tongTien += donGia * item.getSoLuong();
+
+            // VNPAY: trừ stock ngay tại checkout vì đã chuyển khoản đặt cọc
+            if (isVNPay) {
+                sanPhamChiTietDAO.truSoLuong(spct.getMaSKU(), item.getSoLuong());
+            }
         }
 
         // Xóa các item đã checkout khỏi giỏ hàng
