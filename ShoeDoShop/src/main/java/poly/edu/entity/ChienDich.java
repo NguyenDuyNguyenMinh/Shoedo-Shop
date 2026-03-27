@@ -37,7 +37,7 @@ public class ChienDich {
     
     
     @Column(name = "TrangThai", length = 50)
-    private String trangThai = "Đang chạy";
+    private String trangThai = "Chưa bắt đầu";
     
     @Transient
     public boolean isActive() {

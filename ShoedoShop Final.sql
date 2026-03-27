@@ -165,11 +165,11 @@ GO
 CREATE TABLE ChienDich (
     MaCD INT IDENTITY(1,1) PRIMARY KEY,
     TenChienDich NVARCHAR(255),
-    MaSP INT,
+    MaSP INT NOT NULL,
     KhuyenMaiCD INT,
     ThoiGianBatDau DATETIME,
     ThoiGianKetThuc DATETIME,
-    TrangThai NVARCHAR(50) DEFAULT N'Đang chạy' CHECK (TrangThai IN (N'Đang chạy', N'Đã dừng', N'Kết thúc')),
+    TrangThai NVARCHAR(50) DEFAULT N'Đang chạy' CHECK (TrangThai IN (N'Chưa bắt đầu', N'Đang chạy', N'Đã dừng', N'Kết thúc')),
     CONSTRAINT FK_ChienDich_SanPham FOREIGN KEY (MaSP) REFERENCES SanPham(MaSP)
 );
 GO
