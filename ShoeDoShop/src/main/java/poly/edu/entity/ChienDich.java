@@ -25,16 +25,17 @@ public class ChienDich {
     private SanPham sanPham;
     
     @Column(name = "KhuyenMaiCD")
-    private Integer khuyenMaiCD;
-    
+    private Integer khuyenMaiCD;    
+
     @Column(name = "ThoiGianBatDau", nullable = false)
     private LocalDateTime thoiGianBatDau;
     
     @Column(name = "ThoiGianKetThuc", nullable = false)
     private LocalDateTime thoiGianKetThuc;
     
+    
     @Column(name = "TrangThai", length = 50)
-    private String trangThai = "Đang chạy";
+    private String trangThai = "Chưa bắt đầu";
     
     @Transient
     public boolean isActive() {

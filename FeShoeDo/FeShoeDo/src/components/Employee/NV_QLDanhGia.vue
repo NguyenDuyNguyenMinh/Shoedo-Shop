@@ -1,8 +1,119 @@
 <template>
-
-
+  
   <div class="employee-layout">
 <NV_Sidebar @toggle-collapse="handleSidebarCollapse" />
+    <!-- modal xem chi tiết -->
+    <div class="modal fade" id="detailModal" tabindex="-1" aria-hidden="true" ref="detailModal">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">
+              <i class="bi bi-chat-square-text me-2"></i>Chi tiết đánh giá
+            </h5>
+            <button type="button" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div v-if="selectedReview">
+              <div class="row mb-3">
+                <div class="col-md-6">
+                  <label class="form-label fw-bold">Tên khách hàng</label>
+                  <p class="form-control-plaintext">{{ getTenKhachHang(selectedReview) }}</p>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label fw-bold">Username</label>
+                  <p class="form-control-plaintext">{{ getUsername(selectedReview) }}</p>
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label fw-bold">Sản phẩm</label>
+                <p class="form-control-plaintext">{{ getTenSanPham(selectedReview) }}</p>
+              </div>
+              
+              <div class="row mb-3">
+                <div class="col-md-6">
+                  <label class="form-label fw-bold">Phân loại (Màu sắc)</label>
+                  <p class="form-control-plaintext">
+                    <i class="bi bi-palette me-1"></i>
+                    {{ getMauSac(selectedReview) || 'Không xác định' }}
+                  </p>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label fw-bold">Size</label>
+                  <p class="form-control-plaintext">
+                    <i class="bi bi-rulers me-1"></i>
+                    {{ getSize(selectedReview) || 'Không xác định' }}
+                  </p>
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label fw-bold">Đơn giá khi mua</label>
+                <p class="form-control-plaintext text-primary fw-bold">
+                  {{ formatPrice(getDonGia(selectedReview)) }}
+                </p>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label fw-bold">Đánh giá</label>
+                <div class="rating mb-2">
+                  <span v-for="star in 5" :key="star" class="star">
+                    <i  class="bi" :class="star <= selectedReview.sao ? 'bi-star-fill text-warning' : 'bi-star text-muted'"></i>
+                  </span>
+                  <span class="ms-2 text-muted small">
+                    {{ formatDate(selectedReview.ngayDG) }}
+                  </span>
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label fw-bold">Nội dung đánh giá</label>
+                <div class="border rounded p-3 bg-light" style="max-height: 300px; overflow-y: auto;">
+                  <p class="mb-0" style="white-space: pre-wrap;">{{ selectedReview.danhGiaCT || 'Không có nội dung' }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+              Đóng
+            </button>
+            <button v-if="selectedReview" type="button" class="btn btn-danger" @click="deleteFromModal">
+              <i class="bi bi-trash me-2"></i>Xóa đánh giá
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  <!-- modal xác nhận xóa -->
+  <div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-hidden="true" ref="confirmDeleteModal">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">
+            <i class="bi bi-exclamation-triangle me-2"></i>Xác nhận xóa
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <p>Bạn có chắc chắn muốn xóa đánh giá này?</p>
+          <p class="text-muted small">Hành động này không thể hoàn tác.</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            Hủy
+          </button>
+          <button type="button" class="btn btn-danger" @click="executeDelete" :disabled="deleting">
+            <span v-if="deleting" class="spinner-border spinner-border-sm me-2"></span>
+            <i v-else class="bi bi-trash me-2"></i>Xóa
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
 <main class="main-content" :class="{ 'expanded': isSidebarCollapsed }">
       <div class="page-container">
         <div v-if="successMessage" class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
@@ -200,120 +311,7 @@
     </main>
   </div>
 
-  <!-- modal xem chi tiết -->
-   <div class="modal fade" id="detailModal" tabindex="-1" aria-hidden="true" ref="detailModal">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">
-            <i class="bi bi-chat-square-text me-2"></i>Chi tiết đánh giá
-          </h5>
-          <button
-            type="button"
-            class="btn-close"
-            data-bs-dismiss="modal"
-          ></button>
-        </div>
-        <div class="modal-body">
-          <div v-if="selectedReview">
-            <div class="row mb-3">
-              <div class="col-md-6">
-                <label class="form-label fw-bold">Tên khách hàng</label>
-                <p class="form-control-plaintext">{{ getTenKhachHang(selectedReview) }}</p>
-              </div>
-              <div class="col-md-6">
-                <label class="form-label fw-bold">Username</label>
-                <p class="form-control-plaintext">{{ getUsername(selectedReview) }}</p>
-              </div>
-            </div>
-
-            <div class="mb-3">
-              <label class="form-label fw-bold">Sản phẩm</label>
-              <p class="form-control-plaintext">{{ getTenSanPham(selectedReview) }}</p>
-            </div>
-            
-            <div class="row mb-3">
-              <div class="col-md-6">
-                <label class="form-label fw-bold">Phân loại (Màu sắc)</label>
-                <p class="form-control-plaintext">
-                  <i class="bi bi-palette me-1"></i>
-                  {{ getMauSac(selectedReview) || 'Không xác định' }}
-                </p>
-              </div>
-              <div class="col-md-6">
-                <label class="form-label fw-bold">Size</label>
-                <p class="form-control-plaintext">
-                  <i class="bi bi-rulers me-1"></i>
-                  {{ getSize(selectedReview) || 'Không xác định' }}
-                </p>
-              </div>
-            </div>
-
-            <div class="mb-3">
-              <label class="form-label fw-bold">Đơn giá khi mua</label>
-              <p class="form-control-plaintext text-primary fw-bold">
-                {{ formatPrice(getDonGia(selectedReview)) }}
-              </p>
-            </div>
-
-            <div class="mb-3">
-              <label class="form-label fw-bold">Đánh giá</label>
-              <div class="rating mb-2">
-                <span v-for="star in 5" :key="star" class="star">
-                  <i  class="bi" :class="star <= selectedReview.sao ? 'bi-star-fill text-warning' : 'bi-star text-muted'"></i>
-                </span>
-                <span class="ms-2 text-muted small">
-                  {{ formatDate(selectedReview.ngayDG) }}
-                </span>
-              </div>
-            </div>
-
-            <div class="mb-3">
-              <label class="form-label fw-bold">Nội dung đánh giá</label>
-              <div class="border rounded p-3 bg-light" style="max-height: 300px; overflow-y: auto;">
-                <p class="mb-0" style="white-space: pre-wrap;">{{ selectedReview.danhGiaCT || 'Không có nội dung' }}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-            Đóng
-          </button>
-          <button v-if="selectedReview" type="button" class="btn btn-danger" @click="deleteFromModal">
-            <i class="bi bi-trash me-2"></i>Xóa đánh giá
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- modal xác nhận xóa -->
-  <div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-hidden="true" ref="confirmDeleteModal">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">
-            <i class="bi bi-exclamation-triangle me-2"></i>Xác nhận xóa
-          </h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
-          <p>Bạn có chắc chắn muốn xóa đánh giá này?</p>
-          <p class="text-muted small">Hành động này không thể hoàn tác.</p>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-            Hủy
-          </button>
-          <button type="button" class="btn btn-danger" @click="executeDelete" :disabled="deleting">
-            <span v-if="deleting" class="spinner-border spinner-border-sm me-2"></span>
-            <i v-else class="bi bi-trash me-2"></i>Xóa
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
+  
   
 </template>
 

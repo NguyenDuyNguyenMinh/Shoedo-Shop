@@ -81,26 +81,56 @@ public class QLHoaDonService {
         checkStatus(hd, "Đang xử lý", "Chỉ có thể xác nhận đơn hàng ở trạng thái 'Đang xử lý'");
         checkEmployee();
 
-        List<String> outOfStock = new ArrayList<>();
-        for (HoaDonCT ct : hd.getHoaDonCTs()) {
-            if (ct.getSanPhamChiTiet().getSoLuong() < ct.getSoLuong()) {
-                outOfStock.add(ct.getSanPhamChiTiet().getSanPham().getTenSP());
+        // Kiểm tra đã trừ kho chưa (checkout() trừ kho rồi thì bỏ qua)
+        boolean daTruKho = hd.getGhiChu() != null && hd.getGhiChu().contains("[DA_TRU_KHO]");
+
+        if (!daTruKho) {
+            // Chưa trừ kho → kiểm tra tồn kho và trừ
+            List<String> outOfStock = new ArrayList<>();
+            for (HoaDonCT ct : hd.getHoaDonCTs()) {
+                if (ct.getSanPhamChiTiet().getSoLuong() < ct.getSoLuong()) {
+                    String tenSP = ct.getSanPhamChiTiet().getSanPham() != null
+                            ? ct.getSanPhamChiTiet().getSanPham().getTenSP()
+                            : "SKU " + ct.getSanPhamChiTiet().getMaSKU();
+                    outOfStock.add(tenSP);
+        String phuongThucTT = hd.getPhuongThucTT();
+        
+        if ("COD".equals(phuongThucTT)) {
+            List<String> outOfStock = new ArrayList<>();
+            for (HoaDonCT ct : hd.getHoaDonCTs()) {
+                if (ct.getSanPhamChiTiet().getSoLuong() < ct.getSoLuong()) {
+                    outOfStock.add(ct.getSanPhamChiTiet().getSanPham().getTenSP());
+                }
+            }
+            if (!outOfStock.isEmpty()) {
+                return error("Sản phẩm không đủ số lượng: " + String.join(", ", outOfStock));
+            }
+
+            for (HoaDonCT ct : hd.getHoaDonCTs()) {
+                int updated = spctDAO.truSoLuong(ct.getSanPhamChiTiet().getMaSKU(), ct.getSoLuong());
+                if (updated == 0) {
+                    String tenSP = ct.getSanPhamChiTiet().getSanPham() != null
+                            ? ct.getSanPhamChiTiet().getSanPham().getTenSP()
+                            : "SKU " + ct.getSanPhamChiTiet().getMaSKU();
+                    return error("Sản phẩm \"" + tenSP + "\" không đủ tồn kho!");
+                }
+                spctDAO.truSoLuong(ct.getSanPhamChiTiet().getMaSKU(), ct.getSoLuong());
             }
         }
-        if (!outOfStock.isEmpty()) {
-            return error("Sản phẩm không đủ số lượng: " + String.join(", ", outOfStock));
-        }
-
-        for (HoaDonCT ct : hd.getHoaDonCTs()) {
-            spctDAO.truSoLuong(ct.getSanPhamChiTiet().getMaSKU(), ct.getSoLuong());
-        }
-
         hd.setQuanTri(getCurrentEmployee());
         hd.setTrangThai("Đang giao");
         hoaDonDAO.save(hd);
 
         emailAsyncService.sendShippingEmail(hd);
-        return success("Đã vận chuyển đơn hàng và trừ số lượng trong kho");
+        return success("Đã vận chuyển đơn hàng");
+        
+        String message = "Đã vận chuyển đơn hàng";
+        if ("COD".equals(phuongThucTT)) {
+            message += " và trừ số lượng trong kho";
+        } else {
+            message += " (VNPAY - đã trừ số lượng khi đặt hàng)";
+        }
+        return success(message);
     }
 
     @Transactional
@@ -114,8 +144,18 @@ public class QLHoaDonService {
         }
 
         String lyDo = payload.getOrDefault("lyDo", "Không có lý do");
+        String phuongThucTT = hd.getPhuongThucTT();
 
-        if ("Đang giao".equals(current)) {
+        // Hoàn trả kho nếu đơn đã trừ kho (checkout) hoặc đang giao
+        boolean daTruKho = hd.getGhiChu() != null && hd.getGhiChu().contains("[DA_TRU_KHO]");
+        if (daTruKho || "Đang giao".equals(current)) {
+        if ("Đang xử lý".equals(current)) {
+            if ("VNPAY".equals(phuongThucTT)) {
+                for (HoaDonCT ct : hd.getHoaDonCTs()) {
+                    spctDAO.congSoLuong(ct.getSanPhamChiTiet().getMaSKU(), ct.getSoLuong());
+                }
+            }
+        } else if ("Đang giao".equals(current)) {
             for (HoaDonCT ct : hd.getHoaDonCTs()) {
                 spctDAO.congSoLuong(ct.getSanPhamChiTiet().getMaSKU(), ct.getSoLuong());
             }
@@ -127,8 +167,19 @@ public class QLHoaDonService {
         hoaDonDAO.save(hd);
 
         String msg = "Đã từ chối đơn hàng";
-        if ("Đang giao".equals(current)) msg += " và hoàn trả số lượng về kho";
+        if (daTruKho || "Đang giao".equals(current)) msg += " và hoàn trả số lượng về kho";
         return success(msg);
+        StringBuilder msg = new StringBuilder("Đã từ chối đơn hàng");
+
+        if ("Đang xử lý".equals(current) && "VNPAY".equals(phuongThucTT)) {
+            msg.append(" và hoàn trả số lượng về kho (VNPAY)");
+        } else if ("Đang giao".equals(current)) {
+            msg.append(" và hoàn trả số lượng về kho");
+        } else if ("Đang xử lý".equals(current) && "COD".equals(phuongThucTT)) {
+            msg.append(" (COD - chưa trừ số lượng)");
+        }
+        
+        return success(msg.toString());
     }
 
     @Transactional
@@ -136,6 +187,13 @@ public class QLHoaDonService {
         HoaDon hd = findOrder(id);
         checkStatus(hd, "Đang giao", "Chỉ có thể đánh dấu thất bại cho đơn hàng đang giao");
 
+        // Hoàn trả kho nếu đơn đã trừ kho tại checkout
+        boolean daTruKho = hd.getGhiChu() != null && hd.getGhiChu().contains("[DA_TRU_KHO]");
+        if (daTruKho) {
+            for (HoaDonCT ct : hd.getHoaDonCTs()) {
+                spctDAO.congSoLuong(ct.getSanPhamChiTiet().getMaSKU(), ct.getSoLuong());
+            }
+        // Cả COD và VNPAY đều đã trừ số lượng, cần hoàn trả
         for (HoaDonCT ct : hd.getHoaDonCTs()) {
             spctDAO.congSoLuong(ct.getSanPhamChiTiet().getMaSKU(), ct.getSoLuong());
         }
@@ -156,6 +214,8 @@ public class QLHoaDonService {
         hd.setTrangThai("Hoàn tất");
         hd.setNgayDen(new Date());
         hd.setQuanTri(getCurrentEmployee());
+        
+        // Cập nhật số lượng đã bán cho sản phẩm
         for (HoaDonCT ct : hd.getHoaDonCTs()) {
             SanPhamChiTiet spct = ct.getSanPhamChiTiet();
             SanPham sp = spct.getSanPham();
@@ -301,12 +361,13 @@ public class QLHoaDonService {
         List<Map<String, Object>> items = new ArrayList<>();
         for (HoaDonCT ct : hd.getHoaDonCTs()) {
             Map<String, Object> item = new HashMap<>();
+            SanPhamChiTiet spct = ct.getSanPhamChiTiet();
             item.put("maHDCT", ct.getMaHDCT());
-            item.put("maSKU", ct.getSanPhamChiTiet().getMaSKU());
-            item.put("tenSP", ct.getSanPhamChiTiet().getSanPham().getTenSP());
-            item.put("tenMau", ct.getSanPhamChiTiet().getTenMau());
-            item.put("coGiay", ct.getSanPhamChiTiet().getSize().getCoGiay());
-            item.put("hinhAnh", ct.getSanPhamChiTiet().getHinhAnh());
+            item.put("maSKU", spct != null ? spct.getMaSKU() : null);
+            item.put("tenSP", (spct != null && spct.getSanPham() != null) ? spct.getSanPham().getTenSP() : "");
+            item.put("tenMau", spct != null ? spct.getTenMau() : "");
+            item.put("coGiay", (spct != null && spct.getSize() != null) ? spct.getSize().getCoGiay() : null);
+            item.put("hinhAnh", spct != null ? spct.getHinhAnh() : "");
             item.put("soLuong", ct.getSoLuong());
             item.put("donGia", ct.getDonGia());
             item.put("thanhTien", ct.getSoLuong() * ct.getDonGia());

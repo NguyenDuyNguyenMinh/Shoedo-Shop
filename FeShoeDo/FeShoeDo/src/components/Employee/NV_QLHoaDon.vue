@@ -848,7 +848,7 @@ export default {
     };
 
     const confirmOrder = async (orderId) => {
-      if (!confirm('Xác nhận đơn hàng này? Số lượng sản phẩm sẽ bị trừ khỏi kho.')) return;
+      if (!confirm('Xác nhận đơn hàng này? Số lượng sản phẩm sẽ bị trừ khỏi kho. (VNPAY được ưu tiên)')) return;
       processing.value = true;
       try {
         const response = await axios.post(`/api/employee/orders/${orderId}/confirm`);
@@ -1032,7 +1032,7 @@ export default {
       if (status === 'Đang giao') {
         return 'Hệ thống sẽ hoàn trả số lượng sản phẩm về kho.';
       }
-      return 'Đơn hàng sẽ bị từ chối mà không ảnh hưởng đến kho.';
+      return 'Đơn hàng sẽ bị từ chối mà với lý do trên';
     };
 
     const isSidebarCollapsed = ref(false);
