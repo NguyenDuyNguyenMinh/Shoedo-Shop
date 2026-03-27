@@ -36,11 +36,8 @@
   </div>
 
   <div class="employee-layout">
-    <NV_Sidebar />
-
-    <!-- page content -->
-
-    <main class="main-content">
+<NV_Sidebar @toggle-collapse="handleSidebarCollapse" />
+<main class="main-content" :class="{ 'expanded': isSidebarCollapsed }">
       <div class="page-container">
         <div
           v-if="successMessage"
@@ -1728,6 +1725,13 @@ const saveProduct = async () => {
     showToast("Lỗi khi lưu sản phẩm! Vui lòng kiểm tra lại console.");
   }
 };
+
+const isSidebarCollapsed = ref(false);
+
+const handleSidebarCollapse = (collapsedState) => {
+  isSidebarCollapsed.value = collapsedState;
+};
+
 onMounted(() => {
   fetchCategories();
   fetchProducts();
@@ -1991,5 +1995,16 @@ onMounted(() => {
     justify-content: center;
     margin-top: 15px;
   }
+}
+.main-content {
+  margin-left: 260px; /* Trạng thái Sidebar mặc định */
+  min-height: 100vh;
+  background: #f8f9fa;
+  transition: margin-left 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); /* Thêm dòng này để mượt */
+}
+
+/* Khi Sidebar thu nhỏ thì nới rộng nội dung chính ra */
+.main-content.expanded {
+  margin-left: 80px; 
 }
 </style>  

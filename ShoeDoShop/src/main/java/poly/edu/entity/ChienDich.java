@@ -3,7 +3,7 @@ package poly.edu.entity;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.Data;
-import java.util.Date;
+import java.time.LocalDateTime;
 
 @Entity
 @Data
@@ -24,30 +24,31 @@ public class ChienDich {
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "chienDichs"})
     private SanPham sanPham;
     
+    @Column(name = "KhuyenMaiCD")
+    private Integer khuyenMaiCD;
+    
     @Column(name = "ThoiGianBatDau", nullable = false)
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date thoiGianBatDau;
+    private LocalDateTime thoiGianBatDau;
     
     @Column(name = "ThoiGianKetThuc", nullable = false)
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date thoiGianKetThuc;
+    private LocalDateTime thoiGianKetThuc;
     
     @Column(name = "TrangThai", length = 50)
     private String trangThai = "Đang chạy";
     
     @Transient
     public boolean isActive() {
-        Date now = new Date();
+        LocalDateTime now = LocalDateTime.now();
         return "Đang chạy".equals(trangThai) 
-                && now.after(thoiGianBatDau) 
-                && now.before(thoiGianKetThuc);
+                && now.isAfter(thoiGianBatDau) 
+                && now.isBefore(thoiGianKetThuc);
     }
     
     public void updateTrangThai() {
-        Date now = new Date();
-        if (now.after(thoiGianKetThuc)) {
+        LocalDateTime now = LocalDateTime.now();
+        if (now.isAfter(thoiGianKetThuc)) {
             this.trangThai = "Kết thúc";
-        } else if (now.before(thoiGianBatDau)) {
+        } else if (now.isBefore(thoiGianBatDau)) {
             this.trangThai = "Đang chạy";
         }
     }

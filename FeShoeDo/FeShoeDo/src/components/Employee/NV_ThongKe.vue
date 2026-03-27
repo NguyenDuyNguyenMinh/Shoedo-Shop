@@ -1,8 +1,7 @@
 <template>
   <div class="employee-layout">
-    <NV_Sidebar />
-
-    <main class="main-content">
+<NV_Sidebar @toggle-collapse="handleSidebarCollapse" />
+<main class="main-content" :class="{ 'expanded': isSidebarCollapsed }">
       <div class="page-container">
 
         <!-- Header -->
@@ -507,6 +506,12 @@ const getStatusClass = (status) => {
   return statusMap[status] || 'processing';
 };
 
+const isSidebarCollapsed = ref(false);
+
+const handleSidebarCollapse = (collapsedState) => {
+  isSidebarCollapsed.value = collapsedState;
+};
+
 onMounted(() => {
   loadThongKeData();
 });
@@ -828,6 +833,18 @@ onMounted(() => {
   color: #333;
 }
 
+.main-content {
+  margin-left: 260px; /* Trạng thái Sidebar mặc định */
+  min-height: 100vh;
+  background: #f8f9fa;
+  transition: margin-left 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); /* Thêm dòng này để mượt */
+}
+
+/* Khi Sidebar thu nhỏ thì nới rộng nội dung chính ra */
+.main-content.expanded {
+  margin-left: 80px; 
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .main-content {
@@ -842,5 +859,7 @@ onMounted(() => {
     flex-direction: column;
     text-align: center;
   }
+
+  
 }
 </style>
