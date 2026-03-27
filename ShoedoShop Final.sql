@@ -164,10 +164,11 @@ GO
 -- 18. Bảng Chiến Dịch
 CREATE TABLE ChienDich (
     MaCD INT IDENTITY(1,1) PRIMARY KEY,
-    TenChienDich NVARCHAR(255) NOT NULL,
-    MaSP INT NOT NULL,
-    ThoiGianBatDau DATETIME NOT NULL,
-    ThoiGianKetThuc DATETIME NOT NULL,
+    TenChienDich NVARCHAR(255),
+    MaSP INT,
+    KhuyenMaiCD INT,
+    ThoiGianBatDau DATETIME,
+    ThoiGianKetThuc DATETIME,
     TrangThai NVARCHAR(50) DEFAULT N'Đang chạy' CHECK (TrangThai IN (N'Đang chạy', N'Đã dừng', N'Kết thúc')),
     CONSTRAINT FK_ChienDich_SanPham FOREIGN KEY (MaSP) REFERENCES SanPham(MaSP)
 );
