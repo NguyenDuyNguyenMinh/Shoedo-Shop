@@ -24,6 +24,9 @@ public class ChienDich {
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "chienDichs"})
     private SanPham sanPham;
     
+    @Column(name = "KhuyenMaiCD")
+    private Integer khuyenMaiCD;
+
     @Column(name = "ThoiGianBatDau", nullable = false)
     @Temporal(TemporalType.TIMESTAMP)
     private Date thoiGianBatDau;
@@ -32,8 +35,9 @@ public class ChienDich {
     @Temporal(TemporalType.TIMESTAMP)
     private Date thoiGianKetThuc;
     
+    
     @Column(name = "TrangThai", length = 50)
-    private String trangThai = "Đang chạy";
+    private String trangThai = "Chưa bắt đầu";
     
     @Transient
     public boolean isActive() {
