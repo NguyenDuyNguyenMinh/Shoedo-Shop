@@ -4,7 +4,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import poly.edu.config.VNPayConfig;
 import poly.edu.dao.HoaDonDAO;
-import poly.edu.entity.HoaDonCT;
 
 import java.io.*;
 import java.net.HttpURLConnection;
@@ -19,9 +18,6 @@ public class VNPayService {
 
     @Autowired
     private HoaDonDAO hoaDonDAO;
-
-    @Autowired
-    private poly.edu.dao.SanPhamChiTietDAO spctDAO;
 
     public String createPaymentUrl(Integer maHD, long amount, String orderInfo) throws Exception {
         Map<String, String> vnpParams = new LinkedHashMap<>();
@@ -233,35 +229,5 @@ public class VNPayService {
 
     private String getResponseMessage(String vnp_ResponseCode) {
         return getResponseCode(vnp_ResponseCode);
-    }
-
-    /**
-     * Hoàn trả tồn kho khi refund thành công.
-     * Gọi sau khi VNPay refund API trả về thành công.
-     * @param vnp_TxnRef Mã đơn hàng (maHD)
-     */
-    @org.springframework.transaction.annotation.Transactional
-    public void restoreStockOnRefund(String vnp_TxnRef) {
-        try {
-            Integer maHD = Integer.parseInt(vnp_TxnRef);
-            hoaDonDAO.findById(maHD).ifPresent(hoaDon -> {
-                if (hoaDon.getHoaDonCTs() != null) {
-                    for (HoaDonCT ct : hoaDon.getHoaDonCTs()) {
-                        if (ct.getSanPhamChiTiet() != null) {
-                            spctDAO.congSoLuong(ct.getSanPhamChiTiet().getMaSKU(), ct.getSoLuong());
-                        }
-                    }
-                }
-                // Cập nhật trạng thái đơn
-                hoaDon.setTrangThai("Đã từ chối");
-                String ghiChu = (hoaDon.getGhiChu() != null ? hoaDon.getGhiChu() + " | " : "")
-                    + "[REFUND] Đã hoàn tiền qua VNPay";
-                hoaDon.setGhiChu(ghiChu);
-                hoaDonDAO.save(hoaDon);
-            });
-        } catch (Exception e) {
-            // Log nhưng không throw — refund đã thành công rồi
-            System.err.println("[VNPayService] restoreStockOnRefund error: " + e.getMessage());
-        }
     }
 }

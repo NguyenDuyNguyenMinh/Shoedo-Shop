@@ -1,7 +1,6 @@
 package poly.edu.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import poly.edu.dto.CheckoutDTO;
@@ -25,10 +24,6 @@ public class VNPayController {
     @Autowired
     private AuthService authService;
 
-    /** Frontend URL đọc từ application.properties thay vì hardcode */
-    @Value("${app.frontend.url:http://localhost:5173}")
-    private String frontendUrl;
-
     @PostMapping("/create-order")
     public ResponseEntity<Map<String, Object>> createPayment(@RequestBody CheckoutDTO checkoutDTO) {
         try {
@@ -37,39 +32,40 @@ public class VNPayController {
                 return ResponseEntity.status(401).body(Map.of("success", false, "message", "Vui lòng đăng nhập"));
             }
 
-            boolean isVNPay = Boolean.TRUE.equals(checkoutDTO.getIsVNPay())
+            // Kiểm tra nếu là thanh toán VNPAY
+            boolean isVNPay = Boolean.TRUE.equals(checkoutDTO.getIsVNPay()) 
                 || "VNPAY".equalsIgnoreCase(checkoutDTO.getPhuongThucTT());
-
+            
             if (!isVNPay) {
-                // COD — xử lý checkout thông thường
+                // Nếu không phải VNPAY, xử lý như checkout thông thường (COD)
                 Map<String, Object> result = gioHangService.checkout(user, checkoutDTO);
                 return ResponseEntity.ok(result);
             }
 
-            // VNPay — tạo payment URL
-            // checkout() đã trừ kho + tạo HoaDon rồi (trong create-order)
+            // Tạo đơn hàng trước (trạng thái chờ thanh toán)
             Map<String, Object> checkoutResult = gioHangService.checkout(user, checkoutDTO);
-
+            
             if (!(Boolean) checkoutResult.getOrDefault("success", false)) {
                 return ResponseEntity.badRequest().body(checkoutResult);
             }
 
             Integer maHD = (Integer) checkoutResult.get("maHD");
             Double tongTien = (Double) checkoutResult.get("tongTien");
-
-            // Nhân 100 theo chuẩn VNPay (amount tính bằng cents/xu)
-            long amount = tongTien != null ? tongTien.longValue() : 0L;
+            
+            // Chuyển đổi sang VND (không nhân 100 vì amount đã là VND)
+            long amount = tongTien.longValue();
+            
             String orderInfo = "Thanh toan don hang #" + maHD;
-
+            
             String paymentUrl = vnPayService.createPaymentUrl(maHD, amount, orderInfo);
-
+            
             return ResponseEntity.ok(Map.of(
                 "success", true,
                 "paymentUrl", paymentUrl,
                 "maHD", maHD,
                 "tongTien", amount
             ));
-
+            
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(500).body(Map.of(
@@ -82,19 +78,15 @@ public class VNPayController {
     @GetMapping("/vnpay-return")
     public ResponseEntity<Map<String, String>> vnpayReturn(
             @RequestParam Map<String, String> params) {
-
+        
         Map<String, String> result = vnPayService.processReturn(params);
-
-        // Redirect về frontend với kết quả VNPay
-        String success = result.getOrDefault("success", "false");
-        String maHD = result.getOrDefault("maHD", "");
-        String responseCode = result.getOrDefault("responseCode", "");
-
-        String redirectUrl = frontendUrl + "/payment-result"
-            + "?vnp_ResponseCode=" + (responseCode != null ? responseCode : "")
-            + "&vnp_TxnRef=" + (maHD != null ? maHD : "")
-            + "&success=" + success;
-
+        
+        // Chuyển hướng về frontend với kết quả
+        String redirectUrl = "http://localhost:4200/payment-result?success=" + result.get("success") 
+            + "&maHD=" + result.get("maHD") 
+            + "&message=" + (result.get("message") != null ? result.get("message").replace(" ", "%20") : "");
+        
+        // Redirect về frontend
         return ResponseEntity.status(302).header("Location", redirectUrl).build();
     }
 
@@ -104,10 +96,6 @@ public class VNPayController {
         return ResponseEntity.ok(result);
     }
 
-    /**
-     * Hoàn tiền — CHỈ nhân viên hoặc admin được phép.
-     * Role check được thực hiện bởi AuthInterceptor qua path-based guard.
-     */
     @PostMapping("/refund")
     public ResponseEntity<Map<String, Object>> refund(
             @RequestParam String vnp_TransactionNo,
@@ -115,30 +103,12 @@ public class VNPayController {
             @RequestParam long amount,
             @RequestParam String vnp_TransactionDate,
             @RequestParam(required = false) String note) {
-
-        // Kiểm tra role server-side — chỉ EMPLOYEE hoặc ADMIN
-        Users user = authService.getCurrentUser();
-        if (user == null) {
-            return ResponseEntity.status(401).body(Map.of(
-                "success", false, "message", "Vui lòng đăng nhập"
-            ));
-        }
-        // QuanTri.role là Boolean: null = customer, false = EMPLOYEE, true = ADMIN
-        Boolean role = user.getQuanTri() != null ? user.getQuanTri().getRole() : null;
-        boolean isStaff = role != null && role; // ADMIN=true hoặc EMPLOYEE=false đều là staff
-        if (!isStaff) {
-            return ResponseEntity.status(403).body(Map.of(
-                "success", false, "message", "Chỉ nhân viên hoặc quản trị viên mới được thực hiện hoàn tiền"
-            ));
-        }
-
+        
         try {
-            // Restore stock khi refund thành công
-            String refundResult = vnPayService.refund(vnp_TransactionNo, vnp_TxnRef, amount, vnp_TransactionDate, note);
-            vnPayService.restoreStockOnRefund(vnp_TxnRef);
+            String result = vnPayService.refund(vnp_TransactionNo, vnp_TxnRef, amount, vnp_TransactionDate, note);
             return ResponseEntity.ok(Map.of(
                 "success", true,
-                "result", refundResult
+                "result", result
             ));
         } catch (Exception e) {
             return ResponseEntity.status(500).body(Map.of(
