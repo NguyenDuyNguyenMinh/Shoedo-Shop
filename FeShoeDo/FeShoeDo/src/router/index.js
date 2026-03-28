@@ -61,12 +61,6 @@ const routes = [
     meta: { requiresAuth: true, role: 'CUSTOMER' }
   },
   {
-    path: '/payment-result',
-    name: 'PaymentResult',
-    component: () => import('@/components/PaymentResult.vue'),
-    meta: { requiresAuth: true, role: 'CUSTOMER' }
-  },
-  {
     path: '/customer/profile',
     name: 'Profile',
     component: () => import('@/components/customer/KH_QLProfile.vue'),

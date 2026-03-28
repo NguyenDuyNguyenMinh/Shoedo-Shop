@@ -218,11 +218,6 @@ export default {
     return apiClient.get(`/customer/orders/review/${maHDCT}`);
   },
 
-  // Check stock for a single SKU
-  checkStock(maSKU) {
-    return apiClient.get(`/customer/cart/stock/${maSKU}`);
-  },
-
   getAddresses() {
     return apiClient.get('/customer/addresses');
   },
@@ -275,7 +270,7 @@ export default {
   },
 
   updateUser(id, userData) {
-    return apiClient.put(`/employee/users/${id}`, userData);
+    return axios.put(`/api/employee/users/${id}`, userData);
   },
 
   toggleUserStatus(id) {

@@ -47,13 +47,6 @@ public class HoaDon {
     @Temporal(TemporalType.TIMESTAMP)
     private Date ngayDen;
 
-    /**
-     * Cờ tạm (không lưu DB) — đánh dấu đã trừ tồn kho tại checkout.
-     * confirmOrder() kiểm tra cờ này để tránh trừ stock 2 lần.
-     */
-    @Transient
-    private boolean daTruKho = false;
-
     @OneToMany(mappedBy = "hoaDon", fetch = FetchType.LAZY)
     @JsonIgnore
     private List<HoaDonCT> hoaDonCTs;
