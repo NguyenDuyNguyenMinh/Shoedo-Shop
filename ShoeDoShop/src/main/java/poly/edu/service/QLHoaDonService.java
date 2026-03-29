@@ -22,6 +22,7 @@ public class QLHoaDonService {
     @Autowired private QuanTriDAO quanTriDAO;
     @Autowired private AuthService authService;
     @Autowired private EmailService emailService;
+    @Autowired private EmailAsyncService emailAsyncService; 
     @Autowired private PdfService pdfService;
     
     
@@ -80,25 +81,36 @@ public class QLHoaDonService {
         checkStatus(hd, "Đang xử lý", "Chỉ có thể xác nhận đơn hàng ở trạng thái 'Đang xử lý'");
         checkEmployee();
 
-        List<String> outOfStock = new ArrayList<>();
-        for (HoaDonCT ct : hd.getHoaDonCTs()) {
-            if (ct.getSanPhamChiTiet().getSoLuong() < ct.getSoLuong()) {
-                outOfStock.add(ct.getSanPhamChiTiet().getSanPham().getTenSP());
+        String phuongThucTT = hd.getPhuongThucTT();
+        
+        if ("COD".equals(phuongThucTT)) {
+            List<String> outOfStock = new ArrayList<>();
+            for (HoaDonCT ct : hd.getHoaDonCTs()) {
+                if (ct.getSanPhamChiTiet().getSoLuong() < ct.getSoLuong()) {
+                    outOfStock.add(ct.getSanPhamChiTiet().getSanPham().getTenSP());
+                }
+            }
+            if (!outOfStock.isEmpty()) {
+                return error("Sản phẩm không đủ số lượng: " + String.join(", ", outOfStock));
+            }
+
+            for (HoaDonCT ct : hd.getHoaDonCTs()) {
+                spctDAO.truSoLuong(ct.getSanPhamChiTiet().getMaSKU(), ct.getSoLuong());
             }
         }
-        if (!outOfStock.isEmpty()) {
-            return error("Sản phẩm không đủ số lượng: " + String.join(", ", outOfStock));
-        }
-
-        for (HoaDonCT ct : hd.getHoaDonCTs()) {
-            spctDAO.truSoLuong(ct.getSanPhamChiTiet().getMaSKU(), ct.getSoLuong());
-        }
-
         hd.setQuanTri(getCurrentEmployee());
         hd.setTrangThai("Đang giao");
         hoaDonDAO.save(hd);
 
-        return success("Đã vận chuyển đơn hàng và trừ số lượng trong kho");
+        emailAsyncService.sendShippingEmail(hd);
+        
+        String message = "Đã vận chuyển đơn hàng";
+        if ("COD".equals(phuongThucTT)) {
+            message += " và trừ số lượng trong kho";
+        } else {
+            message += " (VNPAY - đã trừ số lượng khi đặt hàng)";
+        }
+        return success(message);
     }
 
     @Transactional
@@ -112,8 +124,15 @@ public class QLHoaDonService {
         }
 
         String lyDo = payload.getOrDefault("lyDo", "Không có lý do");
+        String phuongThucTT = hd.getPhuongThucTT();
 
-        if ("Đang giao".equals(current)) {
+        if ("Đang xử lý".equals(current)) {
+            if ("VNPAY".equals(phuongThucTT)) {
+                for (HoaDonCT ct : hd.getHoaDonCTs()) {
+                    spctDAO.congSoLuong(ct.getSanPhamChiTiet().getMaSKU(), ct.getSoLuong());
+                }
+            }
+        } else if ("Đang giao".equals(current)) {
             for (HoaDonCT ct : hd.getHoaDonCTs()) {
                 spctDAO.congSoLuong(ct.getSanPhamChiTiet().getMaSKU(), ct.getSoLuong());
             }
@@ -124,9 +143,17 @@ public class QLHoaDonService {
         hd.setGhiChu(lyDo);
         hoaDonDAO.save(hd);
 
-        String msg = "Đã từ chối đơn hàng";
-        if ("Đang giao".equals(current)) msg += " và hoàn trả số lượng về kho";
-        return success(msg);
+        StringBuilder msg = new StringBuilder("Đã từ chối đơn hàng");
+
+        if ("Đang xử lý".equals(current) && "VNPAY".equals(phuongThucTT)) {
+            msg.append(" và hoàn trả số lượng về kho (VNPAY)");
+        } else if ("Đang giao".equals(current)) {
+            msg.append(" và hoàn trả số lượng về kho");
+        } else if ("Đang xử lý".equals(current) && "COD".equals(phuongThucTT)) {
+            msg.append(" (COD - chưa trừ số lượng)");
+        }
+        
+        return success(msg.toString());
     }
 
     @Transactional
@@ -134,6 +161,7 @@ public class QLHoaDonService {
         HoaDon hd = findOrder(id);
         checkStatus(hd, "Đang giao", "Chỉ có thể đánh dấu thất bại cho đơn hàng đang giao");
 
+        // Cả COD và VNPAY đều đã trừ số lượng, cần hoàn trả
         for (HoaDonCT ct : hd.getHoaDonCTs()) {
             spctDAO.congSoLuong(ct.getSanPhamChiTiet().getMaSKU(), ct.getSoLuong());
         }
@@ -154,6 +182,8 @@ public class QLHoaDonService {
         hd.setTrangThai("Hoàn tất");
         hd.setNgayDen(new Date());
         hd.setQuanTri(getCurrentEmployee());
+        
+        // Cập nhật số lượng đã bán cho sản phẩm
         for (HoaDonCT ct : hd.getHoaDonCTs()) {
             SanPhamChiTiet spct = ct.getSanPhamChiTiet();
             SanPham sp = spct.getSanPham();
@@ -165,12 +195,8 @@ public class QLHoaDonService {
         }
         
         hoaDonDAO.save(hd);
-
-        try {
-            sendSuccessEmail(hd);
-        } catch (Exception e) {
-            System.err.println("Lỗi gửi email: " + e.getMessage());
-        }
+        
+        emailAsyncService.sendSuccessEmail(hd);
 
         return success("Đã cập nhật giao hàng thành công. KH có 1 tháng để báo lỗi/bảo hành");
     }
@@ -184,12 +210,26 @@ public class QLHoaDonService {
         if (kh == null || kh.getUser() == null || kh.getUser().getMail() == null) {
             return error("Không tìm thấy email khách hàng");
         }
+        for (HoaDonCT ct : hd.getHoaDonCTs()) {
+            SanPhamChiTiet spct = ct.getSanPhamChiTiet();
+            spct.getMaSKU();
+            spct.getTenMau();
+            spct.getHinhAnh();
+            spct.getSoLuong();
+            
+            SanPham sp = spct.getSanPham();
+            sp.getTenSP();
+            sp.getDaBan();
 
-        sendApologyEmailWithPdf(hd);
+            if (spct.getSize() != null) {
+                spct.getSize().getCoGiay();
+            }
+        }
         hd.setTrangThai("Hoàn tất");
         hd.setQuanTri(getCurrentEmployee());
         hoaDonDAO.save(hd);
 
+        emailAsyncService.sendApologyEmail(hd);
         return success("Đã gửi email xin lỗi kèm hóa đơn PDF");
     }
 
@@ -303,78 +343,6 @@ public class QLHoaDonService {
         detail.put("chiTiet", items);
         
         return detail;
-    }
-
-    private void sendSuccessEmail(HoaDon hd) {
-    	try {
-            KhachHang kh = hd.getKhachHang();
-            if (kh == null || kh.getUser() == null || kh.getUser().getMail() == null) return;
-            
-            String email = kh.getUser().getMail();
-            String tenKH = kh.getTenKH();
-            
-            byte[] pdfBytes = pdfService.generateInvoice(hd);
-            
-            String subject = "SHOEDO SHOP - Đơn hàng #HD" + String.format("%04d", hd.getMaHD()) + " đã giao thành công";
-            String htmlContent = "<!DOCTYPE html>"
-                    + "<html><head><meta charset='UTF-8'>"
-                    + "<style>body{font-family:Arial,sans-serif}.container{max-width:600px;margin:0 auto;padding:20px;border:1px solid #ddd;border-radius:10px}.header{background:#000;color:#fff;padding:20px;text-align:center;border-radius:10px 10px 0 0}.content{ padding: 20px; background: #f9f9f9;}.warning{background:#fff3cd;padding:10px;border-radius:5px;margin:15px 0}</style>"
-                    + "</head><body>"
-                    + "<div class='container'>"
-                    + "<div class='header'><h2>ShoeDo Shop - Giao hàng thành công</h2></div>"
-                    + "<div class='content'>"
-                    + "<p>Xin chào <strong>" + tenKH + "</strong>,</p>"
-                    + "<p>Đơn hàng <strong>#HD" + String.format("%04d", hd.getMaHD()) + "</strong> của bạn đã được giao thành công.</p>"
-                    + "<p>Bạn có thể xem chi tiết hóa đơn trong file đính kèm của email này.</p>"
-                    + "<div class='warning'>"
-                    + "<p><strong>Lưu ý:</strong> Bạn có <strong>1 THÁNG</strong> để báo lỗi/ bảo hành kể từ ngày đơn hàng được giao thành công</p>" + hd.getNgayDen()
-                    + "<p>Sau 1 tháng, đơn hàng sẽ được xác nhận hoàn tất và không thể thay đổi.</p>"
-                    + "</div>"
-                    + "<p>Cảm ơn bạn đã mua sắm tại ShoeDo Shop!</p>"
-                    + "</div></div></body></html>";
-            
-            emailService.sendHtmlEmailWithAttachment(email, subject, htmlContent, 
-                "HD" + String.format("%04d", hd.getMaHD()) + ".pdf", pdfBytes);
-            
-        } catch (Exception e) {
-            System.err.println("Lỗi gửi email: " + e.getMessage());
-        }
-    }
-
-    private void sendApologyEmailWithPdf(HoaDon hd) {
-    	try {
-            KhachHang kh = hd.getKhachHang();
-            if (kh == null || kh.getUser() == null || kh.getUser().getMail() == null) return;
-            
-            String email = kh.getUser().getMail();
-            String tenKH = kh.getTenKH();
-            
-            byte[] pdfBytes = pdfService.generateInvoice(hd);
-            
-            String subject = "SHOEDO SHOP - Xin lỗi về sự cố đơn hàng #HD" + String.format("%04d", hd.getMaHD());
-            String htmlContent = "<!DOCTYPE html>"
-                    + "<html><head><meta charset='UTF-8'>"
-                    + "<style>body{font-family:Arial,sans-serif}.container{max-width:600px;margin:0 auto;padding:20px;border:1px solid #ddd;border-radius:10px}.header{background:#000;color:#fff;padding:20px;text-align:center;border-radius:10px 10px 0 0}.content{ padding: 20px; background: #f9f9f9; }.apology{background:#f8d7da;color:#721c24;padding:15px;border-radius:5px;margin:15px 0}</style>"
-                    + "</head><body>"
-                    + "<div class='container'>"
-                    + "<div class='header'><h2>ShoeDo Shop - Xin lỗi quý khách</h2></div>"
-                    + "<div class='content'>"
-                    + "<p>Xin chào <strong>" + tenKH + "</strong>,</p>"
-                    + "<div class='apology'>"
-                    + "<p>Chúng tôi chân thành xin lỗi về sự cố đơn hàng <strong>#HD" + String.format("%04d", hd.getMaHD()) + "</strong> mà bạn đã gặp phải.</p>"
-                    + "<p><strong>Lỗi:</strong> " + (hd.getGhiChu() != null ? hd.getGhiChu() : "Không xác định") + "</p>"
-                    + "</div>"
-                    + "<p>Đội ngũ ShoeDo Shop đã xử lý sự cố này và đã khắc phục thành công. Vui lòng xem file hóa đơn đính kèm để kiểm tra chi tiết.</p>"
-                    + "<p>Nếu bạn cần hỗ trợ thêm, vui lòng liên hệ hotline 1900 0001 của chúng tôi.</p>"
-                    + "<p>Một lần nữa, chúng tôi xin lỗi về sự bất tiện này và hy vọng sẽ phục vụ bạn tốt hơn trong tương lai.</p>"
-                    + "</div></div></body></html>";
-            
-            emailService.sendHtmlEmailWithAttachment(email, subject, htmlContent,
-                "HD" + String.format("%04d", hd.getMaHD()) + ".pdf", pdfBytes);
-            
-        } catch (Exception e) {
-            System.err.println("Lỗi gửi email: " + e.getMessage());
-        }
     }
 
     private Map<String, Object> success(String key, Object value) {

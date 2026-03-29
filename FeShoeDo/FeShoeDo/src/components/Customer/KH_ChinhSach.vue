@@ -41,6 +41,7 @@
       </div>
     </main>
     <Footer />
+  <ChatBox />
   </div>
 </template>
 
@@ -48,6 +49,8 @@
 import { ref } from 'vue';
 import KH_Navbar from '@/components/shared/KH_Navbar.vue';
 import Footer from '@/components/shared/Footer.vue';
+import ChatBox from '@/components/Shared/ChatBox.vue'
+
 export default {
   name: 'KH_ChinhSach',
   components: {
@@ -93,7 +96,7 @@ export default {
             <ul class="policy-list">
               <li><i class="bi bi-check-circle text-success me-2"></i>Sản phẩm lỗi do nhà sản xuất</li>
               <li><i class="bi bi-check-circle text-success me-2"></i>Giao sai mẫu, sai size</li>
-              <li><i class="bi bi-check-circle text-success me-2"></i>Thời gian: 3 – 7 ngày kể từ khi nhận hàng</li>
+              <li><i class="bi bi-check-circle text-success me-2"></i>Thời gian: 30 ngày kể từ khi nhận hàng</li>
               <li><i class="bi bi-check-circle text-success me-2"></i>Sản phẩm chưa sử dụng, còn nguyên tem</li>
               <li><i class="bi bi-check-circle text-success me-2"></i>Có vieo mở hàng để chứng minh đối chiếu</li>
             </ul>

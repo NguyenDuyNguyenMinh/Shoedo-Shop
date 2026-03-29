@@ -1,6 +1,9 @@
 <template>
   <div class="auth-page">
     <div class="bg-overlay"></div>
+    <router-link to="/customer/index" class="btn btn-outline-white btn-sm">
+      <i class="bi bi-house"></i>
+    </router-link>
 
     <!-- Google Password Modal -->
     <div class="modal fade" id="googlePasswordModal" tabindex="-1" aria-hidden="true">
@@ -330,6 +333,8 @@ export default {
     if (authStore.isAuthenticated) {
       this.redirectByRole(authStore);
     }
+    
+    this.checkAndOpenRegisterTab();
   },
 
   beforeUnmount() {
@@ -339,6 +344,29 @@ export default {
   },
 
   methods: {
+    checkAndOpenRegisterTab() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const tab = urlParams.get('tab');
+      
+      if (tab === 'register') {
+        const registerTab = document.getElementById('register-tab');
+        const loginTab = document.getElementById('login-tab');
+        
+        if (registerTab && loginTab) {
+          registerTab.classList.add('active');
+          loginTab.classList.remove('active');
+          
+          const registerPane = document.getElementById('register');
+          const loginPane = document.getElementById('login');
+          
+          if (registerPane && loginPane) {
+            registerPane.classList.add('show', 'active');
+            loginPane.classList.remove('show', 'active');
+          }
+        }
+      }
+    },
+    
     getImageUrl(imagePath) {
       return `http://localhost:8080/${imagePath}`;
     },
@@ -504,44 +532,34 @@ export default {
       this.loading = true;
       this.error = '';
 
-      const response = await axios.post('/api/auth/complete-register', {
-        mail: this.registerForm.mail,
-        confirmationCode: this.registerOtp
-      }, {
-        withCredentials: true
-      });
+      try {
+        const response = await axios.post('/api/auth/complete-register', {
+          mail: this.registerForm.mail,
+          confirmationCode: this.registerOtp
+        }, {
+          withCredentials: true
+        });
 
-      const data = response.data;
-      
-      if (data.success) {
-        const modal = bootstrap.Modal.getInstance(document.getElementById('registerOtpModal'));
-        modal.hide();
+        const data = response.data;
+        
+        if (data.success) {
+          const modal = bootstrap.Modal.getInstance(document.getElementById('registerOtpModal'));
+          modal.hide();
 
-        this.loginForm.identifier = this.registerForm.mail;
-        this.loginForm.pass = this.registerForm.pass;
-        this.loginForm.remember = true;
+          this.loginForm.identifier = this.registerForm.mail;
+          this.loginForm.pass = this.registerForm.pass;
+          this.loginForm.remember = true;
 
-        await this.handleLogin();
-                        
-        if (loginResult.success) {
-          this.message = 'Đăng ký và đăng nhập thành công!';
-
-          setTimeout(() => {
-            if (authStore.isCustomer) {
-              this.$router.push('/customer/index');
-            } else if (authStore.isAdmin) {
-              this.$router.push('/employee/dashboard');
-            } else if (authStore.isEmployee) {
-              this.$router.push('/employee/products');
-            } else {
-              this.$router.push('/customer/index');
-            }
-          }, 1000);
+          await this.handleLogin();
           
+          this.message = 'Đăng ký và đăng nhập thành công!';
+        } else {
+          this.error = data.message || 'Mã OTP không chính xác';
         }
-        this.message = 'Đăng ký và đăng nhập thành công!';
-      } else {
-        this.error = data.message || 'Mã OTP không chính xác';
+      } catch (error) {
+        this.error = error.response?.data?.message || 'Có lỗi xảy ra';
+      } finally {
+        this.loading = false;
       }
     },
 
@@ -628,8 +646,7 @@ export default {
           
           if (data.success) {
             this.message = 'Mật khẩu mới đã được gửi đến email của bạn!';
-            
-            this.resetForgotPasswordOtp();
+            this.closeForgotPasswordModal();
           } else {
             this.error = data.message || 'Mã OTP không chính xác';
           }
@@ -639,6 +656,21 @@ export default {
           this.loading = false;
         }
       }
+    },
+
+    closeForgotPasswordModal() {
+      const modal = bootstrap.Modal.getInstance(document.getElementById('forgotPasswordOtpModal'));
+      if (modal) {
+        modal.hide();
+      }
+
+      const backdrops = document.querySelectorAll('.modal-backdrop');
+      backdrops.forEach(backdrop => backdrop.remove());
+      document.body.classList.remove('modal-open');
+      document.body.style.removeProperty('overflow');
+      document.body.style.removeProperty('padding-right');
+      
+      this.resetForgotPasswordOtp();
     },
 
     async resendForgotPasswordOtp() {
@@ -957,5 +989,19 @@ input[type="text"].text-center {
 small {
   font-size: 0.8rem;
   color: #666;
+}
+
+.btn-outline-white {
+  border-color: #f6f6f6;
+  color: #ffffff;
+  position: fixed; 
+  top: 20px; 
+  left: 20px; 
+  z-index: 1000;
+}
+
+.btn-outline-white:hover {
+  background-color: #ffffff;
+  color: #000000;
 }
 </style>

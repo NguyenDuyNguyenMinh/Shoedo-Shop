@@ -1,5 +1,4 @@
 <template>
-
 <div class="toast-container position-fixed top-0 start-50 translate-middle-x p-3 mt-2" style="z-index: 1090;">
   <transition name="toast-fade">
     <div
@@ -32,11 +31,10 @@
     </div>
   </transition>
 </div>
-
+<!-- page content -->
   <div class="employee-layout">
-    <NV_Sidebar />
-
-    <main class="main-content">
+<NV_Sidebar @toggle-collapse="handleSidebarCollapse" />
+<main class="main-content" :class="{ 'expanded': isSidebarCollapsed }">
       <div class="page-container">
         <ul class="nav nav-tabs" role="tablist">
           <li class="nav-item" role="presentation">
@@ -60,6 +58,8 @@
             </a>
           </li>
         </ul>
+
+<!-- bộ lọc -->
 
         <div class="tab-content p-3 border border-top-0">
           <div v-show="activeTab === 'import'" class="tab-pane show active">
@@ -140,6 +140,8 @@
                 </div>
               </div>
             </div>
+
+<!-- list phân loại -->
 
             <div class="table-responsive">
               <table class="table table-bordered table-hover">
@@ -264,7 +266,6 @@
           </div>
 
           <div v-show="activeTab === 'history'" class="tab-pane show active">
-            
             <div class="row g-2 mb-3">
               <div class="col-md-5">
                 <div class="input-group">
@@ -284,7 +285,9 @@
                 </button>
               </div>
             </div>
-            
+
+            <!-- list lịch sử -->
+
             <div class="table-responsive">
               <table class="table table-bordered">
                 <thead class="table-dark">
@@ -343,14 +346,12 @@ const activeTab = ref("import");
 const products = ref([]);
 const history = ref([]);
 const bulkQuantity = ref(10);
-
-// --- STATE CHO BỘ LỌC ---
 const categories = ref([]);
 const filterKeyword = ref("");
 const filterCategory = ref("");
 const filterStatus = ref("");
 
-// Hàm lấy danh sách Danh Mục
+// api lấy danh mục
 const fetchCategories = async () => {
   try {
     const response = await axios.get(
@@ -362,7 +363,6 @@ const fetchCategories = async () => {
   }
 };
 
-// Hàm lấy danh sách Sản Phẩm
 const fetchProducts = async () => {
   try {
     const response = await axios.get(
@@ -389,17 +389,14 @@ const fetchHistory = async () => {
   }
 };
 
-// --- LOGIC LỌC SẢN PHẨM (COMPUTED) ---
+// lọc theo tìm kiếm, trạng thái và danh mục
 const filteredProducts = computed(() => {
   return products.value.filter((item) => {
-    // 1. Lọc theo tên sản phẩm
     const matchKeyword =
       !filterKeyword.value ||
       item.sanPham?.tenSP
         ?.toLowerCase()
         .includes(filterKeyword.value.toLowerCase());
-
-    // 2. Lọc theo trạng thái
     let matchStatus = true;
     if (filterStatus.value === "Còn hàng") {
       matchStatus = item.soLuong > 10;
@@ -408,12 +405,8 @@ const filteredProducts = computed(() => {
     } else if (filterStatus.value === "Hết hàng") {
       matchStatus = item.soLuong === 0;
     }
-
-    // 3. Lọc theo danh mục
     let matchCategory = true;
     if (filterCategory.value) {
-      // Vì dữ liệu API của bạn đang ẩn List danh mục (do @JsonIgnore ở Entity),
-      // logic này sẽ hoạt động ngay khi backend mở trả danh sách danh mục về.
       if (item.sanPham?.sanPhamDanhMucs) {
         matchCategory = item.sanPham.sanPhamDanhMucs.some(
           (dm) =>
@@ -422,7 +415,6 @@ const filteredProducts = computed(() => {
         );
       }
     }
-
     return matchKeyword && matchStatus && matchCategory;
   });
 });
@@ -434,14 +426,13 @@ const resetFilters = () => {
   filterStatus.value = "";
 };
 
-// --- LOGIC CHO NHẬP HÀNG LOẠT ---
 
-// Cập nhật lại: Đếm số lượng chọn dựa trên danh sách đang hiển thị
+// đếm số đã chọn
 const selectedCount = computed(
   () => filteredProducts.value.filter((p) => p.selected).length
 );
 
-// Cập nhật lại: Nút chọn tất cả chỉ áp dụng cho danh sách đang hiển thị
+// chọn tất cả
 const isAllSelected = computed({
   get: () =>
     filteredProducts.value.length > 0 &&
@@ -449,6 +440,7 @@ const isAllSelected = computed({
   set: (val) => filteredProducts.value.forEach((p) => (p.selected = val)),
 });
 
+//bỏ chọn tất cả
 const unselectAll = () => {
   products.value.forEach((p) => (p.selected = false));
 };
@@ -458,7 +450,6 @@ const applyBulkQuantity = () => {
     showToast("Số lượng phải lớn hơn 0");
     return;
   }
-  // Chỉ áp dụng cho sản phẩm đang lọc và được tick
   filteredProducts.value.forEach((p) => {
     if (p.selected) p.soLuongNhap = bulkQuantity.value;
   });
@@ -470,12 +461,10 @@ const handleBulkImport = async () => {
     showToast("Vui lòng tích chọn ít nhất 1 sản phẩm để nhập kho!","warning");
     return;
   }
-
   const payload = selectedItems.map((item) => ({
     maSKU: item.maSKU,
     soLuongNhap: item.soLuongNhap,
   }));
-
   try {
     await axios.post(
       "http://localhost:8080/api/nhapkho/nhap-hang-loat",
@@ -514,9 +503,9 @@ const formatDate = (dateString) => {
   return date.toLocaleDateString("vi-VN");
 };
 
-// Trạng thái của thông báo (Toast)
+
 const toast = ref({
-  id: 0, // Thêm ID để ép reset thanh tiến trình
+  id: 0,
   show: false,
   message: "",
   type: "success",
@@ -524,14 +513,9 @@ const toast = ref({
 
 let toastTimeout = null;
 
-// Hàm gọi thông báo dùng chung
 const showToast = (message, type = "success") => {
-  // Gán Date.now() làm ID giúp mỗi lần bật là một animation mới hoàn toàn
   toast.value = { id: Date.now(), show: true, message, type };
-  
   if (toastTimeout) clearTimeout(toastTimeout);
-  
-  // Tự động tắt sau đúng 3 giây
   toastTimeout = setTimeout(() => {
     toast.value.show = false;
   }, 5000);
@@ -550,45 +534,40 @@ onMounted(() => {
   fetchCategories();
 });
 
-// --- STATE CHO BỘ LỌC LỊCH SỬ (TAB 2) ---
 const historyKeyword = ref("");
 const historyDate = ref("");
 
-// --- LOGIC LỌC VÀ SẮP XẾP LỊCH SỬ ---
 const filteredHistory = computed(() => {
   let result = history.value;
-
-  // 1. Lọc theo tên sản phẩm
   if (historyKeyword.value) {
     const keyword = historyKeyword.value.toLowerCase();
     result = result.filter((log) =>
       log.sanPhamChiTiet?.sanPham?.tenSP?.toLowerCase().includes(keyword)
     );
   }
-
-  // 2. Lọc theo ngày nhập
   if (historyDate.value) {
     result = result.filter((log) => {
       if (!log.ngayNhap) return false;
-      // Format ngày từ database sang định dạng YYYY-MM-DD chuẩn của ô input type="date"
       const d = new Date(log.ngayNhap);
       const year = d.getFullYear();
       const month = String(d.getMonth() + 1).padStart(2, "0");
       const day = String(d.getDate()).padStart(2, "0");
       const formattedDate = `${year}-${month}-${day}`;
-
       return formattedDate === historyDate.value;
     });
   }
-
-  // 3. Sắp xếp mới nhất lên đầu (Mã Nhập Kho giảm dần)
   return result.slice().sort((a, b) => b.maNK - a.maNK);
 });
 
-// Hàm làm mới bộ lọc lịch sử
 const resetHistoryFilters = () => {
   historyKeyword.value = "";
   historyDate.value = "";
+};
+
+const isSidebarCollapsed = ref(false);
+
+const handleSidebarCollapse = (collapsedState) => {
+  isSidebarCollapsed.value = collapsedState;
 };
 </script>
 
@@ -661,5 +640,16 @@ td .btn-outline-success {
 .toast-fade-leave-to {
   opacity: 0;
   transform: translateY(-50px);
+}
+.main-content {
+  margin-left: 260px; /* Trạng thái Sidebar mặc định */
+  min-height: 100vh;
+  background: #f8f9fa;
+  transition: margin-left 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); /* Thêm dòng này để mượt */
+}
+
+/* Khi Sidebar thu nhỏ thì nới rộng nội dung chính ra */
+.main-content.expanded {
+  margin-left: 80px; 
 }
 </style>

@@ -21,6 +21,15 @@ public class AuthInterceptor implements HandlerInterceptor {
             uri.startsWith("/oauth2/") ||
             uri.startsWith("/images/") ||
             uri.startsWith("/anh/") ||
+            uri.startsWith("/api/sanpham/flash-sales") ||
+            uri.startsWith("/api/sanpham/noi-bat") ||
+            uri.startsWith("/api/sanpham/ban-chay") ||
+            uri.startsWith("/api/sanpham/trang-chu") ||
+            uri.startsWith("/api/sanpham/detail") ||
+            uri.startsWith("/api/san-pham/") ||
+            uri.startsWith("/api/danh-gia/") || 
+            uri.startsWith("/api/public/") ||
+            uri.startsWith("/api/chat/") ||
             uri.equals("/") ||
             uri.equals("/customer/index") ||
             uri.equals("/customer/chinhsach") ||

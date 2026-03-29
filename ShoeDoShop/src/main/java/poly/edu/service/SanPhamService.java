@@ -1,7 +1,9 @@
 // File: src/main/java/poly/edu/service/SanPhamService.java
 package poly.edu.service;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import jakarta.transaction.Transactional;
@@ -18,6 +20,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class SanPhamService {
 
     @Autowired
@@ -232,6 +235,67 @@ public class SanPhamService {
         
         sanPhamDAO.save(sp);
         return sp.getIsActive();
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    //  TRANG CHỦ — Flash Sales, Nổi Bật, Bán Chạy
+    // ══════════════════════════════════════════════════════════════
+
+    private static final int SO_GIAY     = 4;
+    private static final int SO_FREESIZE = 1;
+    private static final int TONG        = SO_GIAY + SO_FREESIZE;
+
+    public List<SanPhamDTO> layFlashSales() {
+        log.debug("Lay Flash Sales");
+        return ghepDanhSach(
+            sanPhamDAO.findFlashSalesGiay(PageRequest.of(0, SO_GIAY + 5)),
+            sanPhamDAO.findFlashSalesFreesize(PageRequest.of(0, SO_FREESIZE + 2))
+        );
+    }
+
+    public List<SanPhamDTO> layNoiBat() {
+        log.debug("Lay Noi Bat");
+        return ghepDanhSach(
+            sanPhamDAO.findNoiBatGiay(PageRequest.of(0, SO_GIAY + 5)),
+            sanPhamDAO.findNoiBatFreesize(PageRequest.of(0, SO_FREESIZE + 2))
+        );
+    }
+
+    public List<SanPhamDTO> layBanChay() {
+        log.debug("Lay Ban Chay");
+        return ghepDanhSach(
+            sanPhamDAO.findBanChayGiay(PageRequest.of(0, SO_GIAY + 5)),
+            sanPhamDAO.findBanChayFreesize(PageRequest.of(0, SO_FREESIZE + 2))
+        );
+    }
+
+    private List<SanPhamDTO> ghepDanhSach(List<SanPham> giay, List<SanPham> freesize) {
+        List<SanPham> result = new ArrayList<>(TONG);
+        int soFs = Math.min(freesize.size(), SO_FREESIZE);
+        result.addAll(freesize.subList(0, soFs));
+        int soGiayLay = Math.min(giay.size(), TONG - soFs);
+        result.addAll(giay.subList(0, soGiayLay));
+        if (result.size() < TONG && giay.size() > soGiayLay) {
+            int them = Math.min(giay.size() - soGiayLay, TONG - result.size());
+            result.addAll(giay.subList(soGiayLay, soGiayLay + them));
+        }
+        return result.stream().map(this::chuyenSangDTO).toList();
+    }
+
+    private SanPhamDTO chuyenSangDTO(SanPham sp) {
+        Integer maSP = sp.getMaSP();
+        Double giaGoc = sanPhamChiTietDAO.findGiaThapNhat(maSP).orElse(0.0);
+        int km = sp.getKhuyenMai() != null ? sp.getKhuyenMai() : 0;
+        Double giaSauKM = giaGoc * (100 - km) / 100.0;
+        List<String> danhSachAnh = sanPhamChiTietDAO.findDanhSachHinhAnh(maSP);
+        String hinhAnh = danhSachAnh.isEmpty() ? null : danhSachAnh.get(0);
+        Integer tongSoLuong = sanPhamChiTietDAO.tinhTongSoLuong(maSP);
+        return SanPhamDTO.builder()
+                .maSP(maSP).tenSP(sp.getTenSP()).hinhAnh(hinhAnh)
+                .giaGoc(giaGoc).giaSauKM(giaSauKM).khuyenMai(km)
+                .tongSoLuong(tongSoLuong != null ? tongSoLuong : 0)
+                .daBan(sp.getDaBan() != null ? sp.getDaBan() : 0)
+                .build();
     }
     
 }

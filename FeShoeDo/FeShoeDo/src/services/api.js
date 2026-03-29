@@ -10,14 +10,18 @@ const apiClient = axios.create({
 
 apiClient.interceptors.request.use(
   (config) => {
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
-    const token = localStorage.getItem('auth_token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    } else if (user?.token) {
-      config.headers.Authorization = `Bearer ${user.token}`;
+    try {
+      const userRaw = localStorage.getItem('user');
+      const user = userRaw ? JSON.parse(userRaw) : null;
+      const token = localStorage.getItem('auth_token');
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      } else if (user?.token) {
+        config.headers.Authorization = `Bearer ${user.token}`;
+      }
+    } catch (e) {
+      // ignore parse errors
     }
-    
     return config;
   },
   (error) => {
@@ -77,7 +81,53 @@ export default {
   getCategories() {
     return apiClient.get('/categories');
   },
-  
+
+  // ========== SẢN PHẨM (TRANG CHỦ) ==========
+  getTrangChu()        { return apiClient.get('/san-pham/trang-chu'); },
+  getFlashSales()      { return apiClient.get('/san-pham/flash-sales'); },
+  getNoiBat()          { return apiClient.get('/san-pham/noi-bat'); },
+  getBanChay()         { return apiClient.get('/san-pham/ban-chay'); },
+
+  // ========== ĐÁNH GIÁ SẢN PHẨM ==========
+  getDanhGia(maSP)     { return apiClient.get(`/danh-gia/san-pham/${maSP}`); },
+
+  // ========== SẢN PHẨM (TRANG CHI TIẾT) ==========
+  getSanPhamChiTiet(id)  { return apiClient.get(`/san-pham/detail/${id}`); },
+  getSanPhamLienQuan(id) { return apiClient.get(`/san-pham/detail/${id}/lien-quan`); },
+
+  // ========== TÌM KIẾM / LỊCH SỬ ==========
+  /**
+   * GET /api/tim-kiem/lich-su/{maKH}
+   * Trả về List<TimKiemDTO>: tối đa 10 từ khóa gần nhất của tài khoản
+   */
+  getLichSuTimKiem(maKH) {
+    return apiClient.get(`/tim-kiem/lich-su/${maKH}`);
+  },
+
+  /**
+   * POST /api/tim-kiem/luu  { maKH, keyword }
+   * Lưu/cập nhật từ khóa tìm kiếm vào DB
+   */
+  luuTimKiem(maKH, keyword) {
+    return apiClient.post('/tim-kiem/luu', { maKH, keyword });
+  },
+
+  /**
+   * DELETE /api/tim-kiem/xoa-tat-ca/{maKH}
+   * Xóa toàn bộ lịch sử tìm kiếm của tài khoản
+   */
+  xoaLichSuTimKiem(maKH) {
+    return apiClient.delete(`/tim-kiem/xoa-tat-ca/${maKH}`);
+  },
+
+  /**
+   * DELETE /api/tim-kiem/xoa/{maKH}?keyword=...
+   * Xóa 1 từ khóa cụ thể
+   */
+  xoaMotTuKhoa(maKH, keyword) {
+    return apiClient.delete(`/tim-kiem/xoa/${maKH}`, { params: { keyword } });
+  },
+
   // ========== CUSTOMER APIs ==========
   // Customer Products
   getCustomerProducts(params = {}) {
@@ -148,8 +198,24 @@ export default {
     return apiClient.put(`/customer/orders/${id}/status?status=${encodeURIComponent(status)}`);
   },
 
-  requestReturn(data) {
-    return apiClient.post('/customer/orders/return', data);
+  cancelOrder(id, cancelReason) {
+    return apiClient.post(`/customer/orders/${id}/cancel`, { cancelReason });
+  },
+
+  reportIssue(data) {
+    return apiClient.post('/customer/orders/report-issue', data);
+  },
+
+  addReview(data) {
+    return apiClient.post('/customer/orders/review', data);
+  },
+
+  updateReview(data) {
+    return apiClient.put('/customer/orders/review', data);
+  },
+
+  getReview(maHDCT) {
+    return apiClient.get(`/customer/orders/review/${maHDCT}`);
   },
 
   getAddresses() {
@@ -203,8 +269,8 @@ export default {
     return apiClient.post('/employee/users', data);
   },
 
-  updateUser(id, data) {
-    return apiClient.put(`/employee/users/${id}`, data);
+  updateUser(id, userData) {
+    return axios.put(`/api/employee/users/${id}`, userData);
   },
 
   toggleUserStatus(id) {

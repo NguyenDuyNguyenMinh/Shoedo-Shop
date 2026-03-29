@@ -18,15 +18,11 @@ public class KhuyenMaiController {
     @Autowired
     private KhuyenMaiService khuyenMaiService;
 
-    // GET: http://localhost:8080/api/khuyenmai/sanpham
-
     @GetMapping("/sanpham")
     public ResponseEntity<List<SanPhamKhuyenMaiResponse>> getAllSanPham() {
-        // Gọi hàm mới trong Service
         return ResponseEntity.ok(khuyenMaiService.getDanhSachKhuyenMai());
     }
 
-    // POST: http://localhost:8080/api/khuyenmai/cap-nhat
     @PostMapping("/cap-nhat")
     public ResponseEntity<?> capNhatKhuyenMai(@RequestBody KhuyenMaiUpdateRequest request) {
         try {
@@ -37,7 +33,6 @@ public class KhuyenMaiController {
         }
     }
 
-    // POST: http://localhost:8080/api/khuyenmai/cap-nhat-hang-loat
     @PostMapping("/cap-nhat-hang-loat")
     public ResponseEntity<?> capNhatHangLoat(@RequestBody List<KhuyenMaiUpdateRequest> requests) {
         try {

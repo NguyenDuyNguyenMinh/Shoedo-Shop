@@ -24,7 +24,6 @@
                 <option value="pending">Chờ xử lý ({{ filterByStatus('Đang xử lý').length }})</option>
                 <option value="shipping">Đang giao ({{ filterByStatus('Đang giao').length }})</option>
                 <option value="completed">Hoàn tất ({{ filterByStatus('Hoàn tất').length }})</option>
-                <option value="returned">Trả hàng ({{ filterByStatus('Hoàn hàng/trả hàng').length }})</option>
                 <option value="error">Báo lỗi ({{ filterByStatus('Báo lỗi').length }})</option>
                 <option value="cancelled">Đã hủy ({{ filterByStatus('Đã từ chối').length }})</option>
               </select>
@@ -40,8 +39,8 @@
                   <option value="asc">Cũ nhất</option>
                 </select>
                 <span class="input-group-text bg-light" @click="toggleSort" style="cursor: pointer;">
-          <i :class="sortDirection === 'desc' ? 'bi bi-sort-down' : 'bi bi-sort-up'"></i>
-        </span>
+                  <i :class="sortDirection === 'desc' ? 'bi bi-sort-down' : 'bi bi-sort-up'"></i>
+                </span>
               </div>
             </div>
           </div>
@@ -101,16 +100,22 @@
 
                 <!-- Các nút hành động -->
                 <div class="d-flex flex-column gap-2 mt-2">
+                  <!-- Nút Hủy đơn hàng -->
+                  <button v-if="canCancelOrder(order)" class="btn btn-danger btn-sm w-100" @click="openCancelModal(order)" :disabled="cancellingOrderId === order.maHD">
+                    <span v-if="cancellingOrderId === order.maHD" class="spinner-border spinner-border-sm me-2"></span>
+                    <i class="bi bi-x-circle me-1"></i> Hủy đơn hàng
+                  </button>
+
                   <!-- Nút Đã nhận hàng -->
                   <button v-if="order.trangThai === 'Đang giao'" class="btn btn-success btn-sm w-100" @click="openConfirmReceivedModal(order.maHD)" :disabled="receivingOrderId === order.maHD">
                     <span v-if="receivingOrderId === order.maHD" class="spinner-border spinner-border-sm me-2"></span>
                     <i class="bi bi-check-circle me-1"></i> Đã nhận hàng
                   </button>
 
-                  <!-- Nút Trả hàng -->
-                  <button v-if="canReturnOrder(order)" class="btn btn-warning btn-sm w-100" @click="openReturnModal(order)" :disabled="returningOrderId === order.maHD">
-                    <span v-if="returningOrderId === order.maHD" class="spinner-border spinner-border-sm me-2"></span>
-                    <i class="bi bi-arrow-return-left me-1"></i> Yêu cầu trả hàng
+                  <!-- Nút Báo lỗi -->
+                  <button v-if="canReportIssue(order)" class="btn btn-warning btn-sm w-100" @click="openReportIssueModal(order)" :disabled="reportingOrderId === order.maHD">
+                    <span v-if="reportingOrderId === order.maHD" class="spinner-border spinner-border-sm me-2"></span>
+                    <i class="bi bi-exclamation-triangle me-1"></i> Báo lỗi
                   </button>
 
                   <!-- Nút Xem chi tiết -->
@@ -149,6 +154,111 @@
             <button type="button" class="btn btn-success" @click="handleConfirmReceived" :disabled="confirming">
               <span v-if="confirming" class="spinner-border spinner-border-sm me-2"></span>
               <i class="bi bi-check-circle me-1"></i>Xác nhận
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Hủy đơn hàng -->
+    <div v-if="showCancelModal" class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header bg-danger text-white">
+            <h5 class="modal-title">
+              <i class="bi bi-x-circle me-2"></i>Hủy đơn hàng
+            </h5>
+            <button type="button" class="btn-close btn-close-white" @click="closeCancelModal"></button>
+          </div>
+          <div class="modal-body">
+            <div v-if="selectedCancelOrder">
+              <p class="mb-3"><strong>Mã đơn hàng:</strong> #{{ selectedCancelOrder.maHD }}</p>
+              <p class="mb-3"><strong>Ngày đặt:</strong> {{ formatDate(selectedCancelOrder.ngayMua) }}</p>
+              <p class="mb-3"><strong>Tổng tiền:</strong> {{ formatPrice(selectedCancelOrder.tongTien || calculateOrderTotal(selectedCancelOrder)) }}</p>
+
+              <div class="mb-3">
+                <label class="form-label fw-bold">Lý do hủy đơn <span class="text-danger">*</span></label>
+                <select class="form-select" v-model="cancelReason">
+                  <option value="">-- Chọn lý do hủy --</option>
+                  <option value="Đặt nhầm sản phẩm">Đặt nhầm sản phẩm</option>
+                  <option value="Thay đổi ý định mua hàng">Thay đổi ý định mua hàng</option>
+                  <option value="Tìm thấy sản phẩm giá tốt hơn">Tìm thấy sản phẩm giá tốt hơn</option>
+                  <option value="Thời gian giao hàng quá lâu">Thời gian giao hàng quá lâu</option>
+                  <option value="Sản phẩm không còn nhu cầu">Sản phẩm không còn nhu cầu</option>
+                  <option value="Lý do khác">Lý do khác</option>
+                </select>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Mô tả chi tiết (tùy chọn)</label>
+                <textarea class="form-control" rows="3" v-model="cancelNote" placeholder="Vui lòng mô tả chi tiết lý do hủy đơn hàng..."></textarea>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" @click="closeCancelModal">
+              <i class="bi bi-arrow-left me-1"></i>Quay lại
+            </button>
+            <button type="button" class="btn btn-danger" @click="submitCancelOrder" :disabled="!cancelReason || cancelling">
+              <span v-if="cancelling" class="spinner-border spinner-border-sm me-2"></span>
+              <i class="bi bi-check-circle me-1"></i>Xác nhận hủy
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal báo lỗi -->
+    <div v-if="showReportIssueModal" class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header bg-warning text-dark">
+            <h5 class="modal-title">
+              <i class="bi bi-exclamation-triangle me-2"></i>Báo lỗi đơn hàng
+            </h5>
+            <button type="button" class="btn-close" @click="closeReportIssueModal"></button>
+          </div>
+          <div class="modal-body">
+            <div v-if="selectedOrder">
+              <p class="mb-2"><strong>Mã đơn hàng:</strong> #{{ selectedOrder.maHD }}</p>
+              <p class="mb-2"><strong>Ngày mua:</strong> {{ formatDate(selectedOrder.ngayMua) }}</p>
+              <p class="mb-3"><strong>Ngày nhận:</strong> {{ formatDate(selectedOrder.ngayDen || selectedOrder.ngayMua) }}</p>
+
+              <!-- Đếm ngược đơn giản -->
+              <div class="timer-simple mb-4" v-if="remainingTimeDetail">
+                <div class="d-flex align-items-center gap-2 text-muted">
+                  <i class="bi bi-clock-history"></i>
+                  <span class="timer-text">{{ remainingTimeDetail.formatted }}</span>
+                  <i class="bi bi-calendar-check"></i>
+                  <span class="deadline-text small">Hạn: {{ formatDate(getReportDeadline(selectedOrder)) }}</span>
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label fw-bold">Lý do báo lỗi <span class="text-danger">*</span></label>
+                <select class="form-select" v-model="reportReason">
+                  <option value="">-- Chọn lý do --</option>
+                  <option value="Sản phẩm bị lỗi">Sản phẩm bị lỗi</option>
+                  <option value="Sai kích thước">Sai kích thước</option>
+                  <option value="Sai màu sắc">Sai màu sắc</option>
+                  <option value="Sai mẫu mã">Sai mẫu mã</option>
+                  <option value="Giao thiếu hàng">Giao thiếu hàng</option>
+                  <option value="Hàng bị hư hỏng">Hàng bị hư hỏng</option>
+                  <option value="Lý do khác">Lý do khác</option>
+                </select>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Mô tả chi tiết</label>
+                <textarea class="form-control" rows="4" v-model="reportNote" placeholder="Vui lòng mô tả chi tiết vấn đề bạn gặp phải..."></textarea>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" @click="closeReportIssueModal">Hủy</button>
+            <button type="button" class="btn btn-warning" @click="submitReportIssue" :disabled="!reportReason || reporting">
+              <span v-if="reporting" class="spinner-border spinner-border-sm me-2"></span>
+              Gửi báo lỗi
             </button>
           </div>
         </div>
@@ -201,494 +311,473 @@
       </div>
     </div>
 
-    <!-- Modal yêu cầu trả hàng -->
-    <div v-if="showReturnModal" class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Yêu cầu trả hàng</h5>
-            <button type="button" class="btn-close" @click="closeReturnModal"></button>
-          </div>
-          <div class="modal-body">
-            <div v-if="selectedOrder">
-              <p><strong>Mã đơn hàng:</strong> #{{ selectedOrder.maHD }}</p>
-              <p><strong>Ngày nhận hàng:</strong> {{ formatDate(selectedOrder.ngayDen || selectedOrder.ngayMua) }}</p>
-
-              <div class="mb-3">
-                <label class="form-label fw-bold">Lý do trả hàng <span class="text-danger">*</span></label>
-                <select class="form-select" v-model="returnReason">
-                  <option value="">-- Chọn lý do --</option>
-                  <option value="Sản phẩm bị lỗi">Sản phẩm bị lỗi</option>
-                  <option value="Sai kích thước">Sai kích thước</option>
-                  <option value="Sai màu sắc">Sai màu sắc</option>
-                  <option value="Sai mẫu mã">Sai mẫu mã</option>
-                  <option value="Không ưng ý">Không ưng ý</option>
-                  <option value="Lý do khác">Lý do khác</option>
-                </select>
-              </div>
-
-              <div class="mb-3" v-if="returnReason === 'Lý do khác'">
-                <label class="form-label">Ghi chú thêm</label>
-                <textarea class="form-control" rows="3" v-model="returnNote" placeholder="Nhập lý do chi tiết..."></textarea>
-              </div>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" @click="closeReturnModal">Hủy</button>
-            <button type="button" class="btn btn-warning" @click="submitReturnRequest" :disabled="!returnReason || submitting">
-              <span v-if="submitting" class="spinner-border spinner-border-sm me-2"></span>
-              Gửi yêu cầu
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-
     <Footer />
   </div>
-
 </template>
 
-<script>
-import { ref, onMounted, computed } from 'vue';
+<script setup>
+import { ref, onMounted, onBeforeUnmount, computed, watch } from 'vue';
 import api from '@/services/api';
 import KH_Navbar from '@/components/shared/KH_Navbar.vue';
 import Footer from '@/components/shared/Footer.vue';
 
-export default {
-  name: 'QLDonHang',
-  components: {
-    KH_Navbar,
-    Footer
-  },
-  setup() {
-    const currentTab = ref('all');
-    const sortDirection = ref('desc');
-    const orders = ref([]);
-    const loading = ref(false);
-    const error = ref('');
-    const receivingOrderId = ref(null);
-    const returningOrderId = ref(null);
+const currentTab = ref('all');
+const sortDirection = ref('desc');
+const orders = ref([]);
+const loading = ref(false);
+const error = ref('');
+const receivingOrderId = ref(null);
+const reportingOrderId = ref(null);
+const cancellingOrderId = ref(null);
 
-    //State cho modal xác nhận
-    const showConfirmModal = ref(false);
-    const confirming = ref(false);
-    const pendingOrderId = ref(null);
+// State cho modal xác nhận
+const showConfirmModal = ref(false);
+const confirming = ref(false);
+const pendingOrderId = ref(null);
 
-    // State cho modal trả hàng
-    const showReturnModal = ref(false);
-    const selectedOrder = ref(null);
-    const returnReason = ref('');
-    const returnNote = ref('');
-    const submitting = ref(false);
+// State cho modal hủy đơn
+const showCancelModal = ref(false);
+const cancelling = ref(false);
+const selectedCancelOrder = ref(null);
+const cancelReason = ref('');
+const cancelNote = ref('');
 
-    // State cho modal thông báo thành công
-    const showSuccessModal = ref(false);
-    const successMessage = ref('');
+// State cho modal báo lỗi
+const showReportIssueModal = ref(false);
+const selectedOrder = ref(null);
+const reportReason = ref('');
+const reportNote = ref('');
+const reporting = ref(false);
 
-    // State cho modal lỗi
-    const showErrorModal = ref(false);
-    const errorMessage = ref('');
+// State cho modal thông báo thành công
+const showSuccessModal = ref(false);
+const successMessage = ref('');
 
-    const sortedOrders = computed(() => {
-      return [...orders.value].sort((a, b) => {
-        return new Date(b.ngayMua) - new Date(a.ngayMua);
-      });
-    });
+// State cho modal lỗi
+const showErrorModal = ref(false);
+const errorMessage = ref('');
 
-    const fetchOrders = async () => {
-      loading.value = true;
-      error.value = '';
+// Timer realtime cho modal
+let modalTimerInterval = null;
+const modalTimeTick = ref(Date.now());
 
-      try {
-        const response = await api.getOrders();
-        console.log('API Response:', response.data);
+// Bắt đầu timer cho modal
+const startModalTimer = () => {
+  if (modalTimerInterval) clearInterval(modalTimerInterval);
+  modalTimerInterval = setInterval(() => {
+    modalTimeTick.value = Date.now();
+  }, 1000);
+};
 
-        if (response.data.success) {
-          let allOrders = [];
-
-          if (response.data.data) {
-            Object.values(response.data.data).forEach(statusOrders => {
-              allOrders.push(...statusOrders);
-            });
-          } else if (response.data.orders) {
-            allOrders = response.data.orders;
-          } else if (Array.isArray(response.data)) {
-            allOrders = response.data;
-          }
-
-          orders.value = allOrders;
-          sortOrders(); // Sắp xếp sau khi nhận dữ liệu
-        } else {
-          error.value = response.data.message || 'Không thể tải danh sách đơn hàng';
-        }
-      } catch (err) {
-        console.error('Error fetching orders:', err);
-        error.value = err.response?.data?.message || 'Lỗi kết nối máy chủ';
-      } finally {
-        loading.value = false;
-      }
-    };
-
-    // Lọc đơn hàng theo trạng thái
-    const filterByStatus = (status) => {
-      return orders.value.filter(order => order.trangThai === status);
-    };
-
-    // Lọc đơn hàng theo tab hiện tại
-    const filteredOrders = computed(() => {
-      let result = [];
-
-      // Lọc theo tab
-      switch (currentTab.value) {
-        case 'all':
-          result = [...orders.value];
-          break;
-        case 'pending':
-          result = filterByStatus('Đang xử lý');
-          break;
-        case 'shipping':
-          result = filterByStatus('Đang giao');
-          break;
-        case 'completed':
-          result = filterByStatus('Hoàn tất');
-          break;
-        case 'cancelled':
-          result = filterByStatus('Đã từ chối');
-          break;
-        case 'error':
-          result = filterByStatus('Báo lỗi');
-          break;
-        case 'returned':
-          result = filterByStatus('Hoàn hàng/trả hàng');
-          break;
-        default:
-          result = [...orders.value];
-      }
-
-      // Sắp xếp theo sortDirection
-      return result.sort((a, b) => {
-        const dateA = new Date(a.ngayMua);
-        const dateB = new Date(b.ngayMua);
-
-        if (sortDirection.value === 'desc') {
-          return dateB - dateA; // Mới nhất lên đầu
-        } else {
-          return dateA - dateB; // Cũ nhất lên đầu
-        }
-      });
-    });
-
-    // Đổi tab
-    const changeTab = () => {
-      //console.log('Tab changed to:', currentTab.value);
-    };
-
-    const changeSort = () => {
-      // Sắp xếp lại orders theo sortDirection
-      sortOrders();
-    };
-
-    const toggleSort = () => {
-      sortDirection.value = sortDirection.value === 'desc' ? 'asc' : 'desc';
-      sortOrders();
-    };
-
-    const sortOrders = () => {
-      const sorted = [...orders.value].sort((a, b) => {
-        const dateA = new Date(a.ngayMua);
-        const dateB = new Date(b.ngayMua);
-
-        if (sortDirection.value === 'desc') {
-          return dateB - dateA; // Mới nhất xuống cũ nhất
-        } else {
-          return dateA - dateB; // Cũ nhất lên mới nhất
-        }
-      });
-
-      orders.value = sorted;
-    };
-
-    // Kiểm tra đơn hàng có thể trả trong vòng 7 ngày không
-    const canReturnOrder = (order) => {
-      if (order.trangThai !== 'Hoàn tất') return false;
-      const receivedDate = order.ngayDen ? new Date(order.ngayDen) : new Date(order.ngayMua);
-      const today = new Date();
-      const diffTime = today - receivedDate;
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      return diffDays <= 7;
-    };
-
-    // Lấy tên sản phẩm đầu tiên từ order
-    const getFirstProductName = (order) => {
-      if (order.chiTiet && order.chiTiet.length > 0) {
-        return order.chiTiet[0].tenSP || 'Sản phẩm';
-      }
-      if (order.hoaDonCTs && order.hoaDonCTs.length > 0) {
-        const item = order.hoaDonCTs[0];
-        return item.plSanPham?.sanPham?.tenSP ||
-            item.plSanPham?.tenSP ||
-            item.tenSP ||
-            'Sản phẩm';
-      }
-      if (order.productName) {
-        return order.productName;
-      }
-      return 'Sản phẩm';
-    };
-
-    // Lấy ảnh sản phẩm đầu tiên
-    const getFirstProductImage = (order) => {
-      if (order.chiTiet && order.chiTiet.length > 0) {
-        return order.chiTiet[0].hinhAnh;
-      }
-      if (order.hoaDonCTs && order.hoaDonCTs.length > 0) {
-        const item = order.hoaDonCTs[0];
-        return item.plSanPham?.hinh || item.hinhAnh;
-      }
-      if (order.productImage) {
-        return order.productImage;
-      }
-      return null;
-    };
-
-    // Đếm số lượng sản phẩm trong đơn hàng
-    const getProductCount = (order) => {
-      if (order.chiTiet && order.chiTiet.length > 0) {
-        return order.chiTiet.length;
-      }
-      if (order.hoaDonCTs && order.hoaDonCTs.length > 0) {
-        return order.hoaDonCTs.length;
-      }
-      if (order.totalItems) {
-        return order.totalItems;
-      }
-      return 1;
-    };
-
-    const calculateOrderTotal = (order) => {
-      if (order.tongTien) return order.tongTien;
-      if (order.chiTiet && order.chiTiet.length > 0) {
-        return order.chiTiet.reduce((total, item) => {
-          return total + (item.soLuong * item.donGia);
-        }, 0);
-      }
-      if (order.hoaDonCTs && order.hoaDonCTs.length > 0) {
-        return order.hoaDonCTs.reduce((total, item) => {
-          return total + (item.soLuong * item.donGia);
-        }, 0);
-      }
-      return 0;
-    };
-
-    const formatPrice = (price) => {
-      if (!price) return '0 ₫';
-      return new Intl.NumberFormat('vi-VN', {
-        style: 'currency',
-        currency: 'VND'
-      }).format(price);
-    };
-
-    const formatDate = (dateString) => {
-      if (!dateString) return '';
-      const date = new Date(dateString);
-      return date.toLocaleDateString('vi-VN', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-      });
-    };
-
-    const getImageUrl = (imageName) => {
-      if (!imageName) return 'https://via.placeholder.com/60';
-      if (imageName.startsWith('http')) return imageName;
-      if (imageName.startsWith('/')) return imageName;
-      return `/images/${imageName}`;
-    };
-
-    const getStatusClass = (status) => {
-      switch (status) {
-        case 'Hoàn tất':
-          return 'badge bg-success';
-        case 'Đang giao':
-          return 'badge bg-primary';
-        case 'Đang xử lý':
-          return 'badge bg-warning text-dark';
-        case 'Đã từ chối':
-          return 'badge bg-danger';
-        case 'Hoàn hàng/trả hàng':
-          return 'badge bg-secondary';
-        case 'Báo lỗi':
-          return 'badge bg-dark';
-        default:
-          return 'badge bg-secondary';
-      }
-    };
-
-    // Xác nhận đã nhận hàng
-    const openConfirmReceivedModal = (orderId) => {
-      pendingOrderId.value = orderId;
-      showConfirmModal.value = true;
-    };
-
-    // Xử lý xác nhận từ modal
-    const handleConfirmReceived = async () => {
-      confirming.value = true;
-      try {
-        await processConfirmReceived(pendingOrderId.value);
-      } finally {
-        confirming.value = false;
-        closeConfirmModal();
-      }
-    };
-
-    // Đóng modal xác nhận
-    const closeConfirmModal = () => {
-      showConfirmModal.value = false;
-      pendingOrderId.value = null;
-    };
-
-    // Xử lý API cập nhật trạng thái
-    const processConfirmReceived = async (orderId) => {
-      receivingOrderId.value = orderId;
-
-      try {
-        //console.log('Updating order status:', orderId, 'to Hoàn tất');
-
-        const response = await api.updateCustomerOrderStatus(orderId, 'Hoàn tất');
-        //console.log('Update response:', response.data);
-
-        if (response.data.success) {
-          const orderIndex = orders.value.findIndex(o => o.maHD === orderId);
-          if (orderIndex !== -1) {
-            orders.value[orderIndex].trangThai = 'Hoàn tất';
-            orders.value[orderIndex].ngayDen = new Date().toISOString();
-            orders.value = [...orders.value];
-          }
-
-          successMessage.value = 'Xác nhận thành công! Cảm ơn bạn đã mua hàng.';
-          showSuccessModal.value = true;
-        } else {
-          errorMessage.value = response.data.message || 'Không thể cập nhật trạng thái';
-          showErrorModal.value = true;
-        }
-      } catch (err) {
-        //console.error('Error updating order status:', err);
-        errorMessage.value = err.response?.data?.message || 'Lỗi khi cập nhật trạng thái';
-        showErrorModal.value = true;
-      } finally {
-        receivingOrderId.value = null;
-      }
-    };
-
-    // Mở modal yêu cầu trả hàng
-    const openReturnModal = (order) => {
-      selectedOrder.value = order;
-      returnReason.value = '';
-      returnNote.value = '';
-      showReturnModal.value = true;
-    };
-
-    // Đóng modal
-    const closeReturnModal = () => {
-      showReturnModal.value = false;
-      selectedOrder.value = null;
-      returnReason.value = '';
-      returnNote.value = '';
-    };
-
-    // Gửi yêu cầu trả hàng
-    const submitReturnRequest = async () => {
-      if (!returnReason.value) {
-        errorMessage.value = 'Vui lòng chọn lý do trả hàng';
-        showErrorModal.value = true;
-        return;
-      }
-
-      submitting.value = true;
-      returningOrderId.value = selectedOrder.value?.maHD;
-
-      try {
-        const response = await api.requestReturn({
-          orderId: selectedOrder.value?.maHD,
-          reason: returnReason.value,
-          note: returnNote.value
-        });
-
-        if (response.data.success) {
-          closeReturnModal();
-          successMessage.value = 'Yêu cầu trả hàng đã được gửi thành công! Chúng tôi sẽ xử lý trong thời gian sớm nhất.';
-          showSuccessModal.value = true;
-
-          setTimeout(() => {
-            window.location.reload();
-          }, 1000);
-        } else {
-          errorMessage.value = response.data.message || 'Không thể gửi yêu cầu trả hàng';
-          showErrorModal.value = true;
-        }
-      } catch (err) {
-        //console.error('Error submitting return request:', err);
-        errorMessage.value = err.response?.data?.message || 'Lỗi khi gửi yêu cầu trả hàng';
-        showErrorModal.value = true;
-      } finally {
-        submitting.value = false;
-        returningOrderId.value = null;
-      }
-    };
-
-    onMounted(() => {
-      fetchOrders();
-    });
-
-    return {
-      orders,
-      loading,
-      error,
-      currentTab,
-      filteredOrders,
-      changeTab,
-      filterByStatus,
-      receivingOrderId,
-      sortedOrders,
-      sortDirection,
-      changeSort,
-      toggleSort,
-      getFirstProductName,
-      getFirstProductImage,
-      getProductCount,
-      calculateOrderTotal,
-      formatPrice,
-      formatDate,
-      getImageUrl,
-      getStatusClass,
-      canReturnOrder,
-      // Modal xác nhận
-      showConfirmModal,
-      confirming,
-      pendingOrderId,
-      openConfirmReceivedModal,
-      closeConfirmModal,
-      handleConfirmReceived,
-      // Modal trả hàng
-      showReturnModal,
-      selectedOrder,
-      returnReason,
-      returnNote,
-      submitting,
-      returningOrderId,
-      openReturnModal,
-      closeReturnModal,
-      submitReturnRequest,
-      // Modal thành công
-      showSuccessModal,
-      successMessage,
-      // Modal lỗi
-      showErrorModal,
-      errorMessage
-    };
+// Dừng timer modal
+const stopModalTimer = () => {
+  if (modalTimerInterval) {
+    clearInterval(modalTimerInterval);
+    modalTimerInterval = null;
   }
 };
+
+const fetchOrders = async () => {
+  loading.value = true;
+  error.value = '';
+
+  try {
+    const response = await api.getOrders();
+    if (response.data.success) {
+      let allOrders = [];
+      if (response.data.data) {
+        Object.values(response.data.data).forEach(statusOrders => {
+          allOrders.push(...statusOrders);
+        });
+      } else if (response.data.orders) {
+        allOrders = response.data.orders;
+      } else if (Array.isArray(response.data)) {
+        allOrders = response.data;
+      }
+      orders.value = allOrders;
+      sortOrders();
+    } else {
+      error.value = response.data.message || 'Không thể tải danh sách đơn hàng';
+    }
+  } catch (err) {
+    error.value = err.response?.data?.message || 'Lỗi kết nối máy chủ';
+  } finally {
+    loading.value = false;
+  }
+};
+
+// Kiểm tra có thể hủy đơn không
+const canCancelOrder = (order) => {
+  return order.trangThai === 'Đang xử lý';
+};
+
+// Lọc đơn hàng theo trạng thái
+const filterByStatus = (status) => {
+  return orders.value.filter(order => order.trangThai === status);
+};
+
+// Lọc đơn hàng theo tab hiện tại
+const filteredOrders = computed(() => {
+  let result = [];
+
+  switch (currentTab.value) {
+    case 'all': result = [...orders.value]; break;
+    case 'pending': result = filterByStatus('Đang xử lý'); break;
+    case 'shipping': result = filterByStatus('Đang giao'); break;
+    case 'completed': result = filterByStatus('Hoàn tất'); break;
+    case 'cancelled': result = filterByStatus('Đã từ chối'); break;
+    case 'error': result = filterByStatus('Báo lỗi'); break;
+    default: result = [...orders.value];
+  }
+
+  return result.sort((a, b) => {
+    const dateA = new Date(a.ngayMua);
+    const dateB = new Date(b.ngayMua);
+    return sortDirection.value === 'desc' ? dateB - dateA : dateA - dateB;
+  });
+});
+
+const changeTab = () => {};
+const changeSort = () => sortOrders();
+const toggleSort = () => {
+  sortDirection.value = sortDirection.value === 'desc' ? 'asc' : 'desc';
+  sortOrders();
+};
+
+const sortOrders = () => {
+  const sorted = [...orders.value].sort((a, b) => {
+    const dateA = new Date(a.ngayMua);
+    const dateB = new Date(b.ngayMua);
+    return sortDirection.value === 'desc' ? dateB - dateA : dateA - dateB;
+  });
+  orders.value = sorted;
+};
+
+// Kiểm tra có thể báo lỗi không
+const canReportIssue = (order) => {
+  if (order.trangThai !== 'Hoàn tất') return false;
+  const receivedDate = order.ngayDen ? new Date(order.ngayDen) : new Date(order.ngayMua);
+  const deadline = new Date(receivedDate);
+  deadline.setDate(deadline.getDate() + 30);
+  return new Date() <= deadline;
+};
+
+// Tính thời gian còn lại cho modal (cập nhật mỗi giây)
+const remainingTimeDetail = computed(() => {
+  // Dùng modalTimeTick để force re-compute
+  const _ = modalTimeTick.value;
+
+  if (!selectedOrder.value || !canReportIssue(selectedOrder.value)) {
+    return { formatted: '00 ngày 00:00:00' };
+  }
+
+  const receivedDate = selectedOrder.value.ngayDen ? new Date(selectedOrder.value.ngayDen) : new Date(selectedOrder.value.ngayMua);
+  const deadline = new Date(receivedDate);
+  deadline.setDate(deadline.getDate() + 30);
+
+  const now = new Date();
+  const diffMs = deadline - now;
+
+  if (diffMs <= 0) return { formatted: '00 ngày 00:00:00' };
+
+  const totalSeconds = Math.floor(diffMs / 1000);
+  const days = Math.floor(totalSeconds / (24 * 60 * 60));
+  const hours = Math.floor((totalSeconds % (24 * 60 * 60)) / (60 * 60));
+  const minutes = Math.floor((totalSeconds % (60 * 60)) / 60);
+  const seconds = totalSeconds % 60;
+
+  const formattedDays = String(days).padStart(2, '0');
+  const formattedHours = String(hours).padStart(2, '0');
+  const formattedMinutes = String(minutes).padStart(2, '0');
+  const formattedSeconds = String(seconds).padStart(2, '0');
+
+  return {
+    days, hours, minutes, seconds,
+    formatted: `${formattedDays} ngày ${formattedHours}:${formattedMinutes}:${formattedSeconds}`
+  };
+});
+
+// Lấy deadline
+const getReportDeadline = (order) => {
+  if (!order) return '';
+  const receivedDate = order.ngayDen ? new Date(order.ngayDen) : new Date(order.ngayMua);
+  const deadline = new Date(receivedDate);
+  deadline.setDate(deadline.getDate() + 30);
+  return deadline;
+};
+
+// Các helper functions
+const getFirstProductName = (order) => {
+  if (order.chiTiet?.length > 0) return order.chiTiet[0].tenSP || 'Sản phẩm';
+  if (order.hoaDonCTs?.length > 0) {
+    const item = order.hoaDonCTs[0];
+    return item.plSanPham?.sanPham?.tenSP || item.plSanPham?.tenSP || item.tenSP || 'Sản phẩm';
+  }
+  return order.productName || 'Sản phẩm';
+};
+
+const getFirstProductImage = (order) => {
+  if (order.chiTiet?.length > 0) return order.chiTiet[0].hinhAnh;
+  if (order.hoaDonCTs?.length > 0) {
+    const item = order.hoaDonCTs[0];
+    return item.plSanPham?.hinh || item.hinhAnh;
+  }
+  return order.productImage || null;
+};
+
+const getProductCount = (order) => {
+  if (order.chiTiet?.length > 0) return order.chiTiet.length;
+  if (order.hoaDonCTs?.length > 0) return order.hoaDonCTs.length;
+  return order.totalItems || 1;
+};
+
+const calculateOrderTotal = (order) => {
+  if (order.tongTien) return order.tongTien;
+  if (order.chiTiet?.length > 0) {
+    return order.chiTiet.reduce((total, item) => total + (item.soLuong * item.donGia), 0);
+  }
+  if (order.hoaDonCTs?.length > 0) {
+    return order.hoaDonCTs.reduce((total, item) => total + (item.soLuong * item.donGia), 0);
+  }
+  return 0;
+};
+
+const formatPrice = (price) => {
+  if (!price) return '0 ₫';
+  return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
+};
+
+const formatDate = (dateString) => {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  return date.toLocaleDateString('vi-VN', {
+    day: '2-digit', month: '2-digit', year: 'numeric'
+  });
+};
+
+const getImageUrl = (imageName) => {
+  if (!imageName) return 'https://via.placeholder.com/60';
+  if (imageName.startsWith('http')) return imageName;
+  if (imageName.startsWith('/')) return imageName;
+  return `/images/${imageName}`;
+};
+
+const handleImageError = (e) => {
+  e.target.src = 'https://via.placeholder.com/60';
+};
+
+const getStatusClass = (status) => {
+  switch (status) {
+    case 'Hoàn tất': return 'badge bg-success';
+    case 'Đang giao': return 'badge bg-primary';
+    case 'Đang xử lý': return 'badge bg-warning text-dark';
+    case 'Đã từ chối': return 'badge bg-danger';
+    case 'Báo lỗi': return 'badge bg-dark';
+    case 'Hoàn hàng/trả hàng': return 'badge bg-secondary';
+    default: return 'badge bg-secondary';
+  }
+};
+
+// Xác nhận đã nhận hàng
+const openConfirmReceivedModal = (orderId) => {
+  pendingOrderId.value = orderId;
+  showConfirmModal.value = true;
+};
+
+const handleConfirmReceived = async () => {
+  confirming.value = true;
+  try {
+    await processConfirmReceived(pendingOrderId.value);
+  } finally {
+    confirming.value = false;
+    closeConfirmModal();
+  }
+};
+
+const closeConfirmModal = () => {
+  showConfirmModal.value = false;
+  pendingOrderId.value = null;
+};
+
+const processConfirmReceived = async (orderId) => {
+  receivingOrderId.value = orderId;
+  try {
+    const response = await api.updateCustomerOrderStatus(orderId, 'Hoàn tất');
+    if (response.data.success) {
+      const orderIndex = orders.value.findIndex(o => o.maHD === orderId);
+      if (orderIndex !== -1) {
+        orders.value[orderIndex].trangThai = 'Hoàn tất';
+        orders.value[orderIndex].ngayDen = new Date().toISOString();
+        orders.value = [...orders.value];
+      }
+      successMessage.value = 'Xác nhận thành công!';
+      showSuccessModal.value = true;
+    } else {
+      errorMessage.value = response.data.message || 'Không thể cập nhật trạng thái';
+      showErrorModal.value = true;
+    }
+  } catch (err) {
+    errorMessage.value = err.response?.data?.message || 'Lỗi khi cập nhật trạng thái';
+    showErrorModal.value = true;
+  } finally {
+    receivingOrderId.value = null;
+  }
+};
+
+// Mở modal hủy đơn
+const openCancelModal = (order) => {
+  selectedCancelOrder.value = order;
+  cancelReason.value = '';
+  cancelNote.value = '';
+  showCancelModal.value = true;
+};
+
+const closeCancelModal = () => {
+  showCancelModal.value = false;
+  selectedCancelOrder.value = null;
+  cancelReason.value = '';
+  cancelNote.value = '';
+};
+
+// Gửi hủy đơn
+const submitCancelOrder = async () => {
+  if (!cancelReason.value) {
+    errorMessage.value = 'Vui lòng chọn lý do hủy đơn';
+    showErrorModal.value = true;
+    return;
+  }
+
+  cancelling.value = true;
+  cancellingOrderId.value = selectedCancelOrder.value?.maHD;
+
+  try {
+    const fullReason = cancelNote.value
+        ? `${cancelReason.value} - ${cancelNote.value}`
+        : cancelReason.value;
+
+    console.log('Cancelling order:', {
+      orderId: selectedCancelOrder.value?.maHD,
+      reason: fullReason
+    });
+
+    const response = await api.cancelOrder(selectedCancelOrder.value?.maHD, fullReason);
+
+    console.log('Cancel response:', response.data);
+
+    if (response.data.success) {
+      closeCancelModal();
+      successMessage.value = 'Đơn hàng đã được hủy thành công!';
+      showSuccessModal.value = true;
+
+      // Cập nhật trạng thái đơn hàng trong danh sách
+      const orderIndex = orders.value.findIndex(o => o.maHD === selectedCancelOrder.value?.maHD);
+      if (orderIndex !== -1) {
+        orders.value[orderIndex].trangThai = 'Đã từ chối';
+        orders.value[orderIndex].ghiChu = fullReason;
+        orders.value = [...orders.value];
+      }
+
+      // Reload trang sau 1 giây
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+
+    } else {
+      console.error('Cancel failed:', response.data.message);
+      errorMessage.value = response.data.message || 'Không thể hủy đơn hàng';
+      showErrorModal.value = true;
+    }
+  } catch (err) {
+    console.error('Cancel error:', err);
+    console.error('Error response:', err.response?.data);
+    errorMessage.value = err.response?.data?.message || err.message || 'Lỗi khi hủy đơn hàng';
+    showErrorModal.value = true;
+  } finally {
+    cancelling.value = false;
+    cancellingOrderId.value = null;
+  }
+};
+
+// Mở modal báo lỗi
+const openReportIssueModal = (order) => {
+  selectedOrder.value = order;
+  reportReason.value = '';
+  reportNote.value = '';
+  showReportIssueModal.value = true;
+};
+
+const closeReportIssueModal = () => {
+  showReportIssueModal.value = false;
+  selectedOrder.value = null;
+  reportReason.value = '';
+  reportNote.value = '';
+};
+
+// Gửi báo lỗi
+const submitReportIssue = async () => {
+  if (!reportReason.value) {
+    errorMessage.value = 'Vui lòng chọn lý do báo lỗi';
+    showErrorModal.value = true;
+    return;
+  }
+
+  reporting.value = true;
+  reportingOrderId.value = selectedOrder.value?.maHD;
+
+  try {
+    const response = await api.reportIssue({
+      orderId: selectedOrder.value?.maHD,
+      reason: reportReason.value,
+      note: reportNote.value
+    });
+
+    if (response.data.success) {
+      closeReportIssueModal();
+      successMessage.value = 'Báo lỗi đã được ghi nhận!';
+      showSuccessModal.value = true;
+
+      // Cập nhật trạng thái đơn hàng trong danh sách
+      const orderIndex = orders.value.findIndex(o => o.maHD === selectedOrder.value?.maHD);
+      if (orderIndex !== -1) {
+        orders.value[orderIndex].trangThai = 'Báo lỗi';
+        orders.value = [...orders.value];
+      }
+
+      // Reload trang sau 1 giây để đảm bảo dữ liệu đồng bộ
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+
+    } else {
+      errorMessage.value = response.data.message || 'Không thể gửi báo lỗi';
+      showErrorModal.value = true;
+    }
+  } catch (err) {
+    errorMessage.value = err.response?.data?.message || 'Lỗi khi gửi báo lỗi';
+    showErrorModal.value = true;
+  } finally {
+    reporting.value = false;
+    reportingOrderId.value = null;
+  }
+};
+
+// Theo dõi khi modal mở/đóng
+watch(() => showReportIssueModal.value, (isOpen) => {
+  if (isOpen && selectedOrder.value && canReportIssue(selectedOrder.value)) {
+    startModalTimer();
+  } else {
+    stopModalTimer();
+  }
+});
+
+// Dọn dẹp khi component unmount
+onBeforeUnmount(() => {
+  stopModalTimer();
+});
+
+onMounted(() => {
+  fetchOrders();
+});
 </script>
 
 <style scoped>
@@ -707,7 +796,6 @@ export default {
   box-shadow: 0 8px 20px rgba(0,0,0,0.1);
 }
 
-/* Kích thước ảnh sản phẩm */
 .product-image {
   width: 70px !important;
   height: 70px !important;
@@ -715,7 +803,6 @@ export default {
   object-fit: cover;
 }
 
-/* Kích thước chữ */
 .product-name {
   font-size: 1rem;
   display: -webkit-box;
@@ -727,7 +814,6 @@ export default {
   font-weight: 600;
 }
 
-/* Kích thước badge */
 .badge {
   font-size: 0.8rem;
   padding: 6px 10px;
@@ -735,21 +821,13 @@ export default {
   font-weight: 500;
 }
 
-/*Kích thước thành tiền */
 .text-danger {
   font-size: 1.1rem;
 }
 
-/* Khoảng cách giữa các dòng */
-.mb-2 {
-  margin-bottom: 0.75rem !important;
-}
+.mb-2 { margin-bottom: 0.75rem !important; }
+.mb-3 { margin-bottom: 1rem !important; }
 
-.mb-3 {
-  margin-bottom: 1rem !important;
-}
-
-/* Kích thước nút */
 .btn-sm {
   font-size: 0.9rem;
   padding: 0.5rem 0.75rem;
@@ -762,27 +840,84 @@ hr {
   opacity: 0.5;
 }
 
-/* Responsive adjustments */
+/* Modal styles */
+.modal {
+  z-index: 1050;
+}
+
+.modal-content {
+  border-radius: 12px;
+  border: none;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+.modal-header.bg-success,
+.modal-header.bg-danger,
+.modal-header.bg-warning {
+  background: #000000 !important;
+  border-bottom: 2px solid #ffffff;
+}
+
+.modal-header.bg-warning .modal-title {
+  color: #ffffff;
+}
+
+.modal-header .modal-title {
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.modal-header .btn-close-white,
+.modal-header .btn-close {
+  filter: brightness(0) invert(1);
+}
+
+.timer-simple {
+  background-color: transparent;
+}
+
+.timer-simple .timer-text {
+  font-family: 'Courier New', monospace;
+  font-size: 1rem;
+  color: #495057;
+  font-weight: 500;
+}
+
+.timer-simple .deadline-text {
+  color: #6c757d;
+  font-family: 'Courier New', monospace;
+}
+
+.timer-simple i {
+  color: #6c757d;
+  font-size: 1rem;
+}
+
+.modal-footer .btn-secondary,
+.modal-footer .btn-danger,
+.modal-footer .btn-success,
+.modal-footer .btn-warning {
+  background-color: #000000;
+  border-color: #ffffff;
+  color: #ffffff;
+  transition: all 0.3s;
+}
+
+.modal-footer .btn-secondary:hover,
+.modal-footer .btn-danger:hover,
+.modal-footer .btn-success:hover,
+.modal-footer .btn-warning:hover {
+  background-color: #ffffff;
+  color: #000000;
+  border-color: #000000;
+}
+
+/* Responsive */
 @media (max-width: 768px) {
-  .row {
-    --bs-gutter-y: 1rem;
-  }
-
-  .product-name {
-    font-size: 0.95rem;
-  }
-
-  .btn-sm {
-    font-size: 0.85rem;
-  }
-
-  .card {
-    padding: 1rem !important;
-  }
-
-  .product-image {
-    width: 60px !important;
-    height: 60px !important;
-  }
+  .row { --bs-gutter-y: 1rem; }
+  .product-name { font-size: 0.95rem; }
+  .btn-sm { font-size: 0.85rem; }
+  .card { padding: 1rem !important; }
+  .product-image { width: 60px !important; height: 60px !important; }
 }
 </style>

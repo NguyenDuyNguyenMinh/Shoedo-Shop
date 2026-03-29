@@ -12,7 +12,6 @@ public class SanPhamKhuyenMaiResponse {
     private Boolean isActive;
     private String maDMs;
 
-    // Constructor đầy đủ tham số để map dữ liệu
     public SanPhamKhuyenMaiResponse(Integer maSP, String tenSP, Integer daBan, Integer khuyenMai, String hinhAnh, BigDecimal donGiaMin, BigDecimal donGiaMax, Boolean isActive, String maDMs) {
         this.maSP = maSP;
         this.tenSP = tenSP;
@@ -25,7 +24,6 @@ public class SanPhamKhuyenMaiResponse {
         this.maDMs = maDMs;
     }
 
-    // --- Giữ lại các Getters và Setters cũ của bạn ---
     public Integer getMaSP() { return maSP; }
     public void setMaSP(Integer maSP) { this.maSP = maSP; }
     public String getTenSP() { return tenSP; }
