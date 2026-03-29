@@ -8,36 +8,12 @@ const apiClient = axios.create({
   withCredentials: true,
 });
 
-apiClient.interceptors.request.use(
-  (config) => {
-    try {
-      const userRaw = localStorage.getItem('user');
-      const user = userRaw ? JSON.parse(userRaw) : null;
-      const token = localStorage.getItem('auth_token');
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-      } else if (user?.token) {
-        config.headers.Authorization = `Bearer ${user.token}`;
-      }
-    } catch (e) {
-      // ignore parse errors
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
-
 apiClient.interceptors.response.use(
   (response) => {
     return response;
   },
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('user');
-      localStorage.removeItem('auth_token');
-      
       if (window.location.pathname !== '/auth/login') {
         window.location.href = '/auth/login';
       }

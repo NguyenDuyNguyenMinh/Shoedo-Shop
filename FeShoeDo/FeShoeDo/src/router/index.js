@@ -163,7 +163,6 @@ router.beforeEach(async (to, from, next) => {
     }
 
     if (to.meta.role) {
-      
       const userRole = authStore.userRole;
       if (userRole !== to.meta.role) {
         if (userRole === 'CUSTOMER') {
@@ -194,4 +193,4 @@ router.beforeEach(async (to, from, next) => {
   next();
 });
 
-export default router;  
+export default router;
