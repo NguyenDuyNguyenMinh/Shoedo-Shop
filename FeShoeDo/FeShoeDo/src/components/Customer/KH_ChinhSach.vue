@@ -34,7 +34,7 @@
             <img src="/SHOEDO.png" alt="Shoedo" class="brand-logo" style="max-width: 40px; height: auto;">
           </router-link>
           <div class="text-start">
-            <p class="lead fw-bold mb-0">SHOUDO - Localbrand giày Việt</p>
+            <p class="lead fw-bold mb-0">SHOEDO - Localbrand giày Việt</p>
             <p class="text-muted small mb-0">Cám ơn bạn đã tin tưởng và ủng hộ shop!</p>
           </div>
         </div>
