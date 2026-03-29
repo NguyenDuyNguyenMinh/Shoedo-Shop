@@ -88,10 +88,10 @@ export default {
       },
       {
         icon: 'bi bi-arrow-repeat',
-        title: '3. Chính sách đổi/trả hàng',
+        title: '3. Chính sách đổi hàng',
         content: `
           <div class="mb-3">
-            <p class="fw-bold mb-2">3.1 Điều kiện đổi/trả:</p>
+            <p class="fw-bold mb-2">3.1 Điều kiện đổi:</p>
             <ul class="policy-list">
               <li><i class="bi bi-check-circle text-success me-2"></i>Sản phẩm lỗi do nhà sản xuất (bung keo, lệch kiểu dáng, rách hỏng)</li>
               <li><i class="bi bi-check-circle text-success me-2"></i>Giao sai mẫu, sai size</li>
@@ -101,7 +101,7 @@ export default {
             </ul>
           </div>
           <div class="mb-3">
-            <p class="fw-bold mb-2 text-danger">3.2 Không hỗ trợ đổi/trả:</p>
+            <p class="fw-bold mb-2 text-danger">3.2 Không hỗ trợ đổi:</p>
             <ul class="policy-list">
               <li><i class="bi bi-x-circle text-danger me-2"></i>Đã qua sử dụng, dơ bẩn, trầy xước do người dùng</li>
               <li><i class="bi bi-x-circle text-danger me-2"></i>Hư hỏng do bảo quản sai cách hoặc do tác động bên ngoài</li>
@@ -109,7 +109,7 @@ export default {
             </ul>
           </div>
           <div>
-            <p class="fw-bold mb-2">3.3 Phí đổi/trả:</p>
+            <p class="fw-bold mb-2">3.3 Phí đổi:</p>
             <ul class="policy-list">
               <li><i class="bi bi-shield-check me-2"></i>Lỗi từ shop: Miễn phí vận chuyển</li>
               <li><i class="bi bi-cash me-2"></i>Đổi do nhu cầu cá nhân: Khách chịu phí vận chuyển 2 chiều</li>
