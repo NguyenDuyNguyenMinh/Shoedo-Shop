@@ -38,6 +38,9 @@ public class UserService {
     @Autowired
     private EmailService emailService;
 
+    @Autowired
+    private EmailAsyncService emailAsyncService;
+
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -545,7 +548,41 @@ public class UserService {
         String newPassword = generateRandomPassword();
         targetUser.setPassWord(passwordEncoder.encode(newPassword));
         usersDAO.save(targetUser);
+
+        // Gửi email ngay lập tức bằng Async
+        try {
+            sendPasswordResetEmailAsync(targetUser, newPassword);
+        } catch (Exception e) {
+            System.err.println("Lỗi khi gửi email reset mật khẩu: " + e.getMessage());
+            e.printStackTrace();
+            // Không throw exception vì mật khẩu đã được lưu thành công
+        }
+
         return newPassword;
+    }
+
+    /**
+     * Gửi email reset mật khẩu bất đồng bộ (không chặn luồng chính)
+     */
+    public void sendPasswordResetEmailAsync(Users user, String newPassword) {
+        emailAsyncService.sendPasswordResetByAdminEmail(
+                user.getMail(),
+                getUserFullname(user),
+                user.getUserName(),
+                newPassword
+        );
+    }
+
+    /**
+     * Lấy tên đầy đủ của user
+     */
+    private String getUserFullname(Users user) {
+        if (user.getKhachHang() != null) {
+            return user.getKhachHang().getTenKH();
+        } else if (user.getQuanTri() != null) {
+            return user.getQuanTri().getTenQT();
+        }
+        return user.getUserName();
     }
 
     @Transactional
@@ -570,10 +607,7 @@ public class UserService {
         String to = user.getMail();
         String subject = "SHOEDO SHOP - Thông báo reset mật khẩu";
 
-        String fullname = "";
-        if (user.getKhachHang() != null) fullname = user.getKhachHang().getTenKH();
-        else if (user.getQuanTri() != null) fullname = user.getQuanTri().getTenQT();
-        else fullname = user.getUserName();
+        String fullname = getUserFullname(user);
 
         String htmlContent = buildPasswordResetEmail(fullname, user.getUserName(), user.getMail(), newPassword);
         emailService.sendHtmlEmail(to, subject, htmlContent);
