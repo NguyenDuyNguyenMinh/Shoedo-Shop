@@ -469,19 +469,22 @@ public class QLUsersController {
                     .body(Map.of("success", false, "message", "Không có quyền reset password user này"));
         }
 
-        String newPassword = userService.resetPassword(targetUser);
-
         try {
-            userService.sendPasswordResetEmail(targetUser, newPassword);
+            String newPassword = userService.resetPassword(targetUser);
+
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", "Reset mật khẩu thành công. Email đã được gửi đến người dùng.",
+                    "newPassword", newPassword
+            ));
         } catch (Exception e) {
             e.printStackTrace();
+            return ResponseEntity.status(500)
+                    .body(Map.of(
+                            "success", false,
+                            "message", "Có lỗi xảy ra khi reset mật khẩu: " + e.getMessage()
+                    ));
         }
-
-        return ResponseEntity.ok(Map.of(
-                "success", true,
-                "message", "Reset mật khẩu thành công. Email đã được gửi đến người dùng.",
-                "newPassword", newPassword
-        ));
     }
 
     @PutMapping("/{id}/toggle-status")

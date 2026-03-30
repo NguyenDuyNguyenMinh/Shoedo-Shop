@@ -284,4 +284,65 @@ public class EmailAsyncService {
             throw new RuntimeException("Lỗi khi gửi email: " + e.getMessage());
         }
     }
+
+    @Async
+    public void sendPasswordResetByAdminEmail(String email, String fullname, String username, String newPassword) {
+        try {
+            String subject = "SHOEDO SHOP - Mật khẩu đã được reset bởi quản trị viên";
+
+            String htmlContent = "<!DOCTYPE html>"
+                    + "<html>"
+                    + "<head>"
+                    + "<meta charset='UTF-8'>"
+                    + "<style>"
+                    + "body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }"
+                    + ".container { max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px; }"
+                    + ".header { background: #000; color: #fff; padding: 20px; text-align: center; border-radius: 10px 10px 0 0; }"
+                    + ".content { padding: 20px; background: #f9f9f9; }"
+                    + ".password-box { background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 5px; text-align: center; margin: 20px 0; font-size: 24px; font-weight: bold; letter-spacing: 2px; font-family: monospace; }"
+                    + ".footer { text-align: center; padding: 20px; font-size: 12px; color: #666; }"
+                    + ".warning { background: #f8d7da; color: #721c24; padding: 10px; border-radius: 5px; margin: 15px 0; }"
+                    + ".info { background: #d1ecf1; color: #0c5460; padding: 10px; border-radius: 5px; margin: 15px 0; }"
+                    + "</style>"
+                    + "</head>"
+                    + "<body>"
+                    + "<div class='container'>"
+                    + "<div class='header'>"
+                    + "<h2>ShoeDo Shop - Thông báo reset mật khẩu</h2>"
+                    + "</div>"
+                    + "<div class='content'>"
+                    + "<p>Xin chào <strong>" + fullname + "</strong>,</p>"
+                    + "<p>Mật khẩu của bạn đã được reset bởi quản trị viên.</p>"
+                    + "<div class='info'>"
+                    + "<p><strong>Thông tin tài khoản:</strong></p>"
+                    + "<p>• Username: <strong>" + username + "</strong></p>"
+                    + "<p>• Email: <strong>" + email + "</strong></p>"
+                    + "</div>"
+                    + "<p>Mật khẩu mới của bạn là:</p>"
+                    + "<div class='password-box'>"
+                    + newPassword
+                    + "</div>"
+                    + "<div class='warning'>"
+                    + "<p><strong>Lưu ý quan trọng:</strong></p>"
+                    + "<p>• Vui lòng đăng nhập và thay đổi mật khẩu ngay sau khi nhận được email này</p>"
+                    + "<p>• Không chia sẻ mật khẩu này với bất kỳ ai</p>"
+                    + "<p>• Nếu bạn không yêu cầu reset mật khẩu, vui lòng liên hệ với quản trị viên ngay lập tức</p>"
+                    + "</div>"
+                    + "<p>Trân trọng,<br>Đội ngũ ShoeDo Shop</p>"
+                    + "</div>"
+                    + "<div class='footer'>"
+                    + "<p>Email này được gửi tự động từ hệ thống ShoeDo Shop.</p>"
+                    + "<p>© 2026 ShoeDo Shop. All rights reserved.</p>"
+                    + "</div>"
+                    + "</div>"
+                    + "</body>"
+                    + "</html>";
+
+            emailService.sendHtmlEmail(email, subject, htmlContent);
+
+        } catch (Exception e) {
+            System.err.println("Lỗi gửi email reset mật khẩu: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
 }
