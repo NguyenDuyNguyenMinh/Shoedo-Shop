@@ -68,10 +68,10 @@ export default {
           <p class="mb-2"><strong>Hình thức thanh toán:</strong></p>
           <ul class="policy-list">
             <li><i class="bi bi-check-circle-fill text-success me-2"></i>Thanh toán khi nhận hàng (COD)</li>
-            <li><i class="bi bi-check-circle-fill text-success me-2"></i>Chuyển khoản ngân hàng</li>
-            <li><i class="bi bi-check-circle-fill text-success" style="font-size: 1rem; flex-shrink: 0;"></i>
-              <span style="white-space: nowrap;">Thanh toán qua</span>
-              <img src="${VNPayLogo}" alt="VNPay" style="height: 26px; width: auto; display: inline-block;"></li></li>
+            <li><i class="bi bi-check-circle-fill text-success me-2"></i>Thanh toán qua
+              
+              <img src="${VNPayLogo}" alt="VNPay" style="height: 26px; width: auto; display: inline-block;">
+            </li>
           </ul>
         `
       },
@@ -80,7 +80,7 @@ export default {
         title: '2. Chính sách giao hàng',
         content: `
           <ul class="policy-list">
-            <li><i class="bi bi-clock-history me-2"></i><strong>Thời gian:</strong> 2 – 5 ngày làm việc (tùy khu vực)</li>
+            <li><i class="bi bi-clock-history me-2"></i><strong>Thời gian:</strong> 3 – 7 ngày làm việc (tùy khu vực)</li>
             <li><i class="bi bi-calendar-x me-2"></i><strong>Không tính:</strong> Ngày lễ, Tết hoặc trường hợp bất khả kháng (thời tiết, dịch bệnh, đơn vị vận chuyển quá tải)</li>
             <li><i class="bi bi-box-seam me-2"></i><strong>Kiểm tra hàng:</strong> Khách được kiểm tra ngoại quan trước khi thanh toán (không mang thử khi chưa thanh toán nếu đơn vị vận chuyển không cho phép)</li>
           </ul>

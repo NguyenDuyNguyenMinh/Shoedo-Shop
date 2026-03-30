@@ -223,11 +223,11 @@ const increaseQty = () => quantity.value++
 const decreaseQty = () => { if (quantity.value > 1) quantity.value-- }
 
 const addToCart = async () => {
+  if (!selectedColor.value) { alert('Vui lòng chọn màu sắc!'); return }
+
   if (!product.value?.isFreesize && !selectedSize.value) {
     alert('Vui lòng chọn size!'); return
   }
-  if (!selectedColor.value) { alert('Vui lòng chọn màu sắc!'); return }
-
   const sku = (apiProduct.value.chiTiets || []).find(s =>
     s.tenMau === selectedColor.value &&
     (product.value.isFreesize || s.coGiay === selectedSize.value)
@@ -245,11 +245,11 @@ const addToCart = async () => {
 }
 
 const buyNow = async () => {
+  if (!selectedColor.value) { alert('Vui lòng chọn màu sắc!'); return }
+
   if (!product.value?.isFreesize && !selectedSize.value) {
     alert('Vui lòng chọn size!'); return
   }
-  if (!selectedColor.value) { alert('Vui lòng chọn màu sắc!'); return }
-
   const sku = (apiProduct.value.chiTiets || []).find(s =>
     s.tenMau === selectedColor.value &&
     (product.value.isFreesize || s.coGiay === selectedSize.value)
