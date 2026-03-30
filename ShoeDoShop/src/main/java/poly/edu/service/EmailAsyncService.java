@@ -77,7 +77,7 @@ public class EmailAsyncService {
                     + "<p><strong>Lỗi:</strong> " + (hd.getGhiChu() != null ? hd.getGhiChu() : "Không xác định") + "</p>"
                     + "</div>"
                     + "<p>Đội ngũ ShoeDo Shop đã xử lý sự cố này và đã khắc phục thành công. Vui lòng xem file hóa đơn đính kèm để kiểm tra chi tiết.</p>"
-                    + "<p>Nếu bạn cần hỗ trợ thêm, vui lòng liên hệ hotline 1900 0001 của chúng tôi.</p>"
+                    + "<p>Nếu bạn cần hỗ trợ thêm, vui lòng liên hệ hotline 1900 6869 của chúng tôi.</p>"
                     + "<p>Một lần nữa, chúng tôi xin lỗi về sự bất tiện này và hy vọng sẽ phục vụ bạn tốt hơn trong tương lai.</p>"
                     + "<p>Truy cập <a href='http://localhost:5173/customer/orders/" + maHD + "'>ShoeDo Shop</a> để biết thêm chi tiết</p>"
                     + "</div></div></body></html>";
@@ -118,7 +118,7 @@ public class EmailAsyncService {
                     + "<div class='tracking'>"
                     + "<p><strong>Lưu ý:</strong></p>"
                     + "<p>• Vui lòng theo dõi email để nhận thông báo khi đơn hàng được giao thành công</p>"
-                    + "<p>• Nếu có bất kỳ thay đổi về thông tin nhận hàng, vui lòng liên hệ ngay với chúng tôi qua hotline 1900 0001</p>"
+                    + "<p>• Nếu có bất kỳ thay đổi về thông tin nhận hàng, vui lòng liên hệ ngay với chúng tôi qua hotline 1900 6869</p>"
                     + "<p>• Truy cập <a href='http://localhost:5173/customer/orders/" + maHD + "'>ShoeDo Shop</a> để biết thêm chi tiết</p>"
                     + "</div>"
                     + "<p>Cảm ơn bạn đã tin tưởng và mua sắm tại ShoeDo Shop!</p>"
