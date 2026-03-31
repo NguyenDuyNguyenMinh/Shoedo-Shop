@@ -200,6 +200,19 @@ CREATE TABLE LichSuTichDiem (
     CONSTRAINT FK_LichSuTichDiem_HoaDonCT FOREIGN KEY (MaHDCT) REFERENCES HoaDonCT(MaHDCT)
 );
 
+-- 19. Bảng Chiến Dịch
+CREATE TABLE ChienDich (
+    MaCD INT IDENTITY(1,1) PRIMARY KEY,
+    TenChienDich NVARCHAR(255) NOT NULL,
+    MaSP INT NOT NULL,
+    KhuyenMaiCD INT NOT NULL,
+    ThoiGianBatDau DATETIME NOT NULL,
+    ThoiGianKetThuc DATETIME NOT NULL,
+    TrangThai NVARCHAR(50) DEFAULT N'Đang chạy' CHECK (TrangThai IN (N'Chưa bắt đầu', N'Đang chạy', N'Đã dừng', N'Kết thúc')) NOT NULL,
+    CONSTRAINT FK_ChienDich_SanPham FOREIGN KEY (MaSP) REFERENCES SanPham(MaSP)
+);
+GO
+
 -- 1. Dữ liệu mẫu cho bảng [User]
 INSERT INTO Users (UserName, Mail, PassWord, IsActive) VALUES
 ('admin', 'admin@shop.com', '$2a$10$FQi/T2Pcgc1UaMkS/8mf0uSLMzLUtjNn0Ja4YRsCj2aRDdxWBCf4K', 1),
