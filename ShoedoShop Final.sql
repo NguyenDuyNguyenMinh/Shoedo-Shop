@@ -179,7 +179,7 @@ CREATE TABLE DanhGia (
 );
 
 -- 17. Bảng Tìm Kiếm
-CREATE TABLE TimKiem (
+CREATE TABLE LSTimKiem (
     MaTK INT IDENTITY(1,1) PRIMARY KEY,
     MaKH INT,
     NoiDungTimKiem NVARCHAR(225) NOT NULL,
@@ -926,7 +926,7 @@ INSERT INTO DanhGia (MaHDCT, Sao, DanhGiaCT) VALUES
 GO
 
 -- 15. Dữ liệu mẫu cho bảng TimKiem
-INSERT INTO TimKiem (MaKH, NoiDungTimKiem) VALUES
+INSERT INTO LSTimKiem (MaKH, NoiDungTimKiem) VALUES
 (1, N'Giày da nam'),
 (1, N'Giày tây công sở'),
 (2, N'Giày sneaker nữ trắng'),
