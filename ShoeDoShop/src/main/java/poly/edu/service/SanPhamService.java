@@ -28,13 +28,13 @@ public class SanPhamService {
 
     @Autowired
     private SanPhamChiTietDAO sanPhamChiTietDAO;
- // Thêm vào SanPhamService.java
+
     @Autowired private poly.edu.dao.SanPhamDanhMucDAO sdmDAO;
     @Autowired private poly.edu.dao.SizeDAO sizeDAO;
 
     @Transactional
     public SanPham createProduct(SanPhamNDTO dto) {
-        // 1. Lưu Sản Phẩm chính
+
         SanPham sp = new SanPham();
         sp.setTenSP(dto.getTenSP());
         sp.setMoTa(dto.getMoTa());
@@ -44,7 +44,7 @@ public class SanPhamService {
         sp.setIsActive(true);
         SanPham savedSP = sanPhamDAO.save(sp);
 
-        // 2. Lưu Danh mục (Bảng trung gian)
+
         if (dto.getCategoryIds() != null) {
             for (Integer catId : dto.getCategoryIds()) {
                 SanPhamDanhMuc sdm = new SanPhamDanhMuc();
@@ -57,7 +57,7 @@ public class SanPhamService {
             }
         }
 
-        // 3. Lưu các Biến thể (Chi tiết sản phẩm)
+
         if (dto.getVariants() != null) {
             for (SanPhamNDTO.VariantDTO vDto : dto.getVariants()) {
                 SanPhamChiTiet ct = new SanPhamChiTiet();
@@ -68,7 +68,7 @@ public class SanPhamService {
                 ct.setHinhAnh(vDto.getHinhAnh());
                 ct.setTrangThai(vDto.getTrangThai());
                 
-                // Tìm đối tượng Size từ DB
+
                 if (vDto.getMaSize() != null) {
                     ct.setSize(sizeDAO.findById(vDto.getMaSize()).orElse(null));
                 }
@@ -77,7 +77,7 @@ public class SanPhamService {
         }
         return savedSP;
     }
- // Lấy thông tin chi tiết 1 sản phẩm đổ lên Modal Sửa
+
     public SanPhamNDTO getProductDetail(Integer maSP) {
         SanPham sp = sanPhamDAO.findById(maSP).orElseThrow(() -> new RuntimeException("Không tìm thấy SP"));
         SanPhamNDTO dto = new SanPhamNDTO();
@@ -87,7 +87,7 @@ public class SanPhamService {
         dto.setGioiTinh(sp.getGioiTinh());
         dto.setKhuyenMai(sp.getKhuyenMai());
 
-        // Lấy danh sách ID danh mục
+
         if (sp.getSanPhamDanhMucs() != null) {
             List<Integer> catIds = sp.getSanPhamDanhMucs().stream()
                     .map(sdm -> sdm.getDanhMuc().getMaDM())
@@ -95,7 +95,6 @@ public class SanPhamService {
             dto.setCategoryIds(catIds);
         }
 
-        // Lấy danh sách phân loại
         List<SanPhamChiTiet> chiTiets = sanPhamChiTietDAO.findBySanPham_MaSP(maSP);
         List<SanPhamNDTO.VariantDTO> variantDTOs = new ArrayList<>();
         for (SanPhamChiTiet ct : chiTiets) {
@@ -113,7 +112,7 @@ public class SanPhamService {
         return dto;
     }
 
-    // Xử lý Cập nhật sản phẩm
+
     @Transactional
     public SanPham updateProduct(SanPhamNDTO dto) {
         SanPham sp = sanPhamDAO.findById(dto.getMaSP()).orElseThrow(() -> new RuntimeException("Không tìm thấy SP"));
@@ -123,7 +122,7 @@ public class SanPhamService {
         sp.setKhuyenMai(dto.getKhuyenMai() != null ? dto.getKhuyenMai() : 0);
         sanPhamDAO.save(sp);
 
-        // Xóa danh mục cũ, thêm danh mục mới
+
         if (sp.getSanPhamDanhMucs() != null) {
             sdmDAO.deleteAll(new ArrayList<>(sp.getSanPhamDanhMucs()));
         }
@@ -139,14 +138,14 @@ public class SanPhamService {
             }
         }
 
-        // Cập nhật phân loại
+
         if (dto.getVariants() != null) {
             for (SanPhamNDTO.VariantDTO vDto : dto.getVariants()) {
                 SanPhamChiTiet ct;
                 if (vDto.getMaSKU() != null) {
                     ct = sanPhamChiTietDAO.findById(vDto.getMaSKU()).orElse(new SanPhamChiTiet());
                 } else {
-                    ct = new SanPhamChiTiet(); // Thêm mới nếu chưa có SKU
+                    ct = new SanPhamChiTiet(); 
                 }
                 ct.setSanPham(sp);
                 ct.setTenMau(vDto.getTenMau());
@@ -174,10 +173,10 @@ public class SanPhamService {
             dto.setGioiTinh(sp.getGioiTinh());
             dto.setIsActive(sp.getIsActive() != null ? sp.getIsActive() : false);
             
-            // Lấy Khuyến mãi từ DB
+
             dto.setKhuyenMai(sp.getKhuyenMai() != null ? sp.getKhuyenMai() : 0);
 
-            // 1. Lấy chuỗi Danh Mục
+
             if (sp.getSanPhamDanhMucs() != null) {
                 String dmStr = sp.getSanPhamDanhMucs().stream()
                         .map(sdm -> sdm.getDanhMuc().getTenDM())
@@ -185,7 +184,7 @@ public class SanPhamService {
                 dto.setDanhMucs(dmStr);
             }
 
-            // 2. Tính toán số lượng, giá min/max và hình ảnh từ bảng Chi Tiết
+
             List<SanPhamChiTiet> chiTiets = sanPhamChiTietDAO.findBySanPham_MaSP(sp.getMaSP());
             dto.setSoPhanLoai(chiTiets.size());
 
@@ -199,7 +198,7 @@ public class SanPhamService {
                 for (SanPhamChiTiet ct : chiTiets) {
                     tongTon += (ct.getSoLuong() != null ? ct.getSoLuong() : 0);
                     
-                    // Tìm giá thấp nhất và cao nhất
+
                     Double gia = ct.getDonGia();
                     if (gia != null) {
                         if (giaMin == null || gia < giaMin) giaMin = gia;
@@ -211,10 +210,10 @@ public class SanPhamService {
             dto.setTongTonKho(tongTon);
             dto.setGiaMin(giaMin != null ? giaMin : 0.0);
             dto.setGiaMax(giaMax != null ? giaMax : 0.0);
-            dto.setGiaDaiDien(giaMin != null ? giaMin : 0.0); // Giữ lại giá đại diện nếu code cũ còn dùng
+            dto.setGiaDaiDien(giaMin != null ? giaMin : 0.0); 
             dto.setHinhAnhDaiDien(hinhAnh);
 
-            // 3. Xét trạng thái
+
             if (tongTon == 0) dto.setTrangThai("Hết hàng");
             else if (tongTon <= 10) dto.setTrangThai("Sắp hết");
             else dto.setTrangThai("Còn hàng");
@@ -223,13 +222,13 @@ public class SanPhamService {
         }
         return result;
     }
- // Thêm hàm chuyển đổi trạng thái (Ẩn/Hiện)
+
     @Transactional
     public boolean toggleProductStatus(Integer maSP) {
         SanPham sp = sanPhamDAO.findById(maSP)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy SP"));
         
-        // Nếu isActive đang null thì coi như là true, sau đó đảo ngược lại
+
         boolean currentStatus = sp.getIsActive() != null ? sp.getIsActive() : true;
         sp.setIsActive(!currentStatus);
         
@@ -237,9 +236,6 @@ public class SanPhamService {
         return sp.getIsActive();
     }
 
-    // ══════════════════════════════════════════════════════════════
-    //  TRANG CHỦ — Flash Sales, Nổi Bật, Bán Chạy
-    // ══════════════════════════════════════════════════════════════
 
     private static final int SO_GIAY     = 4;
     private static final int SO_FREESIZE = 1;

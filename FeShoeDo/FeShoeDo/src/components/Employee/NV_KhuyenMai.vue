@@ -980,7 +980,7 @@ onMounted(() => {
     if (activeTab.value === 'history') {
       fetchCampaigns();
     }
-  }, 5000);
+  }, 3000);
 });
 
 // RẤT QUAN TRỌNG: Hàm này sẽ tự động chạy khi bạn chuyển sang component khác (Vd: qua trang QL Sản Phẩm)
