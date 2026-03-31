@@ -21,6 +21,15 @@ public class KhachHang {
 
     @Column(name = "SDT")
     private String sdt;
+    
+    @Column(name = "DiemTichLuy")
+    private Integer diemTichLuy = 0;
+    
+    @Column(name = "MaGioiThieu", unique = true, nullable = false, length = 20)
+    private String maGioiThieu;
+    
+    @Column(name = "MaNguoiGioiThieu", length = 20)
+    private String maNguoiGioiThieu;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "MaUser")
@@ -42,4 +51,12 @@ public class KhachHang {
     @OneToMany(mappedBy = "khachHang", fetch = FetchType.LAZY)
     @JsonIgnore
     private List<TimKiem> timKiems;
+    
+    @OneToMany(mappedBy = "khachHang", fetch = FetchType.LAZY)
+    @JsonIgnore
+    private List<KhachHangVoucher> khachHangVouchers;
+    
+    @OneToMany(mappedBy = "khachHang", fetch = FetchType.LAZY)
+    @JsonIgnore
+    private List<LichSuTichDiem> lichSuTichDiems;
 }
