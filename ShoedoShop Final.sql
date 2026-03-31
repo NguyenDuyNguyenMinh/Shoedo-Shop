@@ -13,7 +13,7 @@ CREATE TABLE Users (
     CreateAt DATETIME DEFAULT GETDATE()
 );
 
--- 2. Bảng Khách Hàng (SỬA: bỏ UNIQUE constraint trên MaGioiThieu)
+-- 2. Bảng Khách Hàng
 CREATE TABLE KhachHang (
     MaKH INT IDENTITY(1,1) PRIMARY KEY,
     TenKH NVARCHAR(100),
@@ -392,13 +392,20 @@ INSERT INTO SanPham_DanhMuc (MaSP, MaDM) VALUES
 -- 6. Dữ liệu Size
 INSERT INTO Size (CoGiay) VALUES
 (0),  -- ID 1: Size 0 (Freesize - Dùng cho phụ kiện)
-(37), -- ID 2: Size 37
-(38), -- ID 3: Size 38
-(39), -- ID 4: Size 39
-(40), -- ID 5: Size 40
-(41), -- ID 6: Size 41
-(42), -- ID 7: Size 42
-(43); -- ID 8: Size 43
+(32), -- ID 2: Size 32
+(33), -- ID 3: Size 33
+(34), -- ID 4: Size 34
+(35), -- ID 5: Size 35
+(36), -- ID 6: Size 36
+(37), -- ID 7: Size 37
+(38), -- ID 8: Size 38
+(39), -- ID 9: Size 39
+(40), -- ID 10: Size 40
+(41), -- ID 11: Size 41
+(42), -- ID 12: Size 42
+(43), -- ID 13: Size 43
+(44), -- ID 14: Size 44
+(45); -- ID 15: Size 45
 
 -- 9.Note: Cột MaSize bây giờ điền ID của bảng Size ở trên (Ví dụ: ID 5 là size 40, ID 6 là size 41)
 -- 8. Dữ liệu Chi tiết sản phẩm (đã gộp màu sắc)
@@ -407,94 +414,79 @@ INSERT INTO SanPham_ChiTiet (MaSP, TenMau, HinhAnh, MaSize, TrangThai, SoLuong, 
 -- Giày da (MaSP 1,2,3)
 -- =======================
 -- SP 1: ShoeDo - SP1 - GD
-(1, N'Đen', 'sp1_gd1_black.jpg', 5, N'Còn hàng', 10, 1000000), -- Size 40 (ID 5)
-(1, N'Đen', 'sp1_gd1_black.jpg', 6, N'Còn hàng', 10, 1200000), -- Size 41 (ID 6)
+(1, N'Đen', 'sp1_gd1_black.jpg', 10, N'Còn hàng', 10, 1000000), -- Size 40 (ID 10)
+(1, N'Đen', 'sp1_gd1_black.jpg', 11, N'Còn hàng', 10, 1200000), -- Size 41 (ID 11)
 
 -- SP 2: ShoeDo - SP2 - GD (Nữ)
-(2, N'Trắng', 'sp2_gd2_white.jpg', 2, N'Còn hàng', 15, 1000000), -- Size 37 (ID 2)
-(2, N'Trắng', 'sp2_gd2_white.jpg', 3, N'Còn hàng', 20, 1200000), -- Size 38 (ID 3)
-(2, N'Trắng', 'sp2_gd2_white.jpg', 4, N'Còn hàng', 20, 1500000), -- Size 39 (ID 4)
+(2, N'Trắng', 'sp2_gd2_white.jpg', 7, N'Còn hàng', 15, 1000000), -- Size 37 (ID 7)
+(2, N'Trắng', 'sp2_gd2_white.jpg', 8, N'Còn hàng', 20, 1200000), -- Size 38 (ID 8)
+(2, N'Trắng', 'sp2_gd2_white.jpg', 9, N'Còn hàng', 20, 1500000), -- Size 39 (ID 9)
 
 -- SP 3: ShoeDo - SP3 - GD (Cao gót)
-(3, N'Trắng', 'sp3_gd3_white.jpg', 2, N'Còn hàng', 10, 1000000), -- Size 37 (ID 2)
-(3, N'Trắng', 'sp3_gd3_white.jpg', 3, N'Còn hàng', 15, 1200000), -- Size 38 (ID 3)
-(3, N'Trắng', 'sp3_gd3_white.jpg', 4, N'Còn hàng', 10, 1300000), -- Size 39 (ID 4)
+(3, N'Trắng', 'sp3_gd3_white.jpg', 7, N'Còn hàng', 10, 1000000), -- Size 37 (ID 7)
+(3, N'Trắng', 'sp3_gd3_white.jpg', 8, N'Còn hàng', 15, 1200000), -- Size 38 (ID 8)
+(3, N'Trắng', 'sp3_gd3_white.jpg', 9, N'Còn hàng', 10, 1300000), -- Size 39 (ID 9)
 
 -- =======================
 -- Giày sneaker (MaSP 4,5)
 -- =======================
 -- SP 4: ShoeDo - SP1 - GSK
-(4, N'Đen', 'sp4_snk1_black.jpg', 5, N'Còn hàng', 10, 1500000),
-(4, N'Đen', 'sp4_snk1_black.jpg', 6, N'Còn hàng', 10, 1500000), 
-(4, N'Đen', 'sp4_snk1_black.jpg', 7, N'Còn hàng', 10, 1500000), 
-(4, N'Trắng', 'sp4_snk1_white.jpg', 5, N'Còn hàng', 10, 1300000), 
-(4, N'Trắng', 'sp4_snk1_white.jpg', 6, N'Còn hàng', 10, 1300000), 
-(4, N'Trắng', 'sp4_snk1_white.jpg', 7, N'Còn hàng', 10, 1300000), 
-(4, N'Nâu', 'sp4_snk1_brown.jpg', 5, N'Còn hàng', 20, 1800000),
-(4, N'Nâu', 'sp4_snk1_brown.jpg', 6, N'Còn hàng', 20, 1800000), 
-(4, N'Nâu', 'sp4_snk1_brown.jpg', 7, N'Còn hàng', 20, 1800000), 
+(4, N'Đen', 'sp4_snk1_black.jpg', 10, N'Còn hàng', 10, 1500000), -- Size 40 (ID 10)
+(4, N'Đen', 'sp4_snk1_black.jpg', 11, N'Còn hàng', 10, 1500000), -- Size 41 (ID 11)
+(4, N'Đen', 'sp4_snk1_black.jpg', 12, N'Còn hàng', 10, 1500000), -- Size 42 (ID 12)
+(4, N'Trắng', 'sp4_snk1_white.jpg', 10, N'Còn hàng', 10, 1300000), -- Size 40 (ID 10)
+(4, N'Nâu', 'sp4_snk1_brown.jpg', 10, N'Còn hàng', 20, 1800000), -- Size 40 (ID 10)
+(4, N'Nâu', 'sp4_snk1_brown.jpg', 11, N'Còn hàng', 20, 1800000), -- Size 41 (ID 11)
+(4, N'Nâu', 'sp4_snk1_brown.jpg', 12, N'Còn hàng', 20, 1800000), -- Size 42 (ID 12)
 
 -- SP 5: ShoeDo - SP2 - GSK
--- Size 40 (ID 5)
--- Size 41 (ID 6)
--- Size 42 (ID 7)
-(5, N'Xanh lá', 'sp5_snk2_green.jpg', 5, N'Còn hàng', 20, 1500000),
-(5, N'Xanh lá', 'sp5_snk2_green.jpg', 6, N'Còn hàng', 20, 1500000), 
-(5, N'Xanh lá', 'sp5_snk2_green.jpg', 7, N'Còn hàng', 20, 1500000), 
-(5, N'Trắng be', 'sp5_snk2_white.jpg', 5, N'Còn hàng', 10, 1200000), 
-(5, N'Trắng be', 'sp5_snk2_white.jpg', 6, N'Còn hàng', 10, 1200000), 
-(5, N'Trắng be', 'sp5_snk2_white.jpg', 7, N'Còn hàng', 10, 1200000), 
+(5, N'Xanh lá', 'sp5_snk2_green.jpg', 10, N'Còn hàng', 20, 1500000), -- Size 40 (ID 10)
+(5, N'Xanh lá', 'sp5_snk2_green.jpg', 11, N'Còn hàng', 20, 1500000), -- Size 41 (ID 11)
+(5, N'Xanh lá', 'sp5_snk2_green.jpg', 12, N'Còn hàng', 20, 1500000), -- Size 42 (ID 12)
+(5, N'Trắng be', 'sp5_snk2_white.jpg', 10, N'Còn hàng', 10, 1200000), -- Size 40 (ID 10)
+(5, N'Trắng be', 'sp5_snk2_white.jpg', 12, N'Còn hàng', 10, 1200000), -- Size 42 (ID 12)
 
 -- =======================
 -- Giày bóng đá (MaSP 6)
 -- =======================
 -- SP 6: ShoeDo - SP1 - GBD
-(6, N'Hồng', 'sp6_gbd1_pink.jpg', 5, N'Còn hàng', 12, 1200000), -- Size 43 (ID 8)
-(6, N'Hồng', 'sp6_gbd1_pink.jpg', 6, N'Còn hàng', 20, 1200000), -- Size 42 (ID 7)
-(6, N'Hồng', 'sp6_gbd1_pink.jpg', 7, N'Còn hàng', 10, 1500000), -- Size 41 (ID 6)
-(6, N'Hồng', 'sp6_gbd1_pink.jpg', 8, N'Còn hàng', 10, 1500000), -- Size 40 (ID 5)
-(6, N'Vàng', 'sp6_gbd1_yellow.jpg', 5, N'Còn hàng', 12, 1200000), -- Size 43 (ID 8)
-(6, N'Vàng', 'sp6_gbd1_yellow.jpg', 6, N'Còn hàng', 20, 1200000), -- Size 42 (ID 7)
-(6, N'Vàng', 'sp6_gbd1_yellow.jpg', 7, N'Còn hàng', 10, 1500000), -- Size 41 (ID 6)
-(6, N'Vàng', 'sp6_gbd1_yellow.jpg', 8, N'Còn hàng', 10, 1500000), -- Size 40 (ID 5)
+(6, N'Hồng', 'sp6_gbd1_pink.jpg', 10, N'Còn hàng', 12, 1200000), -- Size 40 (ID 10)
+(6, N'Hồng', 'sp6_gbd1_pink.jpg', 11, N'Còn hàng', 20, 1200000), -- Size 41 (ID 11)
+(6, N'Hồng', 'sp6_gbd1_pink.jpg', 12, N'Còn hàng', 10, 1500000), -- Size 42 (ID 12)
+(6, N'Hồng', 'sp6_gbd1_pink.jpg', 13, N'Còn hàng', 10, 1500000), -- Size 43 (ID 13)
+(6, N'Vàng', 'sp6_gbd1_yellow.jpg', 10, N'Còn hàng', 12, 1200000), -- Size 40 (ID 10)
+(6, N'Vàng', 'sp6_gbd1_yellow.jpg', 11, N'Còn hàng', 20, 1200000), -- Size 41 (ID 11)
 
 -- =======================
 -- Giày sandal (MaSP 7)
 -- =======================
 -- SP 7: ShoeDo - SP1 - GSD
--- Size 37 (ID 2)
--- Size 38 (ID 3)
--- Size 39 (ID 4)
-(7, N'Đen', 'sp7_gsd1_black.jpg', 2, N'Còn hàng', 18, 1800000),
-(7, N'Đen', 'sp7_gsd1_black.jpg', 3, N'Còn hàng', 18, 1800000),
-(7, N'Đen', 'sp7_gsd1_black.jpg', 4, N'Còn hàng', 18, 1800000),
-(7, N'Trắng', 'sp7_gsd1_white.jpg', 2, N'Còn hàng', 18, 1800000),
-(7, N'Trắng', 'sp7_gsd1_white.jpg', 3, N'Còn hàng', 18, 1800000), 
-(7, N'Trắng', 'sp7_gsd1_white.jpg', 4, N'Còn hàng', 18, 1800000), 
+(7, N'Đen', 'sp7_gsd1_black.jpg', 7, N'Còn hàng', 18, 1800000), -- Size 37 (ID 7)
+(7, N'Đen', 'sp7_gsd1_black.jpg', 8, N'Còn hàng', 18, 1800000), -- Size 38 (ID 8)
+(7, N'Đen', 'sp7_gsd1_black.jpg', 9, N'Còn hàng', 18, 1800000), -- Size 39 (ID 9)
+(7, N'Trắng', 'sp7_gsd1_white.jpg', 7, N'Còn hàng', 18, 1800000), -- Size 37 (ID 7)
+(7, N'Trắng', 'sp7_gsd1_white.jpg', 8, N'Còn hàng', 18, 1800000), -- Size 38 (ID 8)
+(7, N'Trắng', 'sp7_gsd1_white.jpg', 9, N'Còn hàng', 18, 1800000), -- Size 39 (ID 9)
 
 -- =======================
 -- Giày boot (MaSP 8)
 -- =======================
 -- SP 8: ShoeDo - SP1 - GBT
-(8, N'Đen', 'sp8_b1_black.jpg', 3, N'Còn hàng', 15, 1900000), -- Size 38 (ID 3)
-(8, N'Đen', 'sp8_b1_black.jpg', 5, N'Còn hàng', 15, 2000000), -- Size 40 (ID 5)
-(8, N'Đen', 'sp8_b1_black.jpg', 7, N'Còn hàng', 15, 2100000), -- Size 42 (ID 7)
-(8, N'Nâu', 'sp8_b1_brown.jpg', 3, N'Còn hàng', 15, 1900000), -- Size 38 (ID 3)
-(8, N'Nâu', 'sp8_b1_brown.jpg', 5, N'Còn hàng', 15, 2000000), -- Size 40 (ID 5)
-(8, N'Nâu', 'sp8_b1_brown.jpg', 7, N'Còn hàng', 15, 2100000), -- Size 42 (ID 7)
+(8, N'Đen', 'sp8_b1_black.jpg', 8, N'Còn hàng', 15, 1900000), -- Size 38 (ID 8)
+(8, N'Đen', 'sp8_b1_black.jpg', 10, N'Còn hàng', 15, 2000000), -- Size 40 (ID 10)
+(8, N'Đen', 'sp8_b1_black.jpg', 12, N'Còn hàng', 15, 2100000), -- Size 42 (ID 12)
+(8, N'Nâu', 'sp8_b1_brown.jpg', 8, N'Còn hàng', 15, 1900000), -- Size 38 (ID 8)
+(8, N'Nâu', 'sp8_b1_brown.jpg', 10, N'Còn hàng', 15, 2000000), -- Size 40 (ID 10)
+(8, N'Nâu', 'sp8_b1_brown.jpg', 12, N'Còn hàng', 15, 2100000), -- Size 42 (ID 12)
 
 -- =======================
 -- Giày boot + da
 -- =======================
 -- SP 9: ShoeDo - SP9 - GBT&GD
--- Size 37 (ID 2)
--- Size 38 (ID 3)
--- Size 39 (ID 4)
--- Size 40 (ID 5)
-(9, N'Đen', 'sp9_bd1_black.jpg', 2, N'Còn hàng', 15, 1500000),
-(9, N'Đen', 'sp9_bd1_black.jpg', 3, N'Còn hàng', 15, 1500000), 
-(9, N'Đen', 'sp9_bd1_black.jpg', 4, N'Còn hàng', 15, 1500000), 
-(9, N'Đen', 'sp9_bd1_black.jpg', 5, N'Còn hàng', 15, 1500000), 
+(9, N'Đen', 'sp9_bd1_black.jpg', 7, N'Còn hàng', 15, 1500000), -- Size 37 (ID 7)
+(9, N'Đen', 'sp9_bd1_black.jpg', 8, N'Còn hàng', 15, 1500000), -- Size 38 (ID 8)
+(9, N'Đen', 'sp9_bd1_black.jpg', 9, N'Còn hàng', 15, 1500000), -- Size 39 (ID 9)
+(9, N'Đen', 'sp9_bd1_black.jpg', 10, N'Còn hàng', 15, 1500000), -- Size 40 (ID 10)
 
 -- =======================
 -- Phụ kiện (MaSP 10 → 15)
@@ -524,199 +516,179 @@ INSERT INTO SanPham_ChiTiet (MaSP, TenMau, HinhAnh, MaSize, TrangThai, SoLuong, 
 
 -- Sản phẩm thêm
 -- Giày sandal
-(16, N'Đen', 'sp16_gsd2_black.jpg', 5, N'Còn hàng', 10, 800000),
-(16, N'Đen', 'sp16_gsd2_black.jpg', 6, N'Còn hàng', 10, 850000),
-(16, N'Đen', 'sp16_gsd2_black.jpg', 7, N'Còn hàng', 10, 900000),
-(16, N'Đen', 'sp16_gsd2_black.jpg', 8, N'Còn hàng', 10, 1000000),
-(16, N'Xanh quân đội', 'sp16_gsd2_green.jpg', 5, N'Còn hàng', 10, 800000),
-(16, N'Xanh quân đội', 'sp16_gsd2_green.jpg', 6, N'Còn hàng', 10, 850000),
-(16, N'Xanh quân đội', 'sp16_gsd2_green.jpg', 7, N'Còn hàng', 10, 900000),
-(16, N'Xanh quân đội', 'sp16_gsd2_green.jpg', 8, N'Còn hàng', 10, 1000000),
+(16, N'Đen', 'sp16_gsd2_black.jpg', 10, N'Còn hàng', 10, 800000), -- Size 40 (ID 10)
+(16, N'Đen', 'sp16_gsd2_black.jpg', 11, N'Còn hàng', 10, 850000), -- Size 41 (ID 11)
+(16, N'Đen', 'sp16_gsd2_black.jpg', 12, N'Còn hàng', 10, 900000), -- Size 42 (ID 12)
+(16, N'Đen', 'sp16_gsd2_black.jpg', 13, N'Còn hàng', 10, 1000000), -- Size 43 (ID 13)
+(16, N'Xanh quân đội', 'sp16_gsd2_green.jpg', 10, N'Còn hàng', 10, 800000), -- Size 40 (ID 10)
+(16, N'Xanh quân đội', 'sp16_gsd2_green.jpg', 11, N'Còn hàng', 10, 850000), -- Size 41 (ID 11)
+(16, N'Xanh quân đội', 'sp16_gsd2_green.jpg', 12, N'Còn hàng', 10, 900000), -- Size 42 (ID 12)
+(16, N'Xanh quân đội', 'sp16_gsd2_green.jpg', 13, N'Còn hàng', 10, 1000000), -- Size 43 (ID 13)
 
+(17, N'Đen', 'sp17_gsd3_black.jpg', 10, N'Còn hàng', 10, 1000000), -- Size 40 (ID 10)
+(17, N'Đen', 'sp17_gsd3_black.jpg', 11, N'Còn hàng', 10, 1100000), -- Size 41 (ID 11)
+(17, N'Nâu', 'sp17_gsd3_brown.jpg', 10, N'Còn hàng', 10, 1000000), -- Size 40 (ID 10)
+(17, N'Nâu', 'sp17_gsd3_brown.jpg', 11, N'Còn hàng', 10, 1100000), -- Size 41 (ID 11)
+(17, N'Nâu', 'sp17_gsd3_brown.jpg', 12, N'Còn hàng', 10, 1200000), -- Size 42 (ID 12)
+(17, N'Nâu', 'sp17_gsd3_brown.jpg', 13, N'Còn hàng', 10, 1300000), -- Size 43 (ID 13)
 
-(17, N'Đen', 'sp17_gsd3_black.jpg', 5, N'Còn hàng', 10, 1000000),
-(17, N'Đen', 'sp17_gsd3_black.jpg', 6, N'Còn hàng', 10, 1100000),
-(17, N'Đen', 'sp17_gsd3_black.jpg', 7, N'Còn hàng', 10, 1200000),
-(17, N'Đen', 'sp17_gsd3_black.jpg', 8, N'Còn hàng', 10, 1300000),
-(17, N'Nâu', 'sp17_gsd3_brown.jpg', 5, N'Còn hàng', 10, 1000000),
-(17, N'Nâu', 'sp17_gsd3_brown.jpg', 6, N'Còn hàng', 10, 1100000),
-(17, N'Nâu', 'sp17_gsd3_brown.jpg', 7, N'Còn hàng', 10, 1200000),
-(17, N'Nâu', 'sp17_gsd3_brown.jpg', 8, N'Còn hàng', 10, 1300000),
+(18, N'Đen', 'sp18_gsd4_black.jpg', 10, N'Còn hàng', 10, 1500000), -- Size 40 (ID 10)
+(18, N'Đen', 'sp18_gsd4_black.jpg', 11, N'Còn hàng', 10, 1800000), -- Size 41 (ID 11)
+(18, N'Đen', 'sp18_gsd4_black.jpg', 12, N'Còn hàng', 10, 2000000), -- Size 42 (ID 12)
+(18, N'Xanh quân đội', 'sp18_gsd4_green.jpg', 10, N'Còn hàng', 10, 1500000), -- Size 40 (ID 10)
+(18, N'Xanh quân đội', 'sp18_gsd4_green.jpg', 11, N'Còn hàng', 10, 1800000), -- Size 41 (ID 11)
+(18, N'Xanh quân đội', 'sp18_gsd4_green.jpg', 12, N'Còn hàng', 10, 2000000), -- Size 42 (ID 12)
+(18, N'Trắng be', 'sp18_gsd4_white.jpg', 10, N'Còn hàng', 10, 1500000), -- Size 40 (ID 10)
+(18, N'Trắng be', 'sp18_gsd4_white.jpg', 11, N'Còn hàng', 10, 1800000), -- Size 41 (ID 11)
+(18, N'Trắng be', 'sp18_gsd4_white.jpg', 12, N'Còn hàng', 10, 2000000), -- Size 42 (ID 12)
 
-(18, N'Đen', 'sp18_gsd4_black.jpg', 5, N'Còn hàng', 10, 1500000),
-(18, N'Đen', 'sp18_gsd4_black.jpg', 6, N'Còn hàng', 10, 1800000),
-(18, N'Đen', 'sp18_gsd4_black.jpg', 7, N'Còn hàng', 10, 2000000),
-(18, N'Xanh quân đội', 'sp18_gsd4_green.jpg', 5, N'Còn hàng', 10, 1500000),
-(18, N'Xanh quân đội', 'sp18_gsd4_green.jpg', 6, N'Còn hàng', 10, 1800000),
-(18, N'Xanh quân đội', 'sp18_gsd4_green.jpg', 7, N'Còn hàng', 10, 2000000),
-(18, N'Trắng be', 'sp18_gsd4_white.jpg', 5, N'Còn hàng', 10, 1500000),
-(18, N'Trắng be', 'sp18_gsd4_white.jpg', 6, N'Còn hàng', 10, 1800000),
-(18, N'Trắng be', 'sp18_gsd4_white.jpg', 7, N'Còn hàng', 10, 2000000),
+(19, N'Đen', 'sp19_gsd5_black.jpg', 7, N'Còn hàng', 10, 1000000), -- Size 37 (ID 7)
+(19, N'Đen', 'sp19_gsd5_black.jpg', 8, N'Còn hàng', 10, 1200000), -- Size 38 (ID 8)
+(19, N'Đen', 'sp19_gsd5_black.jpg', 9, N'Còn hàng', 10, 1500000), -- Size 39 (ID 9)
+(19, N'Trắng be', 'sp19_gsd5_white.jpg', 7, N'Còn hàng', 10, 1000000), -- Size 37 (ID 7)
+(19, N'Trắng be', 'sp19_gsd5_white.jpg', 8, N'Còn hàng', 10, 1200000), -- Size 38 (ID 8)
+(19, N'Trắng be', 'sp19_gsd5_white.jpg', 9, N'Còn hàng', 10, 1500000), -- Size 39 (ID 9)
 
-(19, N'Đen', 'sp19_gsd5_black.jpg', 2, N'Còn hàng', 10, 1000000),
-(19, N'Đen', 'sp19_gsd5_black.jpg', 3, N'Còn hàng', 10, 1200000),
-(19, N'Đen', 'sp19_gsd5_black.jpg', 4, N'Còn hàng', 10, 1500000),
-(19, N'Trắng be', 'sp19_gsd5_white.jpg', 2, N'Còn hàng', 10, 1000000),
-(19, N'Trắng be', 'sp19_gsd5_white.jpg', 3, N'Còn hàng', 10, 1200000),
-(19, N'Trắng be', 'sp19_gsd5_white.jpg', 4, N'Còn hàng', 10, 1500000),
-
-(20, N'Đen', 'sp20_gsd6_black.jpg', 2, N'Còn hàng', 10, 1000000),
-(20, N'Đen', 'sp20_gsd6_black.jpg', 3, N'Còn hàng', 10, 1200000),
-(20, N'Đen', 'sp20_gsd6_black.jpg', 4, N'Còn hàng', 10, 1500000),
-(20, N'Trắng', 'sp20_gsd6_white.jpg', 2, N'Còn hàng', 10, 1000000),
-(20, N'Trắng', 'sp20_gsd6_white.jpg', 3, N'Còn hàng', 10, 1200000),
-(20, N'Trắng', 'sp20_gsd6_white.jpg', 4, N'Còn hàng', 10, 1500000),
+(20, N'Đen', 'sp20_gsd6_black.jpg', 7, N'Còn hàng', 10, 1000000), -- Size 37 (ID 7)
+(20, N'Đen', 'sp20_gsd6_black.jpg', 8, N'Còn hàng', 10, 1200000), -- Size 38 (ID 8)
+(20, N'Đen', 'sp20_gsd6_black.jpg', 9, N'Còn hàng', 10, 1500000), -- Size 39 (ID 9)
+(20, N'Trắng', 'sp20_gsd6_white.jpg', 7, N'Còn hàng', 10, 1000000), -- Size 37 (ID 7)
+(20, N'Trắng', 'sp20_gsd6_white.jpg', 8, N'Còn hàng', 10, 1200000), -- Size 38 (ID 8)
+(20, N'Trắng', 'sp20_gsd6_white.jpg', 9, N'Còn hàng', 10, 1500000), -- Size 39 (ID 9)
 
 -- Giày da
-(21, N'Đen', 'sp21_gd4_black.jpg', 2, N'Còn hàng', 10, 1000000),
-(21, N'Đen', 'sp21_gd4_black.jpg', 3, N'Còn hàng', 10, 1200000),
-(21, N'Đen', 'sp21_gd4_black.jpg', 4, N'Còn hàng', 10, 1500000),
-(21, N'Trắng be', 'sp21_gd4_white.jpg', 2, N'Còn hàng', 10, 1000000),
-(21, N'Trắng be', 'sp21_gd4_white.jpg', 3, N'Còn hàng', 10, 1200000),
-(21, N'Trắng be', 'sp21_gd4_white.jpg', 4, N'Còn hàng', 10, 1500000),
+(21, N'Đen', 'sp21_gd4_black.jpg', 7, N'Còn hàng', 10, 1000000), -- Size 37 (ID 7)
+(21, N'Đen', 'sp21_gd4_black.jpg', 8, N'Còn hàng', 10, 1200000), -- Size 38 (ID 8)
+(21, N'Đen', 'sp21_gd4_black.jpg', 9, N'Còn hàng', 10, 1500000), -- Size 39 (ID 9)
+(21, N'Trắng be', 'sp21_gd4_white.jpg', 7, N'Còn hàng', 10, 1000000), -- Size 37 (ID 7)
+(21, N'Trắng be', 'sp21_gd4_white.jpg', 8, N'Còn hàng', 10, 1200000), -- Size 38 (ID 8)
+(21, N'Trắng be', 'sp21_gd4_white.jpg', 9, N'Còn hàng', 10, 1500000), -- Size 39 (ID 9)
 
-(22, N'Đen', 'sp22_gd5_black.jpg', 6, N'Còn hàng', 10, 1500000),
-(22, N'Đen', 'sp22_gd5_black.jpg', 7, N'Còn hàng', 10, 1580000),
-(22, N'Nâu', 'sp22_gd5_brown.jpg', 6, N'Còn hàng', 10, 1500000),
-(22, N'Nâu', 'sp22_gd5_brown.jpg', 7, N'Còn hàng', 10, 1580000),
+(22, N'Đen', 'sp22_gd5_black.jpg', 11, N'Còn hàng', 10, 1500000), -- Size 41 (ID 11)
+(22, N'Đen', 'sp22_gd5_black.jpg', 12, N'Còn hàng', 10, 1580000), -- Size 42 (ID 12)
+(22, N'Nâu', 'sp22_gd5_brown.jpg', 11, N'Còn hàng', 10, 1500000), -- Size 41 (ID 11)
+(22, N'Nâu', 'sp22_gd5_brown.jpg', 12, N'Còn hàng', 10, 1580000), -- Size 42 (ID 12)
 
-(23, N'Đen', 'sp23_gd6_black.jpg', 5, N'Còn hàng', 10, 900000),
-(23, N'Đen', 'sp23_gd6_black.jpg', 6, N'Còn hàng', 10, 1000000),
-(23, N'Đen', 'sp23_gd6_black.jpg', 7, N'Còn hàng', 10, 1100000),
-(23, N'Nâu', 'sp23_gd6_brown.jpg', 5, N'Còn hàng', 10, 900000),
-(23, N'Nâu', 'sp23_gd6_brown.jpg', 6, N'Còn hàng', 10, 1000000),
-(23, N'Nâu', 'sp23_gd6_brown.jpg', 7, N'Còn hàng', 10, 1100000),
+(23, N'Đen', 'sp23_gd6_black.jpg', 11, N'Còn hàng', 10, 1000000), -- Size 41 (ID 11)
+(23, N'Đen', 'sp23_gd6_black.jpg', 12, N'Còn hàng', 10, 1100000), -- Size 42 (ID 12)
+(23, N'Nâu', 'sp23_gd6_brown.jpg', 10, N'Còn hàng', 10, 900000), -- Size 40 (ID 10)
+(23, N'Nâu', 'sp23_gd6_brown.jpg', 11, N'Còn hàng', 10, 1000000), -- Size 41 (ID 11)
+(23, N'Nâu', 'sp23_gd6_brown.jpg', 12, N'Còn hàng', 10, 1100000), -- Size 42 (ID 12)
 
-(24, N'Đen', 'sp24_gd7_black.jpg', 3, N'Còn hàng', 10, 1500000),
-(24, N'Đen', 'sp24_gd7_black.jpg', 4, N'Còn hàng', 10, 1700000),
-(24, N'Đen', 'sp24_gd7_black.jpg', 5, N'Còn hàng', 10, 1800000),
+(24, N'Đen', 'sp24_gd7_black.jpg', 8, N'Còn hàng', 10, 1500000), -- Size 38 (ID 8)
+(24, N'Đen', 'sp24_gd7_black.jpg', 9, N'Còn hàng', 10, 1700000), -- Size 39 (ID 9)
+(24, N'Đen', 'sp24_gd7_black.jpg', 10, N'Còn hàng', 10, 1800000), -- Size 40 (ID 10)
 
-(25, N'Đen', 'sp25_gd8_black.jpg', 2, N'Còn hàng', 10, 1200000),
-(25, N'Đen', 'sp25_gd8_black.jpg', 3, N'Còn hàng', 10, 1400000),
-(25, N'Đen', 'sp25_gd8_black.jpg', 4, N'Còn hàng', 10, 1600000),
-(25, N'Trắng be', 'sp25_gd8_white.jpg', 2, N'Còn hàng', 10, 1200000),
-(25, N'Trắng be', 'sp25_gd8_white.jpg', 3, N'Còn hàng', 10, 1400000),
-(25, N'Trắng be', 'sp25_gd8_white.jpg', 4, N'Còn hàng', 10, 1600000),
+(25, N'Đen', 'sp25_gd8_black.jpg', 7, N'Còn hàng', 10, 1200000), -- Size 37 (ID 7)
+(25, N'Đen', 'sp25_gd8_black.jpg', 8, N'Còn hàng', 10, 1400000), -- Size 38 (ID 8)
+(25, N'Đen', 'sp25_gd8_black.jpg', 9, N'Còn hàng', 10, 1600000), -- Size 39 (ID 9)
+(25, N'Trắng be', 'sp25_gd8_white.jpg', 7, N'Còn hàng', 10, 1200000), -- Size 37 (ID 7)
+(25, N'Trắng be', 'sp25_gd8_white.jpg', 8, N'Còn hàng', 10, 1400000), -- Size 38 (ID 8)
+(25, N'Trắng be', 'sp25_gd8_white.jpg', 9, N'Còn hàng', 10, 1600000), -- Size 39 (ID 9)
 
 -- Giày boot
-(26, N'Xám', 'sp26_b2_black.jpg', 3, N'Còn hàng', 5, 1800000),
-(26, N'Xám', 'sp26_b2_black.jpg', 4, N'Còn hàng', 5, 2000000),
-(26, N'Xám', 'sp26_b2_black.jpg', 5, N'Còn hàng', 5, 2200000),
+(26, N'Xám', 'sp26_b2_black.jpg', 8, N'Còn hàng', 5, 1800000), -- Size 38 (ID 8)
+(26, N'Xám', 'sp26_b2_black.jpg', 9, N'Còn hàng', 5, 2000000), -- Size 39 (ID 9)
+(26, N'Xám', 'sp26_b2_black.jpg', 10, N'Còn hàng', 5, 2200000), -- Size 40 (ID 10)
 
-(27, N'Trắng be', 'sp27_b3_white.jpg', 3, N'Còn hàng', 10, 500000),
-(27, N'Trắng be', 'sp27_b3_white.jpg', 4, N'Còn hàng', 10, 600000),
-(27, N'Trắng be', 'sp27_b3_white.jpg', 5, N'Còn hàng', 10, 700000),
-(27, N'Trắng be', 'sp27_b3_white.jpg', 6, N'Còn hàng', 10, 800000),
-(27, N'Trắng be', 'sp27_b3_white.jpg', 7, N'Còn hàng', 10, 900000),
+(27, N'Trắng be', 'sp27_b3_white.jpg', 8, N'Còn hàng', 10, 500000), -- Size 38 (ID 8)
+(27, N'Trắng be', 'sp27_b3_white.jpg', 9, N'Còn hàng', 10, 600000), -- Size 39 (ID 9)
+(27, N'Trắng be', 'sp27_b3_white.jpg', 10, N'Còn hàng', 10, 700000), -- Size 40 (ID 10)
+(27, N'Trắng be', 'sp27_b3_white.jpg', 11, N'Còn hàng', 10, 800000), -- Size 41 (ID 11)
+(27, N'Trắng be', 'sp27_b3_white.jpg', 12, N'Còn hàng', 10, 900000), -- Size 42 (ID 12)
 
 -- Giày boot & da
-(28, N'Nâu', 'sp28_bd2_brown.jpg', 5, N'Còn hàng', 5, 1500000),
-(28, N'Nâu', 'sp28_bd2_brown.jpg', 6, N'Còn hàng', 5, 1800000),
-(28, N'Nâu', 'sp28_bd2_brown.jpg', 7, N'Còn hàng', 5, 2000000),
+(28, N'Nâu', 'sp28_bd2_brown.jpg', 10, N'Còn hàng', 5, 1500000), -- Size 40 (ID 10)
+(28, N'Nâu', 'sp28_bd2_brown.jpg', 11, N'Còn hàng', 5, 1800000), -- Size 41 (ID 11)
+(28, N'Nâu', 'sp28_bd2_brown.jpg', 12, N'Còn hàng', 5, 2000000), -- Size 42 (ID 12)
 
-(29, N'Đen', 'sp29_bd3_black.jpg', 2, N'Còn hàng', 10, 1700000),
-(29, N'Đen', 'sp29_bd3_black.jpg', 3, N'Còn hàng', 10, 1900000),
-(29, N'Đen', 'sp29_bd3_black.jpg', 4, N'Còn hàng', 10, 2100000),
-(29, N'Nâu', 'sp29_bd3_brown.jpg', 2, N'Còn hàng', 10, 1700000),
-(29, N'Nâu', 'sp29_bd3_brown.jpg', 3, N'Còn hàng', 10, 1900000),
-(29, N'Nâu', 'sp29_bd3_brown.jpg', 4, N'Còn hàng', 10, 2100000),
+(29, N'Đen', 'sp29_bd3_black.jpg', 9, N'Còn hàng', 10, 2100000), -- Size 39 (ID 9)
+(29, N'Nâu', 'sp29_bd3_brown.jpg', 7, N'Còn hàng', 10, 1700000), -- Size 37 (ID 7)
+(29, N'Nâu', 'sp29_bd3_brown.jpg', 8, N'Còn hàng', 10, 1900000), -- Size 38 (ID 8)
+(29, N'Nâu', 'sp29_bd3_brown.jpg', 9, N'Còn hàng', 10, 2100000), -- Size 39 (ID 9)
 
-(30, N'Nâu đậm', 'sp30_bd4_brown.jpg', 5, N'Còn hàng', 10, 1500000),
-(30, N'Nâu đậm', 'sp30_bd4_brown.jpg', 6, N'Còn hàng', 10, 1650000),
-(30, N'Nâu đậm', 'sp30_bd4_brown.jpg', 7, N'Còn hàng', 10, 1780000),
+(30, N'Nâu đậm', 'sp30_bd4_brown.jpg', 10, N'Còn hàng', 10, 1500000), -- Size 40 (ID 10)
+(30, N'Nâu đậm', 'sp30_bd4_brown.jpg', 11, N'Còn hàng', 10, 1650000), -- Size 41 (ID 11)
+(30, N'Nâu đậm', 'sp30_bd4_brown.jpg', 12, N'Còn hàng', 10, 1780000), -- Size 42 (ID 12)
 
 -- Giày sneaker
-(31, N'Đen', 'sp31_snk2_black.jpg', 5, N'Còn hàng', 5, 1000000),
-(31, N'Đen', 'sp31_snk2_black.jpg', 6, N'Còn hàng', 5, 1250000),
-(31, N'Đen', 'sp31_snk2_black.jpg', 7, N'Còn hàng', 5, 1500000),
+(31, N'Đen', 'sp31_snk2_black.jpg', 10, N'Còn hàng', 5, 1000000), -- Size 40 (ID 10)
+(31, N'Đen', 'sp31_snk2_black.jpg', 11, N'Còn hàng', 5, 1250000), -- Size 41 (ID 11)
+(31, N'Đen', 'sp31_snk2_black.jpg', 12, N'Còn hàng', 5, 1500000), -- Size 42 (ID 12)
 
-(32, N'Đen', 'sp32_snk3_black.jpg', 5, N'Còn hàng', 10, 1000000),
-(32, N'Đen', 'sp32_snk3_black.jpg', 6, N'Còn hàng', 10, 1200000),
-(32, N'Đen', 'sp32_snk3_black.jpg', 7, N'Còn hàng', 10, 1400000),
-(32, N'Trắng be nhạt', 'sp32_snk3_white.jpg', 5, N'Còn hàng', 10, 1000000),
-(32, N'Trắng be nhạt', 'sp32_snk3_white.jpg', 6, N'Còn hàng', 10, 1200000),
-(32, N'Trắng be nhạt', 'sp32_snk3_white.jpg', 7, N'Còn hàng', 10, 1400000),
+(32, N'Đen', 'sp32_snk3_black.jpg', 10, N'Còn hàng', 10, 1000000), -- Size 40 (ID 10)
+(32, N'Đen', 'sp32_snk3_black.jpg', 11, N'Còn hàng', 10, 1200000), -- Size 41 (ID 11)
+(32, N'Đen', 'sp32_snk3_black.jpg', 12, N'Còn hàng', 10, 1400000), -- Size 42 (ID 12)
+(32, N'Trắng be nhạt', 'sp32_snk3_white.jpg', 10, N'Còn hàng', 10, 1000000), -- Size 40 (ID 10)
+(32, N'Trắng be nhạt', 'sp32_snk3_white.jpg', 11, N'Còn hàng', 10, 1200000), -- Size 41 (ID 11)
+(32, N'Trắng be nhạt', 'sp32_snk3_white.jpg', 12, N'Còn hàng', 10, 1400000), -- Size 42 (ID 12)
 
-(33, N'Trắng', 'sp33_snk4_be.jpg', 5, N'Còn hàng', 10, 1000000),
-(33, N'Trắng', 'sp33_snk4_be.jpg', 6, N'Còn hàng', 10, 1200000),
-(33, N'Trắng', 'sp33_snk4_be.jpg', 7, N'Còn hàng', 10, 1400000),
-(33, N'Trắng be', 'sp33_snk4_white.jpg', 5, N'Còn hàng', 10, 1000000),
-(33, N'Trắng be', 'sp33_snk4_white.jpg', 6, N'Còn hàng', 10, 1200000),
-(33, N'Trắng be', 'sp33_snk4_white.jpg', 7, N'Còn hàng', 10, 1400000),
+(33, N'Trắng', 'sp33_snk4_be.jpg', 10, N'Còn hàng', 10, 1000000), -- Size 40 (ID 10)
+(33, N'Trắng', 'sp33_snk4_be.jpg', 11, N'Còn hàng', 10, 1200000), -- Size 41 (ID 11)
+(33, N'Trắng', 'sp33_snk4_be.jpg', 12, N'Còn hàng', 10, 1400000), -- Size 42 (ID 12)
+(33, N'Trắng be', 'sp33_snk4_white.jpg', 10, N'Còn hàng', 10, 1000000), -- Size 40 (ID 10)
+(33, N'Trắng be', 'sp33_snk4_white.jpg', 11, N'Còn hàng', 10, 1200000), -- Size 41 (ID 11)
+(33, N'Trắng be', 'sp33_snk4_white.jpg', 12, N'Còn hàng', 10, 1400000), -- Size 42 (ID 12)
 
-(34, N'Đen', 'sp34_snk5_black.jpg', 5, N'Còn hàng', 10, 1200000),
-(34, N'Đen', 'sp34_snk5_black.jpg', 6, N'Còn hàng', 10, 1500000),
-(34, N'Trắng be', 'sp34_snk5_white.jpg', 5, N'Còn hàng', 10, 1200000),
-(34, N'Trắng be', 'sp34_snk5_white.jpg', 6, N'Còn hàng', 10, 1500000),
+(34, N'Đen', 'sp34_snk5_black.jpg', 10, N'Còn hàng', 10, 1200000), -- Size 40 (ID 10)
+(34, N'Đen', 'sp34_snk5_black.jpg', 11, N'Còn hàng', 10, 1500000), -- Size 41 (ID 11)
+(34, N'Trắng be', 'sp34_snk5_white.jpg', 10, N'Còn hàng', 10, 1200000), -- Size 40 (ID 10)
+(34, N'Trắng be', 'sp34_snk5_white.jpg', 11, N'Còn hàng', 10, 1500000), -- Size 41 (ID 11)
 
-(35, N'Đen', 'sp35_snk6_black.jpg', 4, N'Còn hàng', 10, 1200000),
-(35, N'Đen', 'sp35_snk6_black.jpg', 5, N'Còn hàng', 10, 1400000),
-(35, N'Đen', 'sp35_snk6_black.jpg', 6, N'Còn hàng', 10, 1500000),
-(35, N'Đỏ', 'sp35_snk6_red.jpg', 4, N'Còn hàng', 10, 1200000),
-(35, N'Đỏ', 'sp35_snk6_red.jpg', 5, N'Còn hàng', 10, 1400000),
-(35, N'Đỏ', 'sp35_snk6_red.jpg', 6, N'Còn hàng', 10, 1200000),
+(35, N'Đen', 'sp35_snk6_black.jpg', 9, N'Còn hàng', 10, 1200000), -- Size 39 (ID 9)
+(35, N'Đen', 'sp35_snk6_black.jpg', 10, N'Còn hàng', 10, 1400000), -- Size 40 (ID 10)
+(35, N'Đen', 'sp35_snk6_black.jpg', 11, N'Còn hàng', 10, 1500000), -- Size 41 (ID 11)
+(35, N'Đỏ', 'sp35_snk6_red.jpg', 9, N'Còn hàng', 10, 1200000), -- Size 39 (ID 9)
+(35, N'Đỏ', 'sp35_snk6_red.jpg', 11, N'Còn hàng', 10, 1200000), -- Size 41 (ID 11)
 
-(36, N'Nâu', 'sp36_snk7_brown.jpg', 5, N'Còn hàng', 10, 1700000),
-(36, N'Nâu', 'sp36_snk7_brown.jpg', 6, N'Còn hàng', 10, 190000),
-(36, N'Nâu', 'sp36_snk7_brown.jpg', 7, N'Còn hàng', 10, 210000),
+(36, N'Nâu', 'sp36_snk7_brown.jpg', 10, N'Còn hàng', 10, 1700000), -- Size 40 (ID 10)
+(36, N'Nâu', 'sp36_snk7_brown.jpg', 11, N'Còn hàng', 10, 1900000), -- Size 41 (ID 11)
+(36, N'Nâu', 'sp36_snk7_brown.jpg', 12, N'Còn hàng', 10, 2100000), -- Size 42 (ID 12)
 
-(37, N'Trắng xanh', 'sp37_snk8_white.jpg', 3, N'Còn hàng', 10, 130000),
-(37, N'Trắng xanh', 'sp37_snk8_white.jpg', 4, N'Còn hàng', 10, 150000),
-(37, N'Trắng xanh', 'sp37_snk8_white.jpg', 5, N'Còn hàng', 10, 1700000),
-(37, N'Trắng xanh', 'sp37_snk8_white.jpg', 6, N'Còn hàng', 10, 190000),
-(37, N'Trắng xanh', 'sp37_snk8_white.jpg', 7, N'Còn hàng', 10, 210000),
+(37, N'Trắng xanh', 'sp37_snk8_white.jpg', 8, N'Còn hàng', 10, 1300000), -- Size 38 (ID 8)
+(37, N'Trắng xanh', 'sp37_snk8_white.jpg', 9, N'Còn hàng', 10, 1500000), -- Size 39 (ID 9)
+(37, N'Trắng xanh', 'sp37_snk8_white.jpg', 10, N'Còn hàng', 10, 1700000), -- Size 40 (ID 10)
+(37, N'Trắng xanh', 'sp37_snk8_white.jpg', 11, N'Còn hàng', 10, 1900000), -- Size 41 (ID 11)
+(37, N'Trắng xanh', 'sp37_snk8_white.jpg', 12, N'Còn hàng', 10, 2100000), -- Size 42 (ID 12)
 
 -- Giày bóng đá
-(38, N'Đen đỏ', 'sp38_gbd2_black.jpg', 5, N'Còn hàng', 10, 1500000),
-(38, N'Đen đỏ', 'sp38_gbd2_black.jpg', 6, N'Còn hàng', 10, 160000),
-(38, N'Đen đỏ', 'sp38_gbd2_black.jpg', 7, N'Còn hàng', 10, 1700000),
-(38, N'Đen đỏ', 'sp38_gbd2_black.jpg', 8, N'Còn hàng', 10, 1800000),
-(38, N'Trắng xanh', 'sp38_gbd2_white.jpg', 5, N'Còn hàng', 10, 1500000),
-(38, N'Trắng xanh', 'sp38_gbd2_white.jpg', 6, N'Còn hàng', 10, 1600000),
-(38, N'Trắng xanh', 'sp38_gbd2_white.jpg', 7, N'Còn hàng', 10, 1700000),
-(38, N'Trắng xanh', 'sp38_gbd2_white.jpg', 8, N'Còn hàng', 10, 1800000),
+(38, N'Đen đỏ', 'sp38_gbd2_black.jpg', 10, N'Còn hàng', 10, 1500000), -- Size 40 (ID 10)
+(38, N'Đen đỏ', 'sp38_gbd2_black.jpg', 11, N'Còn hàng', 10, 1600000), -- Size 41 (ID 11)
+(38, N'Đen đỏ', 'sp38_gbd2_black.jpg', 12, N'Còn hàng', 10, 1700000), -- Size 42 (ID 12)
+(38, N'Đen đỏ', 'sp38_gbd2_black.jpg', 13, N'Còn hàng', 10, 1800000), -- Size 43 (ID 13)
+(38, N'Trắng xanh', 'sp38_gbd2_white.jpg', 10, N'Còn hàng', 10, 1500000), -- Size 40 (ID 10)
+(38, N'Trắng xanh', 'sp38_gbd2_white.jpg', 11, N'Còn hàng', 10, 1600000), -- Size 41 (ID 11)
 
-(39, N'Đen bạc', 'sp39_gbd3_black.jpg', 5, N'Còn hàng', 10, 1200000),
-(39, N'Đen bạc', 'sp39_gbd3_black.jpg', 6, N'Còn hàng', 10, 1300000),
-(39, N'Đen bạc', 'sp39_gbd3_black.jpg', 7, N'Còn hàng', 10, 1400000),
-(39, N'Đen bạc', 'sp39_gbd3_black.jpg', 8, N'Còn hàng', 10, 1500000),
-(39, N'Xanh nhạt', 'sp39_gbd3_blue.jpg', 5, N'Còn hàng', 10, 1200000),
-(39, N'Xanh nhạt', 'sp39_gbd3_blue.jpg', 6, N'Còn hàng', 10, 1300000),
-(39, N'Xanh nhạt', 'sp39_gbd3_blue.jpg', 7, N'Còn hàng', 10, 1400000),
-(39, N'Xanh nhạt', 'sp39_gbd3_blue.jpg', 8, N'Còn hàng', 10, 1500000),
-(39, N'Xanh navy', 'sp39_gbd3_bluenavy.jpg', 5, N'Còn hàng', 10, 1200000),
-(39, N'Xanh navy', 'sp39_gbd3_bluenavy.jpg', 6, N'Còn hàng', 10, 1300000),
-(39, N'Xanh navy', 'sp39_gbd3_bluenavy.jpg', 7, N'Còn hàng', 10, 1400000),
-(39, N'Xanh navy', 'sp39_gbd3_bluenavy.jpg', 8, N'Còn hàng', 10, 1500000),
-(39, N'Xanh lá chuối', 'sp39_gbd3_green.jpg', 5, N'Còn hàng', 10, 1200000),
-(39, N'Xanh lá chuối', 'sp39_gbd3_green.jpg', 6, N'Còn hàng', 10, 1300000),
-(39, N'Xanh lá chuối', 'sp39_gbd3_green.jpg', 7, N'Còn hàng', 10, 1400000),
-(39, N'Xanh lá chuối', 'sp39_gbd3_green.jpg', 8, N'Còn hàng', 10, 1500000),
-(39, N'Cam đen', 'sp39_gbd3_orange.jpg', 5, N'Còn hàng', 10, 1200000),
-(39, N'Cam đen', 'sp39_gbd3_orange.jpg', 6, N'Còn hàng', 10, 1300000),
-(39, N'Cam đen', 'sp39_gbd3_orange.jpg', 7, N'Còn hàng', 10, 1400000),
-(39, N'Cam đen', 'sp39_gbd3_orange.jpg', 8, N'Còn hàng', 10, 1500000),
+(39, N'Đen bạc', 'sp39_gbd3_black.jpg', 12, N'Còn hàng', 10, 1400000), -- Size 42 (ID 12)
+(39, N'Đen bạc', 'sp39_gbd3_black.jpg', 13, N'Còn hàng', 10, 1500000), -- Size 43 (ID 13)
+(39, N'Xanh nhạt', 'sp39_gbd3_blue.jpg', 10, N'Còn hàng', 10, 1200000), -- Size 40 (ID 10)
+(39, N'Xanh nhạt', 'sp39_gbd3_blue.jpg', 13, N'Còn hàng', 10, 1500000), -- Size 43 (ID 13)
+(39, N'Xanh navy', 'sp39_gbd3_bluenavy.jpg', 10, N'Còn hàng', 10, 1200000), -- Size 40 (ID 10)
+(39, N'Xanh navy', 'sp39_gbd3_bluenavy.jpg', 11, N'Còn hàng', 10, 1300000), -- Size 41 (ID 11)
+(39, N'Xanh navy', 'sp39_gbd3_bluenavy.jpg', 12, N'Còn hàng', 10, 1400000), -- Size 42 (ID 12)
+(39, N'Xanh navy', 'sp39_gbd3_bluenavy.jpg', 13, N'Còn hàng', 10, 1500000), -- Size 43 (ID 13)
+(39, N'Xanh lá chuối', 'sp39_gbd3_green.jpg', 10, N'Còn hàng', 10, 1200000), -- Size 40 (ID 10)
+(39, N'Xanh lá chuối', 'sp39_gbd3_green.jpg', 11, N'Còn hàng', 10, 1300000), -- Size 41 (ID 11)
+(39, N'Xanh lá chuối', 'sp39_gbd3_green.jpg', 12, N'Còn hàng', 10, 1400000), -- Size 42 (ID 12)
+(39, N'Xanh lá chuối', 'sp39_gbd3_green.jpg', 13, N'Còn hàng', 10, 1500000), -- Size 43 (ID 13)
+(39, N'Cam đen', 'sp39_gbd3_orange.jpg', 10, N'Còn hàng', 10, 1200000), -- Size 40 (ID 10)
+(39, N'Cam đen', 'sp39_gbd3_orange.jpg', 12, N'Còn hàng', 10, 1400000), -- Size 42 (ID 12)
+(39, N'Cam đen', 'sp39_gbd3_orange.jpg', 13, N'Còn hàng', 10, 1500000), -- Size 43 (ID 13)
 
-(40, N'Đen xám', 'sp40_gbd4_black.jpg', 5, N'Còn hàng', 10, 1200000),
-(40, N'Đen xám', 'sp40_gbd4_black.jpg', 6, N'Còn hàng', 10, 1300000),
-(40, N'Đen xám', 'sp40_gbd4_black.jpg', 7, N'Còn hàng', 10, 1400000),
-(40, N'Đen xám', 'sp40_gbd4_black.jpg', 8, N'Còn hàng', 10, 1500000),
-(40, N'Xanh nhạt', 'sp40_gbd4_blue.jpg', 5, N'Còn hàng', 10, 1200000),
-(40, N'Xanh nhạt', 'sp40_gbd4_blue.jpg', 6, N'Còn hàng', 10, 1300000),
-(40, N'Xanh nhạt', 'sp40_gbd4_blue.jpg', 7, N'Còn hàng', 10, 1400000),
-(40, N'Xanh nhạt', 'sp40_gbd4_blue.jpg', 8, N'Còn hàng', 10, 1500000),
-(40, N'Xanh navy', 'sp40_gbd4_bluenavy.jpg', 5, N'Còn hàng', 10, 1200000),
-(40, N'Xanh navy', 'sp40_gbd4_bluenavy.jpg', 6, N'Còn hàng', 10, 1300000),
-(40, N'Xanh navy', 'sp40_gbd4_bluenavy.jpg', 7, N'Còn hàng', 10, 1400000),
-(40, N'Xanh navy', 'sp40_gbd4_bluenavy.jpg', 8, N'Còn hàng', 10, 1500000),
-(40, N'Cam bạc', 'sp40_gbd4_silver.jpg', 5, N'Còn hàng', 10, 1200000),
-(40, N'Cam bạc', 'sp40_gbd4_silver.jpg', 6, N'Còn hàng', 10, 1300000),
-(40, N'Cam bạc', 'sp40_gbd4_silver.jpg', 7, N'Còn hàng', 10, 1400000),
-(40, N'Cam bạc', 'sp40_gbd4_silver.jpg', 8, N'Còn hàng', 10, 1500000),
-(40, N'Trắng xanh', 'sp40_gbd4_white.jpg', 5, N'Còn hàng', 10, 1200000),
-(40, N'Trắng xanh', 'sp40_gbd4_white.jpg', 6, N'Còn hàng', 10, 1300000),
-(40, N'Trắng xanh', 'sp40_gbd4_white.jpg', 7, N'Còn hàng', 10, 1400000),
-(40, N'Trắng xanh', 'sp40_gbd4_white.jpg', 8, N'Còn hàng', 10, 1500000);
+(40, N'Đen xám', 'sp40_gbd4_black.jpg', 10, N'Còn hàng', 10, 1200000), -- Size 40 (ID 10)
+(40, N'Đen xám', 'sp40_gbd4_black.jpg', 13, N'Còn hàng', 10, 1500000), -- Size 43 (ID 13)
+(40, N'Xanh nhạt', 'sp40_gbd4_blue.jpg', 10, N'Còn hàng', 10, 1200000), -- Size 40 (ID 10)
+(40, N'Xanh nhạt', 'sp40_gbd4_blue.jpg', 11, N'Còn hàng', 10, 1300000), -- Size 41 (ID 11)
+(40, N'Xanh nhạt', 'sp40_gbd4_blue.jpg', 12, N'Còn hàng', 10, 1400000), -- Size 42 (ID 12)
+(40, N'Xanh nhạt', 'sp40_gbd4_blue.jpg', 13, N'Còn hàng', 10, 1500000), -- Size 43 (ID 13)
+(40, N'Xanh navy', 'sp40_gbd4_bluenavy.jpg', 12, N'Còn hàng', 10, 1400000), -- Size 42 (ID 12)
+(40, N'Xanh navy', 'sp40_gbd4_bluenavy.jpg', 13, N'Còn hàng', 10, 1500000), -- Size 43 (ID 13)
+(40, N'Cam bạc', 'sp40_gbd4_silver.jpg', 10, N'Còn hàng', 10, 1200000), -- Size 40 (ID 10)
+(40, N'Cam bạc', 'sp40_gbd4_silver.jpg', 11, N'Còn hàng', 10, 1300000), -- Size 41 (ID 11)
+(40, N'Cam bạc', 'sp40_gbd4_silver.jpg', 13, N'Còn hàng', 10, 1500000), -- Size 43 (ID 13)
+(40, N'Trắng xanh', 'sp40_gbd4_white.jpg', 11, N'Còn hàng', 10, 1300000), -- Size 41 (ID 11)
+(40, N'Trắng xanh', 'sp40_gbd4_white.jpg', 12, N'Còn hàng', 10, 1400000), -- Size 42 (ID 12)
+(40, N'Trắng xanh', 'sp40_gbd4_white.jpg', 13, N'Còn hàng', 10, 1500000); -- Size 43 (ID 13)
 
 -- 11. Dữ liệu mẫu cho bảng Địa Chỉ
 INSERT INTO DiaChi (MaKH, MacDinh, DiemGiao, TenNN, SDT) VALUES
