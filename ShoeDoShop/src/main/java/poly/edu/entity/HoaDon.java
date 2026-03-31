@@ -26,6 +26,11 @@ public class HoaDon {
     @JoinColumn(name = "MaQT")
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "hoaDons"})
     private QuanTri quanTri;
+    
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "MaKH_VC")
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+    private KhachHangVoucher khachHangVoucher;
 
     @Column(name = "PhuongThucTT")
     private String phuongThucTT;

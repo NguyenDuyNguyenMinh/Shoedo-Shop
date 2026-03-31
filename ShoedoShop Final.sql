@@ -5,163 +5,202 @@ GO
 
 -- 1. Bảng Users
 CREATE TABLE Users (
-MaUser INT IDENTITY(1,1) PRIMARY KEY,
-UserName NVARCHAR(50) UNIQUE,
-Mail NVARCHAR(100) UNIQUE,
-PassWord NVARCHAR(255),
-IsActive BIT,
-CreateAt DATETIME DEFAULT GETDATE()
+    MaUser INT IDENTITY(1,1) PRIMARY KEY,
+    UserName NVARCHAR(50) UNIQUE,
+    Mail NVARCHAR(100) UNIQUE,
+    PassWord NVARCHAR(255),
+    IsActive BIT,
+    CreateAt DATETIME DEFAULT GETDATE()
 );
 
 -- 2. Bảng Khách Hàng
 CREATE TABLE KhachHang (
-MaKH INT IDENTITY(1,1) PRIMARY KEY,
-TenKH NVARCHAR(100),
-SDT VARCHAR(15),
-MaUser INT,
-CONSTRAINT FK_KhachHang_User FOREIGN KEY (MaUser) REFERENCES Users(MaUser)
+    MaKH INT IDENTITY(1,1) PRIMARY KEY,
+    TenKH NVARCHAR(100),
+    SDT VARCHAR(15),
+    DiemTichLuy INT DEFAULT 0,
+    MaGioiThieu VARCHAR(20) UNIQUE NOT NULL,
+    MaNguoiGioiThieu VARCHAR(20),
+    MaUser INT,
+    CONSTRAINT FK_KhachHang_User FOREIGN KEY (MaUser) REFERENCES Users(MaUser)
 );
 
 -- 3. Bảng Quản Trị
 CREATE TABLE QuanTri (
-MaQT INT IDENTITY(1,1) PRIMARY KEY,
-TenQT NVARCHAR(100),
-[Role] BIT DEFAULT 0,
-MaUser INT,
-CONSTRAINT FK_QuanTri_User FOREIGN KEY (MaUser) REFERENCES Users(MaUser)
+    MaQT INT IDENTITY(1,1) PRIMARY KEY,
+    TenQT NVARCHAR(100),
+    [Role] BIT DEFAULT 0,
+    MaUser INT,
+    CONSTRAINT FK_QuanTri_User FOREIGN KEY (MaUser) REFERENCES Users(MaUser)
 );
 
 -- 4. Bảng Danh Mục
 CREATE TABLE DanhMuc (
-MaDM INT IDENTITY(1,1) PRIMARY KEY,
-TenDM NVARCHAR(100) NOT NULL
+    MaDM INT IDENTITY(1,1) PRIMARY KEY,
+    TenDM NVARCHAR(100) NOT NULL
 );
 
 -- 5. Bảng Sản Phẩm
 CREATE TABLE SanPham (
-MaSP INT IDENTITY(1,1) PRIMARY KEY,
-TenSP NVARCHAR(200) NOT NULL,
-GioiTinh BIT,
-MoTa NVARCHAR(MAX),
-KhuyenMai INT DEFAULT 0 CHECK (KhuyenMai >= 0 AND KhuyenMai <= 100),
-DaBan INT DEFAULT 0 CHECK (DaBan >= 0), -- Đã thêm dấu phẩy ở đây
-IsActive BIT DEFAULT 1
+    MaSP INT IDENTITY(1,1) PRIMARY KEY,
+    TenSP NVARCHAR(200) NOT NULL,
+    GioiTinh BIT,
+    MoTa NVARCHAR(MAX),
+    KhuyenMai INT DEFAULT 0 CHECK (KhuyenMai >= 0 AND KhuyenMai <= 100),
+    DaBan INT DEFAULT 0 CHECK (DaBan >= 0),
+    IsActive BIT DEFAULT 1
 );
 
--- 6. Bảng Sản phẩm - Danh mục (Many-to-Many)
+-- 6. Bảng Sản phẩm - Danh mục
 CREATE TABLE SanPham_DanhMuc (
-MaSP INT,
-MaDM INT,
-PRIMARY KEY (MaSP, MaDM),
-FOREIGN KEY (MaSP) REFERENCES SanPham(MaSP),
-FOREIGN KEY (MaDM) REFERENCES DanhMuc(MaDM)
+    MaSP INT,
+    MaDM INT,
+    PRIMARY KEY (MaSP, MaDM),
+    FOREIGN KEY (MaSP) REFERENCES SanPham(MaSP),
+    FOREIGN KEY (MaDM) REFERENCES DanhMuc(MaDM)
 );
 
 -- 7. Bảng Size
 CREATE TABLE Size (
-MaSize INT IDENTITY (1,1) PRIMARY KEY, -- Bỏ dấu phẩy thừa
-CoGiay INT UNIQUE -- 39, 40, 41
+    MaSize INT IDENTITY(1,1) PRIMARY KEY,
+    CoGiay INT UNIQUE
 );
 
--- 10. Bảng Chi tiết sản phẩm (SKU - Kho hàng - Giá)
+-- 8. Bảng Chi tiết sản phẩm
 CREATE TABLE SanPham_ChiTiet (
-MaSKU INT IDENTITY(1,1) PRIMARY KEY,
-MaSP INT NOT NULL,
-TenMau NVARCHAR(50),
-HinhAnh NVARCHAR(MAX),
-MaSize INT,
-TrangThai NVARCHAR(50),
-SoLuong INT DEFAULT 0 CHECK (SoLuong >= 0),
-DonGia DECIMAL(18,2) CHECK (DonGia > 0),
--- Ràng buộc: 1 sản phẩm + 1 màu + 1 size = 1 SKU duy nhất
-CONSTRAINT UQ_SP_Mau_Size UNIQUE (MaSP, TenMau, MaSize),
-CONSTRAINT FK_ChiTiet_SanPham FOREIGN KEY (MaSP) REFERENCES SanPham(MaSP),
-CONSTRAINT FK_ChiTiet_Size FOREIGN KEY (MaSize) REFERENCES Size(MaSize)
+    MaSKU INT IDENTITY(1,1) PRIMARY KEY,
+    MaSP INT NOT NULL,
+    TenMau NVARCHAR(50),
+    HinhAnh NVARCHAR(MAX),
+    MaSize INT,
+    TrangThai NVARCHAR(50),
+    SoLuong INT DEFAULT 0 CHECK (SoLuong >= 0),
+    DonGia DECIMAL(18,2) CHECK (DonGia > 0),
+    CONSTRAINT UQ_SP_Mau_Size UNIQUE (MaSP, TenMau, MaSize),
+    CONSTRAINT FK_ChiTiet_SanPham FOREIGN KEY (MaSP) REFERENCES SanPham(MaSP),
+    CONSTRAINT FK_ChiTiet_Size FOREIGN KEY (MaSize) REFERENCES Size(MaSize)
 );
 
--- 11. Bảng Nhập Kho
-CREATE TABLE PhieuNhap (
-MaNK INT IDENTITY(1,1) PRIMARY KEY,
-MaSKU INT,
-SoLuong INT CHECK (SoLuong > 0),
-NgayNhap DATE DEFAULT GETDATE(),
-CONSTRAINT FK_PhieuNhap_SKU FOREIGN KEY (MaSKU) REFERENCES SanPham_ChiTiet(MaSKU)
+-- 9. Bảng Nhập Kho
+CREATE TABLE NhapKho (
+    MaNK INT IDENTITY(1,1) PRIMARY KEY,
+    MaSKU INT,
+    SoLuong INT CHECK (SoLuong > 0),
+    NgayNhap DATE DEFAULT GETDATE(),
+    CONSTRAINT FK_NhapKho_SKU FOREIGN KEY (MaSKU) REFERENCES SanPham_ChiTiet(MaSKU)
 );
 
--- 12. Bảng Địa Chỉ
+-- 10. Bảng Địa Chỉ
 CREATE TABLE DiaChi (
-MaDC INT IDENTITY(1,1) PRIMARY KEY,
-MaKH INT,
-MacDinh BIT DEFAULT 0,
-DiemGiao NVARCHAR(255),
-TenNN NVARCHAR(100),
-SDT VARCHAR(15),
-CONSTRAINT FK_DiaChi_KhachHang FOREIGN KEY (MaKH) REFERENCES KhachHang(MaKH)
+    MaDC INT IDENTITY(1,1) PRIMARY KEY,
+    MaKH INT,
+    MacDinh BIT DEFAULT 0,
+    DiemGiao NVARCHAR(255),
+    TenNN NVARCHAR(100),
+    SDT VARCHAR(15),
+    CONSTRAINT FK_DiaChi_KhachHang FOREIGN KEY (MaKH) REFERENCES KhachHang(MaKH)
 );
 
--- 13. Bảng Giỏ Hàng
+-- 11. Bảng Giỏ Hàng
 CREATE TABLE GioHang (
-MaGH INT IDENTITY(1,1) PRIMARY KEY,
-MaKH INT,
-MaSKU INT,
-SoLuong INT CHECK (SoLuong > 0),
--- Ràng buộc: 1 khách chỉ có 1 dòng cho 1 sản phẩm trong giỏ.
-CONSTRAINT UQ_GioHang UNIQUE (MaKH, MaSKU),
-CONSTRAINT FK_GioHang_KhachHang FOREIGN KEY (MaKH) REFERENCES KhachHang(MaKH),
-CONSTRAINT FK_GioHang_SKU FOREIGN KEY (MaSKU) REFERENCES SanPham_ChiTiet(MaSKU)
+    MaGH INT IDENTITY(1,1) PRIMARY KEY,
+    MaKH INT,
+    MaSKU INT,
+    SoLuong INT CHECK (SoLuong > 0),
+    CONSTRAINT UQ_GioHang UNIQUE (MaKH, MaSKU),
+    CONSTRAINT FK_GioHang_KhachHang FOREIGN KEY (MaKH) REFERENCES KhachHang(MaKH),
+    CONSTRAINT FK_GioHang_SKU FOREIGN KEY (MaSKU) REFERENCES SanPham_ChiTiet(MaSKU)
+);
+
+-- 12. Bảng Voucher
+CREATE TABLE Voucher (
+    MaVoucher INT IDENTITY(1,1) PRIMARY KEY,
+    TenVoucher NVARCHAR(100) NOT NULL,
+    DiemCanDoi INT NOT NULL CHECK (DiemCanDoi > 0),
+    GiaTriGiam DECIMAL(18,2),
+    DonToiThieu DECIMAL(18,2) DEFAULT 0,
+    SoLuong INT DEFAULT 0 CHECK (SoLuong >= 0),
+    NgayBatDau DATETIME DEFAULT GETDATE(),
+    NgayKetThuc DATETIME,
+    IsActive BIT DEFAULT 1
+);
+
+-- 13. Bảng KhachHang_Voucher
+CREATE TABLE KhachHang_Voucher (
+    MaKH_VC INT IDENTITY(1,1) PRIMARY KEY,
+    MaKH INT NOT NULL,
+    MaVoucher INT NOT NULL,
+    TrangThai NVARCHAR(50) DEFAULT N'Chưa sử dụng' CHECK (TrangThai IN (N'Chưa sử dụng', N'Đã sử dụng', N'Hết hạn')),
+    NgayDoi DATETIME DEFAULT GETDATE(),
+    HanSuDung DATETIME NULL,
+    CONSTRAINT FK_KHVC_KhachHang FOREIGN KEY (MaKH) REFERENCES KhachHang(MaKH),
+    CONSTRAINT FK_KHVC_Voucher FOREIGN KEY (MaVoucher) REFERENCES Voucher(MaVoucher)
 );
 
 -- 14. Bảng Hóa Đơn
 CREATE TABLE HoaDon (
-MaHD INT IDENTITY(1,1) PRIMARY KEY,
-MaKH INT,
-MaQT INT, -- Nhân viên duyệt đơn
-PhuongThucTT NVARCHAR(50),
-DiaChiJson NVARCHAR(MAX),
-TrangThai NVARCHAR(50) CHECK (TrangThai IN (N'Đang xử lý', N'Đang giao', N'Hoàn tất', N'Đã từ chối', N'Báo lỗi')),
-GhiChu NVARCHAR(MAX),
-NgayMua DATETIME DEFAULT GETDATE(),
-NgayDen DATETIME,
-CONSTRAINT FK_HoaDon_KhachHang FOREIGN KEY (MaKH) REFERENCES KhachHang(MaKH),
-CONSTRAINT FK_HoaDon_QuanTri FOREIGN KEY (MaQT) REFERENCES QuanTri(MaQT)
+    MaHD INT IDENTITY(1,1) PRIMARY KEY,
+    MaKH INT,
+    MaQT INT,
+    MaKH_VC INT,
+    PhuongThucTT NVARCHAR(50),
+    DiaChiJson NVARCHAR(MAX),
+    TrangThai NVARCHAR(50) CHECK (TrangThai IN (N'Đang xử lý', N'Đang giao', N'Hoàn tất', N'Đã từ chối', N'Báo lỗi')),
+    GhiChu NVARCHAR(MAX),
+    NgayMua DATETIME DEFAULT GETDATE(),
+    NgayDen DATETIME,
+    CONSTRAINT FK_HoaDon_KhachHang FOREIGN KEY (MaKH) REFERENCES KhachHang(MaKH),
+    CONSTRAINT FK_HoaDon_QuanTri FOREIGN KEY (MaQT) REFERENCES QuanTri(MaQT),
+    CONSTRAINT FK_HoaDon_KhachHangVoucher FOREIGN KEY (MaKH_VC) REFERENCES KhachHang_Voucher(MaKH_VC)
 );
 
 -- 15. Bảng Hóa Đơn Chi Tiết
 CREATE TABLE HoaDonCT (
-MaHDCT INT IDENTITY(1,1) PRIMARY KEY,
-MaHD INT,
-MaSKU INT,
-SoLuong INT CHECK (SoLuong > 0),
-DonGia DECIMAL(18,2) CHECK (DonGia > 0), -- Giá tại thời điểm mua
-CONSTRAINT FK_HoaDonCT_HoaDon FOREIGN KEY (MaHD) REFERENCES HoaDon(MaHD),
-CONSTRAINT FK_HoaDonCT_SKU FOREIGN KEY (MaSKU) REFERENCES SanPham_ChiTiet(MaSKU)
+    MaHDCT INT IDENTITY(1,1) PRIMARY KEY,
+    MaHD INT,
+    MaSKU INT,
+    SoLuong INT CHECK (SoLuong > 0),
+    DonGia DECIMAL(18,2) CHECK (DonGia > 0),
+    MaNguoiChiaSe INT,
+    CONSTRAINT FK_HoaDonCT_HoaDon FOREIGN KEY (MaHD) REFERENCES HoaDon(MaHD),
+    CONSTRAINT FK_HoaDonCT_NguoiChiaSe FOREIGN KEY (MaNguoiChiaSe) REFERENCES KhachHang(MaKH),
+    CONSTRAINT FK_HoaDonCT_SKU FOREIGN KEY (MaSKU) REFERENCES SanPham_ChiTiet(MaSKU)
 );
 
 -- 16. Bảng Đánh giá
 CREATE TABLE DanhGia (
-MaDG INT IDENTITY(1,1) PRIMARY KEY,
-MaHDCT INT NOT NULL,
-Sao INT CHECK (Sao >= 1 AND Sao <= 5),
-DanhGiaCT NVARCHAR(MAX),
-NgayDG DATETIME DEFAULT GETDATE(),
--- Ràng buộc: Mua 1 lần -> đánh giá 1 lần (Unique trên MaKH và MaHDCT)
-CONSTRAINT UQ_DanhGia_MotLan UNIQUE (MaHDCT),
-CONSTRAINT FK_DanhGia_HoaDonCT FOREIGN KEY (MaHDCT) REFERENCES HoaDonCT(MaHDCT)
+    MaDG INT IDENTITY(1,1) PRIMARY KEY,
+    MaHDCT INT NOT NULL,
+    Sao INT CHECK (Sao >= 1 AND Sao <= 5),
+    DanhGiaCT NVARCHAR(MAX),
+    NgayDG DATETIME DEFAULT GETDATE(),
+    CONSTRAINT UQ_DanhGia_MotLan UNIQUE (MaHDCT),
+    CONSTRAINT FK_DanhGia_HoaDonCT FOREIGN KEY (MaHDCT) REFERENCES HoaDonCT(MaHDCT)
 );
 
 -- 17. Bảng Tìm Kiếm
 CREATE TABLE LSTimKiem (
-MaTK INT IDENTITY(1,1) PRIMARY KEY,
-MaKH INT,
-NoiDungTimKiem NVARCHAR(225) NOT NULL,
--- Ràng buộc: Một User không thể có 2 dòng chứa cùng 1 từ khóa (Unique trên MaKH và NoiDungTimKiem)
-CONSTRAINT UQ_User_Keyword UNIQUE (MaKH, NoiDungTimKiem),
-ThoiGian DATETIME DEFAULT GETDATE(), -- Bổ sung thời gian tìm
-CONSTRAINT FK_TimKiem_KhachHang FOREIGN KEY (MaKH) REFERENCES KhachHang(MaKH)
+    MaTK INT IDENTITY(1,1) PRIMARY KEY,
+    MaKH INT,
+    NoiDungTimKiem NVARCHAR(225) NOT NULL,
+    ThoiGian DATETIME DEFAULT GETDATE(),
+    CONSTRAINT FK_TimKiem_KhachHang FOREIGN KEY (MaKH) REFERENCES KhachHang(MaKH)
 );
-GO
 
--- 18. Bảng Chiến Dịch
+-- 18. Bảng Lịch Sử Tích Điểm
+CREATE TABLE LichSuTichDiem (
+    MaLS INT IDENTITY(1,1) PRIMARY KEY,
+    MaKH INT NOT NULL,
+    SoDiem INT,
+    LoaiGiaoDich NVARCHAR(100) CHECK (LoaiGiaoDich IN (N'Mời bạn bè', N'Chia sẻ mua hàng')),
+    MaNguoiLienQuan INT NULL,
+    MaHDCT INT NULL,
+    NgayGiaoDich DATETIME DEFAULT GETDATE(),
+    CONSTRAINT FK_LichSuTichDiem_KhachHang FOREIGN KEY (MaKH) REFERENCES KhachHang(MaKH),
+    CONSTRAINT FK_LichSuTichDiem_HoaDonCT FOREIGN KEY (MaHDCT) REFERENCES HoaDonCT(MaHDCT)
+);
+
+-- 19. Bảng Chiến Dịch
 CREATE TABLE ChienDich (
     MaCD INT IDENTITY(1,1) PRIMARY KEY,
     TenChienDich NVARCHAR(255) NOT NULL,
@@ -186,11 +225,11 @@ INSERT INTO Users (UserName, Mail, PassWord, IsActive) VALUES
 ('QuanTesteremail', 'nguyenhoangminhquan786@gmail.com', '$2a$10$FQi/T2Pcgc1UaMkS/8mf0uSLMzLUtjNn0Ja4YRsCj2aRDdxWBCf4K', 1);
 
 -- 2. Dữ liệu mẫu cho bảng Khách Hàng (MaUser 5, 6, 7, 8)
-INSERT INTO KhachHang (TenKH, SDT, MaUser) VALUES
-(N'Nguyễn Văn A', '0901234567', 5),
-(N'Trần Thị Hi', '0912345678', 6),
-(N'Lê Thị B', '0987654321', 7),
-(N'Nguyễn Hoàng Minh Quân', '010100101', 8);
+INSERT INTO KhachHang (TenKH, SDT, DiemTichLuy, MaGioiThieu, MaNguoiGioiThieu, MaUser) VALUES
+(N'Nguyễn Văn A', '0901234567', 5, 'M91CAC', NULL, 5),
+(N'Trần Thị Hi', '0912345678',  0, 'MVOZ9V', NULL, 6),
+(N'Lê Thị B', '0987654321', 0, 'OVK32C', NULL, 7),
+(N'Nguyễn Hoàng Minh Quân', '010100101', 0, 'AZHD13', 'M91CAC', 8);
 
 -- 3. Dữ liệu mẫu cho bảng Quản Trị (MaUser 1, 2, 3, 4)
 INSERT INTO QuanTri (TenQT, [Role], MaUser) VALUES
@@ -381,6 +420,7 @@ INSERT INTO Size (CoGiay) VALUES
 (44), -- ID 14: Size 44
 (45); -- ID 15: Size 45
 
+-- 9.Note: Cột MaSize bây giờ điền ID của bảng Size ở trên (Ví dụ: ID 5 là size 40, ID 6 là size 41)
 -- 8. Dữ liệu Chi tiết sản phẩm (đã gộp màu sắc)
 INSERT INTO SanPham_ChiTiet (MaSP, TenMau, HinhAnh, MaSize, TrangThai, SoLuong, DonGia) VALUES
 -- =======================
@@ -708,137 +748,181 @@ INSERT INTO GioHang (MaKH, MaSKU, SoLuong) VALUES
 (4, 18, 1),  -- Boot & da nâu đậm 42
 (4, 10, 2);  -- Sneaker xanh 43
 
+INSERT INTO Voucher (TenVoucher, DiemCanDoi, GiaTriGiam, DonToiThieu, SoLuong, NgayBatDau, NgayKetThuc, IsActive) VALUES
+-- Voucher 10,000đ
+(N'Giảm 10K cho đơn từ 200K', 10, 10000, 200000, 100, '2026-01-01', '2026-12-31', 1),
+
+-- Voucher 20,000đ
+(N'Giảm 20K cho đơn từ 300K', 20, 20000, 300000, 80, '2026-01-01', '2026-12-31', 1),
+
+-- Voucher 50,000đ
+(N'Giảm 50K cho đơn từ 500K', 50, 50000, 500000, 50, '2026-01-01', '2026-12-31', 1),
+
+-- Voucher 100,000đ
+(N'Giảm 100K cho đơn từ 1,000,000đ', 100, 100000, 1000000, 30, '2026-01-01', '2026-12-31', 1),
+
+-- Thêm một số voucher đặc biệt
+(N'Giảm 15K cho đơn từ 250K', 12, 15000, 250000, 90, '2026-01-01', '2026-12-31', 1),
+(N'Giảm 30K cho đơn từ 400K', 30, 30000, 400000, 60, '2026-01-01', '2026-12-31', 1),
+(N'Giảm 70K cho đơn từ 800K', 75, 70000, 800000, 35, '2026-01-01', '2026-12-31', 1),
+(N'Giảm 150K cho đơn từ 2,000,000đ', 1500, 150000, 2000000, 15, '2026-01-01', '2026-12-31', 1),
+
+-- Voucher theo mùa (có thời hạn ngắn)
+(N'FLASH SALE - Giảm 20K', 15, 20000, 200000, 100, '2026-01-01', '2026-06-30', 1),
+(N'FLASH SALE - Giảm 50K', 40, 50000, 500000, 50, '2026-01-01', '2026-06-30', 1),
+(N'BLACK FRIDAY - Giảm 100K', 80, 100000, 800000, 100, '2026-01-01', '2026-6-30', 1);
+
 -- 13. Dữ liệu mẫu cho bảng Hóa Đơn
-INSERT INTO HoaDon (MaKH, MaQT, PhuongThucTT, DiaChiJson, TrangThai, GhiChu, NgayMua, NgayDen) VALUES
+INSERT INTO HoaDon (MaKH, MaQT, MaKH_VC, PhuongThucTT, DiaChiJson, TrangThai, GhiChu, NgayMua, NgayDen) VALUES
 -- HD 1
-(1, 1, N'COD',
+(1, 1, NULL, N'COD',
  N'{"DiemGiao":"123 Nguyễn Huệ A, Q1","TenNN":"Nguyễn Văn A","SDT":"0901234567"}',
- N'Đã từ chối', N'Đơn hàng đặt số lượng quá lớn nhân viên miễn cưỡng từ chối vì gọi không ghe máy', '2025-01-10', NULL),
+ N'Đã từ chối', N'Đơn hàng đặt số lượng quá lớn nhân viên miễn cưỡng từ chối vì gọi không ghe máy', '2026-01-10', NULL),
 
 -- HD 2
-(2, NULL, N'VNPAY',
+(2, NULL, NULL, N'Chuyển khoản',
  N'{"DiemGiao":"789 Cách Mạng Tháng 8Z, Tân Bình","TenNN":"Trần Thị Hi A","SDT":"0912345678"}',
  N'Đang xử lý', NULL, '2026-01-11', NULL),
 
 -- HD 3
-(3, 1, N'COD',
+(3, 1, NULL, N'COD',
  N'{"DiemGiao":"456 Lê Lợi A, Q1","TenNN":"Nguyễn Văn A","SDT":"0901234567"}',
  N'Đang giao', NULL, '2026-01-12', NULL),
 
 -- HD 4
-(4, 1, N'COD',
+(4, 1, NULL, N'COD',
  N'{"DiemGiao":"Quận Cam A","TenNN":"Nguyễn Văn A","SDT":"0901234567"}',
  N'Hoàn tất', NULL, '2026-01-13', '2026-03-25'),
 
 -- HD 5
-(1, 1, N'COD',
+(1, 1, NULL, N'COD',
  N'{"DiemGiao":"123 Nguyễn Huệ B","TenNN":"Nguyễn Văn A-B","SDT":"0901234567"}',
  N'Đã từ chối', N'Khách hủy đơn', '2026-01-14', NULL),
 
 -- HD 6
-(2, 1, N'VNPAY',
+(2, 1, NULL, N'Chuyển khoản',
  N'{"DiemGiao":"789 Cách Mạng Tháng 8Y","TenNN":"Trần Thị Hi B","SDT":"0912345678"}',
  N'Báo lỗi', N'Khách hàng không nhận được hàng', '2026-01-15', '2026-01-19'),
 
 -- HD 7
-(3, 1, N'COD',
+(3, 1, NULL, N'COD',
  N'{"DiemGiao":"456 Lê Lợi B","TenNN":"Nguyễn Văn A-B","SDT":"0901234567"}',
  N'Báo lỗi', N'Mũi giày bị móp', '2026-01-16', '2026-01-20'),
 
 -- HD 8
-(4, 1, N'COD',
+(4, 1, NULL, N'COD',
  N'{"DiemGiao":"Quận Cam B","TenNN":"Nguyễn Văn B","SDT":"0901234567"}',
  N'Đang giao', NULL, '2026-01-17', NULL),
 
 -- HD 9
-(1, NULL, N'COD',
+(1, NULL, NULL, N'COD',
  N'{"DiemGiao":"123 Nguyễn Huệ C","TenNN":"Nguyễn Văn A-C","SDT":"0901234567"}',
  N'Đang xử lý', NULL, '2026-01-18', NULL),
 
 -- HD 10
-(2, 1, N'VNPAY',
+(2, 1, NULL, N'Chuyển khoản',
  N'{"DiemGiao":"789 Cách Mạng Tháng 8Z","TenNN":"Trần Thị Hi A","SDT":"0912345678"}',
  N'Hoàn tất', NULL, '2026-01-19', '2026-01-24');
 
 -- 14. Dữ liệu mẫu cho bảng Hóa Đơn Chi Tiết 
-INSERT INTO HoaDonCT (MaHD, MaSKU, SoLuong, DonGia) VALUES
+INSERT INTO HoaDonCT (MaHD, MaSKU, SoLuong, DonGia, MaNguoiChiaSe) VALUES
 -- ===== HD 1 =====
 -- Giày da đen 40: Giá gốc 1,000,000 - KM 10% = 900,000
-(1, 1, 1, 900000),
+(1, 1, 1, 900000, NULL),
 -- Giày bóng đá hồng 41: Giá gốc 1,200,000 - KM 5% = 1,140,000
-(1, 25, 1, 1140000),
+(1, 25, 1, 1140000, NULL),
 -- Vớ đen: Giá gốc 70,000 - KM 10% = 63,000
-(1, 48, 2, 63000),
+(1, 48, 2, 63000, NULL),
 
 -- ===== HD 2 =====
 -- Giày cao gót trắng 38: Giá gốc 1,200,000 - KM 30% = 840,000
-(2, 7, 1, 840000),
+(2, 7, 1, 840000, NULL),
 -- Sandal đen 37: Giá gốc 1,800,000 - KM 30% = 1,260,000
-(2, 32, 1, 1260000),
+(2, 32, 1, 1260000, NULL),
 
 -- ===== HD 3 =====
 -- Giày bóng đá vàng 42: Giá gốc 1,500,000 - KM 5% = 1,425,000
-(3, 30, 2, 1425000),
+(3, 30, 2, 1425000, NULL),
 -- Vớ cổ cao Helio trắng: Giá gốc 150,000 - KM 10% = 135,000
-(3, 51, 1, 135000),
+(3, 51, 1, 135000, NULL),
 
 -- ===== HD 4 =====
 -- Boot đen 40: Giá gốc 2,000,000 - KM 0% = 2,000,000
-(4, 39, 1, 2000000),
+(4, 39, 1, 2000000, NULL),
 -- Dây giày tròn phản quang đen: Giá gốc 120,000 - KM 10% = 108,000
-(4, 58, 1, 108000),
+(4, 58, 1, 108000, NULL),
 
 -- ===== HD 5 =====
 -- Giày cao gót trắng 37: Giá gốc 1,000,000 - KM 30% = 700,000
-(5, 3, 1, 700000),
+(5, 3, 1, 700000, NULL),
 -- Vớ chạy bộ Performance: Giá gốc 180,000 - KM 10% = 162,000
-(5, 52, 2, 162000),
+(5, 52, 2, 162000, NULL),
 
 -- ===== HD 6 =====
 -- Sneaker đen 42: Giá gốc 1,500,000 - KM 0% = 1,500,000
-(6, 11, 1, 1500000),
+(6, 11, 1, 1500000, NULL),
 -- Vớ trắng: Giá gốc 70,000 - KM 10% = 63,000
-(6, 49, 3, 63000),
+(6, 49, 3, 63000, NULL),
 
 -- ===== HD 7 =====
 -- Boot combat đen 38: Giá gốc 1,500,000 - KM 0% = 1,500,000
-(7, 45, 1, 1500000),
+(7, 45, 1, 1500000, NULL),
 -- Dây giày tròn basic đen: Giá gốc 80,000 - KM 10% = 72,000
-(7, 53, 1, 72000),
+(7, 53, 1, 72000, NULL),
 
 -- ===== HD 8  =====
 -- Sneaker trắng 40: Giá gốc 1,300,000 - KM 0% = 1,300,000
-(8, 12, 1, 1300000),
+(8, 12, 1, 1300000, NULL),
 -- Vớ cổ cao Helio đen: Giá gốc 150,000 - KM 10% = 135,000
-(8, 50, 2, 135000),
+(8, 50, 2, 135000, NULL),
 
 -- ===== HD 9 =====
 -- Giày da đen 41: Giá gốc 1,200,000 - KM 10% = 1,080,000
-(9, 2, 1, 1080000),
+(9, 2, 1, 1080000, NULL),
 -- Sandal trắng 38: Giá gốc 1,800,000 - KM 30% = 1,260,000
-(9, 36, 1, 1260000),
+(9, 36, 1, 1260000, NULL),
 
 -- ===== HD 10 =====
 -- Boot nâu 42: Giá gốc 2,100,000 - KM 0% = 2,100,000
-(10, 43, 1, 2100000),       
+(10, 43, 1, 2100000, NULL),       
 -- Vớ chạy bộ Performance: Giá gốc 180,000 - KM 10% = 162,000
-(10, 52, 2, 162000);
+(10, 52, 2, 162000, NULL);
 
 -- 12. Dữ liệu mẫu cho bảng Đánh Giá
 INSERT INTO DanhGia (MaHDCT, Sao, DanhGiaCT) VALUES
 
 -- ===== ĐÁNH GIÁ CỦA KHÁCH HÀNG 4 (MaKH = 4) - Hóa đơn HD4 =====
+-- HD4 có 2 dòng:
+-- Dòng 1: Boot đen 40 (MaSKU 36) - MaHDCT = 7 (vì insert từ trên xuống)
+-- Dòng 2: Dây giày phản quang đen (MaSKU 50) - MaHDCT = 8
 (8, 5, N'Giày boot đẹp, da mềm, đi rất êm chân. Giao hàng nhanh, đóng gói cẩn thận!'),
 (9, 4, N'Dây giày phản quang đẹp, nhưng hơi ngắn so với mong đợi. Chất lượng ổn.'),
 
-(20, 5, N'Mua tặng chồng, chồng rất thích. Boot nâu đẹp, da mềm, đi êm.'),
-(21, 4, N'Vớ chạy bộ chất tốt, thấm hút mồ hôi. Giá hơi cao so với mặt bằng chung.'),
+-- ===== ĐÁNH GIÁ CỦA KHÁCH HÀNG 2 (MaKH = 2) - Hóa đơn HD2 và HD10 =====
+-- HD2 có 2 dòng:
+-- Dòng 1: Giày cao gót trắng 38 (MaSKU 6) - MaHDCT = 4
+-- Dòng 2: Sandal đen 39 (MaSKU 32) - MaHDCT = 5
+(4, 5, N'Giày cao gót rất đẹp, đúng size, đi tiệc thoải mái. Sẽ ủng hộ shop thêm.'),
+(5, 4, N'Sandal đen thời trang, chất liệu tốt. Trừ 1 sao vì giao hơi chậm.'),
 
+-- HD10 có 2 dòng:
+-- Dòng 1: Boot nâu 42 (MaSKU 37) - MaHDCT = 19
+-- Dòng 2: Vớ chạy bộ Performance (MaSKU 43) - MaHDCT = 20
+(19, 5, N'Mua tặng chồng, chồng rất thích. Boot nâu đẹp, da mềm, đi êm.'),
+(20, 4, N'Vớ chạy bộ chất tốt, thấm hút mồ hôi. Giá hơi cao so với mặt bằng chung.'),
+
+-- ===== ĐÁNH GIÁ CỦA KHÁCH HÀNG 3 (MaKH = 3) - Hóa đơn HD3 và HD7 =====
+-- HD3 có 2 dòng:
+-- Dòng 1: Giày bóng đá vàng 42 (MaSKU 29) - MaHDCT = 6
+-- Dòng 2: Vớ Helio trắng (MaSKU 42) - MaHDCT = 7 (đã có đánh giá ở trên? Không, đây là HD3)
 (6, 5, N'Giày bóng đá chất lượng tốt, đế bám sân, đá bóng êm chân. Đáng tiền!'),
 (7, 3, N'Vớ Helio màu đẹp nhưng hơi mỏng, đá bóng 1 trận đã thấy sờn gót.'),
 
-(14, 4, N'Boot combat đen phong cách, đi chơi rất ngầu. Trừ 1 sao vì hơi nặng.'),
-(15, 5, N'Dây giày basic đen chất lượng tốt, giá rẻ, thay cho dây cũ hỏng.');
+-- HD7 có 2 dòng:
+-- Dòng 1: Boot combat đen 38 (MaSKU 38) - MaHDCT = 13
+-- Dòng 2: Dây giày basic đen (MaSKU 44) - MaHDCT = 14
+(13, 4, N'Boot combat đen phong cách, đi chơi rất ngầu. Trừ 1 sao vì hơi nặng.'),
+(14, 5, N'Dây giày basic đen chất lượng tốt, giá rẻ, thay cho dây cũ hỏng.');
 GO
 
 -- 15. Dữ liệu mẫu cho bảng TimKiem

@@ -29,8 +29,17 @@ public class HoaDonCT {
 
     @Column(name = "DonGia")
     private Double donGia;
+    
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "MaNguoiChiaSe")
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+    private KhachHang nguoiChiaSe;
 
     @OneToOne(mappedBy = "hoaDonCT", fetch = FetchType.LAZY)
     @JsonIgnoreProperties("hoaDonCT")
     private DanhGia danhGia;
+    
+    @OneToOne(mappedBy = "hoaDonCT", fetch = FetchType.LAZY)
+    @JsonIgnoreProperties("hoaDonCT")
+    private LichSuTichDiem lichSuTichDiem;
 }
