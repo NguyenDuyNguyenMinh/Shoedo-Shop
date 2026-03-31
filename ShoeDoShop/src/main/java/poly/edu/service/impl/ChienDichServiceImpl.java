@@ -27,7 +27,7 @@ public class ChienDichServiceImpl implements ChienDichService {
     @Transactional
     public void createCampaign(CampaignRequestDTO request) {
         LocalDateTime now = LocalDateTime.now();
-        // Kiểm tra xem thời gian tạo là tương lai hay hiện tại
+
         String initialStatus = request.getThoiGianBatDau().isAfter(now) ? "Chưa bắt đầu" : "Đang chạy";
 
         for (ProductCampaignDTO spDto : request.getSanPhams()) {
@@ -38,13 +38,12 @@ public class ChienDichServiceImpl implements ChienDichService {
             cd.setTenChienDich(request.getTenChienDich());
             cd.setThoiGianBatDau(request.getThoiGianBatDau());
             cd.setThoiGianKetThuc(request.getThoiGianKetThuc());
-            cd.setKhuyenMaiCD(spDto.getKhuyenMai()); // Ghi vào lịch sử Chiến Dịch
+            cd.setKhuyenMaiCD(spDto.getKhuyenMai());
             cd.setTrangThai(initialStatus);
             cd.setSanPham(sp); 
             
             chienDichRepository.save(cd);
 
-            // Nếu tạo xong mà chạy ngay thì mới cập nhật % vào bảng Sản phẩm
             if ("Đang chạy".equals(initialStatus)) {
                 sp.setKhuyenMai(spDto.getKhuyenMai());
                 sanPhamRepository.save(sp);
@@ -88,13 +87,13 @@ public class ChienDichServiceImpl implements ChienDichService {
             
             SanPham sp = item.getSanPham();
             if (sp != null) {
-                sp.setKhuyenMai(0); // Dừng chạy sale
+                sp.setKhuyenMai(0);
                 sanPhamRepository.save(sp);
             }
         }
     }
     
-    // ĐÃ CHUẨN HOÁ THAM SỐ ĐỂ HẾT LỖI GẠCH ĐỎ (Ảnh 1 & 2)
+
     @Override
     @Transactional
     public void updateCampaignDiscount(Integer maCD, ProductCampaignDTO payload) {
@@ -104,10 +103,10 @@ public class ChienDichServiceImpl implements ChienDichService {
         for (ChienDich cd : listCD) {
             if (cd.getSanPham().getMaSP().equals(payload.getMaSP())) {
                 
-                cd.setKhuyenMaiCD(payload.getKhuyenMai()); // Cập nhật lại % trong Lịch sử
+                cd.setKhuyenMaiCD(payload.getKhuyenMai()); 
                 chienDichRepository.save(cd);
                 
-                // Nếu đang chạy thì cập nhật luôn bảng Sản phẩm để thay đổi giá trên Web
+
                 if ("Đang chạy".equals(cd.getTrangThai())) {
                     SanPham sp = cd.getSanPham();
                     sp.setKhuyenMai(payload.getKhuyenMai());
@@ -127,25 +126,25 @@ public class ChienDichServiceImpl implements ChienDichService {
         for (ChienDich cd : allCampaigns) {
             SanPham sp = cd.getSanPham();
             
-            // 1. TỪ "CHƯA BẮT ĐẦU" -> "ĐANG CHẠY"
+
             if ("Chưa bắt đầu".equals(cd.getTrangThai()) && !now.isBefore(cd.getThoiGianBatDau())) {
                 cd.setTrangThai("Đang chạy");
                 chienDichRepository.save(cd);
                 
                 if (sp != null) {
-                    sp.setKhuyenMai(cd.getKhuyenMaiCD()); // Bật % giảm giá lên Web
+                    sp.setKhuyenMai(cd.getKhuyenMaiCD()); 
                     sanPhamRepository.save(sp);
                 }
                 System.out.println("Đã tự động BẮT ĐẦU chiến dịch: " + cd.getTenChienDich());
             }
             
-            // 2. TỪ "ĐANG CHẠY" -> "KẾT THÚC"
+
             else if ("Đang chạy".equals(cd.getTrangThai()) && now.isAfter(cd.getThoiGianKetThuc())) {
                 cd.setTrangThai("Kết thúc");
                 chienDichRepository.save(cd);
                 
                 if (sp != null) {
-                    sp.setKhuyenMai(0); // Xóa % giảm giá khỏi Web
+                    sp.setKhuyenMai(0); 
                     sanPhamRepository.save(sp);
                 }
                 System.out.println("Đã tự động KẾT THÚC chiến dịch: " + cd.getTenChienDich());

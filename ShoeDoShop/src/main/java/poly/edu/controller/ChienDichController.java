@@ -39,7 +39,6 @@ public class ChienDichController {
 
     @PutMapping("/{maCD}/cap-nhat-km")
     public ResponseEntity<?> updateCampaignDiscount(@PathVariable Integer maCD, @RequestBody ProductCampaignDTO payload) {
-        // Viết hàm trong service cập nhật trực tiếp SanPham.khuyenMai = payload.getKhuyenMai()
         return ResponseEntity.ok().body("Cập nhật phần trăm thành công");
     }
 }

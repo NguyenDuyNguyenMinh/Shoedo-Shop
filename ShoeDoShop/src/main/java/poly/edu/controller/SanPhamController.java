@@ -59,25 +59,24 @@ public class SanPhamController {
     @Value("${file.upload-dir}")
     private String uploadDir;
 
-    // 1. API Lấy danh sách hình ảnh đã có trong thư mục
     @GetMapping("/images")
     public ResponseEntity<List<String>> getAllImages() {
         File dir = new File(uploadDir);
         if (!dir.exists()) {
-            dir.mkdirs(); // Tạo thư mục nếu chưa có
+            dir.mkdirs(); 
         }
         String[] files = dir.list((current, name) -> new File(current, name).isFile());
         return ResponseEntity.ok(files != null ? Arrays.asList(files) : new ArrayList<>());
     }
 
-    // 2. API Upload hình ảnh mới
+
     @PostMapping("/upload")
     public ResponseEntity<?> uploadImage(@RequestParam("file") MultipartFile file) {
         try {
             if (file.isEmpty()) {
                 return ResponseEntity.badRequest().body(Map.of("success", false, "message", "File trống"));
             }
-            String fileName = System.currentTimeMillis() + "_" + file.getOriginalFilename(); // Thêm timestamp để không trùng tên
+            String fileName = System.currentTimeMillis() + "_" + file.getOriginalFilename(); 
             Path path = Paths.get(uploadDir + File.separator + fileName);
             Files.write(path, file.getBytes());
             
@@ -95,7 +94,6 @@ public class SanPhamController {
         }
     }
 
-    // Keep old /{id} for backward compatibility
     @GetMapping("/{id}")
     public ResponseEntity<?> getProductDetail(@PathVariable Integer id) {
         try {
@@ -117,7 +115,7 @@ public class SanPhamController {
     public ResponseEntity<?> getAllSizes() {
         return ResponseEntity.ok(sizeDAO.findAll());
     }
- // Thêm API Toggle trạng thái Ẩn/Hiện sản phẩm
+
     @PutMapping("/toggle-status/{id}")
     public ResponseEntity<?> toggleProductStatus(@PathVariable Integer id) {
         try {
@@ -141,7 +139,7 @@ public class SanPhamController {
             
             poly.edu.entity.DanhMuc newCategory = new poly.edu.entity.DanhMuc();
             newCategory.setTenDM(tenDM);
-            danhMucDAO.save(newCategory); // Lưu vào database
+            danhMucDAO.save(newCategory); 
             
             return ResponseEntity.ok(Map.of("success", true, "data", newCategory));
         } catch (Exception e) {
@@ -149,9 +147,6 @@ public class SanPhamController {
         }
     }
 
-    // ══════════════════════════════════════════════════════════════
-    //  TRANG CHỦ (Public)
-    // ══════════════════════════════════════════════════════════════
 
     @GetMapping("/flash-sales")
     public ResponseEntity<ApiResponse<List<SanPhamDTO>>> getFlashSales() {
@@ -202,9 +197,6 @@ public class SanPhamController {
         }
     }
 
-    // ══════════════════════════════════════════════════════════════
-    //  TRANG CHI TIẾT (Public)
-    // ══════════════════════════════════════════════════════════════
 
     @GetMapping("/detail/{id}")
     public ResponseEntity<ApiResponse<SanPhamDetailDTO>> getChiTiet(@PathVariable Integer id) {
