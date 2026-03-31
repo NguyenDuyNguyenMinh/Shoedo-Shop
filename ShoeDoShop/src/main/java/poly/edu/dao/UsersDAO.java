@@ -9,23 +9,29 @@ import poly.edu.entity.*;
 import java.util.*;
 
 public interface UsersDAO extends JpaRepository<Users, Integer> {
-    Users findByMail(String mail);
-    
-    Users findByUserName(String userName);
 
-    boolean existsByMail(String mail);
-    boolean existsByUserName(String userName);
-    
+    @Query("SELECT u FROM Users u WHERE u.mail = :mail")
+    Users findByMail(@Param("mail") String mail);
+
+    @Query("SELECT u FROM Users u WHERE u.userName = :userName")
+    Users findByUserName(@Param("userName") String userName);
+
+    @Query("SELECT CASE WHEN COUNT(u) > 0 THEN true ELSE false END FROM Users u WHERE u.mail = :mail")
+    boolean existsByMail(@Param("mail") String mail);
+
+    @Query("SELECT CASE WHEN COUNT(u) > 0 THEN true ELSE false END FROM Users u WHERE u.userName = :userName")
+    boolean existsByUserName(@Param("userName") String userName);
+
     @Query("SELECT u FROM Users u WHERE u.mail = :mail AND u.isActive = :isActive")
     Users findByMailAndIsActive(@Param("mail") String mail, @Param("isActive") Boolean isActive);
-    
+
     List<Users> findByIsActiveTrue();
-    
+
     List<Users> findByIsActiveFalseOrIsActiveIsNull();
-    
+
     @Query("SELECT u FROM Users u WHERE u.mail LIKE %:keyword% AND u.isActive = :isActive")
-    Page<Users> searchByKeywordAndActive(@Param("keyword") String keyword, 
-                                         @Param("isActive") Boolean isActive, 
+    Page<Users> searchByKeywordAndActive(@Param("keyword") String keyword,
+                                         @Param("isActive") Boolean isActive,
                                          Pageable pageable);
 
     @Query(value = "SELECT DISTINCT u FROM Users u " +

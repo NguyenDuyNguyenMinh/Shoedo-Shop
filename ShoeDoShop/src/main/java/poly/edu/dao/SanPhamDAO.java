@@ -17,11 +17,6 @@ public interface SanPhamDAO extends JpaRepository<SanPham, Integer> {
             "(SELECT STRING_AGG(CAST(MaDM AS VARCHAR), ',') FROM SanPham_DanhMuc sd WHERE sd.MaSP = sp.MaSP) as maDMs " +
             "FROM SanPham sp", nativeQuery = true)
 	List<Object[]> getDanhSachKhuyenMaiRaw();
-
-    // ════════════════════════════════════════════════════════════
-    //  TRANG CHỦ — Flash Sales, Nổi Bật, Bán Chạy
-    // ════════════════════════════════════════════════════════════
-
     @Query("SELECT DISTINCT sp FROM SanPham sp " +
            "JOIN sp.sanPhamChiTiets sct JOIN sct.size sz " +
            "WHERE sp.isActive = true AND sp.khuyenMai > 0 AND sz.coGiay > 0 " +
@@ -53,11 +48,6 @@ public interface SanPhamDAO extends JpaRepository<SanPham, Integer> {
            "JOIN sp.sanPhamChiTiets sct JOIN sct.size sz " +
            "WHERE sp.isActive = true AND sz.coGiay = 0 ORDER BY sp.daBan DESC")
     List<SanPham> findBanChayFreesize(Pageable pageable);
-
-    // ════════════════════════════════════════════════════════════
-    //  TRANG DETAIL
-    // ════════════════════════════════════════════════════════════
-
     @Query("SELECT DISTINCT sp FROM SanPham sp " +
            "LEFT JOIN FETCH sp.sanPhamDanhMucs spdm " +
            "LEFT JOIN FETCH spdm.danhMuc " +
@@ -75,4 +65,7 @@ public interface SanPhamDAO extends JpaRepository<SanPham, Integer> {
            "  ))")
     List<SanPham> findLienQuan(@Param("maSP") Integer maSP);
     List<SanPham> findByTenSPContainingIgnoreCase(String tenSP);
+    
+    @Query("SELECT s FROM SanPham s WHERE LOWER(s.tenSP) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(s.moTa) LIKE LOWER(CONCAT('%', :keyword, '%'))")
+    List<SanPham> searchByNameOrDescription(@Param("keyword") String keyword);
 }

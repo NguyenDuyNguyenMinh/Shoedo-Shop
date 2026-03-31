@@ -28,7 +28,7 @@ public class ChatBotController {
 	    @PostMapping("/send")
 	    public ResponseEntity<String> sendMessage(@RequestBody UserMessageDTO message) {
 
-	    	String responseFromCoze = chatService.callCozeApi(message.getText());
+	    	String responseFromCoze = chatService.chatWithGroq(message.getText());
 	        return ResponseEntity.ok(responseFromCoze);
 	}
 }

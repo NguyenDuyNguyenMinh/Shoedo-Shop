@@ -308,14 +308,11 @@ export default {
         email: '',
         name: ''
       },
-
       forgotPasswordStep: 1,
       forgotPasswordEmail: '',
       forgotPasswordOtp: '',
-
       registerOtp: '',
       registerTempData: null,
-
       loading: false,
       message: '',
       error: '',
@@ -333,7 +330,6 @@ export default {
     if (authStore.isAuthenticated) {
       this.redirectByRole(authStore);
     }
-    
     this.checkAndOpenRegisterTab();
   },
 
@@ -430,21 +426,16 @@ export default {
           pass: this.loginForm.pass,
           remember: this.loginForm.remember
         }, {
-          withCredentials: true
+          withCredentials: true 
         });
 
         const data = response.data;
         
         if (data.success) {
           const authStore = useAuthStore();
+          
           authStore.user = data.user;
           authStore.cartCount = data.user.cartCount || 0;
-          
-          const token = btoa(JSON.stringify({
-            maUser: data.user.maUser,
-            exp: Date.now() + 24 * 60 * 60 * 1000
-          }));
-          localStorage.setItem('auth_token', token);
           
           this.message = 'Đăng nhập thành công!';
           
@@ -465,10 +456,6 @@ export default {
           if (data.message && data.message.includes('bị khóa')) {
             this.accountLocked = true;
             this.accountLockedMessage = data.message;
-
-            setTimeout(() => {
-              this.accountLockedMessage += ' Vui lòng liên hệ quản trị viên qua Hotline: 1900 0001';
-            }, 100);
           }
         }
       } catch (error) {
@@ -546,13 +533,23 @@ export default {
           const modal = bootstrap.Modal.getInstance(document.getElementById('registerOtpModal'));
           modal.hide();
 
-          this.loginForm.identifier = this.registerForm.mail;
-          this.loginForm.pass = this.registerForm.pass;
-          this.loginForm.remember = true;
+          const loginResponse = await axios.post('/api/auth/login', {
+            identifier: this.registerForm.mail,
+            pass: this.registerForm.pass,
+            remember: true
+          }, { withCredentials: true });
 
-          await this.handleLogin();
-          
-          this.message = 'Đăng ký và đăng nhập thành công!';
+          if (loginResponse.data.success) {
+            const authStore = useAuthStore();
+            authStore.user = loginResponse.data.user;
+            authStore.cartCount = loginResponse.data.user.cartCount || 0;
+            
+            this.message = 'Đăng ký và đăng nhập thành công!';
+            
+            setTimeout(() => {
+              this.$router.push('/customer/index');
+            }, 1000);
+          }
         } else {
           this.error = data.message || 'Mã OTP không chính xác';
         }
@@ -727,7 +724,7 @@ export default {
             this.error = data.message || 'Đăng nhập Google thất bại';
             if (data.message && data.message.includes('bị khóa')) {
               this.accountLocked = true;
-              this.accountLockedMessage = data.message + 'Vui lòng liên hệ quản trị viên qua Hotline: 1900 0001 để được khắc phục.';
+              this.accountLockedMessage = data.message + ' Vui lòng liên hệ quản trị viên qua Hotline: 1900 6869 để được khắc phục.';
             }
           }
         }
@@ -778,12 +775,6 @@ export default {
         const data = response.data;
         
         if (data.success) {
-          const token = btoa(JSON.stringify({
-            maUser: data.user.maUser,
-            exp: Date.now() + 24 * 60 * 60 * 1000
-          }));
-          localStorage.setItem('auth_token', token);
-
           const authStore = useAuthStore();
           authStore.user = data.user;
           window.history.replaceState({}, document.title, window.location.pathname);
@@ -816,11 +807,6 @@ export default {
         const data = response.data;
         
         if (data.success) {
-          const token = btoa(JSON.stringify({
-            maUser: data.user.maUser,
-            exp: Date.now() + 24 * 60 * 60 * 1000
-          }));
-          localStorage.setItem('auth_token', token);
           const authStore = useAuthStore();
           authStore.user = data.user;
 

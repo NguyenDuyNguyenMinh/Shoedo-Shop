@@ -14,7 +14,7 @@
       <!-- Grid layout cho các chính sách -->
       <div class="row g-4">
         <!-- Chính sách thanh toán -->
-        <div class="" v-for="(policy, index) in policies" :key="index">
+        <div v-for="(policy, index) in policies" :key="index">
           <div class="policy-card h-100">
             <div class="policy-header">
               <div class="policy-icon">
@@ -34,14 +34,14 @@
             <img src="/SHOEDO.png" alt="Shoedo" class="brand-logo" style="max-width: 40px; height: auto;">
           </router-link>
           <div class="text-start">
-            <p class="lead fw-bold mb-0">SHOUDO - Localbrand giày Việt</p>
+            <p class="lead fw-bold mb-0">SHOEDO - Localbrand giày Việt</p>
             <p class="text-muted small mb-0">Cám ơn bạn đã tin tưởng và ủng hộ shop!</p>
           </div>
         </div>
       </div>
     </main>
     <Footer />
-  <ChatBox />
+    <ChatBox />
   </div>
 </template>
 
@@ -49,16 +49,17 @@
 import { ref } from 'vue';
 import KH_Navbar from '@/components/shared/KH_Navbar.vue';
 import Footer from '@/components/shared/Footer.vue';
-import ChatBox from '@/components/Shared/ChatBox.vue'
+import ChatBox from '@/components/Shared/ChatBox.vue';
 
 export default {
   name: 'KH_ChinhSach',
   components: {
     KH_Navbar,
-    Footer
+    Footer,
+    ChatBox
   },
   setup() {
-
+    const VNPayLogo = '/vnpay_thumb.png';
     const policies = ref([
       {
         icon: 'bi bi-credit-card',
@@ -67,13 +68,11 @@ export default {
           <p class="mb-2"><strong>Hình thức thanh toán:</strong></p>
           <ul class="policy-list">
             <li><i class="bi bi-check-circle-fill text-success me-2"></i>Thanh toán khi nhận hàng (COD)</li>
-            <li><i class="bi bi-check-circle-fill text-success me-2"></i>Chuyển khoản ngân hàng</li>
-            <li><i class="bi bi-check-circle-fill text-success me-2"></i>Thanh toán qua ví điện tử</li>
+            <li><i class="bi bi-check-circle-fill text-success me-2"></i>Thanh toán qua
+              
+              <img src="${VNPayLogo}" alt="VNPay" style="height: 26px; width: auto; display: inline-block;">
+            </li>
           </ul>
-          <div class="alert alert-light border-start border-3 border-dark mt-3 py-2">
-            <i class="bi bi-info-circle-fill me-2"></i>
-            <strong>Lưu ý:</strong> Với đơn hàng pre-order, shop có thể yêu cầu đặt cọc trước. Mọi chi phí phát sinh sẽ được thông báo rõ trước khi xác nhận đơn hàng.
-          </div>
         `
       },
       {
@@ -81,39 +80,39 @@ export default {
         title: '2. Chính sách giao hàng',
         content: `
           <ul class="policy-list">
-            <li><i class="bi bi-clock-history me-2"></i><strong>Thời gian:</strong> 2 – 5 ngày làm việc (tùy khu vực)</li>
-            <li><i class="bi bi-calendar-x me-2"></i><strong>Không tính:</strong> Ngày lễ, Tết hoặc trường hợp bất khả kháng</li>
-            <li><i class="bi bi-box-seam me-2"></i><strong>Kiểm tra hàng:</strong> Khách được kiểm tra ngoại quan trước khi thanh toán</li>
+            <li><i class="bi bi-clock-history me-2"></i><strong>Thời gian:</strong> 3 – 7 ngày làm việc (tùy khu vực)</li>
+            <li><i class="bi bi-calendar-x me-2"></i><strong>Không tính:</strong> Ngày lễ, Tết hoặc trường hợp bất khả kháng (thời tiết, dịch bệnh, đơn vị vận chuyển quá tải)</li>
+            <li><i class="bi bi-box-seam me-2"></i><strong>Kiểm tra hàng:</strong> Khách được kiểm tra ngoại quan trước khi thanh toán (không mang thử khi chưa thanh toán nếu đơn vị vận chuyển không cho phép)</li>
           </ul>
         `
       },
       {
         icon: 'bi bi-arrow-repeat',
-        title: '3. Chính sách đổi/trả hàng',
+        title: '3. Chính sách đổi hàng',
         content: `
           <div class="mb-3">
-            <p class="fw-bold mb-2">3.1 Điều kiện đổi/trả:</p>
+            <p class="fw-bold mb-2">3.1 Điều kiện đổi:</p>
             <ul class="policy-list">
-              <li><i class="bi bi-check-circle text-success me-2"></i>Sản phẩm lỗi do nhà sản xuất</li>
+              <li><i class="bi bi-check-circle text-success me-2"></i>Sản phẩm lỗi do nhà sản xuất (bung keo, lệch kiểu dáng, rách hỏng)</li>
               <li><i class="bi bi-check-circle text-success me-2"></i>Giao sai mẫu, sai size</li>
-              <li><i class="bi bi-check-circle text-success me-2"></i>Thời gian: 30 ngày kể từ khi nhận hàng</li>
-              <li><i class="bi bi-check-circle text-success me-2"></i>Sản phẩm chưa sử dụng, còn nguyên tem</li>
-              <li><i class="bi bi-check-circle text-success me-2"></i>Có vieo mở hàng để chứng minh đối chiếu</li>
+              <li><i class="bi bi-check-circle text-success me-2"></i>Thời hạn: 30 ngày kể từ khi nhận hàng</li>
+              <li><i class="bi bi-check-circle text-success me-2"></i>Sản phẩm chưa sử dụng, còn nguyên tem, phụ kiện đi kèm</li>
+              <li><i class="bi bi-check-circle text-success me-2"></i>Có video mở hàng để chứng minh đối chiếu</li>
             </ul>
           </div>
           <div class="mb-3">
-            <p class="fw-bold mb-2 text-danger">3.2 Không hỗ trợ đổi trả:</p>
+            <p class="fw-bold mb-2 text-danger">3.2 Không hỗ trợ đổi:</p>
             <ul class="policy-list">
-              <li><i class="bi bi-x-circle text-danger me-2"></i>Đã qua sử dụng, dơ bẩn</li>
-              <li><i class="bi bi-x-circle text-danger me-2"></i>Hư hỏng do bảo quản sai cách</li>
-              <li><i class="bi bi-x-circle text-danger me-2"></i>Sản phẩm xả kho, giảm giá sâu</li>
+              <li><i class="bi bi-x-circle text-danger me-2"></i>Đã qua sử dụng, dơ bẩn, trầy xước do người dùng</li>
+              <li><i class="bi bi-x-circle text-danger me-2"></i>Hư hỏng do bảo quản sai cách hoặc do tác động bên ngoài</li>
+              <li><i class="bi bi-x-circle text-danger me-2"></i>Sản phẩm xả kho, giảm giá sâu (trừ trường hợp có lỗi từ nhà sản xuất)</li>
             </ul>
           </div>
           <div>
-            <p class="fw-bold mb-2">3.3 Phí đổi/trả:</p>
+            <p class="fw-bold mb-2">3.3 Phí đổi:</p>
             <ul class="policy-list">
               <li><i class="bi bi-shield-check me-2"></i>Lỗi từ shop: Miễn phí vận chuyển</li>
-              <li><i class="bi bi-cash me-2"></i>Đổi do nhu cầu cá nhân: Khách chịu phí 2 chiều</li>
+              <li><i class="bi bi-cash me-2"></i>Đổi do nhu cầu cá nhân: Khách chịu phí vận chuyển 2 chiều</li>
             </ul>
           </div>
         `
@@ -123,14 +122,14 @@ export default {
         title: '4. Chính sách bảo hành',
         content: `
           <ul class="policy-list">
-            <li><i class="bi bi-clock me-2"></i><strong>Thời gian:</strong> 1 – 3 tháng (tùy sản phẩm)</li>
-            <li><i class="bi bi-check-circle me-2"></i><strong>Bảo hành:</strong> Lỗi kỹ thuật từ nhà sản xuất</li>
+            <li><i class="bi bi-clock me-2"></i><strong>Thời gian:</strong> 1 tháng (tùy dòng sản phẩm)</li>
+            <li><i class="bi bi-check-circle me-2"></i><strong>Bảo hành:</strong> Lỗi kỹ thuật từ nhà sản xuất (bung keo, xứt chỉ, hở đế)</li>
           </ul>
           <p class="fw-bold mt-3 mb-2">Không áp dụng bảo hành cho:</p>
           <ul class="policy-list">
-            <li><i class="bi bi-dash-circle text-danger me-2"></i>Hao mòn tự nhiên</li>
-            <li><i class="bi bi-dash-circle text-danger me-2"></i>Hư hỏng do ngâm nước, giặt máy</li>
-            <li><i class="bi bi-dash-circle text-danger me-2"></i>Trầy xước do ma sát</li>
+            <li><i class="bi bi-dash-circle text-danger me-2"></i>Hao mòn tự nhiên trong quá trình sử dụng</li>
+            <li><i class="bi bi-dash-circle text-danger me-2"></i>Hư hỏng do ngâm nước, giặt máy, phơi nắng gắt</li>
+            <li><i class="bi bi-dash-circle text-danger me-2"></i>Trầy xước, mòn đế do ma sát khi sử dụng</li>
           </ul>
         `
       },
@@ -151,7 +150,7 @@ export default {
         content: `
           <ul class="policy-list">
             <li><i class="bi bi-check-circle me-2"></i>Áp dụng khi shop hết hàng thay thế</li>
-            <li><i class="bi bi-clock-history me-2"></i>Thời gian xử lý: 3-7 ngày làm việc</li>
+            <li><i class="bi bi-clock-history me-2"></i>Thời gian xử lý: 3 – 7 ngày làm việc</li>
             <li><i class="bi bi-bank me-2"></i>Hình thức: Chuyển khoản ngân hàng</li>
           </ul>
         `

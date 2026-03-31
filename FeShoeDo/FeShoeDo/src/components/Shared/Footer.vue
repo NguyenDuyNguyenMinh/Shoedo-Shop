@@ -1,5 +1,5 @@
 <template>
-  <footer class="shoedo-footer mt-auto">
+  <footer class="shoedo-footer mt-4">
     <div class="footer-highlights py-4">
       <div class="container">
         <div class="row g-4 text-center">
@@ -7,7 +7,7 @@
             <div class="highlight-item">
               <i class="bi bi-truck fs-2 mb-2"></i>
               <h6 class="fw-bold mb-1">GIAO HÀNG NHANH CHÓNG</h6>
-              <p class="small mb-0 text-muted">Thời gian từ 2 - 5 ngày</p>
+              <p class="small mb-0 text-muted">Thời gian từ 3 - 7 ngày</p>
             </div>
           </div>
           <div class="col-md-3 col-sm-6">

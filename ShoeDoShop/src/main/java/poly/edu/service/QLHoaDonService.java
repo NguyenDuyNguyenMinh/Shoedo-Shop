@@ -161,7 +161,6 @@ public class QLHoaDonService {
         HoaDon hd = findOrder(id);
         checkStatus(hd, "Đang giao", "Chỉ có thể đánh dấu thất bại cho đơn hàng đang giao");
 
-        // Cả COD và VNPAY đều đã trừ số lượng, cần hoàn trả
         for (HoaDonCT ct : hd.getHoaDonCTs()) {
             spctDAO.congSoLuong(ct.getSanPhamChiTiet().getMaSKU(), ct.getSoLuong());
         }
@@ -183,7 +182,6 @@ public class QLHoaDonService {
         hd.setNgayDen(new Date());
         hd.setQuanTri(getCurrentEmployee());
         
-        // Cập nhật số lượng đã bán cho sản phẩm
         for (HoaDonCT ct : hd.getHoaDonCTs()) {
             SanPhamChiTiet spct = ct.getSanPhamChiTiet();
             SanPham sp = spct.getSanPham();
@@ -227,6 +225,7 @@ public class QLHoaDonService {
         }
         hd.setTrangThai("Hoàn tất");
         hd.setQuanTri(getCurrentEmployee());
+        hd.setGhiChu(null);
         hoaDonDAO.save(hd);
 
         emailAsyncService.sendApologyEmail(hd);

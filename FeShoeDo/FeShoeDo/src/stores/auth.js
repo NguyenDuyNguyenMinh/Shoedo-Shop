@@ -1,10 +1,9 @@
 import { defineStore } from 'pinia';
-import api from '@/services/api';
+import axios from 'axios'; 
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
     user: null,
-    token: localStorage.getItem('auth_token') || null,
     isLoading: false,
     error: null,
     cartCount: 0,
@@ -30,22 +29,13 @@ export const useAuthStore = defineStore('auth', {
   },
   
   actions: {
-    
     async initAuth() {
       if (this.isInitialized) return;
       this.isLoading = true;
       
       try {
-        if (this.token) {
-          const success = await this.loadUserFromToken();
-          if (success) {
-            this.isInitialized = true;
-            return;
-          }
-        }
-
-        const sessionSuccess = await this.checkSession();
-        if (sessionSuccess) {
+        const success = await this.checkSession();
+        if (success) {
           this.isInitialized = true;
           return;
         }
@@ -55,8 +45,10 @@ export const useAuthStore = defineStore('auth', {
           this.isInitialized = true;
           return;
         }
+        
         this.clearAuth();
       } catch (error) {
+        console.error('Init auth error:', error);
         this.clearAuth();
       } finally {
         this.isLoading = false;
@@ -66,20 +58,13 @@ export const useAuthStore = defineStore('auth', {
 
     async checkSession() {
       try {
-        const response = await api.getCurrentUser();
+        const response = await axios.get('/api/auth/current-user', {
+          withCredentials: true
+        });
 
         if (response.data.success && response.data.user) {
           this.user = response.data.user;
           this.cartCount = response.data.user.cartCount || 0;
-
-          if (!this.token) {
-            const token = btoa(JSON.stringify({
-              maUser: response.data.user.maUser,
-              exp: Date.now() + 24 * 60 * 60 * 1000
-            }));
-            localStorage.setItem('auth_token', token);
-            this.token = token;
-          }
           return true;
         }
       } catch (error) {
@@ -90,17 +75,13 @@ export const useAuthStore = defineStore('auth', {
 
     async autoLoginFromCookie() {
       try {
-        const response = await api.getCurrentUser();
+        const response = await axios.get('/api/auth/auto-login', {
+          withCredentials: true
+        });
 
         if (response.data.success && response.data.user) {
           this.user = response.data.user;
           this.cartCount = response.data.user.cartCount || 0;
-          const token = btoa(JSON.stringify({
-            maUser: response.data.user.maUser,
-            exp: Date.now() + 24 * 60 * 60 * 1000
-          }));
-          localStorage.setItem('auth_token', token);
-          this.token = token;
           return true;
         }
       } catch (error) {
@@ -111,78 +92,68 @@ export const useAuthStore = defineStore('auth', {
 
     async logout() {
       try {
-        await api.logout();
-        localStorage.removeItem('user');
-        localStorage.removeItem('auth_token');
+        await axios.post('/api/auth/logout', {}, {
+          withCredentials: true
+        });
       } catch (error) {
         console.error('Logout error:', error);
       } finally {
         this.clearAuth();
+        window.location.href = '/auth/login';
       }
     },
 
     async fetchCurrentUser() {
       try {
-        const response = await api.getCurrentUser();
+        const response = await axios.get('/api/auth/current-user', {
+          withCredentials: true
+        });
         if (response.data.success) {
           this.user = response.data.user;
           this.cartCount = response.data.user.cartCount || 0;
-
-          const token = btoa(JSON.stringify({
-            maUser: response.data.user.maUser,
-            exp: Date.now() + 24 * 60 * 60 * 1000
-          }));
-          localStorage.setItem('auth_token', token);
           return true;
         }
       } catch (error) {
+        console.error('Fetch current user error:', error);
         this.clearAuth();
       }
       return false;
     },
 
     async updateCartCount() {
-      if (this.isAuthenticated) {
-        try {
-          const response = await api.getCurrentUser();
-          if (response.data.success) {
-            this.cartCount = response.data.user.cartCount || 0;
-          }
-        } catch (error) {
-          console.error('Error updating cart count:', error);
+      if (!this.isAuthenticated) {
+        this.cartCount = 0;
+        return;
+      }
+      
+      try {
+        const response = await axios.get('/api/customer/cart/count', {
+          withCredentials: true
+        });
+
+        if (response.data.success) {
+          this.cartCount = response.data.cartCount || 0;
+        } else {
+          this.cartCount = 0;
         }
+      } catch (error) {
+        console.error('Error updating cart count:', error);
+        this.cartCount = 0;
       }
     },
 
-    async loadUserFromToken() {
-      if (!this.token) return false;
+    setCartCount(count) {
+      this.cartCount = Math.max(0, count);
+    },
 
-      try {
-        const tokenData = JSON.parse(atob(this.token));
-
-        if (tokenData.exp < Date.now()) {
-          this.clearAuth();
-          return false;
-        }
-
-        const response = await api.getCurrentUser();
-        if (response.data.success) {
-          this.user = response.data.user;
-          this.cartCount = response.data.user.cartCount || 0;
-          return true;
-        }
-      } catch (error) {
-        this.clearAuth();
-      }
-      return false;
+    incrementCartCount(delta = 1) {
+      this.cartCount = Math.max(0, this.cartCount + delta);
     },
 
     clearAuth() {
       this.user = null;
-      this.token = null;
       this.cartCount = 0;
-      localStorage.removeItem('user');
-      localStorage.removeItem('auth_token');
+      this.logout;
     }
-  },
+  }
 });
