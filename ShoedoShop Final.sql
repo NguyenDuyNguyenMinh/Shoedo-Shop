@@ -13,7 +13,7 @@ CREATE TABLE Users (
     CreateAt DATETIME DEFAULT GETDATE()
 );
 
--- 2. Bảng Khách Hàng (SỬA: bỏ UNIQUE constraint trên MaGioiThieu)
+-- 2. Bảng Khách Hàng
 CREATE TABLE KhachHang (
     MaKH INT IDENTITY(1,1) PRIMARY KEY,
     TenKH NVARCHAR(100),
