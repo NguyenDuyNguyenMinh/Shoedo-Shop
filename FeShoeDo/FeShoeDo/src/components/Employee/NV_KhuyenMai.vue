@@ -973,7 +973,7 @@ onMounted(() => {
   // Khởi tạo lấy danh sách chiến dịch ngay khi vừa vào trang
   fetchCampaigns();
 
-  // Cài đặt vòng lặp: Cứ 5000ms (5 giây) sẽ chạy lại hàm 1 lần
+
   campaignPollingInterval = setInterval(() => {
     // Mẹo tối ưu: Chỉ gọi API chọc xuống Database nếu người dùng ĐANG MỞ tab Lịch sử
     // Nếu họ đang ở tab Flash Sale thì không gọi để giảm tải cho Spring Boot
