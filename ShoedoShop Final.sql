@@ -82,7 +82,7 @@ CREATE TABLE SanPham_ChiTiet (
 );
 
 -- 9. Bảng Nhập Kho
-CREATE TABLE NhapKho (
+CREATE TABLE PhieuNhap (
     MaNK INT IDENTITY(1,1) PRIMARY KEY,
     MaSKU INT,
     SoLuong INT CHECK (SoLuong > 0),
@@ -192,7 +192,7 @@ CREATE TABLE LichSuTichDiem (
     MaLS INT IDENTITY(1,1) PRIMARY KEY,
     MaKH INT NOT NULL,
     SoDiem INT,
-    LoaiGiaoDich NVARCHAR(100) CHECK (LoaiGiaoDich IN (N'Mời bạn bè', N'Chia sẻ mua hàng')),
+    LoaiGiaoDich NVARCHAR(100) CHECK (LoaiGiaoDich IN (N'Mời bạn bè', N'Chia sẻ mua hàng', N'Nhập mã giới thiệu', N'Đổi voucher')),
     MaNguoiLienQuan INT NULL,
     MaHDCT INT NULL,
     NgayGiaoDich DATETIME DEFAULT GETDATE(),
