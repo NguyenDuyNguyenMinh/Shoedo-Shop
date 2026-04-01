@@ -114,6 +114,12 @@ const routes = [
     component: () => import('@/components/employee/NV_KhuyenMai.vue'),
     meta: { requiresAuth: true, roles: ['ADMIN', 'EMPLOYEE'] }
   },
+      {
+    path: '/employee/voucher',
+    name: 'VoucherSet',
+    component: () => import('@/components/employee/NV_QLVoucher.vue'),
+    meta: { requiresAuth: true, roles: ['ADMIN', 'EMPLOYEE'] }
+  },
   
 ];
 

@@ -2,6 +2,7 @@ package poly.edu.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.util.Date;
@@ -34,10 +35,12 @@ public class Voucher {
     
     @Column(name = "NgayBatDau")
     @Temporal(TemporalType.TIMESTAMP)
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm", timezone = "Asia/Ho_Chi_Minh")
     private Date ngayBatDau;
     
     @Column(name = "NgayKetThuc")
     @Temporal(TemporalType.TIMESTAMP)
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm", timezone = "Asia/Ho_Chi_Minh")
     private Date ngayKetThuc;
     
     @Column(name = "IsActive")
