@@ -143,9 +143,9 @@
 
 <!-- list phân loại -->
 
-            <div class="table-responsive">
-              <table class="table table-bordered table-hover">
-                <thead class="table-dark">
+            <div class="table-responsive custom-table-wrapper">
+              <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
                   <tr>
                     <th>
                       <div class="form-check">
@@ -166,7 +166,7 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="item in filteredProducts" :key="item.maSKU">
+                  <tr v-for="item in paginatedImportProducts" :key="item.maSKU">
                     <td>
                       <div class="form-check">
                         <input
@@ -221,19 +221,19 @@
                       </span>
                     </td>
                     <td>
-                      <span
-                        :class="[
-                          'badge',
-                          item.soLuong > 10
-                            ? 'bg-success'
-                            : item.soLuong > 0
-                            ? 'bg-warning text-dark'
-                            : 'bg-danger',
-                        ]"
-                      >
-                        {{ item.soLuong > 0 ? "Còn hàng" : "Hết hàng" }}
-                      </span>
-                    </td>
+  <span
+    :class="[
+      'badge',
+      item.soLuong > 10
+        ? 'bg-success'
+        : item.soLuong > 0
+        ? 'bg-warning text-dark'
+        : 'bg-danger',
+    ]"
+  >
+    {{ item.soLuong > 10 ? "Còn hàng" : item.soLuong > 0 ? "Sắp hết" : "Hết hàng" }}
+  </span>
+</td>
                     <td>
                       <div class="d-flex align-items-center gap-2">
                         <div class="input-group" style="min-width: 150px">
@@ -263,6 +263,28 @@
                 </tbody>
               </table>
             </div>
+            
+            <div v-if="importTotalPages > 1" class="d-flex justify-content-center align-items-center mt-4">
+              <nav aria-label="Page navigation">
+                <ul class="pagination pagination-sm mb-0">
+                  <li class="page-item" :class="{ disabled: importCurrentPage === 1 }">
+                    <button class="page-link text-dark" @click="goToImportPage(importCurrentPage - 1)">
+                      <i class="bi bi-chevron-left"></i> Trước
+                    </button>
+                  </li>
+                  <li class="page-item" v-for="page in importTotalPages" :key="page" :class="{ active: importCurrentPage === page }">
+                    <button class="page-link" :class="importCurrentPage === page ? 'bg-dark border-dark text-white' : 'text-dark'" @click="goToImportPage(page)">
+                      {{ page }}
+                    </button>
+                  </li>
+                  <li class="page-item" :class="{ disabled: importCurrentPage === importTotalPages }">
+                    <button class="page-link text-dark" @click="goToImportPage(importCurrentPage + 1)">
+                      Sau <i class="bi bi-chevron-right"></i>
+                    </button>
+                  </li>
+                </ul>
+              </nav>
+            </div>
           </div>
 
           <div v-show="activeTab === 'history'" class="tab-pane show active">
@@ -288,9 +310,9 @@
 
             <!-- list lịch sử -->
 
-            <div class="table-responsive">
-              <table class="table table-bordered">
-                <thead class="table-dark">
+            <div class="table-responsive custom-table-wrapper">
+              <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
                   <tr>
                     <th class="text-center">Mã NK</th>
                     <th>Sản phẩm</th>
@@ -301,7 +323,7 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="log in filteredHistory" :key="log.maNK">
+                  <tr v-for="log in paginatedHistory" :key="log.maNK">
                     <td class="text-center fw-bold text-primary">NK{{ log.maNK }}</td>
                     <td>
                       <strong>{{ log.sanPhamChiTiet?.sanPham?.tenSP }}</strong>
@@ -324,8 +346,30 @@
                 </tbody>
               </table>
             </div>
+            
+            <div v-if="historyTotalPages > 1" class="d-flex justify-content-center align-items-center mt-4">
+              <nav aria-label="Page navigation">
+                <ul class="pagination pagination-sm mb-0">
+                  <li class="page-item" :class="{ disabled: historyCurrentPage === 1 }">
+                    <button class="page-link text-dark" @click="goToHistoryPage(historyCurrentPage - 1)">
+                      <i class="bi bi-chevron-left"></i> Trước
+                    </button>
+                  </li>
+                  <li class="page-item" v-for="page in historyTotalPages" :key="page" :class="{ active: historyCurrentPage === page }">
+                    <button class="page-link" :class="historyCurrentPage === page ? 'bg-dark border-dark text-white' : 'text-dark'" @click="goToHistoryPage(page)">
+                      {{ page }}
+                    </button>
+                  </li>
+                  <li class="page-item" :class="{ disabled: historyCurrentPage === historyTotalPages }">
+                    <button class="page-link text-dark" @click="goToHistoryPage(historyCurrentPage + 1)">
+                      Sau <i class="bi bi-chevron-right"></i>
+                    </button>
+                  </li>
+                </ul>
+              </nav>
+            </div>
 
-            <div class="text-muted text-center mt-2" v-if="filteredHistory.length > 0">
+            <div class="text-muted text-center mt-4" v-if="filteredHistory.length > 0">
               Tổng <strong>{{ filteredHistory.length }}</strong> bản ghi
             </div>
           </div>
@@ -350,6 +394,19 @@ const categories = ref([]);
 const filterKeyword = ref("");
 const filterCategory = ref("");
 const filterStatus = ref("");
+
+// --- LOGIC PHÂN TRANG CHUNG ---
+const itemsPerPage = 10;
+
+// Phân trang Nhập Kho
+const importCurrentPage = ref(1);
+const importTotalPages = computed(() => Math.ceil(filteredProducts.value.length / itemsPerPage));
+const paginatedImportProducts = computed(() => {
+  const start = (importCurrentPage.value - 1) * itemsPerPage;
+  return filteredProducts.value.slice(start, start + itemsPerPage);
+});
+const goToImportPage = (page) => { if (page >= 1 && page <= importTotalPages.value) importCurrentPage.value = page; };
+watch([filterKeyword, filterCategory, filterStatus], () => { importCurrentPage.value = 1; });
 
 // api lấy danh mục
 const fetchCategories = async () => {
@@ -564,6 +621,16 @@ const resetHistoryFilters = () => {
   historyDate.value = "";
 };
 
+// Phân trang Lịch Sử
+const historyCurrentPage = ref(1);
+const historyTotalPages = computed(() => Math.ceil(filteredHistory.value.length / itemsPerPage));
+const paginatedHistory = computed(() => {
+  const start = (historyCurrentPage.value - 1) * itemsPerPage;
+  return filteredHistory.value.slice(start, start + itemsPerPage);
+});
+const goToHistoryPage = (page) => { if (page >= 1 && page <= historyTotalPages.value) historyCurrentPage.value = page; };
+watch([historyKeyword, historyDate], () => { historyCurrentPage.value = 1; });
+
 const isSidebarCollapsed = ref(false);
 
 const handleSidebarCollapse = (collapsedState) => {
@@ -651,5 +718,39 @@ td .btn-outline-success {
 /* Khi Sidebar thu nhỏ thì nới rộng nội dung chính ra */
 .main-content.expanded {
   margin-left: 80px; 
+}
+
+/* --- UI TABLE ĐỒNG BỘ --- */
+.custom-table-wrapper {
+  background: #fff;
+  border-radius: 12px; 
+  overflow: hidden; 
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08); 
+  border: 1px solid #eaeaea; 
+}
+
+.custom-table-wrapper thead th {
+  background-color: #f8f9fa;
+  color: #495057;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 13px;
+  padding: 16px 12px;
+  border-bottom: 2px solid #edf2f9;
+  white-space: nowrap;
+}
+
+.custom-table-wrapper tbody td {
+  padding: 16px 12px;
+  color: #333;
+  border-bottom: 1px solid #f1f3f5;
+}
+
+.custom-table-wrapper tbody tr:last-child td {
+  border-bottom: none; 
+}
+
+.custom-table-wrapper tbody tr:hover td {
+  background-color: #f4f6f8; 
 }
 </style>

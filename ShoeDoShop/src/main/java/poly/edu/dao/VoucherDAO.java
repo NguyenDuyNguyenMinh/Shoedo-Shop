@@ -10,5 +10,6 @@ import java.util.Optional;
 import java.util.Date;
 
 public interface VoucherDAO extends JpaRepository<Voucher, Integer> {
-
+	@Query("SELECT v FROM Voucher v ORDER BY v.ngayBatDau DESC")
+    List<Voucher> findAllOrderByNgayBatDauDesc();
 }
