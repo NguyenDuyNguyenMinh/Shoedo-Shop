@@ -95,7 +95,7 @@
                     </button>
                   </div>
                   <div v-if="item.soLuong > item.soLuongTon" class="text-danger small mt-1 text-center">
-                    Chỉ còn {{ item.soLuongTon }}
+                    Số lượng vượt quá giới hạn cho phép
                   </div>
                 </div>
                 <div class="col-auto text-end" style="min-width: 130px;">
@@ -205,8 +205,8 @@ export default {
             ...item,
             updating: false,
           }));
-          // Mặc định chọn tất cả
-          this.selectedIds = this.cartItems.map(item => item.maGH);
+          // Không tự động chọn - để khách hàng tự chọn
+          this.selectedIds = [];
         }
       } catch (error) {
         console.error('Error loading cart:', error);
@@ -293,7 +293,7 @@ export default {
       const newQty = item.soLuong + delta;
       if (newQty < 1) return;
       if (newQty > item.soLuongTon) {
-        alert(`Số lượng tồn kho chỉ còn ${item.soLuongTon}`);
+        alert(`Số lượng vượt quá giới hạn cho phép`);
         return;
       }
       item.updating = true;
@@ -316,7 +316,7 @@ export default {
       const newQty = parseInt(value);
       if (isNaN(newQty) || newQty < 1) return;
       if (newQty > item.soLuongTon) {
-        alert(`Số lượng tồn kho chỉ còn ${item.soLuongTon}`);
+        alert(`Số lượng vượt quá giới hạn cho phép`);
         return;
       }
       item.updating = true;

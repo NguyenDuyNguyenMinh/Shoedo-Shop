@@ -120,10 +120,25 @@
           </div>
           <div class="col-md-5">
             <div class="content-card h-100">
-              <h6 class="chart-title"><i class="bi bi-pie-chart me-2"></i>Trạng thái đơn hàng</h6>
-              <p class="chart-subtitle">Phân bổ theo trạng thái</p>
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <div>
+                  <h6 class="chart-title mb-0"><i class="bi bi-pie-chart me-2"></i>Trạng thái đơn hàng</h6>
+                  <p class="chart-subtitle mb-0">Phân bổ theo trạng thái</p>
+                </div>
+                <button class="btn btn-outline-dark btn-sm" @click="showStatusModal = true">
+                  <i class="bi bi-eye me-1"></i>Chi tiết
+                </button>
+              </div>
               <div class="chart-container-doughnut">
-                <canvas ref="orderStatusChart"></canvas>
+                <canvas ref="orderStatusChart" @click="showStatusModal = true" style="cursor:pointer;"></canvas>
+              </div>
+              <!-- Custom Legend -->
+              <div class="status-legend mt-2">
+                <div v-for="item in trangThaiDisplay" :key="item.trangThai" class="status-legend-item" @click="showStatusModal = true">
+                  <span class="status-dot" :style="{ backgroundColor: item.color }"></span>
+                  <span class="status-name">{{ item.trangThai }}</span>
+                  <span class="status-count">{{ item.soDon }}</span>
+                </div>
               </div>
             </div>
           </div>
@@ -136,7 +151,9 @@
             <div class="content-card h-100">
               <div class="d-flex justify-content-between align-items-center mb-3">
                 <h6 class="chart-title mb-0"><i class="bi bi-receipt-cutoff me-2"></i>Đơn hàng gần đây</h6>
-                <button class="btn btn-outline-dark btn-sm">Xem tất cả</button>
+                <button class="btn btn-outline-dark btn-sm" @click="openAllOrdersModal">
+                  <i class="bi bi-arrows-fullscreen me-1"></i>Xem tất cả
+                </button>
               </div>
               <div class="table-responsive">
                 <table class="table table-hover align-middle recent-table">
@@ -222,6 +239,79 @@
 
       </div>
     </main>
+
+    <!-- Modal: Trạng thái đơn hàng -->
+    <div v-if="showStatusModal" class="modal-overlay" @click.self="showStatusModal = false">
+      <div class="modal-content-custom">
+        <div class="modal-header-custom">
+          <div>
+            <h5 class="mb-0"><i class="bi bi-pie-chart me-2"></i>Chi tiết trạng thái đơn hàng</h5>
+            <p class="mb-0 mt-1 text-muted small">Doanh thu theo khoảng thời gian đã chọn</p>
+          </div>
+          <button class="btn-close-custom" @click="showStatusModal = false">&times;</button>
+        </div>
+        <div class="modal-body-custom">
+          <div class="row g-3">
+            <div v-for="item in trangThaiDisplay" :key="item.trangThai" class="col-6 col-md-4">
+              <div class="status-card" :style="{ borderLeftColor: item.color }">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                  <span class="status-dot-lg" :style="{ backgroundColor: item.color }"></span>
+                  <span class="fw-semibold">{{ item.trangThai }}</span>
+                </div>
+                <div class="h4 mb-1">{{ item.soDon }}</div>
+                <div class="small text-muted">{{ formatCurrency(item.doanhThu) }}đ</div>
+              </div>
+            </div>
+          </div>
+          <div v-if="!trangThaiDisplay.length" class="text-center text-muted py-4">Không có dữ liệu</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: Đơn hàng gần đây -->
+    <div v-if="showRecentOrdersModal" class="modal-overlay" @click.self="showRecentOrdersModal = false">
+      <div class="modal-content-custom modal-lg">
+        <div class="modal-header-custom">
+          <div>
+            <h5 class="mb-0"><i class="bi bi-receipt-cutoff me-2"></i>Tất cả đơn hàng</h5>
+            <p class="mb-0 mt-1 text-muted small">Danh sách đơn hàng gần đây</p>
+          </div>
+          <button class="btn-close-custom" @click="showRecentOrdersModal = false">&times;</button>
+        </div>
+        <div class="modal-body-custom">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle">
+              <thead>
+                <tr>
+                  <th>Mã HĐ</th>
+                  <th>Khách hàng</th>
+                  <th>Ngày mua</th>
+                  <th>Tổng tiền</th>
+                  <th>Trạng thái</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="order in allRecentOrders" :key="order.maHD">
+                  <td class="fw-semibold">#{{ order.maHD }}</td>
+                  <td>
+                    <div class="d-flex align-items-center gap-2">
+                      <div class="avatar-sm bg-customer-sm">{{ getInitials(order.tenKH) }}</div>
+                      {{ order.tenKH }}
+                    </div>
+                  </td>
+                  <td>{{ formatDate(order.ngayMua) }}</td>
+                  <td class="fw-semibold">{{ formatCurrency(order.tongTien) }}đ</td>
+                  <td><span :class="'badge order-badge badge-' + getStatusClass(order.trangThai)">{{ order.trangThai }}</span></td>
+                </tr>
+                <tr v-if="!allRecentOrders.length">
+                  <td colspan="5" class="text-center text-muted py-4">Không có đơn hàng</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -243,18 +333,45 @@ const error = ref(null);
 
 // Data states
 const thongKeData = ref(null);
-const selectedFilter = ref('7'); // Default 7 days
+const selectedFilter = ref('1'); // Default Hôm nay
 
-// Computed dates
-const dateRange = computed(() => {
-  const endDate = new Date();
-  const startDate = new Date();
-  startDate.setDate(endDate.getDate() - parseInt(selectedFilter.value));
-  return {
-    startDate: startDate.toISOString().split('T')[0],
-    endDate: endDate.toISOString().split('T')[0]
+// Modal states
+const showStatusModal = ref(false);
+const showRecentOrdersModal = ref(false);
+const allRecentOrders = ref([]);
+
+// Computed display data for trạng thái
+const trangThaiDisplay = computed(() => {
+  const data = thongKeData.value?.theoTrangThai || [];
+  const statusMap = {
+    'Hoàn tất': '#10b981',
+    'Đang giao': '#3b82f6',
+    'Đang xử lý': '#f59e0b',
+    'Đã từ chối': '#ef4444',
+    'Báo lỗi': '#8b5cf6',
+    'Hoàn hàng': '#6c757d'
   };
+  return data.map(s => ({
+    trangThai: s.trangThai,
+    soDon: s.soDon,
+    doanhThu: s.doanhThu || 0,
+    color: statusMap[s.trangThai] || '#6c757d'
+  }));
 });
+
+// Open all orders modal
+const openAllOrdersModal = async () => {
+  showRecentOrdersModal.value = true;
+  if (!allRecentOrders.value.length) {
+    try {
+      const res = await api.getDonHangGanDay(50);
+      allRecentOrders.value = res.data || [];
+    } catch (err) {
+      console.error('Error loading all orders:', err);
+      allRecentOrders.value = thongKeData.value?.donHangGanday || [];
+    }
+  }
+};
 
 // Format currency
 const formatCurrency = (value) => {
@@ -276,29 +393,36 @@ const loadThongKeData = async () => {
   
   const endDate = new Date();
   const startDate = new Date();
-  startDate.setDate(endDate.getDate() - parseInt(selectedFilter.value));
+  const days = parseInt(selectedFilter.value);
+  // Hôm nay (1 ngày): startDate = endDate → chỉ lấy hôm nay
+  // 7/30/90 ngày: lấy range từ startDate → endDate
+  if (days > 1) {
+    startDate.setDate(endDate.getDate() - days + 1);
+  }
   
   const startDateStr = startDate.toISOString().split('T')[0];
   const endDateStr = endDate.toISOString().split('T')[0];
   
     try {
     // Fetch all required data in parallel
-    const [tongQuan, theoNgay, theoDanhMuc, topSanPham, topKhachHang, donHangGanDay] = await Promise.all([
+    const [tongQuan, theoNgay, theoDanhMuc, topSanPham, topKhachHang, donHangGanDay, trangThai] = await Promise.all([
       api.getThongKeTongQuan(startDateStr, endDateStr),
       api.getThongKeNgay(startDateStr, endDateStr),
       api.getThongKeDanhMuc(startDateStr, endDateStr),
       api.getTopSanPham(startDateStr, endDateStr, 10),
       api.getTopKhachHang(startDateStr, endDateStr, 5),
-      api.getDonHangGanDay(5)
+      api.getDonHangGanDay(5),
+      api.getThongKeTrangThai(startDateStr, endDateStr)
     ]);
-    
+
     thongKeData.value = {
       tongQuan: tongQuan.data,
       theoNgay: theoNgay.data,
       theoDanhMuc: theoDanhMuc.data,
       topSanPham: topSanPham.data,
       topKhachHang: topKhachHang.data,
-      donHangGanday: donHangGanDay.data
+      donHangGanday: donHangGanDay.data,
+      theoTrangThai: trangThai.data
     };
     
     // Initialize charts after data loaded
@@ -434,25 +558,22 @@ const initCharts = () => {
     }
   });
 
-  // Order Status Doughnut Chart
-  const tongQuan = data.tongQuan || {};
+  // Order Status Doughnut Chart — uses dedicated /trang-thai endpoint
+  const trangThaiData = data.theoTrangThai || [];
+  const statusMap = {
+    'Hoàn tất': '#10b981',
+    'Đang giao': '#3b82f6',
+    'Đang xử lý': '#f59e0b',
+    'Đã từ chối': '#ef4444',
+    'Báo lỗi': '#8b5cf6'
+  };
   new Chart(orderStatusChart.value, {
     type: 'doughnut',
     data: {
-      labels: ['Hoàn tất', 'Đang giao', 'Đang xử lý', 'Đã từ chối'],
+      labels: trangThaiData.map(s => s.trangThai),
       datasets: [{
-        data: [
-          tongQuan.donHoanTat || 0,
-          tongQuan.donDangGiao || 0,
-          tongQuan.donDangXuLy || 0,
-          tongQuan.donBiTuChoi || 0
-        ],
-        backgroundColor: [
-          '#10b981',
-          '#3b82f6',
-          '#f59e0b',
-          '#ef4444'
-        ],
+        data: trangThaiData.map(s => s.soDon || 0),
+        backgroundColor: trangThaiData.map(s => statusMap[s.trangThai] || '#6c757d'),
         borderWidth: 3,
         borderColor: '#fff',
         hoverOffset: 8
@@ -859,7 +980,148 @@ onMounted(() => {
     flex-direction: column;
     text-align: center;
   }
+}
 
-  
+/* Modal Overlay */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  backdrop-filter: blur(2px);
+}
+
+.modal-content-custom {
+  background: white;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 560px;
+  max-height: 85vh;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  animation: slideUp 0.25s ease-out;
+}
+
+.modal-content-custom.modal-lg {
+  max-width: 860px;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.modal-header-custom {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.modal-header-custom h5 {
+  font-weight: 700;
+  color: #212529;
+  font-size: 17px;
+}
+
+.btn-close-custom {
+  background: none;
+  border: none;
+  font-size: 24px;
+  line-height: 1;
+  color: #999;
+  cursor: pointer;
+  padding: 0;
+  margin-top: -2px;
+  transition: color 0.2s;
+}
+
+.btn-close-custom:hover {
+  color: #333;
+}
+
+.modal-body-custom {
+  padding: 20px 24px;
+  overflow-y: auto;
+  max-height: calc(85vh - 80px);
+}
+
+/* Status Card (inside modal) */
+.status-card {
+  background: white;
+  border: 1px solid #f0f0f0;
+  border-radius: 12px;
+  padding: 16px;
+  border-left-width: 4px;
+  transition: all 0.2s;
+}
+
+.status-card:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  transform: translateY(-1px);
+}
+
+/* Custom Status Legend */
+.status-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.status-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: #f8f9fa;
+  transition: background 0.2s;
+}
+
+.status-legend-item:hover {
+  background: #e9ecef;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.status-dot-lg {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.status-name {
+  font-size: 12px;
+  color: #555;
+  font-weight: 500;
+}
+
+.status-count {
+  font-size: 12px;
+  font-weight: 700;
+  color: #333;
+  margin-left: auto;
+}
+
+/* Revenue chart subtitle fix */
+.chart-subtitle {
+  font-size: 13px;
+  color: #6c757d;
+  margin-bottom: 8px;
 }
 </style>

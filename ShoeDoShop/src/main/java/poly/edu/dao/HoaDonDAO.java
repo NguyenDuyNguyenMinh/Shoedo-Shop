@@ -30,4 +30,8 @@ public interface HoaDonDAO extends JpaRepository<HoaDon, Integer> {
 
     List<HoaDon> findByKhachHang(KhachHang khachHang);
     List<HoaDon> findByQuanTri(QuanTri quanTri);
+
+    @org.springframework.data.jpa.repository.Query(
+        "SELECT h FROM HoaDon h LEFT JOIN FETCH h.hoaDonCTs ct LEFT JOIN FETCH ct.sanPhamChiTiet LEFT JOIN FETCH h.khachHangVoucher WHERE h.maHD = :maHD")
+    java.util.Optional<HoaDon> findByIdWithDetails(@Param("maHD") Integer maHD);
 }
