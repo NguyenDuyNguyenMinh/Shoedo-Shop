@@ -63,13 +63,30 @@ public class AuthService {
         String pass = request.get("pass");
         boolean remember = Boolean.parseBoolean(request.get("remember"));
         
-        Users user = identifier.contains("@") ? 
-            usersDAO.findByMail(identifier) : 
-            usersDAO.findByUserName(identifier);
+        Users user = null;
         
-        if (user == null) return error("Sai tài khoản hoặc mật khẩu");
-        if (!user.getIsActive()) return error("Tài khoản đã bị khóa");
-        if (!passwordEncoder.matches(pass, user.getPassWord())) return error("Sai tài khoản hoặc mật khẩu");
+        if (identifier.contains("@")) {
+            user = usersDAO.findByMail(identifier);
+        } else {
+            Users tempUser = usersDAO.findByUserName(identifier);
+            if (tempUser != null && tempUser.getUserName().equals(identifier)) {
+                user = tempUser;
+            } else {
+                user = null;
+            }
+        }
+        
+        if (user == null) {
+            return error("Sai tài khoản hoặc mật khẩu");
+        }
+        
+        if (!user.getIsActive()) {
+            return error("Tài khoản đã bị khóa");
+        }
+        
+        if (!passwordEncoder.matches(pass, user.getPassWord())) {
+            return error("Sai tài khoản hoặc mật khẩu");
+        }
         
         return success(doLogin(user, remember));
     }

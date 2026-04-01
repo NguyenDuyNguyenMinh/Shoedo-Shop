@@ -135,7 +135,7 @@
       <!-- Quản lý địa chỉ -->
       <div class="card shadow-sm">
         <div class="card-header d-flex justify-content-between align-items-center">
-          <span>📍 Quản lý địa chỉ nhận hàng</span>
+          <span><i class="fa-solid fa-location-dot me-2"></i>Quản lý địa chỉ nhận hàng</span>
           <button class="btn btn-light btn-sm" @click="showAddModal = true">
             <i class="fas fa-plus me-1"></i> Thêm địa chỉ mới
           </button>
@@ -186,7 +186,7 @@
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title">
-              <i class="fas fa-history me-2"></i>Lịch sử tích điểm
+              Lịch sử tích điểm
             </h5>
             <button type="button" class="btn-close" @click="showHistoryModal = false"></button>
           </div>
@@ -195,8 +195,18 @@
               <strong>Tổng điểm hiện tại: </strong> 
               <span class="text-yellow fw-bold">{{ pointsHistory.currentPoints || 0 }}</span>
             </div>
-            <div v-if="pointsHistory.history && pointsHistory.history.length > 0">
-              <div v-for="item in pointsHistory.history" :key="item.ngayGiaoDich" 
+            
+            <div class="filter-bar mb-3">
+              <select v-model="historySortBy" class="form-select form-select-sm" style="width: auto;">
+                <option value="newest">Mới nhất</option>
+                <option value="oldest">Cũ nhất</option>
+                <option value="high-low">Điểm cao - thấp</option>
+                <option value="low-high">Điểm thấp - cao</option>
+              </select>
+            </div>
+            
+            <div v-if="filteredHistory.length > 0" class="history-list">
+              <div v-for="item in filteredHistory" :key="item.ngayGiaoDich" 
                    class="history-item d-flex justify-content-between align-items-center border-bottom py-2">
                 <div>
                   <div class="fw-bold">{{ item.loaiGiaoDich }}</div>
@@ -255,12 +265,12 @@
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title">
-              <i class="fas fa-ticket-alt me-2"></i>Quản lý voucher
+              Quản lý voucher
             </h5>
             <button type="button" class="btn-close" @click="closeVoucherModal"></button>
           </div>
           <div class="modal-body">
-            <ul class="nav nav-tabs mb-3">
+            <ul class="nav nav-tabs mb-2">
               <li class="nav-item">
                 <a class="nav-link" :class="{ active: activeTab === 'myVouchers' }" 
                    @click="activeTab = 'myVouchers'">
@@ -277,9 +287,24 @@
 
             <!-- Tab 1: Voucher của tôi -->
             <div v-if="activeTab === 'myVouchers'">
-              <div v-if="myVouchers.length > 0">
-                <div v-for="item in myVouchers" :key="item.maKHVC" 
-                     class="voucher-card mb-3 p-3 border rounded">
+              <div class="filter-bar mb-2 d-flex gap-2">
+                <select v-model="myVoucherStatusFilter" class="form-select form-select-sm" style="width: auto;">
+                  <option value="all">Tất cả trạng thái</option>
+                  <option value="Chưa sử dụng">Chưa sử dụng</option>
+                  <option value="Đã sử dụng">Đã sử dụng</option>
+                  <option value="Hết hạn">Hết hạn</option>
+                </select>
+                <select v-model="myVoucherSortBy" class="form-select form-select-sm" style="width: auto;">
+                  <option value="newest">Mới nhất</option>
+                  <option value="oldest">Cũ nhất</option>
+                  <option value="high-low">Giá trị cao - thấp</option>
+                  <option value="low-high">Giá trị thấp - cao</option>
+                </select>
+              </div>
+              
+              <div v-if="filteredMyVouchers.length > 0" class="voucher-list">
+                <div v-for="item in filteredMyVouchers" :key="item.maKHVC" 
+                     class="voucher-card mb-2 p-3 border rounded">
                   <div class="row align-items-center">
                     <div class="col-md-8">
                       <div class="fw-bold fs-5">{{ item.voucher.tenVoucher }}</div>
@@ -303,43 +328,56 @@
 
             <!-- Tab 2: Đổi điểm lấy voucher -->
             <div v-if="activeTab === 'available'">
-              <div class="current-points mb-3 p-3 rounded">
-                <strong>Điểm hiện có: </strong> 
-                <span class="text-yellow fw-bold">{{ customer.diemTichLuy || 0 }}</span>
+              <div class="filter-bar mb-2 d-flex gap-2">
+                <select v-model="availableVoucherFilter" class="form-select form-select-sm" style="width: auto;">
+                  <option value="all">Tất cả voucher</option>
+                  <option value="enough">Đủ điểm</option>
+                  <option value="not-enough">Không đủ điểm</option>
+                </select>
+                <select v-model="availableVoucherSortBy" class="form-select form-select-sm" style="width: auto;">
+                  <option value="newest">Mới nhất (HSD)</option>
+                  <option value="oldest">Cũ nhất (HSD)</option>
+                  <option value="discount-high-low">Giảm giá cao - thấp</option>
+                  <option value="discount-low-high">Giảm giá thấp - cao</option>
+                  <option value="points-high-low">Điểm cần cao - thấp</option>
+                  <option value="points-low-high">Điểm cần thấp - cao</option>
+                </select>
               </div>
               
-              <div class="row">
-                <div v-for="voucher in availableVouchers" :key="voucher.maVoucher" 
-                     class="col-md-6 mb-3">
-                  <div class="voucher-card p-3 border rounded h-100">
-                    <div class="fw-bold fs-6">{{ voucher.tenVoucher }}</div>
-                    <div class="text-danger fw-bold">-{{ formatMoney(voucher.giaTriGiam) }}</div>
-                    <div class="small text-muted">Đơn tối thiểu: {{ formatMoney(voucher.donToiThieu) }}</div>
-                    <div class="small text-muted">Cần: {{ voucher.diemCanDoi }} điểm</div>
-                    <div class="small text-muted">Còn: {{ voucher.soLuong }} voucher</div>
-                    <div class="small text-muted">
-                      Ngày bắt đầu: {{ formatDateShort(voucher.ngayBatDau) }}
+              <div v-if="filteredAvailableVouchers.length > 0" class="voucherdoi-list">
+                <div class="row">
+                  <div v-for="voucher in filteredAvailableVouchers" :key="voucher.maVoucher" class="col-md-6 mb-2">
+                    <div class="voucher-card p-3 border rounded h-100">
+                      <div class="fw-bold fs-6">{{ voucher.tenVoucher }}</div>
+                      <div class="text-danger fw-bold">-{{ formatMoney(voucher.giaTriGiam) }}</div>
+                      <div class="small text-muted">Đơn tối thiểu: {{ formatMoney(voucher.donToiThieu) }}</div>
+                      <div class="small text-muted">Cần: {{ voucher.diemCanDoi }} điểm</div>
+                      <div class="small text-muted">Còn: {{ voucher.soLuong }} voucher</div>
+                      <div class="small text-muted">
+                        HSD: {{ formatDateShort(voucher.ngayBatDau) }} - {{ formatDateShort(voucher.ngayKetThuc) }}
+                      </div>
+                      <button class="btn btn-primary btn-sm mt-2 w-100" 
+                              @click="redeemVoucher(voucher.maVoucher)"
+                              :disabled="redeemLoading || customer.diemTichLuy < voucher.diemCanDoi || voucher.soLuong <= 0">
+                        <span v-if="redeemLoading && selectedVoucher === voucher.maVoucher" class="spinner-border spinner-border-sm me-1"></span>
+                        <i v-else class="fas fa-exchange-alt me-1"></i>
+                        Đổi voucher
+                      </button>
                     </div>
-                    <div class="small text-muted">
-                      Ngày kết thúc: {{ formatDateShort(voucher.ngayKetThuc) }}
-                    </div>
-                    <button class="btn btn-primary btn-sm mt-2 w-100" 
-                            @click="redeemVoucher(voucher.maVoucher)"
-                            :disabled="redeemLoading || customer.diemTichLuy < voucher.diemCanDoi || voucher.soLuong <= 0">
-                      <span v-if="redeemLoading && selectedVoucher === voucher.maVoucher" class="spinner-border spinner-border-sm me-1"></span>
-                      <i v-else class="fas fa-exchange-alt me-1"></i>
-                      Đổi voucher
-                    </button>
                   </div>
                 </div>
               </div>
-              <div v-if="availableVouchers.length === 0" class="text-center text-muted py-4">
+              <div v-if="filteredAvailableVouchers.length === 0" class="text-center text-muted py-4">
                 <i class="fas fa-search fa-3x mb-3"></i>
-                <p>Hiện không có voucher nào để đổi</p>
+                <p>Không có voucher nào phù hợp với bộ lọc</p>
               </div>
             </div>
           </div>
-          <div class="modal-footer">
+          <div class="modal-footer d-flex justify-content-between align-items-center">
+            <div>
+              <strong>Điểm hiện có: </strong> 
+              <span class="text-yellow fw-bold">{{ customer.diemTichLuy || 0 }}</span>
+            </div>
             <button type="button" class="btn btn-secondary" @click="closeVoucherModal">Hủy</button>
           </div>
         </div>
@@ -395,7 +433,7 @@
 </template>
 
 <script>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import axios from 'axios'
 import KH_Navbar from '@/components/shared/KH_Navbar.vue'
 import Footer from '@/components/shared/Footer.vue'
@@ -427,6 +465,96 @@ export default {
     const availableVouchers = ref([])
     const redeemLoading = ref(false)
     const selectedVoucher = ref(null)
+    
+    // Filter states
+    const historySortBy = ref('newest')
+    const myVoucherStatusFilter = ref('all')
+    const myVoucherSortBy = ref('newest')
+    const availableVoucherFilter = ref('all')
+    const availableVoucherSortBy = ref('newest')
+
+    const filteredHistory = computed(() => {
+      let history = [...(pointsHistory.value.history || [])]
+
+      switch (historySortBy.value) {
+        case 'newest':
+          history.sort((a, b) => new Date(b.ngayGiaoDich) - new Date(a.ngayGiaoDich))
+          break
+        case 'oldest':
+          history.sort((a, b) => new Date(a.ngayGiaoDich) - new Date(b.ngayGiaoDich))
+          break
+        case 'high-low':
+          history.sort((a, b) => b.soDiem - a.soDiem)
+          break
+        case 'low-high':
+          history.sort((a, b) => a.soDiem - b.soDiem)
+          break
+      }
+      
+      return history
+    })
+
+    const filteredMyVouchers = computed(() => {
+      let vouchers = [...(myVouchers.value || [])]
+
+      if (myVoucherStatusFilter.value !== 'all') {
+        vouchers = vouchers.filter(v => v.trangThai === myVoucherStatusFilter.value)
+      }
+
+      switch (myVoucherSortBy.value) {
+        case 'newest':
+          vouchers.sort((a, b) => new Date(b.ngayDoi) - new Date(a.ngayDoi))
+          break
+        case 'oldest':
+          vouchers.sort((a, b) => new Date(a.ngayDoi) - new Date(b.ngayDoi))
+          break
+        case 'high-low':
+          vouchers.sort((a, b) => (b.voucher?.giaTriGiam || 0) - (a.voucher?.giaTriGiam || 0))
+          break
+        case 'low-high':
+          vouchers.sort((a, b) => (a.voucher?.giaTriGiam || 0) - (b.voucher?.giaTriGiam || 0))
+          break
+      }
+      
+      return vouchers
+    })
+
+    const filteredAvailableVouchers = computed(() => {
+      let vouchers = [...(availableVouchers.value || [])]
+      const currentPoints = customer.value.diemTichLuy || 0
+
+      switch (availableVoucherFilter.value) {
+        case 'enough':
+          vouchers = vouchers.filter(v => v.diemCanDoi <= currentPoints)
+          break
+        case 'not-enough':
+          vouchers = vouchers.filter(v => v.diemCanDoi > currentPoints)
+          break
+      }
+
+      switch (availableVoucherSortBy.value) {
+        case 'newest':
+          vouchers.sort((a, b) => new Date(b.ngayBatDau) - new Date(a.ngayBatDau))
+          break
+        case 'oldest':
+          vouchers.sort((a, b) => new Date(a.ngayBatDau) - new Date(b.ngayBatDau))
+          break
+        case 'discount-high-low':
+          vouchers.sort((a, b) => (b.giaTriGiam || 0) - (a.giaTriGiam || 0))
+          break
+        case 'discount-low-high':
+          vouchers.sort((a, b) => (a.giaTriGiam || 0) - (b.giaTriGiam || 0))
+          break
+        case 'points-high-low':
+          vouchers.sort((a, b) => b.diemCanDoi - a.diemCanDoi)
+          break
+        case 'points-low-high':
+          vouchers.sort((a, b) => a.diemCanDoi - b.diemCanDoi)
+          break
+      }
+      
+      return vouchers
+    })
 
     const fetchProfile = async () => {
       try {
@@ -658,6 +786,11 @@ export default {
     const closeVoucherModal = () => {
       showVoucherModal.value = false
       activeTab.value = 'myVouchers'
+      // Reset filters
+      myVoucherStatusFilter.value = 'all'
+      myVoucherSortBy.value = 'newest'
+      availableVoucherFilter.value = 'all'
+      availableVoucherSortBy.value = 'newest'
     }
 
     const closeReferralModal = () => {
@@ -747,6 +880,11 @@ export default {
       showHistoryModal, showVoucherModal, showReferralModal, activeTab, pointsHistory, 
       myVouchers, availableVouchers, redeemLoading, selectedVoucher,
       referralCodeInput,
+      // Filters
+      historySortBy, myVoucherStatusFilter, myVoucherSortBy, 
+      availableVoucherFilter, availableVoucherSortBy,
+      filteredHistory, filteredMyVouchers, filteredAvailableVouchers,
+      // Methods
       updateProfile, changePassword, saveAddress, deleteAddress,
       setDefaultAddress, editAddress, closeModal,
       fetchPointsHistory, fetchMyVouchers, loadAvailableVouchers, 
@@ -917,7 +1055,7 @@ export default {
   background: #ffffff;
   padding: 3px 15px;
   border-radius: 25px;
-  text-shadow: 2px 2px 3px rgba(0,0,0,0.4); /* bóng tối */
+  text-shadow: 2px 2px 3px rgba(0,0,0,0.4);
 }
 
 .points-actions {
@@ -941,6 +1079,11 @@ export default {
   background: #f8f9fa;
 }
 
+.history-list {
+  max-height: 380px;
+  overflow-y: auto;
+}
+
 .history-item {
   transition: background 0.2s;
   padding: 10px 20px;
@@ -949,6 +1092,17 @@ export default {
 .history-item:hover {
   background: #f8f9fa;
   transform: translateY(-2px);
+}
+
+.voucher-list {
+  max-height: 418px;
+  overflow-y: auto;
+}
+
+.voucherdoi-list {
+  max-height: 418px;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .voucher-card {
@@ -985,7 +1139,17 @@ export default {
   border-color: #dee2e6 #dee2e6 #ddd;
 }
 
-.text-yellow{
+.text-yellow {
   color: #ffc107;
+}
+
+.filter-bar {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.filter-bar .form-select {
+  min-width: 140px;
 }
 </style>
