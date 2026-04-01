@@ -9,5 +9,5 @@ import java.util.Date;
 import java.util.List;
 
 public interface LichSuTichDiemDAO extends JpaRepository<LichSuTichDiem, Integer> {
-    
+	 List<LichSuTichDiem> findByKhachHangOrderByNgayGiaoDichDesc(KhachHang khachHang);
 }

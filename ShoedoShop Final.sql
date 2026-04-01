@@ -81,13 +81,13 @@ CREATE TABLE SanPham_ChiTiet (
     CONSTRAINT FK_ChiTiet_Size FOREIGN KEY (MaSize) REFERENCES Size(MaSize)
 );
 
--- 9. Bảng Nhập Kho
-CREATE TABLE NhapKho (
+-- 9. Bảng Phiếu Nhập
+CREATE TABLE PhieuNhap (
     MaNK INT IDENTITY(1,1) PRIMARY KEY,
     MaSKU INT,
     SoLuong INT CHECK (SoLuong > 0),
     NgayNhap DATE DEFAULT GETDATE(),
-    CONSTRAINT FK_NhapKho_SKU FOREIGN KEY (MaSKU) REFERENCES SanPham_ChiTiet(MaSKU)
+    CONSTRAINT FK_PhieuNhap_SKU FOREIGN KEY (MaSKU) REFERENCES SanPham_ChiTiet(MaSKU)
 );
 
 -- 10. Bảng Địa Chỉ
@@ -179,7 +179,7 @@ CREATE TABLE DanhGia (
 );
 
 -- 17. Bảng Tìm Kiếm
-CREATE TABLE TimKiem (
+CREATE TABLE LSTimKiem (
     MaTK INT IDENTITY(1,1) PRIMARY KEY,
     MaKH INT,
     NoiDungTimKiem NVARCHAR(225) NOT NULL,
@@ -192,13 +192,26 @@ CREATE TABLE LichSuTichDiem (
     MaLS INT IDENTITY(1,1) PRIMARY KEY,
     MaKH INT NOT NULL,
     SoDiem INT,
-    LoaiGiaoDich NVARCHAR(100) CHECK (LoaiGiaoDich IN (N'Mời bạn bè', N'Chia sẻ mua hàng')),
+    LoaiGiaoDich NVARCHAR(100) CHECK (LoaiGiaoDich IN (N'Mời bạn bè', N'Chia sẻ mua hàng', N'Nhập mã giới thiệu', N'Đổi voucher')),
     MaNguoiLienQuan INT NULL,
     MaHDCT INT NULL,
     NgayGiaoDich DATETIME DEFAULT GETDATE(),
     CONSTRAINT FK_LichSuTichDiem_KhachHang FOREIGN KEY (MaKH) REFERENCES KhachHang(MaKH),
     CONSTRAINT FK_LichSuTichDiem_HoaDonCT FOREIGN KEY (MaHDCT) REFERENCES HoaDonCT(MaHDCT)
 );
+
+-- 19. Bảng Chiến Dịch
+CREATE TABLE ChienDich (
+    MaCD INT IDENTITY(1,1) PRIMARY KEY,
+    TenChienDich NVARCHAR(255) NOT NULL,
+    MaSP INT NOT NULL,
+    KhuyenMaiCD INT NOT NULL,
+    ThoiGianBatDau DATETIME NOT NULL,
+    ThoiGianKetThuc DATETIME NOT NULL,
+    TrangThai NVARCHAR(50) DEFAULT N'Đang chạy' CHECK (TrangThai IN (N'Chưa bắt đầu', N'Đang chạy', N'Đã dừng', N'Kết thúc')) NOT NULL,
+    CONSTRAINT FK_ChienDich_SanPham FOREIGN KEY (MaSP) REFERENCES SanPham(MaSP)
+);
+GO
 
 -- 1. Dữ liệu mẫu cho bảng [User]
 INSERT INTO Users (UserName, Mail, PassWord, IsActive) VALUES
@@ -913,7 +926,7 @@ INSERT INTO DanhGia (MaHDCT, Sao, DanhGiaCT) VALUES
 GO
 
 -- 15. Dữ liệu mẫu cho bảng TimKiem
-INSERT INTO TimKiem (MaKH, NoiDungTimKiem) VALUES
+INSERT INTO LSTimKiem (MaKH, NoiDungTimKiem) VALUES
 (1, N'Giày da nam'),
 (1, N'Giày tây công sở'),
 (2, N'Giày sneaker nữ trắng'),

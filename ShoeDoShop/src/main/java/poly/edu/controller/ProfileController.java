@@ -86,4 +86,51 @@ public class ProfileController {
             return ResponseEntity.status(500).body(Map.of("success", false, "message", e.getMessage()));
         }
     }
+    
+    @GetMapping("/points-history")
+    public ResponseEntity<Map<String, Object>> getPointsHistory() {
+        try {
+            return ResponseEntity.ok(profileService.getPointsHistory());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("success", false, "message", e.getMessage()));
+        }
+    }
+    
+    @GetMapping("/vouchers/my-vouchers")
+    public ResponseEntity<Map<String, Object>> getMyVouchers() {
+        try {
+            return ResponseEntity.ok(profileService.getMyVouchers());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("success", false, "message", e.getMessage()));
+        }
+    }
+    
+    @GetMapping("/vouchers/available")
+    public ResponseEntity<Map<String, Object>> getAvailableVouchers() {
+        try {
+            return ResponseEntity.ok(profileService.getAvailableVouchers());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("success", false, "message", e.getMessage()));
+        }
+    }
+    
+    @PostMapping("/vouchers/redeem")
+    public ResponseEntity<Map<String, Object>> redeemVoucher(@RequestBody Map<String, Integer> request) {
+        try {
+            Integer maVoucher = request.get("maVoucher");
+            return ResponseEntity.ok(profileService.redeemVoucher(maVoucher));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("success", false, "message", e.getMessage()));
+        }
+    }
+    
+    @PostMapping("/apply-referral")
+    public ResponseEntity<Map<String, Object>> applyReferralCode(@RequestBody Map<String, String> request) {
+        try {
+            String referralCode = request.get("referralCode");
+            return ResponseEntity.ok(profileService.applyReferralCode(referralCode));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("success", false, "message", e.getMessage()));
+        }
+    }
 }

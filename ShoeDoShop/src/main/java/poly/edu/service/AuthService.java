@@ -36,6 +36,27 @@ public class AuthService {
     private Map<String, RegistrationInfo> registrationConfirmations = new HashMap<>();
     private Map<String, ForgotPasswordInfo> forgotPasswordConfirmations = new HashMap<>();
     
+    
+    // ==================== GENERATE REFERRAL CODE ====================
+    private String generateReferralCode() {
+        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        StringBuilder code = new StringBuilder();
+        SecureRandom secureRandom = new SecureRandom();
+        
+        for (int i = 0; i < 12; i++) {
+            code.append(chars.charAt(secureRandom.nextInt(chars.length())));
+        }
+        return code.toString();
+    }
+    
+    private String generateUniqueReferralCode() {
+        String code;
+        do {
+            code = generateReferralCode();
+        } while (khachHangDAO.findByMaGioiThieu(code) != null);
+        return code;
+    }
+    
     // ==================== LOGIN ====================
     public Map<String, Object> login(Map<String, String> request) {
         String identifier = request.get("identifier");
@@ -148,10 +169,15 @@ public class AuthService {
         user.setIsActive(true);
         user.setCreateAt(new Date());
         user = usersDAO.save(user);
+
+        String referralCode = generateUniqueReferralCode();
         
         KhachHang kh = new KhachHang();
         kh.setTenKH(info.getFullname());
         kh.setSdt(info.getPhone());
+        kh.setDiemTichLuy(0);
+        kh.setMaGioiThieu(referralCode);
+        kh.setMaNguoiGioiThieu(null);
         kh.setUser(user);
         khachHangDAO.save(kh);
         
@@ -202,16 +228,20 @@ public class AuthService {
             user.setCreateAt(new Date());
             user = usersDAO.save(user);
 
+            String referralCode = generateUniqueReferralCode();
+            
             KhachHang kh = new KhachHang();
             kh.setTenKH(name != null ? name : "Google User");
             kh.setSdt("N/A");
+            kh.setDiemTichLuy(0);
+            kh.setMaGioiThieu(referralCode);
+            kh.setMaNguoiGioiThieu(null);
             kh.setUser(user);
             khachHangDAO.save(kh);
         }
         
         return success(doLogin(user, false));
     }
-
     // ==================== FORGOT PASSWORD WITH EMAIL CONFIRMATION ====================
     public Map<String, Object> sendForgotPass(Map<String, String> request) {
         String email = request.get("email");
@@ -546,9 +576,5 @@ public class AuthService {
             return expired;
         });
         
-//        System.out.println(String.format(
-//            "Cleanup: Đăng ký: %d → %d, Quên MK: %d → %d",
-//            beforeReg, registrationConfirmations.size(), beforeForgot, forgotPasswordConfirmations.size()
-//    	));
     }
 }
