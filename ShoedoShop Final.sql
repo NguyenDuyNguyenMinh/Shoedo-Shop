@@ -81,13 +81,13 @@ CREATE TABLE SanPham_ChiTiet (
     CONSTRAINT FK_ChiTiet_Size FOREIGN KEY (MaSize) REFERENCES Size(MaSize)
 );
 
--- 9. Bảng Nhập Kho
+-- 9. Bảng Phiếu Nhập
 CREATE TABLE PhieuNhap (
     MaNK INT IDENTITY(1,1) PRIMARY KEY,
     MaSKU INT,
     SoLuong INT CHECK (SoLuong > 0),
     NgayNhap DATE DEFAULT GETDATE(),
-    CONSTRAINT FK_NhapKho_SKU FOREIGN KEY (MaSKU) REFERENCES SanPham_ChiTiet(MaSKU)
+    CONSTRAINT FK_PhieuNhap_SKU FOREIGN KEY (MaSKU) REFERENCES SanPham_ChiTiet(MaSKU)
 );
 
 -- 10. Bảng Địa Chỉ
