@@ -33,6 +33,9 @@ public class GioHangService {
     @Autowired
     private DiaChiDAO diaChiDAO;
 
+    @Autowired
+    private KhachHangVoucherDAO khachHangVoucherDAO;
+
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     // ==================== GET CART ====================
@@ -104,7 +107,7 @@ public class GioHangService {
         }
 
         if (spct.getSoLuong() == null || spct.getSoLuong() < dto.getSoLuong()) {
-            return error("Số lượng tồn kho không đủ");
+            return error("Số lượng vượt quá giới hạn cho phép");
         }
 
         // Kiểm tra đã có trong giỏ chưa
@@ -115,7 +118,7 @@ public class GioHangService {
             GioHang gh = existing.get();
             int newQty = gh.getSoLuong() + dto.getSoLuong();
             if (newQty > spct.getSoLuong()) {
-                return error("Số lượng vượt quá tồn kho (tồn: " + spct.getSoLuong() + ")");
+                return error("Số lượng vượt quá giới hạn cho phép");
             }
             gh.setSoLuong(newQty);
             gioHangDAO.save(gh);
@@ -159,7 +162,7 @@ public class GioHangService {
         }
 
         if (gh.getSanPhamChiTiet().getSoLuong() < soLuong) {
-            return error("Số lượng vượt quá tồn kho (tồn: " + gh.getSanPhamChiTiet().getSoLuong() + ")");
+            return error("Số lượng vượt quá giới hạn cho phép");
         }
 
         gh.setSoLuong(soLuong);
@@ -220,11 +223,10 @@ public class GioHangService {
             return error("Không tìm thấy thông tin khách hàng");
         }
 
-        // Lấy danh sách sản phẩm trong giỏ hàng theo ID được chọn
+        // ── Lấy danh sách sản phẩm trong giỏ hàng theo ID được chọn ──
         List<GioHang> selectedItems;
         if (dto.getCartItemIds() != null && !dto.getCartItemIds().isEmpty()) {
             selectedItems = gioHangDAO.findAllById(dto.getCartItemIds());
-            // Kiểm tra tất cả items thuộc về khách hàng hiện tại
             selectedItems = selectedItems.stream()
                     .filter(item -> item.getKhachHang().getMaKH().equals(kh.getMaKH()))
                     .collect(Collectors.toList());
@@ -236,24 +238,25 @@ public class GioHangService {
             return error("Giỏ hàng trống hoặc không có sản phẩm nào được chọn");
         }
 
-        // Kiểm tra tồn kho
+        // ── Kiểm tra tồn kho ──
         for (GioHang item : selectedItems) {
             SanPhamChiTiet spct = item.getSanPhamChiTiet();
             if (spct.getSoLuong() < item.getSoLuong()) {
-                String tenSP = spct.getSanPham() != null ? spct.getSanPham().getTenSP() : "SKU " + spct.getMaSKU();
-                return error("Sản phẩm \"" + tenSP + "\" không đủ tồn kho (còn " + spct.getSoLuong() + ")");
+                String tenSP = spct.getSanPham() != null
+                        ? spct.getSanPham().getTenSP() : "SKU " + spct.getMaSKU();
+                return error("Sản phẩm \"" + tenSP + "\" vượt quá giới hạn cho phép");
             }
         }
 
-        // Lấy địa chỉ giao hàng
+        // ── Lấy địa chỉ giao hàng ──
         String diaChiJson = "";
         if (dto.getMaDC() != null) {
             DiaChi dc = diaChiDAO.findById(dto.getMaDC()).orElse(null);
             if (dc != null) {
                 try {
                     Map<String, String> dcMap = new LinkedHashMap<>();
-                    dcMap.put("TenNN", dc.getTenNN());
-                    dcMap.put("SDT", dc.getSdt());
+                    dcMap.put("TenNN",   dc.getTenNN());
+                    dcMap.put("SDT",    dc.getSdt());
                     dcMap.put("DiemGiao", dc.getDiemGiao());
                     diaChiJson = objectMapper.writeValueAsString(dcMap);
                 } catch (Exception e) {
@@ -262,11 +265,56 @@ public class GioHangService {
             }
         }
 
-        // Xác định phương thức thanh toán
+        // ── Xác định phương thức thanh toán ──
         String phuongThucTT = dto.getPhuongThucTT() != null ? dto.getPhuongThucTT() : "COD";
-        boolean isVNPay = Boolean.TRUE.equals(dto.getIsVNPay()) || "VNPAY".equalsIgnoreCase(phuongThucTT);
-        
-        // Tạo hóa đơn
+        boolean isVNPay = Boolean.TRUE.equals(dto.getIsVNPay())
+                       || "VNPAY".equalsIgnoreCase(phuongThucTT);
+
+        // ── Xử lý voucher ──
+        KhachHangVoucher usedVoucher = null;
+        double voucherDiscount = 0.0;
+
+        if (dto.getMaKH_VC() != null) {
+            var khvOpt = khachHangVoucherDAO.findByMaKHVCAndMaKH(dto.getMaKH_VC(), kh.getMaKH());
+            if (khvOpt.isEmpty()) {
+                return error("Voucher không hợp lệ hoặc không thuộc về bạn");
+            }
+            usedVoucher = khvOpt.get();
+
+            // Kiểm tra voucher còn hạn và chưa dùng
+            if (!"Chưa sử dụng".equals(usedVoucher.getTrangThai())) {
+                return error("Voucher này đã được sử dụng");
+            }
+            Date now = new Date();
+            if (usedVoucher.getHanSuDung() != null && usedVoucher.getHanSuDung().before(now)) {
+                return error("Voucher đã hết hạn");
+            }
+            Voucher voucher = usedVoucher.getVoucher();
+            if (voucher.getIsActive() == null || !voucher.getIsActive()) {
+                return error("Voucher đã bị vô hiệu hóa");
+            }
+
+            // Tính tongTien trước để kiểm tra đơn tối thiểu
+            double tempTong = 0;
+            for (GioHang item : selectedItems) {
+                SanPhamChiTiet spct = item.getSanPhamChiTiet();
+                double giaGoc = spct.getDonGia() != null ? spct.getDonGia() : 0;
+                int km = (spct.getSanPham() != null && spct.getSanPham().getKhuyenMai() != null)
+                         ? spct.getSanPham().getKhuyenMai() : 0;
+                double donGia = giaGoc * (100 - km) / 100;
+                tempTong += donGia * item.getSoLuong();
+            }
+
+            double donToiThieu = voucher.getDonToiThieu() != null ? voucher.getDonToiThieu() : 0;
+            if (tempTong < donToiThieu) {
+                return error("Đơn hàng tối thiểu " + formatCurrency(donToiThieu) + " mới áp dụng được voucher này");
+            }
+
+            // Gia trị giảm giá
+            voucherDiscount = voucher.getGiaTriGiam() != null ? voucher.getGiaTriGiam() : 0;
+        }
+
+        // ── Tạo hóa đơn ──
         HoaDon hoaDon = new HoaDon();
         hoaDon.setKhachHang(kh);
         hoaDon.setPhuongThucTT(isVNPay ? "VNPAY" : phuongThucTT);
@@ -274,18 +322,22 @@ public class GioHangService {
         hoaDon.setTrangThai("Đang xử lý");
         hoaDon.setGhiChu(dto.getGhiChu());
         hoaDon.setNgayMua(new Date());
+
+        // Gắn voucher nếu có
+        if (usedVoucher != null) {
+            hoaDon.setKhachHangVoucher(usedVoucher);
+        }
+
         hoaDon = hoaDonDAO.save(hoaDon);
 
-        // Tạo chi tiết hóa đơn
+        // ── Tạo chi tiết hóa đơn & tính tongTien ──
         double tongTien = 0;
         for (GioHang item : selectedItems) {
             SanPhamChiTiet spct = item.getSanPhamChiTiet();
 
-            // Tính giá
             double giaGoc = spct.getDonGia() != null ? spct.getDonGia() : 0;
             int km = (spct.getSanPham() != null && spct.getSanPham().getKhuyenMai() != null)
-                    ? spct.getSanPham().getKhuyenMai()
-                    : 0;
+                     ? spct.getSanPham().getKhuyenMai() : 0;
             double donGia = giaGoc * (100 - km) / 100;
 
             HoaDonCT hdct = new HoaDonCT();
@@ -297,30 +349,50 @@ public class GioHangService {
 
             tongTien += donGia * item.getSoLuong();
 
-            // VNPAY: trừ stock ngay tại checkout vì đã chuyển khoản đặt cọc
+            // VNPAY: trừ stock ngay tại checkout (khách đã chuyển khoản trước → giữ chỗ hàng)
+            // COD: KHÔNG trừ stock — admin duyệt đơn mới trừ
             if (isVNPay) {
                 sanPhamChiTietDAO.truSoLuong(spct.getMaSKU(), item.getSoLuong());
             }
         }
 
-        // Xóa các item đã checkout khỏi giỏ hàng
-        for (GioHang item : selectedItems) {
-            gioHangDAO.delete(item);
+        // ── Áp dụng giảm giá voucher (nhưng không âm) ──
+        double tongTienSauGiam = Math.max(0, tongTien - voucherDiscount);
+
+        // ── Xóa các item đã checkout khỏi giỏ hàng ──
+        // VNPAY: KHÔNG xóa cart ở đây — chỉ xóa khi thanh toán thực sự thành công
+        // (nếu hủy VNPay → hoàn stock + restore cart)
+        if (!isVNPay) {
+            for (GioHang item : selectedItems) {
+                gioHangDAO.delete(item);
+            }
         }
 
+        // ── Đánh dấu voucher là đã sử dụng ──
+        // VNPAY: đánh dấu ngay tại checkout để khóa voucher (thanh toán đã xác nhận chuyển khoản)
+        // COD: đánh dấu khi thanh toán xong
+        if (usedVoucher != null) {
+            usedVoucher.setTrangThai("Đã sử dụng");
+            usedVoucher.setNgayDoi(new Date());
+            khachHangVoucherDAO.save(usedVoucher);
+        }
+
+        // ── Kết quả ──
         Map<String, Object> result = new HashMap<>();
         result.put("success", true);
-        
+        result.put("maHD", hoaDon.getMaHD());
+        result.put("tongTien", tongTien);
+        result.put("voucherDiscount", voucherDiscount);
+        result.put("tongTienSauGiam", tongTienSauGiam);
+        result.put("isVNPay", isVNPay);
+
         if (isVNPay) {
-            result.put("message", "Đơn hàng đã tạo. Vui lòng thanh toán VNPAY!");
+            result.put("message",       "Đơn hàng đã tạo. Vui lòng thanh toán VNPAY!");
             result.put("requirePayment", true);
         } else {
             result.put("message", "Đặt hàng thành công!");
         }
-        
-        result.put("maHD", hoaDon.getMaHD());
-        result.put("tongTien", tongTien);
-        result.put("isVNPay", isVNPay);
+
         return result;
     }
 
@@ -338,5 +410,9 @@ public class GioHangService {
         result.put("success", false);
         result.put("message", message);
         return result;
+    }
+
+    private String formatCurrency(double value) {
+        return String.format("%,.0f₫", (long) value);
     }
 }

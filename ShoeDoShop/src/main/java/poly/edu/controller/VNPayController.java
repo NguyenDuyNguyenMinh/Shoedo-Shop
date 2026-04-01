@@ -1,15 +1,26 @@
 package poly.edu.controller;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import poly.edu.dao.GioHangDAO;
+import poly.edu.dao.HoaDonDAO;
+import poly.edu.dao.KhachHangVoucherDAO;
+import poly.edu.dao.SanPhamChiTietDAO;
 import poly.edu.dto.CheckoutDTO;
+import poly.edu.entity.GioHang;
+import poly.edu.entity.HoaDon;
+import poly.edu.entity.KhachHangVoucher;
 import poly.edu.entity.Users;
 import poly.edu.service.AuthService;
 import poly.edu.service.GioHangService;
 import poly.edu.service.VNPayService;
 
-import java.util.Map;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 
 @RestController
 @RequestMapping("/api/payment")
@@ -24,6 +35,20 @@ public class VNPayController {
     @Autowired
     private AuthService authService;
 
+    @Autowired
+    private HoaDonDAO hoaDonDAO;
+
+    @Autowired
+    private GioHangDAO gioHangDAO;
+
+    @Autowired
+    private SanPhamChiTietDAO sanPhamChiTietDAO;
+
+    @Autowired
+    private KhachHangVoucherDAO khachHangVoucherDAO;
+
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
     @PostMapping("/create-order")
     public ResponseEntity<Map<String, Object>> createPayment(@RequestBody CheckoutDTO checkoutDTO) {
         try {
@@ -33,9 +58,9 @@ public class VNPayController {
             }
 
             // Kiểm tra nếu là thanh toán VNPAY
-            boolean isVNPay = Boolean.TRUE.equals(checkoutDTO.getIsVNPay()) 
+            boolean isVNPay = Boolean.TRUE.equals(checkoutDTO.getIsVNPay())
                 || "VNPAY".equalsIgnoreCase(checkoutDTO.getPhuongThucTT());
-            
+
             if (!isVNPay) {
                 // Nếu không phải VNPAY, xử lý như checkout thông thường (COD)
                 Map<String, Object> result = gioHangService.checkout(user, checkoutDTO);
@@ -44,28 +69,41 @@ public class VNPayController {
 
             // Tạo đơn hàng trước (trạng thái chờ thanh toán)
             Map<String, Object> checkoutResult = gioHangService.checkout(user, checkoutDTO);
-            
+
             if (!(Boolean) checkoutResult.getOrDefault("success", false)) {
                 return ResponseEntity.badRequest().body(checkoutResult);
             }
 
             Integer maHD = (Integer) checkoutResult.get("maHD");
             Double tongTien = (Double) checkoutResult.get("tongTien");
-            
-            // Chuyển đổi sang VND (không nhân 100 vì amount đã là VND)
-            long amount = tongTien.longValue();
-            
+            Double tongTienSauGiam = (Double) checkoutResult.get("tongTienSauGiam");
+            Double voucherDiscount = (Double) checkoutResult.get("voucherDiscount");
+
+            // Số tiền thanh toán thực tế = sau giảm giá voucher (tối thiểu 0)
+            long amount = (tongTienSauGiam != null ? tongTienSauGiam.longValue() : tongTien.longValue());
+            if (amount <= 0) amount = tongTien.longValue(); // fallback nếu voucher cover hết
+
             String orderInfo = "Thanh toan don hang #" + maHD;
-            
+
+            // Lưu cartItemIds vào HoaDon để có thể restore khi hủy thanh toán
+            if (checkoutDTO.getCartItemIds() != null && !checkoutDTO.getCartItemIds().isEmpty()) {
+                hoaDonDAO.findById(maHD).ifPresent(hoaDon -> {
+                    hoaDon.setCartItemIdsJson(objectMapper.writeValueAsString(checkoutDTO.getCartItemIds()));
+                    hoaDonDAO.save(hoaDon);
+                });
+            }
+
             String paymentUrl = vnPayService.createPaymentUrl(maHD, amount, orderInfo);
-            
+
             return ResponseEntity.ok(Map.of(
                 "success", true,
                 "paymentUrl", paymentUrl,
                 "maHD", maHD,
-                "tongTien", amount
+                "tongTien", amount,
+                "tongTienSauGiam", amount,
+                "voucherDiscount", voucherDiscount != null ? voucherDiscount : 0.0
             ));
-            
+
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(500).body(Map.of(
@@ -78,15 +116,71 @@ public class VNPayController {
     @GetMapping("/vnpay-return")
     public ResponseEntity<Map<String, String>> vnpayReturn(
             @RequestParam Map<String, String> params) {
-        
+
         Map<String, String> result = vnPayService.processReturn(params);
-        
-        // Chuyển hướng về frontend với kết quả
-        String redirectUrl = "http://localhost:4200/payment-result?success=" + result.get("success") 
-            + "&maHD=" + result.get("maHD") 
-            + "&message=" + (result.get("message") != null ? result.get("message").replace(" ", "%20") : "");
-        
-        // Redirect về frontend
+        String success = result.get("success");
+        String maHDStr = result.get("maHD");
+        String message = result.get("message") != null ? result.get("message") : "";
+
+        if (maHDStr != null) {
+            try {
+                Integer maHD = Integer.parseInt(maHDStr);
+                Optional<HoaDon> optHD = hoaDonDAO.findByIdWithDetails(maHD);
+
+                if (optHD.isPresent()) {
+                    HoaDon hoaDon = optHD.get();
+
+                    // Lấy cartItemIds từ HoaDon
+                    List<Integer> cartItemIds = new ArrayList<>();
+                    if (hoaDon.getCartItemIdsJson() != null && !hoaDon.getCartItemIdsJson().isEmpty()) {
+                        try {
+                            cartItemIds = objectMapper.readValue(
+                                hoaDon.getCartItemIdsJson(),
+                                new TypeReference<List<Integer>>() {}
+                            );
+                        } catch (Exception ignored) {}
+                    }
+
+                    if ("true".equals(success)) {
+                        // ✅ THANH TOÁN THÀNH CÔNG
+                        // Stock đã được trừ tại GioHangService.checkout() (VNPay branch)
+                        // Voucher đã được đánh dấu "Đã sử dụng" tại GioHangService.checkout()
+                        // Chỉ xóa cart items
+                        for (Integer maGH : cartItemIds) {
+                            gioHangDAO.findById(maGH).ifPresent(gioHangDAO::delete);
+                        }
+                    } else {
+                        // ❌ THANH TOÁN THẤT BẠI / HỦY
+                        // 1) Hoàn lại stock đã trừ (cộng lại vào SanPhamChiTiet)
+                        if (hoaDon.getHoaDonCTs() != null) {
+                            for (var hdct : hoaDon.getHoaDonCTs()) {
+                                sanPhamChiTietDAO.congSoLuong(
+                                    hdct.getSanPhamChiTiet().getMaSKU(),
+                                    hdct.getSoLuong()
+                                );
+                            }
+                        }
+                        // 2) Hủy voucher (khôi phục về "Chưa sử dụng")
+                        KhachHangVoucher khv = hoaDon.getKhachHangVoucher();
+                        if (khv != null) {
+                            khv.setTrangThai("Chưa sử dụng");
+                            khv.setNgayDoi(null);
+                            khachHangVoucherDAO.save(khv);
+                        }
+                        // 3) HoaDon giữ nguyên (trạng thái "Đang xử lý") — user có thể retry
+                        // Cart items KHÔNG bị xóa → user quay lại checkout thấy lại sản phẩm
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        // Chuyển hướng về frontend (Vite dev server port 5173)
+        String redirectUrl = "http://localhost:5173/payment-result?success=" + success
+            + "&maHD=" + (maHDStr != null ? maHDStr : "")
+            + "&message=" + URLEncoder.encode(message, StandardCharsets.UTF_8);
+
         return ResponseEntity.status(302).header("Location", redirectUrl).build();
     }
 
@@ -103,7 +197,7 @@ public class VNPayController {
             @RequestParam long amount,
             @RequestParam String vnp_TransactionDate,
             @RequestParam(required = false) String note) {
-        
+
         try {
             String result = vnPayService.refund(vnp_TransactionNo, vnp_TxnRef, amount, vnp_TransactionDate, note);
             return ResponseEntity.ok(Map.of(

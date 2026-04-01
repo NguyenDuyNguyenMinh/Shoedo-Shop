@@ -243,6 +243,7 @@ public class ThongKeService {
             dashboard.put("donDangGiao", row[5] != null ? ((Number) row[5]).intValue() : 0);
             dashboard.put("donHoanTat", row[6] != null ? ((Number) row[6]).intValue() : 0);
             dashboard.put("donBiTuChoi", row[7] != null ? ((Number) row[7]).intValue() : 0);
+            dashboard.put("donBaoLoi", row[8] != null ? ((Number) row[8]).intValue() : 0);
             
             // #region DEBUG - Log output
             try {

@@ -5,6 +5,7 @@ import KH_Navbar from '@/components/Shared/KH_Navbar.vue'
 import Footer from '@/components/Shared/Footer.vue'
 import ChatBox from '@/components/Shared/ChatBox.vue'
 import api from '@/services/api.js'
+import { useAuthStore } from '@/stores/auth'
 
 const route  = useRoute()
 const router = useRouter()
@@ -236,6 +237,8 @@ const addToCart = async () => {
 
   try {
     await api.addToCart({ maSKU: sku.maSKU, soLuong: quantity.value })
+    const authStore = useAuthStore()
+    authStore.incrementCartCount()
     addedToCart.value = true
     setTimeout(() => addedToCart.value = false, 2000)
   } catch (e) {
@@ -258,6 +261,8 @@ const buyNow = async () => {
 
   try {
     await api.addToCart({ maSKU: sku.maSKU, soLuong: quantity.value })
+    const authStore = useAuthStore()
+    authStore.incrementCartCount()
     router.push({ name: 'Cart' })
   } catch (e) {
     console.error('Lỗi mua ngay:', e)
