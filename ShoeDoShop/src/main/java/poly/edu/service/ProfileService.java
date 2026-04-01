@@ -2,11 +2,14 @@ package poly.edu.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import poly.edu.dao.*;
 import poly.edu.entity.*;
 
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class ProfileService {
@@ -15,6 +18,9 @@ public class ProfileService {
     @Autowired private DiaChiDAO diaChiDAO;
     @Autowired private UsersDAO usersDAO;
     @Autowired private AuthService authService;
+    @Autowired private KhachHangVoucherDAO khachHangVoucherDAO;
+    @Autowired private VoucherDAO voucherDAO; 
+    @Autowired private LichSuTichDiemDAO lichSuTichDiemDAO;
     
     public Map<String, Object> getProfile() {
         Users currentUser = authService.getCurrentUser();
@@ -29,11 +35,6 @@ public class ProfileService {
         
         List<DiaChi> addresses = diaChiDAO.findByKhachHang_MaKH(customer.getMaKH());
         
-        String createAt = "";
-        if (currentUser.getCreateAt() != null) {
-            createAt = new SimpleDateFormat("dd/MM/yyyy").format(currentUser.getCreateAt());
-        }
-        
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
         
@@ -41,13 +42,15 @@ public class ProfileService {
         userInfo.put("maUser", currentUser.getMaUser());
         userInfo.put("userName", currentUser.getUserName() != null ? currentUser.getUserName().trim() : "");
         userInfo.put("mail", currentUser.getMail());
-        userInfo.put("createAt", createAt);
         userInfo.put("isActive", currentUser.getIsActive());
         
         Map<String, Object> customerInfo = new HashMap<>();
         customerInfo.put("maKH", customer.getMaKH());
         customerInfo.put("tenKH", customer.getTenKH());
         customerInfo.put("sdt", customer.getSdt());
+        customerInfo.put("diemTichLuy", customer.getDiemTichLuy() != null ? customer.getDiemTichLuy() : 0);
+        customerInfo.put("maGioiThieu", customer.getMaGioiThieu() != null ? customer.getMaGioiThieu() : "");
+        customerInfo.put("hasAppliedReferral", customer.getMaNguoiGioiThieu() != null && !customer.getMaNguoiGioiThieu().isEmpty());
         
         response.put("user", userInfo);
         response.put("customer", customerInfo);
@@ -264,5 +267,241 @@ public class ProfileService {
         diaChiDAO.save(address);
         
         return Map.of("success", true, "message", "Đặt địa chỉ mặc định thành công!");
+    }
+    
+    public Map<String, Object> getPointsHistory() {
+        Users currentUser = authService.getCurrentUser();
+        if (currentUser == null) {
+            return Map.of("success", false, "message", "Chưa đăng nhập");
+        }
+        
+        KhachHang customer = khachHangDAO.findByUser_MaUser(currentUser.getMaUser());
+        if (customer == null) {
+            return Map.of("success", false, "message", "Không tìm thấy thông tin khách hàng");
+        }
+        
+        List<LichSuTichDiem> history = lichSuTichDiemDAO.findByKhachHangOrderByNgayGiaoDichDesc(customer);
+        
+        List<Map<String, Object>> formattedHistory = history.stream().map(item -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("soDiem", item.getSoDiem());
+            map.put("loaiGiaoDich", item.getLoaiGiaoDich());
+            map.put("ngayGiaoDich", item.getNgayGiaoDich());
+            if (item.getNguoiLienQuan() != null) {
+                map.put("nguoiLienQuan", item.getNguoiLienQuan().getTenKH());
+            }
+            return map;
+        }).collect(Collectors.toList());
+        
+        return Map.of("success", true, "history", formattedHistory, "currentPoints", customer.getDiemTichLuy());
+    }
+    
+    public Map<String, Object> getMyVouchers() {
+        Users currentUser = authService.getCurrentUser();
+        if (currentUser == null) {
+            return Map.of("success", false, "message", "Chưa đăng nhập");
+        }
+        
+        KhachHang customer = khachHangDAO.findByUser_MaUser(currentUser.getMaUser());
+        if (customer == null) {
+            return Map.of("success", false, "message", "Không tìm thấy thông tin khách hàng");
+        }
+        
+        List<KhachHangVoucher> myVouchers = khachHangVoucherDAO.findByKhachHang(customer);
+        
+        List<Map<String, Object>> formattedVouchers = myVouchers.stream().map(item -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("maKHVC", item.getMaKHVC());
+            map.put("voucher", item.getVoucher());
+            map.put("trangThai", item.getTrangThai());
+            map.put("ngayDoi", item.getNgayDoi());
+            map.put("hanSuDung", item.getHanSuDung());
+            return map;
+        }).collect(Collectors.toList());
+        
+        return Map.of("success", true, "vouchers", formattedVouchers);
+    }
+    
+    public Map<String, Object> getAvailableVouchers() {
+        try {
+            Date now = new Date();
+            List<Voucher> availableVouchers = new ArrayList<>();
+            
+            try {
+                availableVouchers = voucherDAO.findAvailableVouchers(now);
+            } catch (Exception e) {
+                availableVouchers = voucherDAO.findByIsActiveTrueAndSoLuongGreaterThan(0);
+            }
+            
+            List<Voucher> filteredVouchers = new ArrayList<>();
+            for (Voucher v : availableVouchers) {
+                boolean isValidDate = true;
+                if (v.getNgayBatDau() != null && v.getNgayBatDau().after(now)) {
+                    isValidDate = false;
+                }
+                if (v.getNgayKetThuc() != null && v.getNgayKetThuc().before(now)) {
+                    isValidDate = false;
+                }
+
+                boolean hasStock = v.getSoLuong() != null && v.getSoLuong() > 0;
+
+                boolean isActive = v.getIsActive() != null && v.getIsActive();
+                
+                if (isActive && hasStock && isValidDate) {
+                    filteredVouchers.add(v);
+                }
+            }
+            
+            List<Map<String, Object>> formattedVouchers = new ArrayList<>();
+            
+            for (Voucher v : filteredVouchers) {
+                Map<String, Object> map = new HashMap<>();
+                map.put("maVoucher", v.getMaVoucher());
+                map.put("tenVoucher", v.getTenVoucher());
+                map.put("diemCanDoi", v.getDiemCanDoi());
+                map.put("giaTriGiam", v.getGiaTriGiam());
+                map.put("donToiThieu", v.getDonToiThieu() != null ? v.getDonToiThieu() : 0);
+                map.put("soLuong", v.getSoLuong());
+                map.put("ngayBatDau", v.getNgayBatDau());
+                map.put("ngayKetThuc", v.getNgayKetThuc());
+                formattedVouchers.add(map);
+            }
+            
+            return Map.of("success", true, "vouchers", formattedVouchers);
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Map.of("success", false, "message", "Lỗi khi tải danh sách voucher: " + e.getMessage());
+        }
+    }
+    
+    @Transactional
+    public Map<String, Object> redeemVoucher(Integer maVoucher) {
+        Users currentUser = authService.getCurrentUser();
+        if (currentUser == null) {
+            return Map.of("success", false, "message", "Chưa đăng nhập");
+        }
+        
+        KhachHang customer = khachHangDAO.findByUser_MaUser(currentUser.getMaUser());
+        if (customer == null) {
+            return Map.of("success", false, "message", "Không tìm thấy thông tin khách hàng");
+        }
+        
+        Optional<Voucher> voucherOpt = voucherDAO.findById(maVoucher);
+        if (!voucherOpt.isPresent()) {
+            return Map.of("success", false, "message", "Voucher không tồn tại");
+        }
+        
+        Voucher voucher = voucherOpt.get();
+        
+        if (!voucher.getIsActive() || voucher.getSoLuong() <= 0) {
+            return Map.of("success", false, "message", "Voucher đã hết hoặc không còn hiệu lực");
+        }
+        
+        Date now = new Date();
+        if (voucher.getNgayBatDau().after(now) || voucher.getNgayKetThuc().before(now)) {
+            return Map.of("success", false, "message", "Voucher không trong thời gian áp dụng");
+        }
+        
+        if (customer.getDiemTichLuy() < voucher.getDiemCanDoi()) {
+            return Map.of("success", false, "message", "Không đủ điểm để đổi voucher này");
+        }
+        
+        customer.setDiemTichLuy(customer.getDiemTichLuy() - voucher.getDiemCanDoi());
+        khachHangDAO.save(customer);
+        
+        voucher.setSoLuong(voucher.getSoLuong() - 1);
+        voucherDAO.save(voucher);
+
+        KhachHangVoucher khv = new KhachHangVoucher();
+        khv.setKhachHang(customer);
+        khv.setVoucher(voucher);
+        khv.setTrangThai("Chưa sử dụng");
+        khv.setNgayDoi(now);
+        
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(now);
+        cal.add(Calendar.DAY_OF_MONTH, 30);
+        khv.setHanSuDung(cal.getTime());
+        
+        khachHangVoucherDAO.save(khv);
+
+        LichSuTichDiem history = new LichSuTichDiem();
+        history.setKhachHang(customer);
+        history.setSoDiem(-voucher.getDiemCanDoi());
+        history.setLoaiGiaoDich("Đổi voucher");
+        history.setNgayGiaoDich(now);
+        lichSuTichDiemDAO.save(history);
+        
+        return Map.of(
+            "success", true, 
+            "message", "Đổi voucher thành công!", 
+            "remainingPoints", customer.getDiemTichLuy()
+        );
+    }
+    
+    @Transactional
+    public Map<String, Object> applyReferralCode(String referralCode) {
+        Users currentUser = authService.getCurrentUser();
+        if (currentUser == null) {
+            return Map.of("success", false, "message", "Chưa đăng nhập");
+        }
+        
+        KhachHang customer = khachHangDAO.findByUser_MaUser(currentUser.getMaUser());
+        if (customer == null) {
+            return Map.of("success", false, "message", "Không tìm thấy thông tin khách hàng");
+        }
+        
+        if (customer.getMaNguoiGioiThieu() != null && !customer.getMaNguoiGioiThieu().isEmpty()) {
+            return Map.of("success", false, "message", "Bạn đã nhập mã giới thiệu trước đó, không thể thay đổi");
+        }
+        
+        if (referralCode == null || referralCode.trim().isEmpty()) {
+            return Map.of("success", false, "message", "Vui lòng nhập mã giới thiệu");
+        }
+        
+        referralCode = referralCode.trim().toUpperCase();
+        
+        if (referralCode.equals(customer.getMaGioiThieu())) {
+            return Map.of("success", false, "message", "Bạn không thể nhập mã giới thiệu của chính mình");
+        }
+
+        KhachHang referrer = khachHangDAO.findByMaGioiThieu(referralCode);
+        if (referrer == null) {
+            return Map.of("success", false, "message", "Mã giới thiệu không hợp lệ");
+        }
+        
+        customer.setMaNguoiGioiThieu(referralCode);
+        khachHangDAO.save(customer);
+        
+        Date now = new Date();
+        
+        customer.setDiemTichLuy(customer.getDiemTichLuy() + 5);
+        khachHangDAO.save(customer);
+        
+        LichSuTichDiem historyForNewUser = new LichSuTichDiem();
+        historyForNewUser.setKhachHang(customer);
+        historyForNewUser.setSoDiem(5);
+        historyForNewUser.setLoaiGiaoDich("Nhập mã giới thiệu");
+        historyForNewUser.setNguoiLienQuan(referrer);
+        historyForNewUser.setNgayGiaoDich(now);
+        lichSuTichDiemDAO.save(historyForNewUser);
+
+        referrer.setDiemTichLuy(referrer.getDiemTichLuy() + 10);
+        khachHangDAO.save(referrer);
+
+        LichSuTichDiem historyForReferrer = new LichSuTichDiem();
+        historyForReferrer.setKhachHang(referrer);
+        historyForReferrer.setSoDiem(10);
+        historyForReferrer.setLoaiGiaoDich("Mời bạn bè");
+        historyForReferrer.setNguoiLienQuan(customer);
+        historyForReferrer.setNgayGiaoDich(now);
+        lichSuTichDiemDAO.save(historyForReferrer);
+        
+        return Map.of(
+            "success", true,
+            "message", "Nhập mã giới thiệu thành công! Bạn nhận được 5 điểm, người giới thiệu nhận 10 điểm.",
+            "newPoints", customer.getDiemTichLuy()
+        );
     }
 }

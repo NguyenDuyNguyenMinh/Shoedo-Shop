@@ -10,4 +10,6 @@ public class CheckoutDTO {
     private String ghiChu;
     private List<Integer> cartItemIds;
     private Boolean isVNPay;
+    /** ID của bản ghi KhachHang_Voucher mà khách hàng chọn áp dụng */
+    private Integer maKH_VC;
 }

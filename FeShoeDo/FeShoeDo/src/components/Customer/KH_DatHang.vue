@@ -1,7 +1,7 @@
 <template>
   <div class="customer-layout">
     <KH_Navbar />
-    
+
     <main class="container py-4">
       <!-- Breadcrumb -->
       <nav aria-label="breadcrumb" class="mb-4">
@@ -34,7 +34,7 @@
         <i class="bi bi-check-circle-fill text-success" style="font-size: 80px;"></i>
         <h3 class="mt-3 fw-bold">Đặt hàng thành công!</h3>
         <p class="text-muted">Mã đơn hàng: <strong>HD{{ String(orderResult.maHD).padStart(4, '0') }}</strong></p>
-        <p class="text-muted">Tổng thanh toán: <strong>{{ formatCurrency(orderResult.tongTien) }}</strong></p>
+        <p class="text-muted">Tổng thanh toán: <strong>{{ formatCurrency(orderResult.tongTienSauGiam || orderResult.tongTien) }}</strong></p>
         <div class="mt-4 d-flex justify-content-center gap-3">
           <a href="/customer/orders" class="btn btn-dark px-4 py-2">
             <i class="bi bi-bag me-2"></i>Xem đơn hàng
@@ -65,12 +65,12 @@
                 Chưa có địa chỉ nào. Vui lòng thêm địa chỉ trong phần Hồ sơ.
               </div>
 
-              <div v-for="addr in addresses" :key="addr.maDC" 
-                   class="address-option" 
+              <div v-for="addr in addresses" :key="addr.maDC"
+                   class="address-option"
                    :class="{ selected: selectedAddress === addr.maDC }"
                    @click="selectedAddress = addr.maDC">
                 <div class="d-flex align-items-start gap-3">
-                  <input class="form-check-input mt-1" type="radio" 
+                  <input class="form-check-input mt-1" type="radio"
                          name="address" :id="'addr' + addr.maDC"
                          :checked="selectedAddress === addr.maDC"
                          @change="selectedAddress = addr.maDC">
@@ -87,13 +87,87 @@
               </div>
             </div>
 
-            <!-- 2. Phương thức thanh toán -->
+            <!-- 2. Voucher -->
+            <div class="checkout-section">
+              <div class="section-header">
+                <h5><i class="bi bi-ticket-perforated me-2"></i>Voucher</h5>
+                <button class="btn btn-sm btn-outline-dark" @click="loadVouchers" :disabled="loadingVouchers">
+                  <i class="bi bi-arrow-clockwise me-1"></i>Làm mới
+                </button>
+              </div>
+
+              <!-- Loading vouchers -->
+              <div v-if="loadingVouchers" class="text-center py-3">
+                <span class="spinner-border spinner-border-sm"></span>
+                <span class="ms-2 text-muted">Đang tải voucher...</span>
+              </div>
+
+              <!-- No vouchers -->
+              <div v-else-if="vouchers.length === 0" class="text-muted text-center py-3">
+                Bạn không có voucher nào khả dụng.
+              </div>
+
+              <!-- Voucher list (radio like address) -->
+              <div v-for="v in vouchers" :key="v.maKH_VC"
+                   class="voucher-option"
+                   :class="{
+                     selected: selectedVoucher === v.maKH_VC,
+                     disabled: !isVoucherApplicable(v)
+                   }"
+                   @click="selectVoucher(v)">
+                <div class="d-flex align-items-start gap-3">
+                  <input class="form-check-input mt-1" type="radio"
+                         name="voucher" :id="'voucher' + v.maKH_VC"
+                         :checked="selectedVoucher === v.maKH_VC"
+                         :disabled="!isVoucherApplicable(v)"
+                         @change="selectedVoucher = v.maKH_VC">
+                  <label :for="'voucher' + v.maKH_VC" class="flex-fill">
+                    <div class="voucher-card-inner">
+                      <div class="voucher-value">
+                        <span class="voucher-amount">{{ formatCurrency(v.giaTriGiam) }}</span>
+                        <span class="voucher-label">GIẢM</span>
+                      </div>
+                      <div class="voucher-info">
+                        <div class="fw-bold text-dark">{{ v.tenVoucher }}</div>
+                        <div class="text-muted small">
+                          Đơn tối thiểu {{ formatCurrency(v.donToiThieu || 0) }}
+                        </div>
+                        <div class="text-muted small">
+                          HSD: {{ formatDate(v.hanSuDung) }}
+                        </div>
+                        <div v-if="!isVoucherApplicable(v)" class="text-danger small mt-1">
+                          Không đủ điều kiện (đơn hàng tối thiểu {{ formatCurrency(v.donToiThieu || 0) }})
+                        </div>
+                      </div>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              <!-- No voucher option -->
+              <div v-if="vouchers.length > 0"
+                   class="voucher-option"
+                   :class="{ selected: selectedVoucher === null }"
+                   @click="selectedVoucher = null">
+                <div class="d-flex align-items-start gap-3">
+                  <input class="form-check-input mt-1" type="radio"
+                         name="voucher" id="noVoucher"
+                         :checked="selectedVoucher === null"
+                         @change="selectedVoucher = null">
+                  <label for="noVoucher" class="flex-fill">
+                    <div class="fw-semibold">Không sử dụng voucher</div>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- 3. Phương thức thanh toán -->
             <div class="checkout-section">
               <div class="section-header">
                 <h5><i class="bi bi-wallet2 me-2"></i>Phương thức thanh toán</h5>
               </div>
 
-              <div class="payment-option" 
+              <div class="payment-option"
                    :class="{ selected: paymentMethod === 'COD' }"
                    @click="paymentMethod = 'COD'">
                 <div class="d-flex align-items-center gap-3">
@@ -111,19 +185,19 @@
                 </div>
               </div>
 
-              <div class="payment-option" 
-                   :class="{ selected: paymentMethod === 'Chuyển khoản' }"
-                   @click="paymentMethod = 'Chuyển khoản'">
+              <div class="payment-option"
+                   :class="{ selected: paymentMethod === 'VNPAY' }"
+                   @click="paymentMethod = 'VNPAY'">
                 <div class="d-flex align-items-center gap-3">
-                  <input class="form-check-input" type="radio" name="payment" id="payTransfer"
-                         :checked="paymentMethod === 'Chuyển khoản'" @change="paymentMethod = 'Chuyển khoản'">
-                  <label for="payTransfer" class="d-flex align-items-center gap-3 flex-fill">
-                    <div class="payment-icon">
-                      <i class="bi bi-bank"></i>
+                  <input class="form-check-input" type="radio" name="payment" id="payVNPay"
+                         :checked="paymentMethod === 'VNPAY'" @change="paymentMethod = 'VNPAY'">
+                  <label for="payVNPay" class="d-flex align-items-center gap-3 flex-fill">
+                    <div class="payment-icon" style="background: #0066cc;">
+                      <i class="bi bi-credit-card-2-front"></i>
                     </div>
                     <div>
-                      <div class="fw-bold">Chuyển khoản ngân hàng</div>
-                      <div class="text-muted small">Chuyển khoản qua tài khoản ngân hàng</div>
+                      <div class="fw-bold">Thanh toán qua VNPay</div>
+                      <div class="text-muted small">Chuyển khoản ngân hàng qua cổng VNPay</div>
                     </div>
                   </label>
                 </div>
@@ -161,6 +235,10 @@
                 <span>Tạm tính</span>
                 <span class="fw-semibold">{{ formatCurrency(totalAmount) }}</span>
               </div>
+              <div v-if="voucherDiscount > 0" class="summary-line">
+                <span>Voucher giảm</span>
+                <span class="text-success fw-semibold">-{{ formatCurrency(voucherDiscount) }}</span>
+              </div>
               <div class="summary-line">
                 <span>Phí vận chuyển</span>
                 <span class="text-success fw-semibold">Miễn phí</span>
@@ -170,10 +248,16 @@
 
               <div class="summary-line total-line">
                 <span>Tổng thanh toán</span>
-                <span>{{ formatCurrency(totalAmount) }}</span>
+                <span>{{ formatCurrency(totalAfterDiscount) }}</span>
               </div>
 
-              <button class="btn btn-dark w-100 mt-3 py-3 place-order-btn" 
+              <!-- Voucher applied badge -->
+              <div v-if="selectedVoucherObj" class="voucher-applied-badge">
+                <i class="bi bi-check-circle-fill me-1"></i>
+                Đã áp dụng voucher "{{ selectedVoucherObj.tenVoucher }}"
+              </div>
+
+              <button class="btn btn-dark w-100 mt-3 py-3 place-order-btn"
                       @click="placeOrder"
                       :disabled="ordering || addresses.length === 0">
                 <span v-if="ordering">
@@ -185,8 +269,8 @@
               </button>
 
               <p class="text-center text-muted small mt-3">
-                Bằng việc nhấn "Đặt hàng", bạn đồng ý với 
-                <a href="/customer/chinhsach" class="text-dark">Điều khoản dịch vụ</a> và 
+                Bằng việc nhấn "Đặt hàng", bạn đồng ý với
+                <a href="/customer/chinhsach" class="text-dark">Điều khoản dịch vụ</a> và
                 <a href="/customer/chinhsach" class="text-dark">Chính sách bảo mật</a>
               </p>
             </div>
@@ -214,6 +298,9 @@ export default {
       checkoutItemIds: [],
       addresses: [],
       selectedAddress: null,
+      vouchers: [],
+      selectedVoucher: null,
+      loadingVouchers: false,
       paymentMethod: 'COD',
       note: '',
       loading: true,
@@ -226,15 +313,27 @@ export default {
     totalAmount() {
       return this.checkoutItems.reduce((sum, item) => sum + (item.thanhTien || 0), 0);
     },
+    selectedVoucherObj() {
+      if (!this.selectedVoucher) return null;
+      return this.vouchers.find(v => v.maKH_VC === this.selectedVoucher) || null;
+    },
+    voucherDiscount() {
+      if (!this.selectedVoucherObj) return 0;
+      const discount = this.selectedVoucherObj.giaTriGiam || 0;
+      // Không vượt quá tổng tiền
+      return Math.min(discount, this.totalAmount);
+    },
+    totalAfterDiscount() {
+      return Math.max(0, this.totalAmount - this.voucherDiscount);
+    },
   },
   methods: {
     async loadData() {
       this.loading = true;
       try {
-        // Lấy items từ sessionStorage (từ cart page)
         const storedItems = sessionStorage.getItem('checkoutItems');
         const storedIds = sessionStorage.getItem('checkoutItemIds');
-        
+
         if (storedItems) {
           this.checkoutItems = JSON.parse(storedItems);
         }
@@ -242,7 +341,6 @@ export default {
           this.checkoutItemIds = JSON.parse(storedIds);
         }
 
-        // Nếu không có items, thử lấy toàn bộ cart
         if (this.checkoutItems.length === 0) {
           const cartResp = await api.getCart();
           if (cartResp.data.success && cartResp.data.items) {
@@ -267,11 +365,41 @@ export default {
           this.selectedAddress = this.addresses[0].maDC;
         }
 
+        // Tải voucher
+        await this.loadVouchers();
+
       } catch (error) {
         console.error('Error loading checkout data:', error);
       } finally {
         this.loading = false;
       }
+    },
+
+    async loadVouchers() {
+      this.loadingVouchers = true;
+      try {
+        const resp = await api.getMyVouchers();
+        if (resp.data.success) {
+          this.vouchers = resp.data.vouchers || [];
+        } else {
+          this.vouchers = [];
+        }
+      } catch (error) {
+        console.error('Error loading vouchers:', error);
+        this.vouchers = [];
+      } finally {
+        this.loadingVouchers = false;
+      }
+    },
+
+    isVoucherApplicable(voucher) {
+      const minOrder = voucher.donToiThieu || 0;
+      return this.totalAmount >= minOrder;
+    },
+
+    selectVoucher(v) {
+      if (!this.isVoucherApplicable(v)) return;
+      this.selectedVoucher = v.maKH_VC;
     },
 
     getImageUrl(item) {
@@ -300,12 +428,10 @@ export default {
     },
 
     getProductName(item) {
-      // Ưu tiên hiển thị tenSP, nếu không có thì mới dùng moTa
       if (item.tenSP && item.tenSP.trim() !== '') {
         const cleaned = item.tenSP.replace(/^SP\d+-ShoeDo\s*-\s*/, '');
         return cleaned || item.tenSP;
       }
-      // Fallback: nếu tenSP không có thì dùng moTa
       if (item.moTa && item.moTa.trim() !== '') {
         return item.moTa;
       }
@@ -315,6 +441,16 @@ export default {
     formatCurrency(value) {
       if (value == null) return '0₫';
       return new Intl.NumberFormat('vi-VN').format(Math.round(value)) + '₫';
+    },
+
+    formatDate(dateStr) {
+      if (!dateStr) return 'N/A';
+      try {
+        const d = new Date(dateStr);
+        return d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+      } catch {
+        return dateStr;
+      }
     },
 
     async placeOrder() {
@@ -332,38 +468,43 @@ export default {
       try {
         let response;
 
-        // Nếu chọn thanh toán VNPay (Chuyển khoản), gọi API tạo thanh toán VNPay
-        if (this.paymentMethod === 'Chuyển khoản') {
-          response = await api.createVNPayOrder({
-            maDC: this.selectedAddress,
-            phuongThucTT: 'VNPAY',
-            isVNPay: true,
-            ghiChu: this.note,
-            cartItemIds: this.checkoutItemIds,
-          });
+        // Xây dựng payload chung
+        const payload = {
+          maDC: this.selectedAddress,
+          phuongThucTT: this.paymentMethod,
+          isVNPay: this.paymentMethod === 'VNPAY',
+          ghiChu: this.note,
+          cartItemIds: this.checkoutItemIds,
+          maKH_VC: this.selectedVoucher || null,
+        };
+
+        if (this.paymentMethod === 'VNPAY') {
+          response = await api.createVNPayOrder(payload);
 
           if (response.data.success && response.data.paymentUrl) {
+            // Lưu kết quả tạm vào sessionStorage để hiển thị khi quay lại
+            sessionStorage.setItem('pendingOrder', JSON.stringify({
+              maHD: response.data.maHD,
+              tongTien: response.data.tongTienSauGiam || response.data.tongTien,
+              voucherDiscount: response.data.voucherDiscount || 0,
+            }));
             // Redirect đến trang thanh toán VNPay
             window.location.href = response.data.paymentUrl;
             return;
           }
         } else {
-          // Thanh toán COD - gọi API checkout thông thường
-          response = await api.checkout({
-            maDC: this.selectedAddress,
-            phuongThucTT: this.paymentMethod,
-            ghiChu: this.note,
-            cartItemIds: this.checkoutItemIds,
-          });
+          // COD
+          response = await api.checkout(payload);
         }
 
         if (response.data.success) {
           this.orderSuccess = true;
           this.orderResult = response.data;
-          
+
           // Clear sessionStorage
           sessionStorage.removeItem('checkoutItems');
           sessionStorage.removeItem('checkoutItemIds');
+          sessionStorage.removeItem('pendingOrder');
 
           // Update cart count
           const authStore = useAuthStore();
@@ -456,6 +597,81 @@ export default {
 
 .address-option label {
   cursor: pointer;
+}
+
+/* Voucher Option */
+.voucher-option {
+  padding: 14px 18px;
+  border: 2px solid #e0e0e0;
+  border-radius: 10px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  transition: all 0.25s;
+}
+
+.voucher-option:hover:not(.disabled) {
+  border-color: #999;
+}
+
+.voucher-option.selected {
+  border-color: #000;
+  background: #fafafa;
+}
+
+.voucher-option.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.voucher-option label {
+  cursor: pointer;
+}
+
+.voucher-card-inner {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+
+.voucher-value {
+  background: #000;
+  color: #fff;
+  border-radius: 8px;
+  padding: 10px 14px;
+  text-align: center;
+  min-width: 80px;
+  flex-shrink: 0;
+}
+
+.voucher-amount {
+  display: block;
+  font-size: 16px;
+  font-weight: 800;
+  color: #ffd700;
+}
+
+.voucher-label {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: #fff;
+}
+
+.voucher-info {
+  flex: 1 1 auto;
+}
+
+.voucher-applied-badge {
+  background: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  margin-top: 10px;
+  text-align: center;
 }
 
 /* Payment Option */
