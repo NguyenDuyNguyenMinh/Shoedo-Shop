@@ -52,10 +52,6 @@ public class HoaDon {
     @Temporal(TemporalType.TIMESTAMP)
     private Date ngayDen;
 
-    /** Lưu tạm cartItemIds (dạng JSON) khi checkout VNPay — dùng để restore cart khi hủy thanh toán */
-    @Column(name = "CartItemIdsJson", columnDefinition = "nvarchar(max)")
-    private String cartItemIdsJson;
-
     @OneToMany(mappedBy = "hoaDon", fetch = FetchType.LAZY)
     @JsonIgnore
     private List<HoaDonCT> hoaDonCTs;

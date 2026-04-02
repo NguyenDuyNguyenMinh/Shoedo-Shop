@@ -8,73 +8,56 @@ import poly.edu.dao.DanhGiaDAO;
 import poly.edu.entity.DanhGia;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
 @Slf4j
 public class QLDanhGiaService {
 
-    @Autowired
-    private DanhGiaDAO danhGiaDAO;
-    
-    @Autowired
-    private JdbcTemplate jdbcTemplate;
+    @Autowired private DanhGiaDAO danhGiaDAO;
+    @Autowired private JdbcTemplate jdbcTemplate;
 
-    public List<DanhGia> getAllDanhGia() {
+    public Map<String, Object> getAllDanhGia() {
         try {
-            return danhGiaDAO.findAllWithDetails();
+            List<DanhGia> danhGiaList = danhGiaDAO.findAllWithDetails();
+            return success("data", danhGiaList);
         } catch (Exception e) {
-            return danhGiaDAO.findAll();
+            return success("data", danhGiaDAO.findAll());
         }
     }
 
-    public Optional<DanhGia> getDanhGiaById(Integer maDG) {
-        return danhGiaDAO.findById(maDG);
+    public Map<String, Object> getDanhGiaById(Integer id) {
+        Optional<DanhGia> danhGia = danhGiaDAO.findById(id);
+        if (danhGia.isPresent()) {
+            return success("data", danhGia.get());
+        }
+        return error("Không tìm thấy đánh giá");
     }
 
-    public boolean deleteDanhGia(Integer maDG) {
-        
+    public Map<String, Object> deleteDanhGia(Integer id) {
         try {
-            if (!danhGiaDAO.existsById(maDG)) {
-                return false;
-            }
-
-            String clearReferenceSql = "UPDATE HoaDonCT SET danhGia = NULL WHERE MaHDCT = (SELECT MaHDCT FROM DanhGia WHERE MaDG = ?)";
-            try {
-                jdbcTemplate.update(clearReferenceSql, maDG);
-            } catch (Exception e) {
-                log.warn("Không thể xóa tham chiếu (có thể đã null): {}", e.getMessage());
+            if (!danhGiaDAO.existsById(id)) {
+                return error("Không tìm thấy đánh giá cần xóa");
             }
             
-            String deleteSql = "DELETE FROM DanhGia WHERE MaDG = ?";
-            int rowsAffected = jdbcTemplate.update(deleteSql, maDG);
-            
-            if (rowsAffected > 0) {
-                return true;
-            } else {
-                return false;
-            }
+            danhGiaDAO.deleteByIdNative(id);
+            return success("Xóa đánh giá thành công");
             
         } catch (Exception e) {
-            return false;
+            return error("Không thể xóa đánh giá: " + e.getMessage());
         }
     }
 
-    public List<DanhGia> getDanhGiaBySao(Integer sao) {
-        try {
-            return danhGiaDAO.findBySao(sao);
-        } catch (Exception e) {
-            return danhGiaDAO.findAll().stream()
-                    .filter(dg -> dg.getSao() != null && dg.getSao().equals(sao))
-                    .toList();
-        }
+    private Map<String, Object> success(String key, Object value) {
+        return Map.of("success", true, key, value);
     }
 
-    public List<DanhGia> getDanhGiaBySanPham(Integer maSP) {
-        return danhGiaDAO.findBySanPham(maSP);
+    private Map<String, Object> success(String message) {
+        return Map.of("success", true, "message", message);
     }
 
-    public List<DanhGia> getDanhGiaByKhachHang(Integer maKH) {
-        return danhGiaDAO.findByKhachHang(maKH);
+    private Map<String, Object> error(String message) {
+        return Map.of("success", false, "message", message);
     }
 }

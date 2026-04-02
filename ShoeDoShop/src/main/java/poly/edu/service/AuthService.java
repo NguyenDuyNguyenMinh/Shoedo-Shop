@@ -35,29 +35,7 @@ public class AuthService {
     
     private Map<String, RegistrationInfo> registrationConfirmations = new HashMap<>();
     private Map<String, ForgotPasswordInfo> forgotPasswordConfirmations = new HashMap<>();
-    
-    
-    // ==================== GENERATE REFERRAL CODE ====================
-    private String generateReferralCode() {
-        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-        StringBuilder code = new StringBuilder();
-        SecureRandom secureRandom = new SecureRandom();
-        
-        for (int i = 0; i < 12; i++) {
-            code.append(chars.charAt(secureRandom.nextInt(chars.length())));
-        }
-        return code.toString();
-    }
-    
-    private String generateUniqueReferralCode() {
-        String code;
-        do {
-            code = generateReferralCode();
-        } while (khachHangDAO.findByMaGioiThieu(code) != null);
-        return code;
-    }
-    
-    // ==================== LOGIN ====================
+
     public Map<String, Object> login(Map<String, String> request) {
         String identifier = request.get("identifier");
         String pass = request.get("pass");
@@ -133,7 +111,6 @@ public class AuthService {
         return cartItems.size();
     }
 
-    // ==================== REGISTER WITH EMAIL CONFIRMATION ====================
     public Map<String, Object> sendRegister(Map<String, String> request) {
         String mail = request.get("mail");
         String pass = request.get("pass");
@@ -202,8 +179,7 @@ public class AuthService {
         
         return success("Đăng ký tài khoản thành công!");
     }
-    
-    // ==================== GOOGLE ====================
+
     public Map<String, Object> handleGoogleCallback(String email, String name) {
         Users user = usersDAO.findByMail(email);
         
@@ -259,7 +235,7 @@ public class AuthService {
         
         return success(doLogin(user, false));
     }
-    // ==================== FORGOT PASSWORD WITH EMAIL CONFIRMATION ====================
+
     public Map<String, Object> sendForgotPass(Map<String, String> request) {
         String email = request.get("email");
         
@@ -322,7 +298,6 @@ public class AuthService {
         
         return success("Mật khẩu mới đã được gửi đến email của bạn. Vui lòng kiểm tra email.");
     }
-    // ==================== PASSWORD ====================
 
     public Map<String, Object> changePassword(Map<String, String> request) {
         String email = request.get("email");
@@ -341,7 +316,6 @@ public class AuthService {
         return success("Đổi mật khẩu thành công");
     }
 
-    // ==================== LOGOUT ====================
     public Map<String, Object> logout() {
         cookieService.remove("rememberMe");
         sessionService.remove("userRole");
@@ -352,7 +326,6 @@ public class AuthService {
         return success("Đăng xuất thành công");
     }
 
-    // ==================== PRIVATE METHODS ====================
     private Map<String, Object> doLogin(Users user, boolean remember) {
     	try { 
 	        QuanTri qt = quanTriDAO.findByUser_MaUser(user.getMaUser());
@@ -415,6 +388,25 @@ public class AuthService {
         return info;
     }
     
+    private String generateReferralCode() {
+        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        StringBuilder code = new StringBuilder();
+        SecureRandom secureRandom = new SecureRandom();
+        
+        for (int i = 0; i < 12; i++) {
+            code.append(chars.charAt(secureRandom.nextInt(chars.length())));
+        }
+        return code.toString();
+    }
+    
+    private String generateUniqueReferralCode() {
+        String code;
+        do {
+            code = generateReferralCode();
+        } while (khachHangDAO.findByMaGioiThieu(code) != null);
+        return code;
+    }
+    
     private String generateRandomCode(int length) {
         String chars = "0123456789";
         StringBuilder code = new StringBuilder();
@@ -436,8 +428,7 @@ public class AuthService {
         }
         return password.toString();
     }
-    
-    // ==================== GETTERS ====================
+
     public Users getCurrentUser() {
         return sessionService.get("user");
     }
@@ -473,8 +464,7 @@ public class AuthService {
     public PasswordEncoder getPasswordEncoder() {
         return passwordEncoder;
     }
-    
-    // ==================== UTILS ====================
+
     private Map<String, Object> success(Object data) {
         return Map.of("success", true, "user", data);
     }
@@ -487,8 +477,7 @@ public class AuthService {
         return Map.of("success", false, "message", message);
     }
     
-    
-    // ==================== PUBLIC ====================
+
     public boolean autoLoginFromCookie() {
         String cookie = cookieService.getValue("rememberMe");
         if (cookie == null) return false;
@@ -520,7 +509,6 @@ public class AuthService {
         return "OK";
     }
     
-    // ==================== HELPER CLASSES ====================
     public static class RegistrationInfo {
         private String mail;
         private String pass;

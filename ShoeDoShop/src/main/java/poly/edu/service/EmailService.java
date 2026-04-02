@@ -19,7 +19,7 @@ public class EmailService {
         helper.setTo(to);
         helper.setSubject(subject);
         helper.setText(htmlContent, true);
-        helper.setFrom("shoedoshop@gmail.com");
+        helper.setFrom("quannhmts01396@fpt.edu.vn");
         
         mailSender.send(message);
     }
@@ -32,7 +32,7 @@ public class EmailService {
         helper.setTo(to);
         helper.setSubject(subject);
         helper.setText(htmlContent, true);
-        helper.setFrom("shoedoshop@gmail.com");
+        helper.setFrom("quannhmts01396@fpt.edu.vn");
         helper.addAttachment(attachmentName, () -> new java.io.ByteArrayInputStream(attachmentData));
         
         mailSender.send(message);

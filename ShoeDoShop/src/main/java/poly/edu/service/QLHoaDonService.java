@@ -28,7 +28,6 @@ public class QLHoaDonService {
     
     private final ObjectMapper mapper = new ObjectMapper();
 
-    // ==================== GET METHODS ====================
     public Map<String, Object> getAllOrders() {
     	List<HoaDon> all = hoaDonDAO.findAll();
   
@@ -74,7 +73,6 @@ public class QLHoaDonService {
         return success("order", buildDetail(hd));
     }
 
-    // ==================== ORDER ACTIONS ====================
     @Transactional
     public Map<String, Object> confirmOrder(Integer id) {
         HoaDon hd = findOrder(id);
@@ -248,7 +246,6 @@ public class QLHoaDonService {
         }
     }
 
-    // ==================== PRIVATE METHODS ====================
     private HoaDon findOrder(Integer id) {
         return hoaDonDAO.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy hóa đơn"));
