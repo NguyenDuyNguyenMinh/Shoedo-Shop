@@ -65,11 +65,6 @@ public class AuthController {
         return ResponseEntity.ok(authService.logout());
     }
     
-    @PostMapping("/change-password")
-    public ResponseEntity<Map<String, Object>> changePassword(@RequestBody Map<String, String> request) {
-        return ResponseEntity.ok(authService.changePassword(request));
-    }
-    
     @GetMapping("/cart-count")
     public ResponseEntity<Map<String, Object>> getCartCount() {
     	 Users currentUser = authService.getCurrentUser();

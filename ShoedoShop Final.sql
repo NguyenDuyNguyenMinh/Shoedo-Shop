@@ -780,7 +780,7 @@ INSERT INTO HoaDon (MaKH, MaQT, MaKH_VC, PhuongThucTT, DiaChiJson, TrangThai, Gh
  N'Đã từ chối', N'Đơn hàng đặt số lượng quá lớn nhân viên miễn cưỡng từ chối vì gọi không ghe máy', '2026-01-10', NULL),
 
 -- HD 2
-(2, NULL, NULL, N'Chuyển khoản',
+(2, NULL, NULL, N'VNPAY',
  N'{"DiemGiao":"789 Cách Mạng Tháng 8Z, Tân Bình","TenNN":"Trần Thị Hi A","SDT":"0912345678"}',
  N'Đang xử lý', NULL, '2026-01-11', NULL),
 
@@ -800,7 +800,7 @@ INSERT INTO HoaDon (MaKH, MaQT, MaKH_VC, PhuongThucTT, DiaChiJson, TrangThai, Gh
  N'Đã từ chối', N'Khách hủy đơn', '2026-01-14', NULL),
 
 -- HD 6
-(2, 1, NULL, N'Chuyển khoản',
+(2, 1, NULL, N'VNPAY',
  N'{"DiemGiao":"789 Cách Mạng Tháng 8Y","TenNN":"Trần Thị Hi B","SDT":"0912345678"}',
  N'Báo lỗi', N'Khách hàng không nhận được hàng', '2026-01-15', '2026-01-19'),
 
@@ -820,7 +820,7 @@ INSERT INTO HoaDon (MaKH, MaQT, MaKH_VC, PhuongThucTT, DiaChiJson, TrangThai, Gh
  N'Đang xử lý', NULL, '2026-01-18', NULL),
 
 -- HD 10
-(2, 1, NULL, N'Chuyển khoản',
+(2, 1, NULL, N'VNPAY',
  N'{"DiemGiao":"789 Cách Mạng Tháng 8Z","TenNN":"Trần Thị Hi A","SDT":"0912345678"}',
  N'Hoàn tất', NULL, '2026-01-19', '2026-01-24');
 
