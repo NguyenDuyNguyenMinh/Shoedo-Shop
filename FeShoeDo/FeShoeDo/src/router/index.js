@@ -52,7 +52,6 @@ const routes = [
     path: '/payment-result',
     name: 'PaymentResult',
     component: () => import('@/components/customer/KH_PaymentResult.vue'),
-    meta: { requiresAuth: true, role: 'CUSTOMER' }
   },
   {
     path: '/customer/orders',

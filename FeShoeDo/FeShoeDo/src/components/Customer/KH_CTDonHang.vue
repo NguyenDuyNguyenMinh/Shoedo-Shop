@@ -753,13 +753,6 @@ const submitCancelOrder = async () => {
         order.value.ghiChu = fullReason;
       }
 
-      // 🔴 C1: Khôi phục stock + voucher cho đơn VNPay
-      if (selectedCancelOrder.value?.phuongThucTT === 'VNPAY') {
-        api.restoreForCancel(selectedCancelOrder.value.maHD).catch(err => {
-          console.error('Lỗi khôi phục stock/voucher:', err);
-        });
-      }
-
       // Reload lại dữ liệu sau 1.5 giây
       setTimeout(() => {
         fetchOrderDetail();

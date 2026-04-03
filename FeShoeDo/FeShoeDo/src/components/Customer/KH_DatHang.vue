@@ -331,37 +331,23 @@ export default {
     async loadData() {
       this.loading = true;
       try {
-        // Lấy danh sách ID sản phẩm đã chọn từ sessionStorage (do trang giỏ hàng lưu)
-        const savedIds = sessionStorage.getItem('checkoutItemIds');
-        let selectedIds = null;
-        if (savedIds) {
-          try {
-            selectedIds = JSON.parse(savedIds);
-          } catch (e) {
-            selectedIds = null;
-          }
+        const storedItems = sessionStorage.getItem('checkoutItems');
+        const storedIds = sessionStorage.getItem('checkoutItemIds');
+
+        if (storedItems) {
+          this.checkoutItems = JSON.parse(storedItems);
+        }
+        if (storedIds) {
+          this.checkoutItemIds = JSON.parse(storedIds);
         }
 
-        // Re-fetch cart mới nhất từ backend để đảm bảo giá/tồn kho chính xác
-        const cartResp = await api.getCart();
-        if (cartResp.data.success && cartResp.data.items && cartResp.data.items.length > 0) {
-          const allItems = cartResp.data.items;
-          // Lọc theo IDs đã chọn từ giỏ hàng; fallback lấy tất cả nếu không có
-          if (selectedIds && selectedIds.length > 0) {
-            this.checkoutItems = allItems.filter(item => selectedIds.includes(item.maGH));
+        if (this.checkoutItems.length === 0) {
+          const cartResp = await api.getCart();
+          if (cartResp.data.success && cartResp.data.items) {
+            this.checkoutItems = cartResp.data.items;
             this.checkoutItemIds = this.checkoutItems.map(item => item.maGH);
-          } else {
-            this.checkoutItems = allItems;
-            this.checkoutItemIds = allItems.map(item => item.maGH);
           }
-        } else {
-          this.checkoutItems = [];
-          this.checkoutItemIds = [];
         }
-
-        // Xóa sessionStorage checkout để tránh dùng dữ liệu cũ
-        sessionStorage.removeItem('checkoutItems');
-        sessionStorage.removeItem('checkoutItemIds');
 
         // Lấy danh sách địa chỉ
         const addrResp = await api.getAddresses();

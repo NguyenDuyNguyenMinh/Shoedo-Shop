@@ -4,8 +4,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import poly.edu.config.VNPayConfig;
 import poly.edu.dao.HoaDonDAO;
-import poly.edu.dao.SanPhamChiTietDAO;
-import poly.edu.dao.KhachHangVoucherDAO;
 
 import java.io.*;
 import java.net.HttpURLConnection;
@@ -14,7 +12,6 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 public class VNPayService {
@@ -22,50 +19,44 @@ public class VNPayService {
     @Autowired
     private HoaDonDAO hoaDonDAO;
 
-    @Autowired
-    private SanPhamChiTietDAO sanPhamChiTietDAO;
-
-    @Autowired
-    private KhachHangVoucherDAO khachHangVoucherDAO;
-
     public String createPaymentUrl(Integer maHD, long amount, String orderInfo) throws Exception {
-        // VNPay yêu cầu số tiền là bội số của 1000 VND
-        long roundedAmount = (amount / 1000) * 1000;
-        if (roundedAmount < 10000) roundedAmount = 10000; // tối thiểu 10,000 VND
-
-        Map<String, String> vnpParams = new TreeMap<>(); // TreeMap tự sắp xếp alphabetically
-        vnpParams.put("vnp_Amount", String.valueOf(roundedAmount * 100)); // nhân 100 theo spec VNPay
-        vnpParams.put("vnp_BankCode", "NCB");
+        Map<String, String> vnpParams = new LinkedHashMap<>();
+        vnpParams.put("vnp_Version", "2.1.0");
         vnpParams.put("vnp_Command", "pay");
-        vnpParams.put("vnp_CreateDate", new SimpleDateFormat("yyyyMMddHHmmss") {{
-                setTimeZone(TimeZone.getTimeZone("Asia/Ho_Chi_Minh"));
-            }}.format(Calendar.getInstance(TimeZone.getTimeZone("Asia/Ho_Chi_Minh")).getTime()));
+        vnpParams.put("vnp_TmnCode", VNPayConfig.vnp_TmnCode_Static);
+        vnpParams.put("vnp_Amount", String.valueOf(amount * 100));
         vnpParams.put("vnp_CurrCode", "VND");
-        vnpParams.put("vnp_IpAddr", "127.0.0.1");
-        vnpParams.put("vnp_Locale", "vn");
+        vnpParams.put("vnp_BankCode", "NCB");
+        vnpParams.put("vnp_TxnRef", maHD.toString());
         vnpParams.put("vnp_OrderInfo", orderInfo);
         vnpParams.put("vnp_OrderType", "topup");
+        vnpParams.put("vnp_Locale", "vn");
         vnpParams.put("vnp_ReturnUrl", VNPayConfig.vnp_ReturnUrl_Static);
-        vnpParams.put("vnp_TmnCode", VNPayConfig.vnp_TmnCode_Static);
-        vnpParams.put("vnp_TxnRef", maHD.toString());
-        vnpParams.put("vnp_Version", "2.1.0");
-
-        // Sửa: cld.add(Calendar.MINUTE, 15) cần gọi TRƯỚC khi format expireDate
-        Calendar cld = Calendar.getInstance(TimeZone.getTimeZone("Asia/Ho_Chi_Minh"));
+        vnpParams.put("vnp_IpAddr", "127.0.0.1");
+        
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
+        Calendar cld = Calendar.getInstance(TimeZone.getTimeZone("Etc/GMT+7"));
+        vnpParams.put("vnp_CreateDate", sdf.format(cld.getTime()));
+        
         cld.add(Calendar.MINUTE, 15);
-        vnpParams.put("vnp_ExpireDate", new SimpleDateFormat("yyyyMMddHHmmss") {{
-                setTimeZone(TimeZone.getTimeZone("Asia/Ho_Chi_Minh"));
-            }}.format(cld.getTime()));
+        vnpParams.put("vnp_ExpireDate", sdf.format(cld.getTime()));
 
         String signValue = VNPayConfig.hashAllFields(vnpParams);
         vnpParams.put("vnp_SecureHash", signValue);
 
         StringBuilder url = new StringBuilder(VNPayConfig.vnp_Url_Static);
         url.append("?");
-        url.append(vnpParams.entrySet().stream()
-                .map(e -> URLEncoder.encode(e.getKey(), StandardCharsets.US_ASCII) + "=" +
-                           URLEncoder.encode(e.getValue(), StandardCharsets.US_ASCII))
-                .collect(Collectors.joining("&")));
+        
+        int i = 0;
+        for (Map.Entry<String, String> entry : vnpParams.entrySet()) {
+            if (i > 0) {
+                url.append("&");
+            }
+            url.append(URLEncoder.encode(entry.getKey(), StandardCharsets.US_ASCII.toString()));
+            url.append("=");
+            url.append(URLEncoder.encode(entry.getValue(), StandardCharsets.US_ASCII.toString()));
+            i++;
+        }
 
         return url.toString();
     }
@@ -238,30 +229,5 @@ public class VNPayService {
 
     private String getResponseMessage(String vnp_ResponseCode) {
         return getResponseCode(vnp_ResponseCode);
-    }
-
-    // 🔴 C1: Khôi phục stock + voucher khi khách hủy đơn VNPay
-    // Endpoint bên ngoài gọi method này sau khi cancelOrder() đã đổi trạng thái
-    public void restoreStockAndVoucherForCancel(Integer maHD) {
-        hoaDonDAO.findById(maHD).ifPresent(hoaDon -> {
-            if ("VNPAY".equals(hoaDon.getPhuongThucTT())
-                    && ("Đang xử lý".equals(hoaDon.getTrangThai())
-                        || "Đã từ chối".equals(hoaDon.getTrangThai()))) {
-                // Khôi phục stock
-                if (hoaDon.getHoaDonCTs() != null) {
-                    for (var ct : hoaDon.getHoaDonCTs()) {
-                        sanPhamChiTietDAO.congSoLuong(
-                            ct.getSanPhamChiTiet().getMaSKU(), ct.getSoLuong());
-                    }
-                }
-                // Khôi phục voucher
-                var khv = hoaDon.getKhachHangVoucher();
-                if (khv != null) {
-                    khv.setTrangThai("Chưa sử dụng");
-                    khv.setNgayDoi(null);
-                    khachHangVoucherDAO.save(khv);
-                }
-            }
-        });
     }
 }
