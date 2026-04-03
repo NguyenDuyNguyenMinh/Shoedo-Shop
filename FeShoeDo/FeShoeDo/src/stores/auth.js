@@ -153,7 +153,7 @@ export const useAuthStore = defineStore('auth', {
     clearAuth() {
       this.user = null;
       this.cartCount = 0;
-      this.isInitialized = false;
+      this.logout;
     }
   }
 });

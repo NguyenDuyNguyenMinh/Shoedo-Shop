@@ -98,7 +98,6 @@
 <script>
 import KH_Navbar from '@/components/shared/KH_Navbar.vue';
 import Footer from '@/components/shared/Footer.vue';
-import api from '@/services/api';
 
 export default {
   name: 'KH_PaymentResult',
@@ -120,15 +119,15 @@ export default {
       return new Intl.NumberFormat('vi-VN').format(Math.round(value)) + '₫';
     },
   },
-  async mounted() {
+  mounted() {
     const params = new URLSearchParams(window.location.search);
-    const urlSuccess = params.get('success');
-    const maHD       = params.get('maHD');
-    const message    = params.get('message');
+    const success = params.get('success');
+    const maHD    = params.get('maHD');
+    const message = params.get('message');
 
     this.maHD = maHD ? parseInt(maHD) : null;
 
-    // Lấy dữ liệu từ sessionStorage (lưu trước khi redirect sang VNPay)
+    // Ưu tiên dùng dữ liệu từ sessionStorage (lưu trước khi redirect sang VNPay)
     const pending = sessionStorage.getItem('pendingOrder');
     if (pending) {
       const order = JSON.parse(pending);
@@ -137,56 +136,16 @@ export default {
       sessionStorage.removeItem('pendingOrder');
     }
 
-    // 🔴 C4: Xác minh thanh toán từ backend — KHÔNG tin URL param
-    if (this.maHD) {
-      try {
-        const verifyResp = await api.verifyPayment(this.maHD);
-
-        if (verifyResp.data.success) {
-          const trangThai = verifyResp.data.trangThai || '';
-          const phuongThucTT = verifyResp.data.phuongThucTT || '';
-          const daThanhToan = verifyResp.data.daThanhToan || false;
-
-          // Trích mã giao dịch từ ghiChu
-          const ghiChu = verifyResp.data.ghiChu || '';
-          const match = ghiChu.match(/Mã giao dịch[:\-]?\s*([A-Z0-9]+)/i);
-          if (match) {
-            this.transactionCode = match[1];
-          }
-
-          // Xác định success: VNPay thành công + trạng thái hợp lệ
-          const isPaid = daThanhToan
-            && (trangThai === "Đang xử lý" || trangThai === "Đang giao"
-                || trangThai === "Hoàn tất");
-
-          if (isPaid) {
-            this.paymentSuccess = true;
-            this.errorMessage   = '';
-            sessionStorage.removeItem('checkoutItems');
-            sessionStorage.removeItem('checkoutItemIds');
-          } else if (urlSuccess === 'true' && !isPaid) {
-            // URL nói thành công nhưng backend không xác nhận → cảnh báo
-            this.paymentSuccess = false;
-            this.errorMessage   = 'Thanh toán không thể xác nhận. Vui lòng liên hệ hỗ trợ.';
-          } else {
-            this.paymentSuccess = false;
-            this.errorMessage   = message ? decodeURIComponent(message) : 'Thanh toán không thành công.';
-          }
-        } else {
-          this.paymentSuccess = false;
-          this.errorMessage   = verifyResp.data.message || 'Không xác minh được thanh toán.';
-        }
-      } catch (err) {
-        // Backend không trả lời → fallback theo URL param nhưng cảnh báo
-        console.error('Verify payment failed:', err);
-        this.paymentSuccess = (urlSuccess === 'true');
-        this.errorMessage   = message ? decodeURIComponent(message)
-          : (urlSuccess !== 'true' ? 'Thanh toán đã bị hủy hoặc không thành công.' : 'Không xác minh được thanh toán. Vui lòng liên hệ hỗ trợ.');
-      }
+    if (success === 'true' || success === true) {
+      // Thanh toán THÀNH CÔNG → xóa sessionStorage checkout
+      this.paymentSuccess = true;
+      this.errorMessage  = '';
+      sessionStorage.removeItem('checkoutItems');
+      sessionStorage.removeItem('checkoutItemIds');
     } else {
-      // Không có maHD → fallback theo URL
-      this.paymentSuccess = (urlSuccess === 'true');
-      if (!this.paymentSuccess && message) {
+      // Thanh toán THẤT BẠI / HỦY → KHÔNG xóa checkoutItems để user thấy lại giỏ hàng
+      this.paymentSuccess = false;
+      if (message) {
         try {
           this.errorMessage = decodeURIComponent(message);
         } catch {

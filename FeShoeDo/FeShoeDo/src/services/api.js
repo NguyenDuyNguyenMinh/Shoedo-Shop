@@ -150,11 +150,6 @@ export default {
     return apiClient.post('/payment/create-order', data);
   },
 
-  // 🔴 C4: Xác minh thanh toán từ backend — chống fake URL
-  verifyPayment(maHD) {
-    return apiClient.get(`/payment/verify-payment/${maHD}`);
-  },
-
   buyNow(data) {
     return apiClient.post('/customer/buy-now', data);
   },
@@ -186,11 +181,6 @@ export default {
 
   cancelOrder(id, cancelReason) {
     return apiClient.post(`/customer/orders/${id}/cancel`, { cancelReason });
-  },
-
-  // 🔴 C1: Gọi sau cancelOrder() để khôi phục stock + voucher cho đơn VNPay
-  restoreForCancel(maHD) {
-    return apiClient.post(`/payment/restore-for-cancel/${maHD}`);
   },
 
   reportIssue(data) {
