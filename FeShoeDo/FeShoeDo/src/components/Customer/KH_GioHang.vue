@@ -117,7 +117,7 @@
                 <span>Tạm tính ({{ selectedItems.length }} sản phẩm)</span>
                 <span class="fw-semibold">{{ formatCurrency(subtotal) }}</span>
               </div>
-              <div class="summary-row">
+              <div v-if="totalDiscount > 0" class="summary-row">
                 <span>Giảm giá</span>
                 <span class="text-success fw-semibold">-{{ formatCurrency(totalDiscount) }}</span>
               </div>
@@ -355,15 +355,15 @@ export default {
       if (this.selectedIds.length === 0) return;
       if (!confirm(`Bạn có chắc muốn xóa ${this.selectedIds.length} sản phẩm đã chọn?`)) return;
       
-      for (const maGH of [...this.selectedIds]) {
-        try {
-          await api.removeFromCart(maGH);
-          this.cartItems = this.cartItems.filter(item => item.maGH !== maGH);
-        } catch (error) {
-          console.error('Error removing item:', maGH, error);
-        }
-      }
+      // Xóa song song để nhanh hơn
+      const deletePromises = [...this.selectedIds].map(maGH =>
+        api.removeFromCart(maGH).catch(err => ({ error: true, maGH, err }))
+      );
+      await Promise.allSettled(deletePromises);
+      
+      // Reload cart từ server để đảm bảo dữ liệu đồng bộ
       this.selectedIds = [];
+      await this.loadCart();
       const authStore = useAuthStore();
       authStore.cartCount = this.cartItems.length;
     },
