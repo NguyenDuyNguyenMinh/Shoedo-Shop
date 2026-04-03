@@ -184,7 +184,6 @@ public class ProfileService {
                 map.put("soDiem", item.getSoDiem());
                 map.put("loaiGiaoDich", item.getLoaiGiaoDich());
                 map.put("ngayGiaoDich", item.getNgayGiaoDich());
-                if (item.getNguoiLienQuan() != null) map.put("nguoiLienQuan", item.getNguoiLienQuan().getTenKH());
                 return map;
             }).collect(Collectors.toList());
         
@@ -311,7 +310,6 @@ public class ProfileService {
         historyNew.setKhachHang(customer);
         historyNew.setSoDiem(3);
         historyNew.setLoaiGiaoDich("Nhập mã giới thiệu");
-        historyNew.setNguoiLienQuan(referrer);
         historyNew.setNgayGiaoDich(now);
         lichSuTichDiemDAO.save(historyNew);
         
@@ -322,7 +320,6 @@ public class ProfileService {
         historyRef.setKhachHang(referrer);
         historyRef.setSoDiem(5);
         historyRef.setLoaiGiaoDich("Mời bạn bè");
-        historyRef.setNguoiLienQuan(customer);
         historyRef.setNgayGiaoDich(now);
         lichSuTichDiemDAO.save(historyRef);
         

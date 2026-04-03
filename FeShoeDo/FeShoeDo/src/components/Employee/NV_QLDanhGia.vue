@@ -76,7 +76,7 @@
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-              Đóng
+              Hủy
             </button>
             <button v-if="selectedReview" type="button" class="btn btn-danger" @click="deleteFromModal">
               <i class="bi bi-trash me-2"></i>Xóa đánh giá

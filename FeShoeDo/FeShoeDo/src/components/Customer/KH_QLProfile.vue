@@ -85,8 +85,9 @@
                 
                 <div class="text-end d-flex justify-content-end gap-2">
                   <button v-if="!customer.hasAppliedReferral" 
+                          type="button"
                           class="btn btn-outline-primary" 
-                          @click="showReferralModal = true">
+                          @click.stop="showReferralModal = true">
                     <i class="fas fa-gift me-1"></i> Nhập mã giới thiệu
                   </button>
                   <button type="submit" class="btn btn-success" :disabled="profileLoading">

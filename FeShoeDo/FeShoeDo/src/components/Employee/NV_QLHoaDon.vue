@@ -626,7 +626,7 @@
             <button type="button" class="btn btn-primary" @click="printOrder(orderDetail)">
               <i class="fas fa-print me-2"></i>Xuất hóa đơn
             </button>
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
           </div>
         </div>
       </div>
