@@ -25,12 +25,7 @@ public class LichSuTichDiem {
     
     @Column(name = "LoaiGiaoDich", length = 100)
     private String loaiGiaoDich;
-    
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "MaNguoiLienQuan")
-    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
-    private KhachHang nguoiLienQuan;
-    
+
     @OneToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "MaHDCT")
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "lichSuTichDiem"})

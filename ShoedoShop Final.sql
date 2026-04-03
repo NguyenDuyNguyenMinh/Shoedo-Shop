@@ -193,7 +193,6 @@ CREATE TABLE LichSuTichDiem (
     MaKH INT NOT NULL,
     SoDiem INT,
     LoaiGiaoDich NVARCHAR(100) CHECK (LoaiGiaoDich IN (N'Mời bạn bè', N'Chia sẻ mua hàng', N'Nhập mã giới thiệu', N'Đổi voucher')),
-    MaNguoiLienQuan INT NULL,
     MaHDCT INT NULL,
     NgayGiaoDich DATETIME DEFAULT GETDATE(),
     CONSTRAINT FK_LichSuTichDiem_KhachHang FOREIGN KEY (MaKH) REFERENCES KhachHang(MaKH),
