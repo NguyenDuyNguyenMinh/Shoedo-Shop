@@ -47,7 +47,9 @@ public class KhachHangVoucherController {
             }
 
             List<KhachHangVoucher> validVouchers =
-                    khachHangVoucherDAO.findValidVouchersByMaKH(kh.getMaKH());
+                    khachHangVoucherDAO.findValidVouchersByMaKH(kh.getMaKH(), "Chưa sử dụng");
+
+            System.out.println("[Voucher] MaKH=" + kh.getMaKH() + ", validVouchers found=" + validVouchers.size());
 
             List<Map<String, Object>> data = validVouchers.stream().map(khv -> {
                 Map<String, Object> map = new LinkedHashMap<>();
