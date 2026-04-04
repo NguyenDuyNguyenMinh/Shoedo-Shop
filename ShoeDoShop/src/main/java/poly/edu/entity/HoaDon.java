@@ -53,8 +53,8 @@ public class HoaDon {
     private Date ngayDen;
 
     // /** Lưu tạm cartItemIds (dạng JSON) khi checkout VNPay — dùng để restore cart khi hủy thanh toán */
-    // @Column(name = "CartItemIdsJson", columnDefinition = "nvarchar(max)")
-    // private String cartItemIdsJson;
+//     @Column(name = "CartItemIdsJson", columnDefinition = "nvarchar(max)")
+//     private String cartItemIdsJson;
 
     /**
      * Cascade ALL + OrphanRemoval: khi xóa HoaDon, toàn bộ HoaDonCT liên quan
