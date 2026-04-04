@@ -38,6 +38,14 @@ public class AuthInterceptor implements HandlerInterceptor {
         }
         
         if (req.getSession().getAttribute("user") == null) {
+            boolean isHighSecurityRoute = uri.startsWith("/employee") || 
+                                          uri.startsWith("/api/employee");
+            
+            if (isHighSecurityRoute) {
+                res.sendRedirect("/auth/login");
+                return false;
+            }
+            
             boolean autoLoggedIn = authService.autoLoginFromCookie();
             if (!autoLoggedIn) {
                 res.sendRedirect("/auth/login");
@@ -63,12 +71,18 @@ public class AuthInterceptor implements HandlerInterceptor {
                 return false;
             }
             
+            Object user = req.getSession().getAttribute("user");
+            if (user == null) {
+                res.sendRedirect("/auth/login");
+                return false;
+            }
+            
             if ((uri.equals("/employee/dashboard") || uri.startsWith("/employee/dashboard/")) 
                     && !authService.isAdmin()) {
                 res.sendRedirect("/employee/products");
                 return false;
             }
-            return true; 
+            return true;
         }
 
         if (uri.startsWith("/customer") && !uri.equals("/customer/index")) {

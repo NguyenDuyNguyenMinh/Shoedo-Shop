@@ -325,6 +325,69 @@ public class ProfileService {
         
         return Map.of("success", true, "message", "Nhập mã giới thiệu thành công! Bạn nhận được 3 điểm.", "newPoints", customer.getDiemTichLuy());
     }
+    
+    public Map<String, Object> deleteExpiredVoucher(Integer maKHVC) {
+        Users currentUser = authService.getCurrentUser();
+        if (currentUser == null) return error("Chưa đăng nhập");
+        
+        KhachHang customer = khachHangDAO.findByUser_MaUser(currentUser.getMaUser());
+        if (customer == null) return error("Không tìm thấy thông tin khách hàng");
+        
+        Optional<KhachHangVoucher> khvOpt = khachHangVoucherDAO.findById(maKHVC);
+        if (!khvOpt.isPresent()) return error("Không tìm thấy voucher");
+        
+        KhachHangVoucher khv = khvOpt.get();
+
+        if (!khv.getKhachHang().getMaKH().equals(customer.getMaKH())) {
+            return error("Bạn không có quyền xóa voucher này");
+        }
+
+        if (!"Hết hạn".equals(khv.getTrangThai())) {
+            return error("Chỉ có thể xóa voucher đã hết hạn");
+        }
+        
+        khachHangVoucherDAO.delete(khv);
+        return success("Xóa voucher thành công!");
+    }
+
+    @Transactional
+    public Map<String, Object> deleteBatchExpiredVouchers(List<Integer> ids) {
+        if (ids == null || ids.isEmpty()) return error("Không có voucher nào được chọn");
+        
+        Users currentUser = authService.getCurrentUser();
+        if (currentUser == null) return error("Chưa đăng nhập");
+        
+        KhachHang customer = khachHangDAO.findByUser_MaUser(currentUser.getMaUser());
+        if (customer == null) return error("Không tìm thấy thông tin khách hàng");
+        
+        int deletedCount = 0;
+        List<String> errors = new ArrayList<>();
+        
+        for (Integer id : ids) {
+            try {
+                Optional<KhachHangVoucher> khvOpt = khachHangVoucherDAO.findById(id);
+                if (khvOpt.isPresent()) {
+                    KhachHangVoucher khv = khvOpt.get();
+                    if (khv.getKhachHang().getMaKH().equals(customer.getMaKH()) && 
+                        "Hết hạn".equals(khv.getTrangThai())) {
+                        khachHangVoucherDAO.delete(khv);
+                        deletedCount++;
+                    } else {
+                        errors.add("Voucher ID " + id + " không hợp lệ");
+                    }
+                }
+            } catch (Exception e) {
+                errors.add("Lỗi khi xóa voucher ID " + id);
+            }
+        }
+        
+        if (deletedCount > 0) {
+            return success("Đã xóa " + deletedCount + " voucher thành công!" + 
+                          (errors.isEmpty() ? "" : " (" + errors.size() + " lỗi)"));
+        } else {
+            return error("Không thể xóa voucher nào: " + String.join(", ", errors));
+        }
+    }
 
     private Map<String, Object> success(String message) { return Map.of("success", true, "message", message); }
     private Map<String, Object> success(String message, Object data) { 

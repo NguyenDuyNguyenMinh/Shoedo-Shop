@@ -64,27 +64,28 @@
               <div v-if="addresses.length === 0" class="text-muted text-center py-3">
                 Chưa có địa chỉ nào. Vui lòng thêm địa chỉ trong phần Hồ sơ.
               </div>
-
-              <div v-for="addr in addresses" :key="addr.maDC"
-                   class="address-option"
-                   :class="{ selected: selectedAddress === addr.maDC }"
-                   @click="selectedAddress = addr.maDC">
-                <div class="d-flex align-items-start gap-3">
-                  <input class="form-check-input mt-1" type="radio"
-                         name="address" :id="'addr' + addr.maDC"
-                         :checked="selectedAddress === addr.maDC"
-                         @change="selectedAddress = addr.maDC">
-                  <label :for="'addr' + addr.maDC" class="flex-fill">
-                    <div class="d-flex align-items-center gap-2 mb-1">
-                      <span class="fw-bold">{{ addr.tenNN }}</span>
-                      <span class="text-muted">|</span>
-                      <span class="text-muted">{{ addr.sdt }}</span>
-                      <span v-if="addr.macDinh" class="badge bg-dark ms-1">Mặc định</span>
-                    </div>
-                    <div class="text-muted small">{{ addr.diemGiao }}</div>
-                  </label>
+              <div v-else class="DS-list1">
+                <div v-for="addr in addresses" :key="addr.maDC"
+                    class="address-option"
+                    :class="{ selected: selectedAddress === addr.maDC }"
+                    @click="selectedAddress = addr.maDC">
+                  <div class="d-flex align-items-start gap-3">
+                    <input class="form-check-input mt-1" type="radio"
+                          name="address" :id="'addr' + addr.maDC"
+                          :checked="selectedAddress === addr.maDC"
+                          @change="selectedAddress = addr.maDC">
+                    <label :for="'addr' + addr.maDC" class="flex-fill">
+                      <div class="d-flex align-items-center gap-2 mb-1">
+                        <span class="fw-bold">{{ addr.tenNN }}</span>
+                        <span class="text-muted">|</span>
+                        <span class="text-muted">{{ addr.sdt }}</span>
+                        <span v-if="addr.macDinh" class="badge bg-dark ms-1">Mặc định</span>
+                      </div>
+                      <div class="text-muted small">{{ addr.diemGiao }}</div>
+                    </label>
+                  </div>
                 </div>
-              </div>
+              </div>              
             </div>
 
             <!-- 2. Voucher -->
@@ -108,41 +109,44 @@
               </div>
 
               <!-- Voucher list (radio like address) -->
-              <div v-for="v in vouchers" :key="v.maKH_VC"
-                   class="voucher-option"
-                   :class="{
-                     selected: selectedVoucher === v.maKH_VC,
-                     disabled: !isVoucherApplicable(v)
-                   }"
-                   @click="selectVoucher(v)">
-                <div class="d-flex align-items-start gap-3">
-                  <input class="form-check-input mt-1" type="radio"
-                         name="voucher" :id="'voucher' + v.maKH_VC"
-                         :checked="selectedVoucher === v.maKH_VC"
-                         :disabled="!isVoucherApplicable(v)"
-                         @change="selectedVoucher = v.maKH_VC">
-                  <label :for="'voucher' + v.maKH_VC" class="flex-fill">
-                    <div class="voucher-card-inner">
-                      <div class="voucher-value">
-                        <span class="voucher-amount">{{ formatCurrency(v.giaTriGiam) }}</span>
-                        <span class="voucher-label">GIẢM</span>
+              <div v-else class="DS-list2">
+                <div v-for="v in vouchers" :key="v.maKH_VC"
+                    class="voucher-option"
+                    :class="{
+                      selected: selectedVoucher === v.maKH_VC,
+                      disabled: !isVoucherApplicable(v)
+                    }"
+                    @click="selectVoucher(v)">
+                  <div class="d-flex align-items-start gap-3">
+                    <input class="form-check-input mt-1" type="radio"
+                          name="voucher" :id="'voucher' + v.maKH_VC"
+                          :checked="selectedVoucher === v.maKH_VC"
+                          :disabled="!isVoucherApplicable(v)"
+                          @change="selectedVoucher = v.maKH_VC">
+                    <label :for="'voucher' + v.maKH_VC" class="flex-fill">
+                      <div class="voucher-card-inner">
+                        <div class="voucher-value">
+                          <span class="voucher-amount">{{ formatCurrency(v.giaTriGiam) }}</span>
+                          <span class="voucher-label">GIẢM</span>
+                        </div>
+                        <div class="voucher-info">
+                          <div class="fw-bold text-dark">{{ v.tenVoucher }}</div>
+                          <div class="text-muted small">
+                            Đơn tối thiểu {{ formatCurrency(v.donToiThieu || 0) }}
+                          </div>
+                          <div class="text-muted small">
+                            HSD: {{ formatDate(v.hanSuDung) }}
+                          </div>
+                          <div v-if="!isVoucherApplicable(v)" class="text-danger small mt-1">
+                            Không đủ điều kiện (đơn hàng tối thiểu {{ formatCurrency(v.donToiThieu || 0) }})
+                          </div>
+                        </div>
                       </div>
-                      <div class="voucher-info">
-                        <div class="fw-bold text-dark">{{ v.tenVoucher }}</div>
-                        <div class="text-muted small">
-                          Đơn tối thiểu {{ formatCurrency(v.donToiThieu || 0) }}
-                        </div>
-                        <div class="text-muted small">
-                          HSD: {{ formatDate(v.hanSuDung) }}
-                        </div>
-                        <div v-if="!isVoucherApplicable(v)" class="text-danger small mt-1">
-                          Không đủ điều kiện (đơn hàng tối thiểu {{ formatCurrency(v.donToiThieu || 0) }})
-                        </div>
-                      </div>
-                    </div>
-                  </label>
+                    </label>
+                  </div>
                 </div>
               </div>
+              
 
               <!-- No voucher option -->
               <div v-if="vouchers.length > 0"
@@ -895,6 +899,18 @@ export default {
 
 .place-order-btn:disabled {
   opacity: 0.6;
+}
+
+.DS-list1 {
+  max-height: 190px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.DS-list2 {
+  max-height: 218px;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 /* Responsive */

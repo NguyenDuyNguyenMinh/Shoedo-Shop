@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import poly.edu.dao.DanhGiaDAO;
 import poly.edu.entity.DanhGia;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -40,15 +41,22 @@ public class QLDanhGiaService {
             if (!danhGiaDAO.existsById(id)) {
                 return error("Không tìm thấy đánh giá cần xóa");
             }
-            
-            danhGiaDAO.deleteByIdNative(id);
-            return success("Xóa đánh giá thành công");
+
+            Optional<DanhGia> danhGiaOpt = danhGiaDAO.findById(id);
+            if (danhGiaOpt.isPresent()) {
+                DanhGia danhGia = danhGiaOpt.get();
+
+                danhGia.setDanhGiaCT("Ẩn đánh giá do vi phạm tiêu chuẩn cộng đồng");
+                danhGiaDAO.save(danhGia);
+                return success("Đã xóa đánh giá do vi phạm tiêu chuẩn cộng đồng");
+            }
+            return error("Không tìm thấy đánh giá cần xóa");
             
         } catch (Exception e) {
-            return error("Không thể xóa đánh giá: " + e.getMessage());
+            return error("Không thể ẩn đánh giá: " + e.getMessage());
         }
     }
-
+    
     private Map<String, Object> success(String key, Object value) {
         return Map.of("success", true, key, value);
     }
