@@ -5,9 +5,6 @@ import org.springframework.context.annotation.Configuration;
 
 import jakarta.annotation.PostConstruct;
 import java.nio.charset.StandardCharsets;
-import java.security.InvalidKeyException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.*;
 
 import javax.crypto.Mac;
@@ -44,16 +41,6 @@ public class VNPayConfig {
     public static String vnp_ApiUrl_Static;
     public static String vnp_ReturnUrl_Static;
     public static String vnp_IpnUrl_Static;
-
-    private static Mac mac;
-
-    static {
-        try {
-            mac = Mac.getInstance("HmacSHA512");
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException("Lỗi khởi tạo Mac", e);
-        }
-    }
 
     @PostConstruct
     public void init() {
@@ -96,14 +83,15 @@ public class VNPayConfig {
 
     public static String hmacSHA512(String key, String data) {
         try {
-            mac.init(new SecretKeySpec(key.getBytes(StandardCharsets.UTF_8), "HmacSHA512"));
-            byte[] hmacData = mac.doFinal(data.getBytes(StandardCharsets.UTF_8));
+            Mac hmac = Mac.getInstance("HmacSHA512");
+            hmac.init(new SecretKeySpec(key.getBytes(StandardCharsets.UTF_8), "HmacSHA512"));
+            byte[] hmacData = hmac.doFinal(data.getBytes(StandardCharsets.UTF_8));
             StringBuilder result = new StringBuilder();
             for (byte b : hmacData) {
                 result.append(String.format("%02x", b));
             }
             return result.toString();
-        } catch (InvalidKeyException e) {
+        } catch (Exception e) {
             throw new RuntimeException("Lỗi tạo HMAC SHA512", e);
         }
     }

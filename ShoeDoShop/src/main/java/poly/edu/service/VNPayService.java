@@ -35,7 +35,8 @@ public class VNPayService {
         vnpParams.put("vnp_IpAddr", "127.0.0.1");
         
         SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
-        Calendar cld = Calendar.getInstance(TimeZone.getTimeZone("Etc/GMT+7"));
+        sdf.setTimeZone(TimeZone.getTimeZone("Asia/Ho_Chi_Minh"));
+        Calendar cld = Calendar.getInstance(TimeZone.getTimeZone("Asia/Ho_Chi_Minh"));
         vnpParams.put("vnp_CreateDate", sdf.format(cld.getTime()));
         
         cld.add(Calendar.MINUTE, 15);

@@ -150,6 +150,10 @@ export default {
     return apiClient.post('/payment/create-order', data);
   },
 
+  getVNPayStatus() {
+    return apiClient.get('/payment/vnpay-status');
+  },
+
   buyNow(data) {
     return apiClient.post('/customer/buy-now', data);
   },

@@ -3,6 +3,7 @@ package poly.edu.controller;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import poly.edu.dao.GioHangDAO;
@@ -10,7 +11,6 @@ import poly.edu.dao.HoaDonDAO;
 import poly.edu.dao.KhachHangVoucherDAO;
 import poly.edu.dao.SanPhamChiTietDAO;
 import poly.edu.dto.CheckoutDTO;
-import poly.edu.entity.GioHang;
 import poly.edu.entity.HoaDon;
 import poly.edu.entity.KhachHangVoucher;
 import poly.edu.entity.Users;
@@ -21,6 +21,7 @@ import poly.edu.service.VNPayService;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 @RestController
 @RequestMapping("/api/payment")
@@ -47,7 +48,26 @@ public class VNPayController {
     @Autowired
     private KhachHangVoucherDAO khachHangVoucherDAO;
 
+    @Value("${vnpay.enabled:true}")
+    private boolean vnpayEnabled;
+
     private final ObjectMapper objectMapper = new ObjectMapper();
+
+    /**
+     * Lưu tạm cartItemIds theo maHD trong bộ nhớ (in-memory).
+     * Key = maHD, Value = JSON string của cartItemIds.
+     * Dùng ConcurrentHashMap để hỗ trợ truy cập đồng thời an toàn.
+     */
+    private final Map<Integer, String> pendingCartItemIds = new ConcurrentHashMap<>();
+
+    @GetMapping("/vnpay-status")
+    public ResponseEntity<Map<String, Object>> getVnpayStatus() {
+        return ResponseEntity.ok(Map.of(
+            "enabled", vnpayEnabled,
+            "name", "VNPay",
+            "message", vnpayEnabled ? "VNPay đang hoạt động" : "VNPay hiện đang bảo trì, vui lòng chọn phương thức thanh toán khác"
+        ));
+    }
 
     @PostMapping("/create-order")
     public ResponseEntity<Map<String, Object>> createPayment(@RequestBody CheckoutDTO checkoutDTO) {
@@ -60,6 +80,14 @@ public class VNPayController {
             // Kiểm tra nếu là thanh toán VNPAY
             boolean isVNPay = Boolean.TRUE.equals(checkoutDTO.getIsVNPay())
                 || "VNPAY".equalsIgnoreCase(checkoutDTO.getPhuongThucTT());
+
+            // Guard: chặn nếu VNPay đang bảo trì
+            if (isVNPay && !vnpayEnabled) {
+                return ResponseEntity.status(503).body(Map.of(
+                    "success", false,
+                    "message", "VNPay hiện đang bảo trì, vui lòng chọn phương thức thanh toán khác."
+                ));
+            }
 
             if (!isVNPay) {
                 // Nếu không phải VNPAY, xử lý như checkout thông thường (COD)
@@ -85,12 +113,13 @@ public class VNPayController {
 
             String orderInfo = "Thanh toan don hang #" + maHD;
 
-            // Lưu cartItemIds vào HoaDon để có thể restore khi hủy thanh toán
+            // Lưu cartItemIds vào in-memory map để dùng khi VNPAY redirect về
             if (checkoutDTO.getCartItemIds() != null && !checkoutDTO.getCartItemIds().isEmpty()) {
-                hoaDonDAO.findById(maHD).ifPresent(hoaDon -> {
-                    hoaDon.setCartItemIdsJson(objectMapper.writeValueAsString(checkoutDTO.getCartItemIds()));
-                    hoaDonDAO.save(hoaDon);
-                });
+                try {
+                    pendingCartItemIds.put(maHD, objectMapper.writeValueAsString(checkoutDTO.getCartItemIds()));
+                } catch (Exception e) {
+                    // ignore serialization errors
+                }
             }
 
             String paymentUrl = vnPayService.createPaymentUrl(maHD, amount, orderInfo);
@@ -125,21 +154,21 @@ public class VNPayController {
         if (maHDStr != null) {
             try {
                 Integer maHD = Integer.parseInt(maHDStr);
+
+                // Lấy cartItemIds từ in-memory map
+                List<Integer> cartItemIds = new ArrayList<>();
+                String storedJson = pendingCartItemIds.remove(maHD); // lấy và xóa luôn
+                if (storedJson != null && !storedJson.isEmpty()) {
+                    try {
+                        cartItemIds = objectMapper.readValue(storedJson,
+                            new TypeReference<List<Integer>>() {});
+                    } catch (Exception ignored) {}
+                }
+
                 Optional<HoaDon> optHD = hoaDonDAO.findByIdWithDetails(maHD);
 
                 if (optHD.isPresent()) {
                     HoaDon hoaDon = optHD.get();
-
-                    // Lấy cartItemIds từ HoaDon
-                    List<Integer> cartItemIds = new ArrayList<>();
-                    if (hoaDon.getCartItemIdsJson() != null && !hoaDon.getCartItemIdsJson().isEmpty()) {
-                        try {
-                            cartItemIds = objectMapper.readValue(
-                                hoaDon.getCartItemIdsJson(),
-                                new TypeReference<List<Integer>>() {}
-                            );
-                        } catch (Exception ignored) {}
-                    }
 
                     if ("true".equals(success)) {
                         // ✅ THANH TOÁN THÀNH CÔNG
@@ -184,8 +213,8 @@ public class VNPayController {
         return ResponseEntity.status(302).header("Location", redirectUrl).build();
     }
 
-    @PostMapping("/vnpay-ipn")
-    public ResponseEntity<Map<String, String>> vnpayIpn(@RequestBody Map<String, String> params) {
+    @GetMapping("/vnpay-ipn")
+    public ResponseEntity<Map<String, String>> vnpayIpn(@RequestParam Map<String, String> params) {
         Map<String, String> result = vnPayService.processIpn(params);
         return ResponseEntity.ok(result);
     }

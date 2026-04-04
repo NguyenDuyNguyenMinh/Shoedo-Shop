@@ -167,6 +167,17 @@
                 <h5><i class="bi bi-wallet2 me-2"></i>Phương thức thanh toán</h5>
               </div>
 
+              <!-- Banner bảo trì VNPay -->
+              <div v-if="!vnpayEnabled" class="vnpay-maintenance-banner mb-3">
+                <div class="d-flex align-items-center gap-2">
+                  <i class="bi bi-exclamation-triangle-fill"></i>
+                  <div>
+                    <strong>VNPay đang bảo trì</strong>
+                    <p class="mb-0 small">Cổng thanh toán VNPay hiện không khả dụng. Vui lòng chọn phương thức khác.</p>
+                  </div>
+                </div>
+              </div>
+
               <div class="payment-option"
                    :class="{ selected: paymentMethod === 'COD' }"
                    @click="paymentMethod = 'COD'">
@@ -186,18 +197,26 @@
               </div>
 
               <div class="payment-option"
-                   :class="{ selected: paymentMethod === 'VNPAY' }"
-                   @click="paymentMethod = 'VNPAY'">
+                   :class="{
+                     selected: paymentMethod === 'VNPAY',
+                     'vnpay-disabled': !vnpayEnabled
+                   }"
+                   @click="vnpayEnabled && (paymentMethod = 'VNPAY')">
                 <div class="d-flex align-items-center gap-3">
                   <input class="form-check-input" type="radio" name="payment" id="payVNPay"
-                         :checked="paymentMethod === 'VNPAY'" @change="paymentMethod = 'VNPAY'">
-                  <label for="payVNPay" class="d-flex align-items-center gap-3 flex-fill">
+                         :checked="paymentMethod === 'VNPAY'"
+                         :disabled="!vnpayEnabled"
+                         @change="vnpayEnabled && (paymentMethod = 'VNPAY')">
+                  <label for="payVNPay" class="d-flex align-items-center gap-3 flex-fill" :class="{ 'text-muted': !vnpayEnabled }">
                     <div class="payment-icon" style="background: #0066cc;">
                       <i class="bi bi-credit-card-2-front"></i>
                     </div>
                     <div>
                       <div class="fw-bold">Thanh toán qua VNPay</div>
-                      <div class="text-muted small">Chuyển khoản ngân hàng qua cổng VNPay</div>
+                      <div class="text-muted small">
+                        <span v-if="vnpayEnabled">Chuyển khoản ngân hàng qua cổng VNPay</span>
+                        <span v-else>Tạm thời không khả dụng</span>
+                      </div>
                     </div>
                   </label>
                 </div>
@@ -301,6 +320,7 @@ export default {
       vouchers: [],
       selectedVoucher: null,
       loadingVouchers: false,
+      vnpayEnabled: true,
       paymentMethod: 'COD',
       note: '',
       loading: true,
@@ -367,6 +387,20 @@ export default {
 
         // Tải voucher
         await this.loadVouchers();
+
+        // Kiểm tra trạng thái VNPay
+        try {
+          const statusResp = await api.getVNPayStatus();
+          if (statusResp.data) {
+            this.vnpayEnabled = statusResp.data.enabled !== false;
+            if (!this.vnpayEnabled && this.paymentMethod === 'VNPAY') {
+              this.paymentMethod = 'COD';
+            }
+          }
+        } catch (e) {
+          // Nếu lỗi, coi như VNPay hoạt động
+          this.vnpayEnabled = true;
+        }
 
       } catch (error) {
         console.error('Error loading checkout data:', error);
@@ -674,6 +708,25 @@ export default {
   text-align: center;
 }
 
+/* VNPay Maintenance Banner */
+.vnpay-maintenance-banner {
+  background: #fff3cd;
+  border: 1.5px solid #ffc107;
+  border-radius: 10px;
+  padding: 12px 16px;
+  color: #856404;
+  font-size: 14px;
+}
+
+.vnpay-maintenance-banner i {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.vnpay-maintenance-banner p {
+  margin-top: 2px;
+}
+
 /* Payment Option */
 .payment-option {
   padding: 16px 18px;
@@ -691,6 +744,12 @@ export default {
 .payment-option.selected {
   border-color: #000;
   background: #fafafa;
+}
+
+.payment-option.vnpay-disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  border-color: #e0e0e0;
 }
 
 .payment-option label {
