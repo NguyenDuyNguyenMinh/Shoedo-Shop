@@ -28,4 +28,7 @@ public interface ChienDichDAO extends JpaRepository<ChienDich, Integer> {
 	            "JOIN SanPham sp ON cd.MaSP = sp.MaSP " +
 	            "WHERE cd.TenChienDich = :tenCD", nativeQuery = true)
 	     List<Object[]> getCampaignDetailsNative(@Param("tenCD") String tenCD);
+	     
+	     @Query("SELECT c FROM ChienDich c WHERE c.trangThai = :trangThai AND CURRENT_TIMESTAMP BETWEEN c.thoiGianBatDau AND c.thoiGianKetThuc ORDER BY c.thoiGianKetThuc ASC")
+	     List<ChienDich> findActiveCampaigns(@Param("trangThai") String trangThai);
 }

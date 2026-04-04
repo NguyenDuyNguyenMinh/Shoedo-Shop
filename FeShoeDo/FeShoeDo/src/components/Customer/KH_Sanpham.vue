@@ -31,18 +31,19 @@ const selectedSort     = ref('Mặc định')
 const showCategoryMenu = ref(false)
 const showSortMenu     = ref(false)
 
-const sortOptions = ['Mặc định', 'Giá tăng dần', 'Giá giảm dần', 'Mới nhất', '🔥 Flash Sale', '📈 Bán Chạy']
+const sortOptions = ['Mặc định', 'Giá tăng dần', 'Giá giảm dần', 'Mới nhất', '🔥 Khuyến Mãi', '📈 Bán Chạy', '⭐ Đánh Giá Cao']
 
 const sortMap = {
-  'Mặc định'    : 'default',
-  'Giá tăng dần': 'price_asc',
-  'Giá giảm dần': 'price_desc',
-  'Mới nhất'    : 'newest',
-  '🔥 Flash Sale': 'flash_sale',
-  '📈 Bán Chạy' : 'ban_chay',
+  'Mặc định'      : 'default',
+  'Giá tăng dần'  : 'price_asc',
+  'Giá giảm dần'  : 'price_desc',
+  'Mới nhất'      : 'newest',
+  '🔥 Khuyến Mãi' : 'flash_sale',
+  '📈 Bán Chạy'   : 'ban_chay',
+  '⭐ Đánh Giá Cao': 'rating_desc' // Tạm map về default vì backend public API chưa support sort rating
 }
 
-const isFlashSale = computed(() => selectedSort.value === '🔥 Flash Sale')
+const isFlashSale = computed(() => selectedSort.value === '🔥 Khuyến Mãi')
 const isSearchMode = computed(() => searchKeyword.value.trim().length > 0)
 
 // =============================================
@@ -142,113 +143,87 @@ const displayProducts = computed(() => {
   } else if (sort === 'flash_sale') {
     list = list.filter(p => p.khuyenMai > 0)
     list.sort((a, b) => b.khuyenMai - a.khuyenMai)
-  } else if (sort === 'ban_chay') {
+} else if (sort === 'ban_chay') {
     list.sort((a, b) => (b.daBan || 0) - (a.daBan || 0))
+  } else if (sort === 'rating_desc') {
+    list.sort((a, b) => (b.saoTrungBinh || 0) - (a.saoTrungBinh || 0))
   }
-
   return list
 })
 
 // =============================================
 // Watch route.query.q → khi Navbar search
 // =============================================
-watch(() => route.query.q, (q) => {
-  searchKeyword.value    = typeof q === 'string' ? q : ''
-  // Reset bộ lọc khi vừa tìm kiếm
-  selectedCategory.value = 'Tất cả'
-  selectedGender.value   = 'Tất cả'
-  onlyInStock.value      = false
-  selectedSort.value     = 'Mặc định'
-  fetchProducts()
-}, { immediate: false })
+watch(() => route.query, (query) => {
+  let needsFetch = false
 
-// Watch filter → gọi lại API (chỉ khi KHÔNG ở search mode)
-watch([selectedCategory, selectedGender, onlyInStock, selectedSort], () => {
+  // 1. Kiểm tra tìm kiếm
+  const newQ = typeof query.q === 'string' ? query.q : ''
+  if (newQ !== searchKeyword.value) { searchKeyword.value = newQ; needsFetch = true }
+
+  // 2. Kiểm tra Danh mục từ Navbar
+  const newCat = typeof query.category === 'string' ? query.category : 'Tất cả'
+  if (newCat !== selectedCategory.value) { selectedCategory.value = newCat; needsFetch = true }
+
+  // 3. Kiểm tra mục Sort từ Trang chủ
+  const sectionMap = {
+    'khuyen-mai': '🔥 Khuyến Mãi',
+    'moi-nhat'  : 'Mới nhất',
+    'danh-gia'  : '⭐ Đánh Giá Cao',
+    'ban-chay'  : '📈 Bán Chạy',
+  }
+  if (query.section && sectionMap[query.section]) {
+    if (selectedSort.value !== sectionMap[query.section]) {
+      selectedSort.value = sectionMap[query.section]
+      needsFetch = true
+    }
+  }
+
+  if (needsFetch) fetchProducts()
+}, { immediate: true })
+
+// Watch bộ lọc giao diện -> gọi API
+watch([selectedGender, onlyInStock, selectedSort], () => {
   if (!isSearchMode.value) fetchProducts()
 })
 
-// =============================================
-// Xóa tìm kiếm → về chế độ bình thường
-// =============================================
 const clearSearch = () => {
   router.replace({ name: 'Sanpham', query: {} })
   searchKeyword.value = ''
   fetchProducts()
 }
 
-// =============================================
-// Helpers
-// =============================================
 const formatPrice = (val) => {
   if (val === null || val === undefined) return ''
   return Number(val).toLocaleString('vi-VN') + ' đ'
 }
-
 const getImageUrl = (hinhAnh) => {
-  if (!hinhAnh) return 'https://via.placeholder.com/400x400?text=No+Image'
+  if (!hinhAnh) return 'https://placehold.co/400x400?text=No+Image'
   if (hinhAnh.startsWith('http')) return hinhAnh
-  return `/images/${hinhAnh}`
+  return `http://localhost:8080/images/${hinhAnh}`
 }
 
-// =============================================
-// Dropdown handlers
-// =============================================
-const updateCategoryPos = () => {
-  if (!categoryBtnRef.value) return
-  const rect = categoryBtnRef.value.getBoundingClientRect()
-  categoryPos.value = { top: rect.bottom + window.scrollY + 6, left: rect.left + window.scrollX }
-}
 const updateSortPos = () => {
   if (!sortBtnRef.value) return
   const rect = sortBtnRef.value.getBoundingClientRect()
   sortPos.value = { top: rect.bottom + window.scrollY + 6, left: rect.left + window.scrollX }
 }
-const toggleCategory = () => {
-  updateCategoryPos()
-  showCategoryMenu.value = !showCategoryMenu.value
-  showSortMenu.value = false
-}
-const toggleSort = () => {
-  updateSortPos()
-  showSortMenu.value = !showSortMenu.value
-  showCategoryMenu.value = false
-}
-const selectCategory = (cat)  => { selectedCategory.value = cat;  showCategoryMenu.value = false }
-const selectSort     = (sort) => { selectedSort.value = sort;     showSortMenu.value = false }
-const setGender      = (g)    => { selectedGender.value = selectedGender.value === g ? 'Tất cả' : g }
-const goToDetail     = (id)   => { router.push({ name: 'DetailProduct', params: { id } }) }
-const closeDropdowns = ()     => { showCategoryMenu.value = false; showSortMenu.value = false }
+
+const toggleSort     = () => { updateSortPos(); showSortMenu.value = !showSortMenu.value }
+const selectSort     = (sort) => { selectedSort.value = sort; showSortMenu.value = false }
+const setGender      = (g) => { selectedGender.value = selectedGender.value === g ? 'Tất cả' : g }
+const goToDetail     = (id) => { router.push({ name: 'DetailProduct', params: { id } }) }
+const closeDropdowns = () => { showSortMenu.value = false }
 
 const resetFilters = () => {
-  selectedCategory.value = 'Tất cả'
-  selectedGender.value   = 'Tất cả'
-  onlyInStock.value      = false
-  selectedSort.value     = 'Mặc định'
+  selectedCategory.value = 'Tất cả'; 
+  selectedGender.value = 'Tất cả'; 
+  onlyInStock.value = false; 
+  selectedSort.value = 'Mặc định';
+  router.replace({ name: 'Sanpham', query: {} })
 }
 
-// =============================================
-// Lifecycle
-// =============================================
-onMounted(async () => {
-  document.addEventListener('click', closeDropdowns)
-  await fetchCategories()
-  // Đọc keyword từ URL khi load trang
-  const q = route.query.q
-  if (q && typeof q === 'string') {
-    searchKeyword.value = q
-  }
-  // ── THÊM MỚI: Đọc section từ KH_index viewAll ──
-  const sectionMap = {
-  'flash-sales': '🔥 Flash Sale',
-  'noi-bat'    : 'Mới nhất',
-  'ban-chay'   : '📈 Bán Chạy',
-}
-  const sec = route.query.section
-  if (sec && sectionMap[sec]) {
-    selectedSort.value = sectionMap[sec]
-  }
-  await fetchProducts()
-})
+onMounted(() => { document.addEventListener('click', closeDropdowns) })
 onUnmounted(() => document.removeEventListener('click', closeDropdowns))
 </script>
 
@@ -261,8 +236,9 @@ onUnmounted(() => document.removeEventListener('click', closeDropdowns))
       <!-- HEADER -->
       <div class="page-header">
         <div class="page-title-area">
-          <h1 class="page-title" v-if="!isSearchMode">Sản Phẩm</h1>
-          <!-- Tiêu đề khi đang tìm kiếm -->
+          <h1 class="page-title" v-if="!isSearchMode">
+            {{ selectedCategory === 'Tất cả' ? 'Tất cả Sản Phẩm' : selectedCategory }}
+          </h1>
           <div v-else class="search-header">
             <i class="bi bi-search search-header-icon"></i>
             <div>
@@ -276,18 +252,14 @@ onUnmounted(() => document.removeEventListener('click', closeDropdowns))
             </div>
           </div>
         </div>
+      </div>
+
+      <div class="filter-bar">
+        
         <div class="gender-tabs">
           <button class="gender-btn" :class="{ active: selectedGender === 'Nam' }" @click.stop="setGender('Nam')">Nam</button>
           <button class="gender-btn" :class="{ active: selectedGender === 'Nữ' }"  @click.stop="setGender('Nữ')">Nữ</button>
         </div>
-      </div>
-
-      <!-- FILTER BAR -->
-      <div class="filter-bar">
-        <button ref="categoryBtnRef" class="filter-btn" :class="{ 'fbn-active': showCategoryMenu }" @click.stop="toggleCategory">
-          <span>{{ selectedCategory === 'Tất cả' ? 'Danh Mục' : selectedCategory }}</span>
-          <i class="bi bi-chevron-down chevron" :class="{ rotated: showCategoryMenu }"></i>
-        </button>
 
         <div class="filter-right">
           <!-- ── nút Còn Hàng: giữ nguyên code, thêm class btn-con-hang để ẩn bằng CSS ── -->
@@ -386,21 +358,6 @@ onUnmounted(() => document.removeEventListener('click', closeDropdowns))
 
     <!-- TELEPORT dropdowns -->
     <Teleport to="body">
-      <div
-        v-if="showCategoryMenu"
-        class="g-dropdown"
-        :style="{ top: categoryPos.top + 'px', left: categoryPos.left + 'px' }"
-        @click.stop
-      >
-        <div
-          v-for="cat in categories"
-          :key="cat"
-          class="g-dropdown-item"
-          :class="{ 'g-active': selectedCategory === cat }"
-          @click="selectCategory(cat)"
-        >{{ cat }}</div>
-      </div>
-
       <div
         v-if="showSortMenu"
         class="g-dropdown"
@@ -555,7 +512,7 @@ onUnmounted(() => document.removeEventListener('click', closeDropdowns))
   min-width: 180px;
   max-height: 320px;
   overflow-y: auto;
-  z-index: 99999;
+  z-index: 1010; /* Hạ z-index xuống thấp hơn navbar để không bị đè khi cuộn */
   font-family: 'Segoe UI', Arial, sans-serif;
 }
 .g-dropdown-item { padding: 10px 16px; font-size: 13px; color: #333; cursor: pointer; transition: background 0.15s; }

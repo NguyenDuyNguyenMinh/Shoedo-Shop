@@ -65,4 +65,12 @@ public interface SanPhamChiTietDAO extends JpaRepository<SanPhamChiTiet, Integer
            "WHERE sct.sanPham.maSP IN :maSPs AND sct.soLuong > 0 " +
            "ORDER BY sct.sanPham.maSP ASC, sct.maSKU ASC")
     List<Object[]> findAnhDaiDienBatch(@Param("maSPs") List<Integer> maSPs);
+    
+    @Query(value = "SELECT ct.MaSP, AVG(CAST(dg.Sao AS FLOAT)) " +
+            "FROM SanPham_ChiTiet ct " +
+            "JOIN HoaDonCT hdct ON ct.MaSKU = hdct.MaSKU " +
+            "JOIN DanhGia dg ON hdct.MaHDCT = dg.MaHDCT " +
+            "WHERE ct.MaSP IN :maSPs " +
+            "GROUP BY ct.MaSP", nativeQuery = true)
+     List<Object[]> getAvgSaoBatch(@Param("maSPs") List<Integer> maSPs);
 }
