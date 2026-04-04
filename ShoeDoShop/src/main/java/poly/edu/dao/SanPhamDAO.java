@@ -68,4 +68,25 @@ public interface SanPhamDAO extends JpaRepository<SanPham, Integer> {
     
     @Query("SELECT s FROM SanPham s WHERE LOWER(s.tenSP) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(s.moTa) LIKE LOWER(CONCAT('%', :keyword, '%'))")
     List<SanPham> searchByNameOrDescription(@Param("keyword") String keyword);
+    
+    @Query("SELECT sp FROM SanPham sp WHERE sp.isActive = true ORDER BY sp.maSP DESC")
+    List<SanPham> findMoiNhat(Pageable pageable);
+
+    // THÊM MỚI 2: Lấy sản phẩm Khuyến Mãi (Sort theo khuyenMai)
+    @Query("SELECT sp FROM SanPham sp WHERE sp.isActive = true AND sp.khuyenMai > 0 ORDER BY sp.khuyenMai DESC")
+    List<SanPham> findKhuyenMaiCaoNhat(Pageable pageable);
+
+    // THÊM MỚI 3: Lấy sản phẩm Nổi Bật (Sort theo đánh giá sao cao nhất)
+    @Query(value = "SELECT sp.* FROM SanPham sp " +
+            "JOIN (" +
+            "  SELECT ct.MaSP, AVG(CAST(dg.Sao AS FLOAT)) as AvgSao " +
+            "  FROM SanPham_ChiTiet ct " +
+            "  JOIN HoaDonCT hdct ON ct.MaSKU = hdct.MaSKU " +
+            "  JOIN DanhGia dg ON hdct.MaHDCT = dg.MaHDCT " +
+            "  GROUP BY ct.MaSP " +
+            ") as Rating ON sp.MaSP = Rating.MaSP " +
+            "WHERE sp.IsActive = 1 " +
+            "ORDER BY Rating.AvgSao DESC", 
+            nativeQuery = true)
+     List<SanPham> findTopDanhGia(Pageable pageable);
 }

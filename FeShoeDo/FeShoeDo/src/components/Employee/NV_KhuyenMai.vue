@@ -126,7 +126,7 @@
             </div>
             <div class="col-md-2">
               <button @click="resetFilters" class="btn btn-secondary w-100">
-                <i class="bi bi-arrow-clockwise me-1"></i>Đặt lại
+                <i class="bi bi-arrow-clockwise me-1"></i>Reset
               </button>
             </div>
           </div>

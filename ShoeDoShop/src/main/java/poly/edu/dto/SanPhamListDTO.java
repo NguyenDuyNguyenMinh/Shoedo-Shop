@@ -17,4 +17,5 @@ public class SanPhamListDTO {
     private List<String> danhMucs;
     private Boolean      conHang;
     private Integer      daBan;
+    private Double saoTrungBinh;
 }

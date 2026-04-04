@@ -186,9 +186,11 @@ public class SanPhamController {
         log.info("GET /api/sanpham/trang-chu");
         try {
             TrangChuResponse body = new TrangChuResponse(
-                    sanPhamService.layFlashSales(),
-                    sanPhamService.layNoiBat(),
-                    sanPhamService.layBanChay()
+                    sanPhamService.layChienDichFlashSale(),
+                    sanPhamService.layKhuyenMaiCaoNhat(),
+                    sanPhamService.layMoiNhat(),
+                    sanPhamService.layTopDanhGia(),
+                    sanPhamService.layBanChay() // Giữ nguyên hàm layBanChay() cũ của ông
             );
             return ResponseEntity.ok(ApiResponse.ok(body));
         } catch (Exception e) {
@@ -196,6 +198,15 @@ public class SanPhamController {
             return ResponseEntity.internalServerError().body(ApiResponse.error("Không thể tải dữ liệu trang chủ"));
         }
     }
+
+    // Sửa lại record TrangChuResponse
+    public record TrangChuResponse(
+            poly.edu.service.SanPhamService.ChienDichHienTaiDTO chienDichFlashSale,
+            List<SanPhamDTO> khuyenMai,
+            List<SanPhamDTO> moiNhat,
+            List<SanPhamDTO> danhGiaCao,
+            List<SanPhamDTO> banChay
+    ) {}
 
 
     @GetMapping("/detail/{id}")
@@ -224,10 +235,4 @@ public class SanPhamController {
             return ResponseEntity.internalServerError().body(ApiResponse.error("Không thể tải sản phẩm liên quan"));
         }
     }
-
-    public record TrangChuResponse(
-            List<SanPhamDTO> flashSales,
-            List<SanPhamDTO> noiBat,
-            List<SanPhamDTO> banChay
-    ) {}
 }
