@@ -6,4 +6,5 @@ import lombok.Data;
 public class GioHangDTO {
     private Integer maSKU;
     private Integer soLuong;
+    private String refCode;
 }

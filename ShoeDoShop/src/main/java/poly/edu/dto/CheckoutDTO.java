@@ -12,4 +12,5 @@ public class CheckoutDTO {
     private Boolean isVNPay;
     /** ID của bản ghi KhachHang_Voucher mà khách hàng chọn áp dụng */
     private Integer maKH_VC;
+    private String refCode;
 }
