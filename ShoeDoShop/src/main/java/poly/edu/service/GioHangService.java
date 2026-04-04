@@ -284,8 +284,6 @@ public class GioHangService {
         if (kh == null) {
             return error("Không tìm thấy thông tin khách hàng");
         }
-
-        // ── Lấy danh sách sản phẩm trong giỏ hàng theo ID được chọn ──
         List<GioHang> selectedItems;
         if (dto.getCartItemIds() != null && !dto.getCartItemIds().isEmpty()) {
             selectedItems = gioHangDAO.findAllById(dto.getCartItemIds());
@@ -300,7 +298,15 @@ public class GioHangService {
             return error("Giỏ hàng trống hoặc không có sản phẩm nào được chọn");
         }
 
-        // ── Kiểm tra tồn kho ──
+        Map<String, String> refMap = new HashMap<>();
+        if (dto.getRefCode() != null && dto.getRefCode().trim().startsWith("{")) {
+            try {
+                refMap = objectMapper.readValue(dto.getRefCode().trim(), new com.fasterxml.jackson.core.type.TypeReference<Map<String, String>>(){});
+            } catch (Exception e) {
+                System.out.println("Lỗi parse JSON refMap: " + e.getMessage());
+            }
+        }
+
         for (GioHang item : selectedItems) {
             SanPhamChiTiet spct = item.getSanPhamChiTiet();
             if (spct.getSoLuong() < item.getSoLuong()) {
@@ -407,21 +413,34 @@ public class GioHangService {
             hdct.setSanPhamChiTiet(spct);
             hdct.setSoLuong(item.getSoLuong());
             hdct.setDonGia(donGia);
+            String skuKey = String.valueOf(spct.getMaSKU());
+            if (refMap.containsKey(skuKey)) {
+                try {
+                    // Lọc lấy số (chống rác)
+                    String numericCode = refMap.get(skuKey).replaceAll("[^0-9]", "");
+                    if (!numericCode.isEmpty()) {
+                        Integer maNguoiChiaSe = Integer.parseInt(numericCode);
+                        KhachHang nguoiChiaSe = khachHangDAO.findByMaKH(maNguoiChiaSe);
+                        
+                        // Chặn tự mua để tự lấy điểm
+                        if (nguoiChiaSe != null && !nguoiChiaSe.getMaKH().equals(kh.getMaKH())) {
+                            hdct.setNguoiChiaSe(nguoiChiaSe);
+                        }
+                    }
+                } catch (Exception e) {}
+            }
             hoaDonCTDAO.save(hdct);
 
             tongTien += donGia * item.getSoLuong();
 
-            // VNPAY: trừ stock (checkout chỉ được gọi khi thanh toán VNPay đã thành công)
-            // COD: KHÔNG trừ stock — admin duyệt đơn mới trừ
             if (isVNPay) {
                 sanPhamChiTietDAO.truSoLuong(spct.getMaSKU(), item.getSoLuong());
             }
         }
 
-        // ── Áp dụng giảm giá voucher (nhưng không âm) ──
         double tongTienSauGiam = Math.max(0, tongTien - voucherDiscount);
-
-        // ── Xóa các item đã checkout khỏi giỏ hàng ──
+        
+        
         for (GioHang item : selectedItems) {
             gioHangDAO.delete(item);
         }

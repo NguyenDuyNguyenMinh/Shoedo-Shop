@@ -510,6 +510,7 @@ export default {
           ghiChu: this.note,
           cartItemIds: this.checkoutItemIds,
           maKH_VC: this.selectedVoucher || null,
+          refCode: localStorage.getItem('refMap') || null,
         };
 
         if (this.paymentMethod === 'VNPAY') {
@@ -539,6 +540,7 @@ export default {
           sessionStorage.removeItem('checkoutItems');
           sessionStorage.removeItem('checkoutItemIds');
           sessionStorage.removeItem('pendingOrder');
+          localStorage.removeItem('refMap');
 
           // Update cart count
           const authStore = useAuthStore();

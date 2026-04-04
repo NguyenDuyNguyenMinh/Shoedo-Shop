@@ -23,4 +23,5 @@ public interface KhachHangDAO extends JpaRepository<KhachHang, Integer> {
     @Query("SELECT kh FROM KhachHang kh WHERE kh.maGioiThieu = :code")
     KhachHang findByMaGioiThieu(@Param("code") String code);
     
+    KhachHang findByMaKH(Integer maKH);
 }

@@ -52,9 +52,7 @@ const shareProduct = () => {
     return
   }
 
-  // 2. Lấy mã giới thiệu của user (giả sử bạn lưu trong authStore.user.maGioiThieu)
-  // Nếu chưa có maGioiThieu trong store, bạn có thể dùng tạm maKH
-  const refCode = authStore.user.maGioiThieu || authStore.user.maKH
+  const refCode = authStore.user.maKH
 
   // 3. Tạo link chia sẻ đính kèm param ?ref=
   const currentUrl = window.location.origin + route.path
@@ -290,6 +288,13 @@ const addToCart = async () => {
   )
   if (!sku) { alert('Không tìm thấy SKU phù hợp!'); return }
 
+  const currentRef = route.query.ref || localStorage.getItem('refCode');
+  if (currentRef && currentRef !== 'null') {
+    let refMap = JSON.parse(localStorage.getItem('refMap') || '{}');
+    refMap[sku.maSKU] = currentRef; 
+    localStorage.setItem('refMap', JSON.stringify(refMap));
+  }
+
   try {
     await api.addToCart({ maSKU: sku.maSKU, soLuong: quantity.value })
     const authStore = useAuthStore()
@@ -313,6 +318,13 @@ const buyNow = async () => {
     (product.value.isFreesize || s.coGiay === selectedSize.value)
   )
   if (!sku) { alert('Không tìm thấy SKU phù hợp!'); return }
+
+  const currentRef = route.query.ref || localStorage.getItem('refCode');
+  if (currentRef && currentRef !== 'null') {
+    let refMap = JSON.parse(localStorage.getItem('refMap') || '{}');
+    refMap[sku.maSKU] = currentRef; 
+    localStorage.setItem('refMap', JSON.stringify(refMap));
+  }
 
   try {
     await api.addToCart({ maSKU: sku.maSKU, soLuong: quantity.value })
@@ -341,6 +353,11 @@ watch(() => route.params.id, (newId) => {
 
 onMounted(() => {
   const id = route.params.id
+
+  if (route.query.ref) {
+    localStorage.setItem('refCode', route.query.ref)
+  }
+
   if (id) {
     fetchProduct(id)
     fetchRelated(id)
