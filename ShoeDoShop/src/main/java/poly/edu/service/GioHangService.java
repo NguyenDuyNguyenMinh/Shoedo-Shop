@@ -214,6 +214,68 @@ public class GioHangService {
         return result;
     }
 
+    // ==================== VALIDATE CHECKOUT (cho VNPay) ====================
+
+    /**
+     * Chỉ validate dữ liệu checkout và tính tổng tiền, KHÔNG tạo HoaDon.
+     * Dùng cho VNPay: validate trước khi redirect sang cổng thanh toán.
+     */
+    public Map<String, Object> validateCheckout(Users user, CheckoutDTO dto) {
+        KhachHang kh = khachHangDAO.findByUser_MaUser(user.getMaUser());
+        if (kh == null) return error("Không tìm thấy thông tin khách hàng");
+
+        List<GioHang> selectedItems;
+        if (dto.getCartItemIds() != null && !dto.getCartItemIds().isEmpty()) {
+            selectedItems = gioHangDAO.findAllById(dto.getCartItemIds());
+            selectedItems = selectedItems.stream()
+                    .filter(item -> item.getKhachHang().getMaKH().equals(kh.getMaKH()))
+                    .collect(Collectors.toList());
+        } else {
+            selectedItems = gioHangDAO.findByKhachHang_MaKH(kh.getMaKH());
+        }
+        if (selectedItems.isEmpty()) return error("Giỏ hàng trống hoặc không có sản phẩm nào được chọn");
+
+        for (GioHang item : selectedItems) {
+            SanPhamChiTiet spct = item.getSanPhamChiTiet();
+            if (spct.getSoLuong() < item.getSoLuong()) {
+                String tenSP = spct.getSanPham() != null ? spct.getSanPham().getTenSP() : "SKU " + spct.getMaSKU();
+                return error("Sản phẩm \"" + tenSP + "\" vượt quá giới hạn cho phép");
+            }
+        }
+
+        double tongTien = 0;
+        for (GioHang item : selectedItems) {
+            SanPhamChiTiet spct = item.getSanPhamChiTiet();
+            double giaGoc = spct.getDonGia() != null ? spct.getDonGia() : 0;
+            int km = (spct.getSanPham() != null && spct.getSanPham().getKhuyenMai() != null)
+                     ? spct.getSanPham().getKhuyenMai() : 0;
+            tongTien += giaGoc * (100 - km) / 100 * item.getSoLuong();
+        }
+
+        double voucherDiscount = 0;
+        if (dto.getMaKH_VC() != null) {
+            var khvOpt = khachHangVoucherDAO.findByMaKHVCAndMaKH(dto.getMaKH_VC(), kh.getMaKH());
+            if (khvOpt.isEmpty()) return error("Voucher không hợp lệ hoặc không thuộc về bạn");
+            KhachHangVoucher v = khvOpt.get();
+            if (!"Chưa sử dụng".equals(v.getTrangThai())) return error("Voucher này đã được sử dụng");
+            if (v.getHanSuDung() != null && v.getHanSuDung().before(new Date())) return error("Voucher đã hết hạn");
+            Voucher voucher = v.getVoucher();
+            if (voucher.getIsActive() == null || !voucher.getIsActive()) return error("Voucher đã bị vô hiệu hóa");
+            double donToiThieu = voucher.getDonToiThieu() != null ? voucher.getDonToiThieu() : 0;
+            if (tongTien < donToiThieu) return error("Đơn hàng tối thiểu " + formatCurrency(donToiThieu) + " mới áp dụng được voucher này");
+            voucherDiscount = voucher.getGiaTriGiam() != null ? voucher.getGiaTriGiam() : 0;
+        }
+
+        double tongTienSauGiam = Math.max(0, tongTien - voucherDiscount);
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("success", true);
+        result.put("tongTien", tongTien);
+        result.put("voucherDiscount", voucherDiscount);
+        result.put("tongTienSauGiam", tongTienSauGiam);
+        return result;
+    }
+
     // ==================== CHECKOUT ====================
 
     @Transactional
@@ -349,7 +411,7 @@ public class GioHangService {
 
             tongTien += donGia * item.getSoLuong();
 
-            // VNPAY: trừ stock ngay tại checkout (khách đã chuyển khoản trước → giữ chỗ hàng)
+            // VNPAY: trừ stock (checkout chỉ được gọi khi thanh toán VNPay đã thành công)
             // COD: KHÔNG trừ stock — admin duyệt đơn mới trừ
             if (isVNPay) {
                 sanPhamChiTietDAO.truSoLuong(spct.getMaSKU(), item.getSoLuong());
@@ -360,17 +422,11 @@ public class GioHangService {
         double tongTienSauGiam = Math.max(0, tongTien - voucherDiscount);
 
         // ── Xóa các item đã checkout khỏi giỏ hàng ──
-        // VNPAY: KHÔNG xóa cart ở đây — chỉ xóa khi thanh toán thực sự thành công
-        // (nếu hủy VNPay → hoàn stock + restore cart)
-        if (!isVNPay) {
-            for (GioHang item : selectedItems) {
-                gioHangDAO.delete(item);
-            }
+        for (GioHang item : selectedItems) {
+            gioHangDAO.delete(item);
         }
 
         // ── Đánh dấu voucher là đã sử dụng ──
-        // VNPAY: đánh dấu ngay tại checkout để khóa voucher (thanh toán đã xác nhận chuyển khoản)
-        // COD: đánh dấu khi thanh toán xong
         if (usedVoucher != null) {
             usedVoucher.setTrangThai("Đã sử dụng");
             usedVoucher.setNgayDoi(new Date());
@@ -386,12 +442,7 @@ public class GioHangService {
         result.put("tongTienSauGiam", tongTienSauGiam);
         result.put("isVNPay", isVNPay);
 
-        if (isVNPay) {
-            result.put("message",       "Đơn hàng đã tạo. Vui lòng thanh toán VNPAY!");
-            result.put("requirePayment", true);
-        } else {
-            result.put("message", "Đặt hàng thành công!");
-        }
+        result.put("message", "Đặt hàng thành công!");
 
         return result;
     }
