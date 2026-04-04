@@ -1,9 +1,7 @@
 package poly.edu.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import poly.edu.config.VNPayConfig;
-import poly.edu.dao.HoaDonDAO;
 
 import java.io.*;
 import java.net.HttpURLConnection;
@@ -15,9 +13,6 @@ import java.util.*;
 
 @Service
 public class VNPayService {
-
-    @Autowired
-    private HoaDonDAO hoaDonDAO;
 
     public String createPaymentUrl(Integer maHD, long amount, String orderInfo) throws Exception {
         Map<String, String> vnpParams = new LinkedHashMap<>();
@@ -77,21 +72,10 @@ public class VNPayService {
             result.put("success", "00".equals(vnp_ResponseCode) ? "true" : "false");
             result.put("responseCode", vnp_ResponseCode);
             result.put("maHD", vnp_TxnRef);
+            result.put("transactionNo", params.get("vnp_TransactionNo"));
             
             if ("00".equals(vnp_ResponseCode)) {
-                try {
-                    Integer maHD = Integer.parseInt(vnp_TxnRef);
-                    hoaDonDAO.findById(maHD).ifPresent(hoaDon -> {
-                        hoaDon.setTrangThai("Đang xử lý");
-                        hoaDon.setPhuongThucTT("VNPAY");
-                        hoaDon.setGhiChu((hoaDon.getGhiChu() != null ? hoaDon.getGhiChu() + " | " : "") 
-                            + "Thanh toán VNPAY thành công - Mã giao dịch: " + params.get("vnp_TransactionNo"));
-                        hoaDonDAO.save(hoaDon);
-                    });
-                    result.put("message", "Thanh toán thành công");
-                } catch (Exception e) {
-                    result.put("message", "Lỗi cập nhật đơn hàng: " + e.getMessage());
-                }
+                result.put("message", "Thanh toán thành công");
             } else {
                 result.put("message", getResponseMessage(vnp_ResponseCode));
             }
@@ -113,35 +97,16 @@ public class VNPayService {
         
         if (signValue.equals(vnp_SecureHash)) {
             String vnp_ResponseCode = params.get("vnp_ResponseCode");
-            String vnp_TxnRef = params.get("vnp_TxnRef");
             String vnp_TransactionStatus = params.get("vnp_TransactionStatus");
             
-            try {
-                Integer maHD = Integer.parseInt(vnp_TxnRef);
-                var hoaDonOpt = hoaDonDAO.findById(maHD);
-                
-                if (hoaDonOpt.isPresent()) {
-                    var hoaDon = hoaDonOpt.get();
-                    
-                    if ("00".equals(vnp_ResponseCode) && "00".equals(vnp_TransactionStatus)) {
-                        hoaDon.setTrangThai("Đang xử lý");
-                        hoaDon.setPhuongThucTT("VNPAY");
-                        hoaDon.setGhiChu((hoaDon.getGhiChu() != null ? hoaDon.getGhiChu() + " | " : "") 
-                            + "Thanh toán VNPAY IPN thành công - Mã GD: " + params.get("vnp_TransactionNo"));
-                        hoaDonDAO.save(hoaDon);
-                        result.put("RspCode", "00");
-                        result.put("Message", "Confirm Success");
-                    } else {
-                        result.put("RspCode", vnp_ResponseCode);
-                        result.put("Message", getResponseMessage(vnp_ResponseCode));
-                    }
-                } else {
-                    result.put("RspCode", "01");
-                    result.put("Message", "Order not found");
-                }
-            } catch (Exception e) {
-                result.put("RspCode", "99");
-                result.put("Message", "Error: " + e.getMessage());
+            if ("00".equals(vnp_ResponseCode) && "00".equals(vnp_TransactionStatus)) {
+                // IPN chỉ xác nhận chữ ký hợp lệ
+                // HoaDon được tạo bởi vnpay-return handler
+                result.put("RspCode", "00");
+                result.put("Message", "Confirm Success");
+            } else {
+                result.put("RspCode", vnp_ResponseCode);
+                result.put("Message", getResponseMessage(vnp_ResponseCode));
             }
         } else {
             result.put("RspCode", "97");

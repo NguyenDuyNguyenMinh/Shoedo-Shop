@@ -518,7 +518,7 @@ export default {
           if (response.data.success && response.data.paymentUrl) {
             // Lưu kết quả tạm vào sessionStorage để hiển thị khi quay lại
             sessionStorage.setItem('pendingOrder', JSON.stringify({
-              maHD: response.data.maHD,
+              tempRef: response.data.tempRef,
               tongTien: response.data.tongTienSauGiam || response.data.tongTien,
               voucherDiscount: response.data.voucherDiscount || 0,
             }));

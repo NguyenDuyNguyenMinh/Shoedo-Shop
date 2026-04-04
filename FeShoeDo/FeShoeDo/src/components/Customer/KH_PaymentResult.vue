@@ -67,15 +67,8 @@
           <h2 class="fw-bold mb-2">Thanh toán không thành công</h2>
           <p class="text-muted mb-4">{{ errorMessage }}</p>
 
-          <div class="result-detail-box mb-4">
-            <div class="detail-row">
-              <span class="text-muted">Mã đơn hàng</span>
-              <strong>{{ maHD ? 'HD' + String(maHD).padStart(4, '0') : 'N/A' }}</strong>
-            </div>
-          </div>
-
           <p class="text-muted small mb-4">
-            Đơn hàng vẫn được tạo và đang chờ thanh toán. Vui lòng thử lại hoặc liên hệ hỗ trợ.
+            Đơn hàng chưa được tạo. Sản phẩm vẫn còn trong giỏ hàng của bạn, vui lòng thử lại.
           </p>
 
           <div class="d-flex justify-content-center gap-3">

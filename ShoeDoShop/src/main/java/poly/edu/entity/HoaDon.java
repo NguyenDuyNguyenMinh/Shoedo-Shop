@@ -26,7 +26,7 @@ public class HoaDon {
     @JoinColumn(name = "MaQT")
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "hoaDons"})
     private QuanTri quanTri;
-    
+
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "MaKH_VC")
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
@@ -47,7 +47,7 @@ public class HoaDon {
     @Column(name = "NgayMua")
     @Temporal(TemporalType.TIMESTAMP)
     private Date ngayMua;
-    
+
     @Column(name = "NgayDen")
     @Temporal(TemporalType.TIMESTAMP)
     private Date ngayDen;
@@ -56,7 +56,11 @@ public class HoaDon {
     // @Column(name = "CartItemIdsJson", columnDefinition = "nvarchar(max)")
     // private String cartItemIdsJson;
 
-    @OneToMany(mappedBy = "hoaDon", fetch = FetchType.LAZY)
+    /**
+     * Cascade ALL + OrphanRemoval: khi xóa HoaDon, toàn bộ HoaDonCT liên quan
+     * cũng tự động bị xóa khỏi DB (không cần xóa thủ công từng dòng).
+     */
+    @OneToMany(mappedBy = "hoaDon", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private List<HoaDonCT> hoaDonCTs;
 }
