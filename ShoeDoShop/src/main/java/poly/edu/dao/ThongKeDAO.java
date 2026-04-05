@@ -22,7 +22,7 @@ public interface ThongKeDAO extends JpaRepository<HoaDon, Integer> {
      */
     @Query(value = """
             SELECT
-                CAST(hd.NgayMua AS DATE) AS ngay,
+                CAST(hd.NgayDen AS DATE) AS ngay,
                 ISNULL(SUM(hdct.DonGia * hdct.SoLuong), 0) AS doanhThu,
                 COUNT(DISTINCT hd.MaHD) AS soDonHang,
                 CASE
@@ -34,9 +34,9 @@ public interface ThongKeDAO extends JpaRepository<HoaDon, Integer> {
             FROM HoaDon hd
             LEFT JOIN HoaDonCT hdct ON hd.MaHD = hdct.MaHD
             WHERE hd.TrangThai = N'Hoàn tất'
-                AND hd.NgayMua BETWEEN :startDate AND :endDate
-            GROUP BY CAST(hd.NgayMua AS DATE)
-            ORDER BY CAST(hd.NgayMua AS DATE)
+                AND CONVERT(DATE, hd.NgayDen) BETWEEN CONVERT(DATE, :startDate) AND CONVERT(DATE, :endDate)
+            GROUP BY CAST(hd.NgayDen AS DATE)
+            ORDER BY CAST(hd.NgayDen AS DATE)
             """, nativeQuery = true)
     List<Object[]> thongKeTheoNgay(
             @Param("startDate") Date startDate,
@@ -51,7 +51,7 @@ public interface ThongKeDAO extends JpaRepository<HoaDon, Integer> {
      */
     @Query(value = """
             SELECT
-                FORMAT(hd.NgayMua, 'yyyy-MM') AS thang,
+                FORMAT(hd.NgayDen, 'yyyy-MM') AS thang,
                 ISNULL(SUM(hdct.DonGia * hdct.SoLuong), 0) AS doanhThu,
                 COUNT(DISTINCT hd.MaHD) AS soDonHang,
                 CASE
@@ -63,9 +63,9 @@ public interface ThongKeDAO extends JpaRepository<HoaDon, Integer> {
             FROM HoaDon hd
             LEFT JOIN HoaDonCT hdct ON hd.MaHD = hdct.MaHD
             WHERE hd.TrangThai = N'Hoàn tất'
-                AND hd.NgayMua BETWEEN :startDate AND :endDate
-            GROUP BY FORMAT(hd.NgayMua, 'yyyy-MM')
-            ORDER BY FORMAT(hd.NgayMua, 'yyyy-MM')
+                AND CONVERT(DATE, hd.NgayDen) BETWEEN CONVERT(DATE, :startDate) AND CONVERT(DATE, :endDate)
+            GROUP BY FORMAT(hd.NgayDen, 'yyyy-MM')
+            ORDER BY FORMAT(hd.NgayDen, 'yyyy-MM')
             """, nativeQuery = true)
     List<Object[]> thongKeTheoThang(
             @Param("startDate") Date startDate,
@@ -78,7 +78,7 @@ public interface ThongKeDAO extends JpaRepository<HoaDon, Integer> {
      */
     @Query(value = """
             SELECT
-                YEAR(hd.NgayMua) AS nam,
+                YEAR(hd.NgayDen) AS nam,
                 ISNULL(SUM(hdct.DonGia * hdct.SoLuong), 0) AS doanhThu,
                 COUNT(DISTINCT hd.MaHD) AS soDonHang,
                 CASE
@@ -90,9 +90,9 @@ public interface ThongKeDAO extends JpaRepository<HoaDon, Integer> {
             FROM HoaDon hd
             LEFT JOIN HoaDonCT hdct ON hd.MaHD = hdct.MaHD
             WHERE hd.TrangThai = N'Hoàn tất'
-                AND hd.NgayMua BETWEEN :startDate AND :endDate
-            GROUP BY YEAR(hd.NgayMua)
-            ORDER BY YEAR(hd.NgayMua)
+                AND CONVERT(DATE, hd.NgayDen) BETWEEN CONVERT(DATE, :startDate) AND CONVERT(DATE, :endDate)
+            GROUP BY YEAR(hd.NgayDen)
+            ORDER BY YEAR(hd.NgayDen)
             """, nativeQuery = true)
     List<Object[]> thongKeTheoNam(
             @Param("startDate") Date startDate,
@@ -118,7 +118,7 @@ public interface ThongKeDAO extends JpaRepository<HoaDon, Integer> {
             LEFT JOIN HoaDonCT hdct ON spct.MaSKU = hdct.MaSKU
             LEFT JOIN HoaDon hd ON hdct.MaHD = hd.MaHD
                 AND hd.TrangThai = N'Hoàn tất'
-                AND hd.NgayMua BETWEEN :startDate AND :endDate
+                AND CONVERT(DATE, hd.NgayDen) BETWEEN CONVERT(DATE, :startDate) AND CONVERT(DATE, :endDate)
             GROUP BY dm.MaDM, dm.TenDM
             ORDER BY doanhThu DESC
             """, nativeQuery = true)
@@ -133,22 +133,23 @@ public interface ThongKeDAO extends JpaRepository<HoaDon, Integer> {
      */
     @Query(value = """
             SELECT
-                ISNULL(SUM(hdct.DonGia * hdct.SoLuong), 0) AS tongDoanhThu,
-                COUNT(DISTINCT hd.MaHD) AS tongDonHang,
+                ISNULL(SUM(CASE WHEN hd.TrangThai = N'Hoàn tất' THEN hdct.DonGia * hdct.SoLuong ELSE 0 END), 0) AS tongDoanhThu,
+                COUNT(DISTINCT CASE WHEN hd.TrangThai = N'Hoàn tất' THEN hd.MaHD END) AS tongDonHang,
                 CASE
-                    WHEN COUNT(DISTINCT hd.MaHD) > 0
-                    THEN SUM(hdct.DonGia * hdct.SoLuong) / COUNT(DISTINCT hd.MaHD)
+                    WHEN COUNT(DISTINCT CASE WHEN hd.TrangThai = N'Hoàn tất' THEN hd.MaHD END) > 0
+                    THEN ISNULL(SUM(CASE WHEN hd.TrangThai = N'Hoàn tất' THEN hdct.DonGia * hdct.SoLuong ELSE 0 END), 0)
+                         / COUNT(DISTINCT CASE WHEN hd.TrangThai = N'Hoàn tất' THEN hd.MaHD END)
                     ELSE 0
                 END AS giaTriDonTB,
-                SUM(hdct.SoLuong) AS tongSP,
+                SUM(CASE WHEN hd.TrangThai = N'Hoàn tất' THEN hdct.SoLuong ELSE 0 END) AS tongSP,
                 COUNT(DISTINCT CASE WHEN hd.TrangThai = N'Đang xử lý' THEN hd.MaHD END) AS donDangXuLy,
                 COUNT(DISTINCT CASE WHEN hd.TrangThai = N'Đang giao' THEN hd.MaHD END) AS donDangGiao,
                 COUNT(DISTINCT CASE WHEN hd.TrangThai = N'Hoàn tất' THEN hd.MaHD END) AS donHoanTat,
-                COUNT(DISTINCT CASE WHEN hd.TrangThai = N'Đã từ chối' THEN hd.MaHD END) AS donBiTuChoi
+                COUNT(DISTINCT CASE WHEN hd.TrangThai = N'Đã từ chối' THEN hd.MaHD END) AS donBiTuChoi,
+                COUNT(DISTINCT CASE WHEN hd.TrangThai = N'Báo lỗi' THEN hd.MaHD END) AS donBaoLoi
             FROM HoaDon hd
             LEFT JOIN HoaDonCT hdct ON hd.MaHD = hdct.MaHD
-            WHERE hd.TrangThai = N'Hoàn tất'
-                AND hd.NgayMua BETWEEN :startDate AND :endDate
+            WHERE CONVERT(DATE, hd.NgayDen) BETWEEN CONVERT(DATE, :startDate) AND CONVERT(DATE, :endDate)
             """, nativeQuery = true)
     List<Object[]> thongKeTongQuan(
             @Param("startDate") Date startDate,
@@ -171,7 +172,7 @@ public interface ThongKeDAO extends JpaRepository<HoaDon, Integer> {
             INNER JOIN HoaDonCT hdct ON spct.MaSKU = hdct.MaSKU
             INNER JOIN HoaDon hd ON hdct.MaHD = hd.MaHD
                 AND hd.TrangThai = N'Hoàn tất'
-                AND hd.NgayMua BETWEEN :startDate AND :endDate
+                AND CONVERT(DATE, hd.NgayDen) BETWEEN CONVERT(DATE, :startDate) AND CONVERT(DATE, :endDate)
             GROUP BY sp.MaSP, sp.TenSP
             ORDER BY tongSoLuong DESC
             """, nativeQuery = true)
@@ -195,7 +196,7 @@ public interface ThongKeDAO extends JpaRepository<HoaDon, Integer> {
             FROM KhachHang kh
             LEFT JOIN HoaDon hd ON kh.MaKH = hd.MaKH
                 AND hd.TrangThai = N'Hoàn tất'
-                AND hd.NgayMua BETWEEN :startDate AND :endDate
+                AND CONVERT(DATE, hd.NgayDen) BETWEEN CONVERT(DATE, :startDate) AND CONVERT(DATE, :endDate)
             LEFT JOIN HoaDonCT hdct ON hd.MaHD = hdct.MaHD
             GROUP BY kh.MaKH, kh.TenKH, kh.SDT
             HAVING COUNT(DISTINCT hd.MaHD) > 0
@@ -218,7 +219,7 @@ public interface ThongKeDAO extends JpaRepository<HoaDon, Integer> {
                 ISNULL(SUM(hdct.DonGia * hdct.SoLuong), 0) AS doanhThu
             FROM HoaDon hd
             LEFT JOIN HoaDonCT hdct ON hd.MaHD = hdct.MaHD
-            WHERE hd.NgayMua BETWEEN :startDate AND :endDate
+            WHERE CONVERT(DATE, hd.NgayDen) BETWEEN CONVERT(DATE, :startDate) AND CONVERT(DATE, :endDate)
             GROUP BY hd.TrangThai
             """, nativeQuery = true)
     List<Object[]> thongKeTheoTrangThai(

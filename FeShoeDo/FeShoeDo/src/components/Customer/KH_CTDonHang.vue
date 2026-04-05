@@ -51,6 +51,14 @@
                 <div v-else class="p-3 bg-light rounded border text-muted">
                   <p class="mb-0">Không có thông tin địa chỉ</p>
                 </div>
+                <div v-if="order.voucherApDung" class="mt-3 p-3 bg-light rounded border">
+                  <h6><strong>Voucher áp dụng:</strong></h6>
+                  <p class="mb-1"><strong>Tên voucher:</strong> {{ order.voucherApDung.tenVoucher }}</p>
+                  <p class="mb-1"><strong>Giảm giá:</strong> {{ formatPrice(order.voucherApDung.giaTriGiam) }}</p>
+                  <p v-if="order.voucherApDung.donToiThieu && order.voucherApDung.donToiThieu > 0" class="mb-0">
+                    <strong>Đơn tối thiểu:</strong> {{ formatPrice(order.voucherApDung.donToiThieu) }}
+                  </p>
+                </div>
                 <div v-if="diaChiError" class="alert alert-warning mt-2">{{ diaChiError }}</div>
               </div>
             </div>
@@ -94,8 +102,34 @@
                     </div>
                   </td>
                   <td class="col-sm-1 text-center" style="height: 70px;">{{ item.soLuong }}</td>
-                  <td class="col-sm-2 text-center" style="height: 70px;">{{ formatPrice(item.donGia) }}</td>
-                  <td class="col-sm-2 text-center" style="height: 70px;">{{ formatPrice(item.soLuong * item.donGia) }}</td>
+                  <td class="col-sm-2 text-center" style="height: 70px;">
+                    <div>
+                      <template v-if="item.khuyenMaiPhanTram && item.khuyenMaiPhanTram > 0">
+                          <span class="text-muted text-decoration-line-through">
+                            {{ formatPrice(item.giaGoc) }}
+                          </span>
+                        <div class="fw-bold text-danger">{{ formatPrice(item.donGia) }}</div>
+                        <small class="text-success">-{{ item.khuyenMaiPhanTram }}%</small>
+                      </template>
+                      <template v-else>
+                        <span class="fw-bold">{{ formatPrice(item.giaGoc || item.donGia) }}</span>
+                      </template>
+                    </div>
+                  </td>
+                  <td class="col-sm-2 text-center" style="height: 70px;">
+                    <div>
+                      <template v-if="item.khuyenMaiPhanTram && item.khuyenMaiPhanTram > 0">
+                          <span class="text-muted text-decoration-line-through">
+                            {{ formatPrice(item.thanhTienGoc) }}
+                          </span>
+                        <div class="fw-bold text-danger">{{ formatPrice(item.thanhTienSauKmSp) }}</div>
+                        <small class="text-muted">(Tiết kiệm: {{ formatPrice(item.giamGiaSp) }})</small>
+                      </template>
+                      <template v-else>
+                        <span class="fw-bold">{{ formatPrice(item.thanhTienGoc || (item.soLuong * item.donGia)) }}</span>
+                      </template>
+                    </div>
+                  </td>
                   <td class="col-sm-2 text-center d-flex justify-content-end" style="height: 70px; min-width: 120px;">
                     <div v-if="item.daDanhGia">
                       <button class="btn btn-outline-warning btn-sm" @click="openViewReviewModal(item)" title="Xem đánh giá">
@@ -125,8 +159,46 @@
                     </div>
                   </td>
                   <td class="col-sm-1 text-center" style="height: 70px;">{{ item.soLuong }}</td>
-                  <td class="col-sm-2 text-center" style="height: 70px;">{{ formatPrice(item.donGia) }}</td>
-                  <td class="col-sm-2 text-center" style="height: 70px;">{{ formatPrice(item.thanhTien || (item.soLuong * item.donGia)) }}</td>
+                  <td class="col-sm-2 text-center" style="height: 70px;">
+                    <div class="price-info">
+                      <template v-if="item.khuyenMaiPhanTram && item.khuyenMaiPhanTram > 0">
+                          <span class="text-muted text-decoration-line-through d-block small">
+                            {{ formatPrice(item.giaGoc) }}
+                          </span>
+                        <span class="fw-bold text-danger">
+                            {{ formatPrice(item.donGia) }}
+                          </span>
+                        <small class="text-success d-block">
+                          <i class="bi bi-tag"></i> -{{ item.khuyenMaiPhanTram }}%
+                        </small>
+                      </template>
+                      <template v-else>
+                          <span class="fw-bold">
+                            {{ formatPrice(item.giaGoc) }}
+                          </span>
+                      </template>
+                    </div>
+                  </td>
+                  <td class="col-sm-2 text-center" style="height: 70px;">
+                    <div class="total-info">
+                      <template v-if="item.khuyenMaiPhanTram && item.khuyenMaiPhanTram > 0">
+                          <span class="text-muted text-decoration-line-through d-block small">
+                            {{ formatPrice(item.thanhTienGoc) }}
+                          </span>
+                        <span class="fw-bold text-danger">
+                            {{ formatPrice(item.thanhTienSauKmSp) }}
+                          </span>
+                        <small class="text-success d-block">
+                          <i class="bi bi-piggy-bank"></i> Tiết kiệm: {{ formatPrice(item.giamGiaSp) }}
+                        </small>
+                      </template>
+                      <template v-else>
+                          <span class="fw-bold">
+                            {{ formatPrice(item.thanhTienGoc) }}
+                          </span>
+                      </template>
+                    </div>
+                  </td>
                   <td class="col-sm-2 text-center" style="height: 70px; min-width: 120px;">
                     <div v-if="item.daDanhGia">
                       <button class="btn btn-outline-warning btn-sm" @click="openViewReviewModal(item)" title="Xem đánh giá">
@@ -142,15 +214,52 @@
               </tbody>
             </table>
           </div>
-          <div class="card-footer d-flex justify-content-end align-items-center">
-            <h5 class="mb-0 me-3">Tổng Cộng:</h5>
-            <h4 class="mb-0 text-danger fw-bold">{{ formatPrice(totalPrice) }}</h4>
+          <div class="card-footer">
+            <div class="border-bottom pb-2 mb-2">
+              <h6 class="mb-0 fw-bold">CHI TIẾT THANH TOÁN</h6>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span class="text-muted">Tổng tiền gốc:</span>
+              <span class="fw-bold fs-5">{{ formatPrice(order.tongTienGoc) }}</span>
+            </div>
+
+            <div v-if="order.tongGiamGiaKmSp && order.tongGiamGiaKmSp > 0" class="d-flex justify-content-between align-items-center mb-2 text-success">
+              <span>
+                <i class="bi bi-tag-fill me-1"></i>
+                Giảm giá từ khuyến mãi sản phẩm:
+              </span>
+              <span class="fw-bold fs-5">-{{ formatPrice(order.tongGiamGiaKmSp) }}</span>
+            </div>
+
+            <div v-if="order.tongGiamGiaVoucher && order.tongGiamGiaVoucher > 0" class="d-flex justify-content-between align-items-center mb-2 text-success">
+              <span>
+                <i class="bi bi-ticket-perforated-fill me-1"></i>
+                Giảm giá từ voucher ({{ order.voucherApDung?.tenVoucher }}):
+              </span>
+              <span class="fw-bold fs-5">-{{ formatPrice(order.tongGiamGiaVoucher) }}</span>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top">
+              <span class="fw-bold fs-5">Tổng tiền thanh toán:</span>
+              <h4 class="mb-0 text-danger fw-bold">{{ formatPrice(order.tongTien) }}</h4>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mt-2">
+              <span class="fw-bold">Số tiền tiết kiệm được:</span>
+              <h4 class="mb-0 text-success fw-bold">
+                {{ formatPrice((order.tongTienGoc || 0) - (order.tongTien || 0)) }}
+              </h4>
+            </div>
+            <small class="text-muted d-block text-end mt-1">
+              ({{ ((order.tongGiamGiaKmSp || 0) + (order.tongGiamGiaVoucher || 0)) > 0 ?
+                Math.round(((order.tongGiamGiaKmSp || 0) + (order.tongGiamGiaVoucher || 0)) / (order.tongTienGoc || 1) * 100) : 0 }}% so với giá gốc)
+            </small>
           </div>
         </div>
 
         <div class="mt-3 d-flex justify-content-end align-items-center gap-2 flex-wrap">
-          <!-- Nút Hủy đơn hàng -->
-          <button v-if="canCancelOrder(order)" class="btn btn-danger" @click="openCancelModal(order)" :disabled="cancellingOrderId === order.maHD">
+          <button v-if="canCancelOrder(order)" class="btn btn-danger m-1" @click="openCancelModal(order)" :disabled="cancellingOrderId === order.maHD">
             <span v-if="cancellingOrderId === order.maHD" class="spinner-border spinner-border-sm me-2"></span>
             <i class="bi bi-x-circle me-1"></i> Hủy đơn hàng
           </button>
@@ -183,32 +292,6 @@
         </div>
       </div>
     </main>
-
-    <!-- Modal xác nhận đã nhận hàng -->
-    <div v-if="showConfirmModal" class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-          <div class="modal-header bg-success text-white">
-            <h5 class="modal-title"><i class="bi bi-check-circle me-2"></i>Xác nhận đã nhận hàng</h5>
-            <button type="button" class="btn-close btn-close-white" @click="closeConfirmModal"></button>
-          </div>
-          <div class="modal-body">
-            <div class="text-center py-3">
-              <i class="bi bi-question-circle text-warning" style="font-size: 4rem;"></i>
-              <h5 class="mt-3">Xác nhận bạn đã nhận được hàng?</h5>
-              <p class="text-muted">Hành động này không thể hoàn tác.</p>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" @click="closeConfirmModal"><i class="bi bi-x-circle me-1"></i>Hủy</button>
-            <button type="button" class="btn btn-success" @click="handleConfirmReceived" :disabled="confirming">
-              <span v-if="confirming" class="spinner-border spinner-border-sm me-2"></span>
-              <i class="bi bi-check-circle me-1"></i>Xác nhận
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
 
     <!-- Modal Hủy đơn hàng -->
     <div v-if="showCancelModal" class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
@@ -258,6 +341,32 @@
       </div>
     </div>
 
+    <!-- Modal xác nhận đã nhận hàng -->
+    <div v-if="showConfirmModal" class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header bg-success text-white">
+            <h5 class="modal-title"><i class="bi bi-check-circle me-2"></i>Xác nhận đã nhận hàng</h5>
+            <button type="button" class="btn-close btn-close-white" @click="closeConfirmModal"></button>
+          </div>
+          <div class="modal-body">
+            <div class="text-center py-3">
+              <i class="bi bi-question-circle text-warning" style="font-size: 4rem;"></i>
+              <h5 class="mt-3">Xác nhận bạn đã nhận được hàng?</h5>
+              <p class="text-muted">Hành động này không thể hoàn tác.</p>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" @click="closeConfirmModal"><i class="bi bi-x-circle me-1"></i>Hủy</button>
+            <button type="button" class="btn btn-success" @click="handleConfirmReceived" :disabled="confirming">
+              <span v-if="confirming" class="spinner-border spinner-border-sm me-2"></span>
+              <i class="bi bi-check-circle me-1"></i>Xác nhận
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Modal báo lỗi -->
     <div v-if="showReportIssueModal" class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
       <div class="modal-dialog">
@@ -300,14 +409,14 @@
       </div>
     </div>
 
-    <!-- Modal đánh giá: tạo mới, xem, chỉnh sửa -->
+    <!-- Modal đánh giá: tạo mới, xem -->
     <div v-if="showReviewModal" class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
       <div class="modal-dialog">
         <div class="modal-content review-modal">
           <div class="modal-header">
             <h5 class="modal-title">
-              <i class="bi" :class="reviewModalMode === 'view' ? 'bi-star-fill' : (reviewModalMode === 'edit' ? 'bi-pencil-square' : 'bi-star-fill')"></i>
-              {{ reviewModalMode === 'view' ? 'Chi tiết đánh giá' : (reviewModalMode === 'edit' ? 'Chỉnh sửa đánh giá' : 'Đánh giá sản phẩm') }}
+              <i class="bi" :class="reviewModalMode === 'view' ? 'bi-star-fill' : 'bi-star-fill'"></i>
+              {{ reviewModalMode === 'view' ? 'Chi tiết đánh giá' : 'Đánh giá sản phẩm' }}
             </h5>
             <button type="button" class="close-btn" @click="closeReviewModal">
               <i class="bi bi-x-lg"></i>
@@ -418,9 +527,6 @@
               <button type="button" class="btn btn-outline-secondary" @click="closeReviewModal">
                 <i class="bi bi-x-circle me-1"></i>Đóng
               </button>
-              <button type="button" class="btn btn-warning" @click="switchToEditMode">
-                <i class="bi bi-pencil-square me-1"></i>Chỉnh sửa
-              </button>
             </template>
             <template v-else>
               <button type="button" class="btn btn-outline-secondary" @click="closeReviewModal">
@@ -429,7 +535,7 @@
               <button type="button" class="btn btn-primary" @click="submitReviewForm"
                       :disabled="reviewFormRating === 0 || reviewFormSubmitting || (reviewFormRating <= 3 && (!reviewFormComment || reviewFormComment.trim() === ''))">
                 <span v-if="reviewFormSubmitting" class="spinner-border spinner-border-sm me-2"></span>
-                <i class="bi bi-check-circle me-1"></i>{{ reviewModalMode === 'edit' ? 'Cập nhật' : 'Gửi đánh giá' }}
+                <i class="bi bi-check-circle me-1"></i>Gửi đánh giá
               </button>
             </template>
           </div>
@@ -497,13 +603,7 @@ const loading = ref(false);
 const error = ref('');
 const diaChiError = ref('');
 const reportingOrderId = ref(null);
-const confirmingOrderId = ref(null);
 const cancellingOrderId = ref(null);
-
-// Modal xác nhận
-const showConfirmModal = ref(false);
-const confirming = ref(false);
-const pendingOrderId = ref(null);
 
 // Modal hủy đơn
 const showCancelModal = ref(false);
@@ -511,6 +611,11 @@ const cancelling = ref(false);
 const selectedCancelOrder = ref(null);
 const cancelReason = ref('');
 const cancelNote = ref('');
+// Modal xác nhận đơn hàng
+const confirmingOrderId = ref(null);
+const showConfirmModal = ref(false);
+const confirming = ref(false);
+const pendingOrderId = ref(null);
 
 // Modal báo lỗi
 const showReportIssueModal = ref(false);
@@ -519,9 +624,9 @@ const reportReason = ref('');
 const reportNote = ref('');
 const reporting = ref(false);
 
-// Modal đánh giá - Gộp 3 chức năng
+// Modal đánh giá
 const showReviewModal = ref(false);
-const reviewModalMode = ref('create'); // 'create', 'view', 'edit'
+const reviewModalMode = ref('create'); // 'create', 'view'
 const reviewModalData = ref(null);
 const reviewModalLoading = ref(false);
 const reviewFormRating = ref(0);
@@ -607,7 +712,6 @@ const fetchOrderDetail = async () => {
   }
 };
 
-// Kiểm tra có thể hủy đơn không
 const canCancelOrder = (order) => {
   if (!order) return false;
   return order.trangThai === 'Đang xử lý';
@@ -661,6 +765,69 @@ const formatFullDateTime = (dateString) => {
   }).replace(',', '');
 };
 
+const canReview = (item) => {
+  if (!order.value) return false;
+  if (order.value.trangThai !== 'Hoàn tất') return false;
+  return !item.daDanhGia;
+};
+
+const openCancelModal = (orderItem) => {
+  selectedCancelOrder.value = orderItem;
+  cancelReason.value = '';
+  cancelNote.value = '';
+  showCancelModal.value = true;
+};
+
+const closeCancelModal = () => {
+  showCancelModal.value = false;
+  selectedCancelOrder.value = null;
+  cancelReason.value = '';
+  cancelNote.value = '';
+};
+
+const submitCancelOrder = async () => {
+  if (!cancelReason.value) {
+    errorMessage.value = 'Vui lòng chọn lý do hủy đơn';
+    showErrorModal.value = true;
+    return;
+  }
+
+  cancelling.value = true;
+  cancellingOrderId.value = selectedCancelOrder.value?.maHD;
+
+  try {
+    const fullReason = cancelNote.value
+        ? `${cancelReason.value} - ${cancelNote.value}`
+        : cancelReason.value;
+
+    const response = await api.cancelOrder(selectedCancelOrder.value?.maHD, fullReason);
+
+    if (response.data.success) {
+      closeCancelModal();
+      successMessage.value = 'Đơn hàng đã được hủy thành công!';
+      showSuccessModal.value = true;
+
+      if (order.value && order.value.maHD === selectedCancelOrder.value?.maHD) {
+        order.value.trangThai = 'Đã từ chối';
+        order.value.ghiChu = fullReason;
+      }
+
+      setTimeout(() => {
+        fetchOrderDetail();
+      }, 1500);
+    } else {
+      errorMessage.value = response.data.message || 'Không thể hủy đơn hàng';
+      showErrorModal.value = true;
+    }
+  } catch (err) {
+    errorMessage.value = err.response?.data?.message || err.message || 'Lỗi khi hủy đơn hàng';
+    showErrorModal.value = true;
+  } finally {
+    cancelling.value = false;
+    cancellingOrderId.value = null;
+  }
+};
+
 const openConfirmModal = (orderId) => {
   pendingOrderId.value = orderId;
   showConfirmModal.value = true;
@@ -700,73 +867,6 @@ const confirmReceived = async (orderId) => {
     alert(err.response?.data?.message || 'Lỗi khi cập nhật trạng thái');
   } finally {
     confirmingOrderId.value = null;
-  }
-};
-
-const canReview = (item) => {
-  if (!order.value) return false;
-  if (order.value.trangThai !== 'Hoàn tất') return false;
-  return !item.daDanhGia;
-};
-
-// Mở modal hủy đơn
-const openCancelModal = (orderItem) => {
-  selectedCancelOrder.value = orderItem;
-  cancelReason.value = '';
-  cancelNote.value = '';
-  showCancelModal.value = true;
-};
-
-const closeCancelModal = () => {
-  showCancelModal.value = false;
-  selectedCancelOrder.value = null;
-  cancelReason.value = '';
-  cancelNote.value = '';
-};
-
-// Gửi hủy đơn
-const submitCancelOrder = async () => {
-  if (!cancelReason.value) {
-    errorMessage.value = 'Vui lòng chọn lý do hủy đơn';
-    showErrorModal.value = true;
-    return;
-  }
-
-  cancelling.value = true;
-  cancellingOrderId.value = selectedCancelOrder.value?.maHD;
-
-  try {
-    const fullReason = cancelNote.value
-        ? `${cancelReason.value} - ${cancelNote.value}`
-        : cancelReason.value;
-
-    const response = await api.cancelOrder(selectedCancelOrder.value?.maHD, fullReason);
-
-    if (response.data.success) {
-      closeCancelModal();
-      successMessage.value = 'Đơn hàng đã được hủy thành công!';
-      showSuccessModal.value = true;
-
-      // Cập nhật trạng thái đơn hàng trong view
-      if (order.value && order.value.maHD === selectedCancelOrder.value?.maHD) {
-        order.value.trangThai = 'Đã từ chối';
-        order.value.ghiChu = fullReason;
-      }
-
-      // Reload lại dữ liệu sau 1.5 giây
-      setTimeout(() => {
-        fetchOrderDetail();
-      }, 1500);
-    } else {
-      errorMessage.value = response.data.message || 'Không thể hủy đơn hàng';
-      showErrorModal.value = true;
-    }
-  } catch (err) {
-    errorMessage.value = err.response?.data?.message || err.message || 'Lỗi khi hủy đơn hàng';
-    showErrorModal.value = true;
-  } finally {
-    cancelling.value = false;
-    cancellingOrderId.value = null;
   }
 };
 
@@ -819,7 +919,6 @@ const submitReportIssue = async () => {
   }
 };
 
-// Modal đánh giá - Các hàm
 const openCreateReviewModal = (product) => {
   reviewModalMode.value = 'create';
   reviewModalData.value = {
@@ -857,14 +956,6 @@ const openViewReviewModal = (product) => {
   }
 };
 
-const switchToEditMode = () => {
-  if (reviewModalData.value) {
-    reviewModalMode.value = 'edit';
-    reviewFormRating.value = reviewModalData.value.sao;
-    reviewFormComment.value = reviewModalData.value.danhGiaCT || '';
-  }
-};
-
 const closeReviewModal = () => {
   showReviewModal.value = false;
   reviewModalMode.value = 'create';
@@ -889,25 +980,15 @@ const submitReviewForm = async () => {
 
   reviewFormSubmitting.value = true;
   try {
-    let response;
-    if (reviewModalMode.value === 'edit') {
-      response = await api.updateReview({
-        maDG: reviewModalData.value.maDG,
-        sao: reviewFormRating.value,
-        danhGiaCT: reviewFormComment.value
-      });
-    } else {
-      response = await api.addReview({
-        maHDCT: reviewModalData.value.maHDCT,
-        sao: reviewFormRating.value,
-        danhGiaCT: reviewFormComment.value
-      });
-    }
+    const response = await api.addReview({
+      maHDCT: reviewModalData.value.maHDCT,
+      sao: reviewFormRating.value,
+      danhGiaCT: reviewFormComment.value
+    });
+
     if (response.data.success) {
       closeReviewModal();
-      successMessage.value = reviewModalMode.value === 'edit'
-          ? 'Đã cập nhật đánh giá thành công!'
-          : 'Cảm ơn bạn đã đánh giá sản phẩm!';
+      successMessage.value = 'Cảm ơn bạn đã đánh giá sản phẩm!';
       showSuccessModal.value = true;
       setTimeout(() => fetchOrderDetail(), 1000);
     } else {
@@ -949,7 +1030,6 @@ const fetchReviewDetailForModal = async (maHDCT, product) => {
   }
 };
 
-// Helper functions
 const getImageUrl = (imageName) => {
   if (!imageName) return 'https://via.placeholder.com/70';
   if (imageName.startsWith('http')) return imageName;
@@ -1759,6 +1839,51 @@ onMounted(() => {
 .gap-3 { gap: 1rem !important; }
 
 .w-100 { width: 100% !important; }
+
+/* ========== PRICE DISPLAY STYLES ========== */
+.price-info, .total-info {
+  line-height: 1.3;
+}
+
+.price-info .text-decoration-line-through,
+.total-info .text-decoration-line-through {
+  font-size: 0.7rem;
+}
+
+.price-info .fw-bold,
+.total-info .fw-bold {
+  font-size: 0.95rem;
+}
+
+.price-info small,
+.total-info small {
+  font-size: 0.65rem;
+}
+
+/* ========== SAVINGS SUMMARY STYLES ========== */
+.bg-opacity-10 {
+  --bs-bg-opacity: 0.1;
+}
+
+.border-top {
+  border-top: 1px solid #dee2e6 !important;
+}
+
+.border-bottom {
+  border-bottom: 1px solid #dee2e6 !important;
+}
+
+.card-footer .total-amount {
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: #dc3545;
+}
+
+.card-footer .saved-amount {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #28a745;
+}
 
 /* ========== RESPONSIVE STYLES ========== */
 @media (max-width: 768px) {

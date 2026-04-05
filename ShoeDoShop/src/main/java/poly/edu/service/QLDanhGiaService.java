@@ -7,74 +7,65 @@ import org.springframework.stereotype.Service;
 import poly.edu.dao.DanhGiaDAO;
 import poly.edu.entity.DanhGia;
 
+import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
 @Slf4j
 public class QLDanhGiaService {
 
-    @Autowired
-    private DanhGiaDAO danhGiaDAO;
+    @Autowired private DanhGiaDAO danhGiaDAO;
+    @Autowired private JdbcTemplate jdbcTemplate;
+
+    public Map<String, Object> getAllDanhGia() {
+        try {
+            List<DanhGia> danhGiaList = danhGiaDAO.findAllWithDetails();
+            return success("data", danhGiaList);
+        } catch (Exception e) {
+            return success("data", danhGiaDAO.findAll());
+        }
+    }
+
+    public Map<String, Object> getDanhGiaById(Integer id) {
+        Optional<DanhGia> danhGia = danhGiaDAO.findById(id);
+        if (danhGia.isPresent()) {
+            return success("data", danhGia.get());
+        }
+        return error("Không tìm thấy đánh giá");
+    }
+
+    public Map<String, Object> deleteDanhGia(Integer id) {
+        try {
+            if (!danhGiaDAO.existsById(id)) {
+                return error("Không tìm thấy đánh giá cần xóa");
+            }
+
+            Optional<DanhGia> danhGiaOpt = danhGiaDAO.findById(id);
+            if (danhGiaOpt.isPresent()) {
+                DanhGia danhGia = danhGiaOpt.get();
+
+                danhGia.setDanhGiaCT("Ẩn đánh giá do vi phạm tiêu chuẩn cộng đồng");
+                danhGiaDAO.save(danhGia);
+                return success("Đã xóa đánh giá do vi phạm tiêu chuẩn cộng đồng");
+            }
+            return error("Không tìm thấy đánh giá cần xóa");
+            
+        } catch (Exception e) {
+            return error("Không thể ẩn đánh giá: " + e.getMessage());
+        }
+    }
     
-    @Autowired
-    private JdbcTemplate jdbcTemplate;
-
-    public List<DanhGia> getAllDanhGia() {
-        try {
-            return danhGiaDAO.findAllWithDetails();
-        } catch (Exception e) {
-            return danhGiaDAO.findAll();
-        }
+    private Map<String, Object> success(String key, Object value) {
+        return Map.of("success", true, key, value);
     }
 
-    public Optional<DanhGia> getDanhGiaById(Integer maDG) {
-        return danhGiaDAO.findById(maDG);
+    private Map<String, Object> success(String message) {
+        return Map.of("success", true, "message", message);
     }
 
-    public boolean deleteDanhGia(Integer maDG) {
-        
-        try {
-            if (!danhGiaDAO.existsById(maDG)) {
-                return false;
-            }
-
-            String clearReferenceSql = "UPDATE HoaDonCT SET danhGia = NULL WHERE MaHDCT = (SELECT MaHDCT FROM DanhGia WHERE MaDG = ?)";
-            try {
-                jdbcTemplate.update(clearReferenceSql, maDG);
-            } catch (Exception e) {
-                log.warn("Không thể xóa tham chiếu (có thể đã null): {}", e.getMessage());
-            }
-            
-            String deleteSql = "DELETE FROM DanhGia WHERE MaDG = ?";
-            int rowsAffected = jdbcTemplate.update(deleteSql, maDG);
-            
-            if (rowsAffected > 0) {
-                return true;
-            } else {
-                return false;
-            }
-            
-        } catch (Exception e) {
-            return false;
-        }
-    }
-
-    public List<DanhGia> getDanhGiaBySao(Integer sao) {
-        try {
-            return danhGiaDAO.findBySao(sao);
-        } catch (Exception e) {
-            return danhGiaDAO.findAll().stream()
-                    .filter(dg -> dg.getSao() != null && dg.getSao().equals(sao))
-                    .toList();
-        }
-    }
-
-    public List<DanhGia> getDanhGiaBySanPham(Integer maSP) {
-        return danhGiaDAO.findBySanPham(maSP);
-    }
-
-    public List<DanhGia> getDanhGiaByKhachHang(Integer maKH) {
-        return danhGiaDAO.findByKhachHang(maKH);
+    private Map<String, Object> error(String message) {
+        return Map.of("success", false, "message", message);
     }
 }

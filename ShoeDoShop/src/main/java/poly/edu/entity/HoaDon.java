@@ -27,6 +27,11 @@ public class HoaDon {
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "hoaDons"})
     private QuanTri quanTri;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "MaKH_VC")
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+    private KhachHangVoucher khachHangVoucher;
+
     @Column(name = "PhuongThucTT")
     private String phuongThucTT;
 
@@ -42,12 +47,20 @@ public class HoaDon {
     @Column(name = "NgayMua")
     @Temporal(TemporalType.TIMESTAMP)
     private Date ngayMua;
-    
+
     @Column(name = "NgayDen")
     @Temporal(TemporalType.TIMESTAMP)
     private Date ngayDen;
 
-    @OneToMany(mappedBy = "hoaDon", fetch = FetchType.LAZY)
+    // /** Lưu tạm cartItemIds (dạng JSON) khi checkout VNPay — dùng để restore cart khi hủy thanh toán */
+//     @Column(name = "CartItemIdsJson", columnDefinition = "nvarchar(max)")
+//     private String cartItemIdsJson;
+
+    /**
+     * Cascade ALL + OrphanRemoval: khi xóa HoaDon, toàn bộ HoaDonCT liên quan
+     * cũng tự động bị xóa khỏi DB (không cần xóa thủ công từng dòng).
+     */
+    @OneToMany(mappedBy = "hoaDon", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private List<HoaDonCT> hoaDonCTs;
 }

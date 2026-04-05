@@ -11,8 +11,15 @@
           <li class="nav-item">
             <router-link class="nav-link text-uppercase text-white fw-light" to="/customer/index">Trang Chủ</router-link>
           </li>
-          <li class="nav-item">
-            <router-link class="nav-link text-uppercase text-white fw-light" to="/customer/sanpham">Sản Phẩm</router-link>
+          <li class="nav-item position-relative dropdown-hover">
+            <router-link class="nav-link text-uppercase text-white fw-light py-2" :to="{ name: 'Sanpham', query: { section: 'moi-nhat' } }">Sản Phẩm</router-link>
+            <div class="dropdown-menu-mega shadow border-0 mt-0">
+               <div class="mega-grid">
+                  <router-link v-for="cat in categories" :key="cat" class="mega-item" :to="{ name: 'Sanpham', query: { category: cat } }">
+                    {{ cat }}
+                  </router-link>
+               </div>
+            </div>
           </li>
           <li class="nav-item">
             <router-link class="nav-link text-uppercase text-white fw-light" to="/customer/chinhsach">Chính Sách</router-link>
@@ -190,6 +197,15 @@ const router    = useRouter()
 const route     = useRoute()
 const authStore = useAuthStore()
 
+// Lấy danh mục cho dropdown Navbar
+const categories = ref([])
+const fetchCategories = async () => {
+  try {
+    const res = await api.getCategories()
+    if (res.data?.success) categories.value = res.data.data
+  } catch (e) { console.error('Lỗi lấy danh mục Navbar:', e) }
+}
+
 // ── Auth ───────────────────────────────────────────────────────
 const isAuthenticated = computed(() => authStore.isAuthenticated)
 const lastName = computed(() => {
@@ -357,6 +373,7 @@ watch(isAuthenticated, async (v) => {
 
 // ── Lifecycle ────────────────────────────────────────────────
 onMounted(() => {
+  fetchCategories() // Tải danh mục cho Navbar
   if (isAuthenticated.value) { 
     fetchCartCount()
     fetchHistory() 
@@ -381,6 +398,26 @@ onBeforeUnmount(() => {
 .nav-link:hover { opacity: 1; }
 .nav-link::after { content: ''; position: absolute; width: 0; height: 1px; bottom: 2px; left: 0; background-color: #fff; transition: width 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); }
 .nav-link:hover::after { width: 100%; }
+
+/* ── CSS CHO MENU HOVER DANH MỤC (HÌNH CHỮ NHẬT NGANG MEGA-MENU) ── */
+.dropdown-hover .dropdown-menu-mega {
+  display: none; position: absolute; top: 100%; left: -50px; min-width: 500px; 
+  background-color: #000; border-radius: 8px; padding: 15px; margin-top: 0; z-index: 1050;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+.dropdown-hover:hover .dropdown-menu-mega {
+  display: block; animation: fadeInMenu 0.2s ease;
+}
+.mega-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+}
+.mega-item {
+  display: block; color: #fff; text-decoration: none; padding: 10px 12px; 
+  border-radius: 6px; font-size: 0.95rem; transition: background 0.2s; 
+  text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.mega-item:hover { background-color: #222; color: #fff; }
+@keyframes fadeInMenu { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
 /* ─── Search ─────────────────────────────────────────── */
 .search-wrapper { width: 320px; z-index: 1000; }

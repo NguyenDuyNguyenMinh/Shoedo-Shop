@@ -24,13 +24,14 @@ public class QLHoaDonService {
     @Autowired private EmailService emailService;
     @Autowired private EmailAsyncService emailAsyncService; 
     @Autowired private PdfService pdfService;
-    
+    @Autowired private KhachHangVoucherDAO khachHangVoucherDAO;
+    @Autowired private LichSuTichDiemDAO lichSuTichDiemDAO;
+    @Autowired private KhachHangDAO khachHangDAO;
     
     private final ObjectMapper mapper = new ObjectMapper();
 
-    // ==================== GET METHODS ====================
     public Map<String, Object> getAllOrders() {
-    	List<HoaDon> all = hoaDonDAO.findAll();
+        List<HoaDon> all = hoaDonDAO.findAll();
   
         Map<String, List<Map<String, Object>>> result = new HashMap<>();
         result.put("pending", mapList(filterByStatus(all, "Đang xử lý")));
@@ -74,7 +75,6 @@ public class QLHoaDonService {
         return success("order", buildDetail(hd));
     }
 
-    // ==================== ORDER ACTIONS ====================
     @Transactional
     public Map<String, Object> confirmOrder(Integer id) {
         HoaDon hd = findOrder(id);
@@ -138,6 +138,13 @@ public class QLHoaDonService {
             }
         }
 
+        if (hd.getKhachHangVoucher() != null) {
+            KhachHangVoucher khv = hd.getKhachHangVoucher();
+            khv.setTrangThai("Chưa sử dụng");
+            khachHangVoucherDAO.save(khv);
+            hd.setKhachHangVoucher(null);
+        }
+
         hd.setQuanTri(getCurrentEmployee());
         hd.setTrangThai("Đã từ chối");
         hd.setGhiChu(lyDo);
@@ -153,6 +160,10 @@ public class QLHoaDonService {
             msg.append(" (COD - chưa trừ số lượng)");
         }
         
+        if (hd.getKhachHangVoucher() != null) {
+            msg.append(" và hoàn trả voucher cho khách hàng");
+        }
+        
         return success(msg.toString());
     }
 
@@ -165,12 +176,23 @@ public class QLHoaDonService {
             spctDAO.congSoLuong(ct.getSanPhamChiTiet().getMaSKU(), ct.getSoLuong());
         }
 
+        if (hd.getKhachHangVoucher() != null) {
+            KhachHangVoucher khv = hd.getKhachHangVoucher();
+            khv.setTrangThai("Chưa sử dụng");
+            khachHangVoucherDAO.save(khv);
+            hd.setKhachHangVoucher(null);
+        }
+
         hd.setTrangThai("Đã từ chối");
         hd.setGhiChu(payload.getOrDefault("lyDo", "Giao hàng thất bại"));
         hd.setQuanTri(getCurrentEmployee());
         hoaDonDAO.save(hd);
 
-        return success("Đã cập nhật giao hàng thất bại và hoàn trả số lượng về kho");
+        String msg = "Đã cập nhật giao hàng thất bại và hoàn trả số lượng về kho";
+        if (hd.getKhachHangVoucher() != null) {
+            msg += " và hoàn trả voucher cho khách hàng";
+        }
+        return success(msg);
     }
 
     @Transactional
@@ -178,20 +200,31 @@ public class QLHoaDonService {
         HoaDon hd = findOrder(id);
         checkStatus(hd, "Đang giao", "Chỉ có thể đánh dấu thành công cho đơn hàng đang giao");
 
-        hd.setTrangThai("Hoàn tất");
-        hd.setNgayDen(new Date());
-        hd.setQuanTri(getCurrentEmployee());
-        
         for (HoaDonCT ct : hd.getHoaDonCTs()) {
             SanPhamChiTiet spct = ct.getSanPhamChiTiet();
             SanPham sp = spct.getSanPham();
-
             int soLuongMoi = sp.getDaBan() + ct.getSoLuong();
             sp.setDaBan(soLuongMoi);
-            
             sanPhamDAO.save(sp);
+            
+            if (ct.getNguoiChiaSe() != null) {
+                KhachHang referrer = ct.getNguoiChiaSe();
+                referrer.setDiemTichLuy(referrer.getDiemTichLuy() + 10);
+                khachHangDAO.save(referrer);
+                
+                LichSuTichDiem history = new LichSuTichDiem();
+                history.setKhachHang(referrer);
+                history.setSoDiem(10);
+                history.setLoaiGiaoDich("Chia sẻ mua hàng");
+                history.setNgayGiaoDich(new Date());
+                lichSuTichDiemDAO.save(history);
+            }
         }
-        
+
+
+        hd.setTrangThai("Hoàn tất");
+        hd.setNgayDen(new Date());
+        hd.setQuanTri(getCurrentEmployee());
         hoaDonDAO.save(hd);
         
         emailAsyncService.sendSuccessEmail(hd);
@@ -208,21 +241,7 @@ public class QLHoaDonService {
         if (kh == null || kh.getUser() == null || kh.getUser().getMail() == null) {
             return error("Không tìm thấy email khách hàng");
         }
-        for (HoaDonCT ct : hd.getHoaDonCTs()) {
-            SanPhamChiTiet spct = ct.getSanPhamChiTiet();
-            spct.getMaSKU();
-            spct.getTenMau();
-            spct.getHinhAnh();
-            spct.getSoLuong();
-            
-            SanPham sp = spct.getSanPham();
-            sp.getTenSP();
-            sp.getDaBan();
-
-            if (spct.getSize() != null) {
-                spct.getSize().getCoGiay();
-            }
-        }
+        
         hd.setTrangThai("Hoàn tất");
         hd.setQuanTri(getCurrentEmployee());
         hd.setGhiChu(null);
@@ -248,7 +267,6 @@ public class QLHoaDonService {
         }
     }
 
-    // ==================== PRIVATE METHODS ====================
     private HoaDon findOrder(Integer id) {
         return hoaDonDAO.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy hóa đơn"));
@@ -315,9 +333,17 @@ public class QLHoaDonService {
             }
         }
 
-        double tong = hd.getHoaDonCTs().stream()
+        double tongTien = hd.getHoaDonCTs().stream()
                 .mapToDouble(ct -> ct.getSoLuong() * ct.getDonGia()).sum();
-        map.put("tongTien", tong);
+        map.put("tongTien", tongTien);
+        
+        double voucherGiam = 0;
+        if (hd.getKhachHangVoucher() != null && hd.getKhachHangVoucher().getVoucher() != null) {
+            voucherGiam = hd.getKhachHangVoucher().getVoucher().getGiaTriGiam() != null ? 
+                         hd.getKhachHangVoucher().getVoucher().getGiaTriGiam() : 0;
+        }
+        map.put("voucherGiam", voucherGiam);
+        map.put("tongTienSauGiam", tongTien - Math.min(voucherGiam, tongTien));
 
         return map;
     }
@@ -340,6 +366,15 @@ public class QLHoaDonService {
             items.add(item);
         }
         detail.put("chiTiet", items);
+        
+        // Thêm thông tin voucher vào chi tiết
+        if (hd.getKhachHangVoucher() != null && hd.getKhachHangVoucher().getVoucher() != null) {
+            Map<String, Object> voucherInfo = new HashMap<>();
+            voucherInfo.put("tenVoucher", hd.getKhachHangVoucher().getVoucher().getTenVoucher());
+            voucherInfo.put("giaTriGiam", hd.getKhachHangVoucher().getVoucher().getGiaTriGiam());
+            voucherInfo.put("donToiThieu", hd.getKhachHangVoucher().getVoucher().getDonToiThieu());
+            detail.put("voucherApDung", voucherInfo);
+        }
         
         return detail;
     }

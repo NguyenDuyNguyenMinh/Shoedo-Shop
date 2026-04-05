@@ -126,7 +126,7 @@
             </div>
             <div class="col-md-2">
               <button @click="resetFilters" class="btn btn-secondary w-100">
-                <i class="bi bi-arrow-clockwise me-1"></i>Đặt lại
+                <i class="bi bi-arrow-clockwise me-1"></i>Reset
               </button>
             </div>
           </div>
@@ -179,9 +179,9 @@
           </div>
 
           <!-- Table sản phẩm -->
-          <div class="table-responsive">
-            <table class="table table-bordered table-hover align-middle">
-              <thead class="table-dark">
+          <div class="table-responsive custom-table-wrapper">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="table-light">
                 <tr>
                   <th style="width: 40px" class="text-center">
                     <div class="form-check d-flex justify-content-center">
@@ -203,7 +203,7 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="item in filteredProducts" :key="item.maSP">
+                <tr v-for="item in paginatedFlashSaleProducts" :key="item.maSP">
                   <td class="text-center">
                     <div class="form-check d-flex justify-content-center">
                       <input
@@ -325,6 +325,28 @@
                 </tr>
               </tbody>
             </table>
+          </div>
+          
+          <div v-if="fsTotalPages > 1" class="d-flex justify-content-center align-items-center mt-4">
+            <nav aria-label="Page navigation">
+              <ul class="pagination pagination-sm mb-0">
+                <li class="page-item" :class="{ disabled: fsCurrentPage === 1 }">
+                  <button class="page-link text-dark" @click="goToFsPage(fsCurrentPage - 1)">
+                    <i class="bi bi-chevron-left"></i> Trước
+                  </button>
+                </li>
+                <li class="page-item" v-for="page in fsTotalPages" :key="page" :class="{ active: fsCurrentPage === page }">
+                  <button class="page-link" :class="fsCurrentPage === page ? 'bg-dark border-dark text-white' : 'text-dark'" @click="goToFsPage(page)">
+                    {{ page }}
+                  </button>
+                </li>
+                <li class="page-item" :class="{ disabled: fsCurrentPage === fsTotalPages }">
+                  <button class="page-link text-dark" @click="goToFsPage(fsCurrentPage + 1)">
+                    Sau <i class="bi bi-chevron-right"></i>
+                  </button>
+                </li>
+              </ul>
+            </nav>
           </div>
         </div>
 
@@ -466,9 +488,9 @@
           </div>
 
           <!-- Table chọn sản phẩm cho chiến dịch -->
-          <div class="table-responsive mb-4">
-            <table class="table table-bordered table-hover align-middle">
-              <thead class="table-dark">
+          <div class="table-responsive mb-4 custom-table-wrapper">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="table-light">
                 <tr>
                   <th style="width: 40px" class="text-center">
                     <div class="form-check d-flex justify-content-center">
@@ -491,7 +513,7 @@
               </thead>
               <tbody>
                 <tr
-                  v-for="item in filteredCampaignProducts"
+                  v-for="item in paginatedCampaignProducts"
                   :key="item.maSP"
                   :class="{ 'table-info': item.campaignSelected }"
                 >
@@ -590,6 +612,28 @@
                 </tr>
               </tbody>
             </table>
+          </div>
+          
+          <div v-if="cpTotalPages > 1" class="d-flex justify-content-center align-items-center mb-4">
+            <nav aria-label="Page navigation">
+              <ul class="pagination pagination-sm mb-0">
+                <li class="page-item" :class="{ disabled: cpCurrentPage === 1 }">
+                  <button class="page-link text-dark" @click="goToCpPage(cpCurrentPage - 1)">
+                    <i class="bi bi-chevron-left"></i> Trước
+                  </button>
+                </li>
+                <li class="page-item" v-for="page in cpTotalPages" :key="page" :class="{ active: cpCurrentPage === page }">
+                  <button class="page-link" :class="cpCurrentPage === page ? 'bg-dark border-dark text-white' : 'text-dark'" @click="goToCpPage(page)">
+                    {{ page }}
+                  </button>
+                </li>
+                <li class="page-item" :class="{ disabled: cpCurrentPage === cpTotalPages }">
+                  <button class="page-link text-dark" @click="goToCpPage(cpCurrentPage + 1)">
+                    Sau <i class="bi bi-chevron-right"></i>
+                  </button>
+                </li>
+              </ul>
+            </nav>
           </div>
 
           <!-- Nút bắt đầu chiến dịch -->
@@ -695,6 +739,7 @@
               <div 
                 :id="`collapse-${cd.maCD}`" 
                 class="accordion-collapse collapse" 
+                :class="{ 'show': cd.isOpen }"
               >
                 <div class="accordion-body p-0">
                   <div v-if="cd.details && cd.details.length > 0" class="table-responsive">
@@ -754,7 +799,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, onUnmounted } from "vue";
+import { ref, onMounted, computed, onUnmounted, watch } from "vue";
 import axios from "axios";
 import NV_Sidebar from "@/components/Shared/NV_Sidebar.vue";
 
@@ -772,6 +817,7 @@ const filterKeyword = ref("");
 const filterCategory = ref("");
 const filterFlashSale = ref("");
 const filterActive = ref("");
+
 
 const fetchCategories = async () => {
   try {
@@ -963,6 +1009,28 @@ const campaignSelectedCount = computed(
   () => filteredCampaignProducts.value.filter((p) => p.campaignSelected).length
 );
 
+// --- LOGIC PHÂN TRANG CHUNG (ĐÃ CHUYỂN XUỐNG ĐÂY ĐỂ KHÔNG BỊ LỖI HOISTING) ---
+const itemsPerPage = 10;
+
+// Phân trang Flash Sale
+const fsCurrentPage = ref(1);
+const fsTotalPages = computed(() => Math.ceil(filteredProducts.value.length / itemsPerPage));
+const paginatedFlashSaleProducts = computed(() => {
+  const start = (fsCurrentPage.value - 1) * itemsPerPage;
+  return filteredProducts.value.slice(start, start + itemsPerPage);
+});
+const goToFsPage = (page) => { if (page >= 1 && page <= fsTotalPages.value) fsCurrentPage.value = page; };
+watch([filterKeyword, filterCategory, filterFlashSale, filterActive], () => { fsCurrentPage.value = 1; });
+
+// Phân trang Chiến Dịch
+const cpCurrentPage = ref(1);
+const cpTotalPages = computed(() => Math.ceil(filteredCampaignProducts.value.length / itemsPerPage));
+const paginatedCampaignProducts = computed(() => {
+  const start = (cpCurrentPage.value - 1) * itemsPerPage;
+  return filteredCampaignProducts.value.slice(start, start + itemsPerPage);
+});
+const goToCpPage = (page) => { if (page >= 1 && page <= cpTotalPages.value) cpCurrentPage.value = page; };
+watch([campaignFilterKeyword, campaignFilterCategory, campaignFilterActive], () => { cpCurrentPage.value = 1; });
 // =================== AUTO POLLING (CHẠY NGẦM) ===================
 let campaignPollingInterval = null;
 
@@ -973,7 +1041,7 @@ onMounted(() => {
   // Khởi tạo lấy danh sách chiến dịch ngay khi vừa vào trang
   fetchCampaigns();
 
-  // Cài đặt vòng lặp: Cứ 5000ms (5 giây) sẽ chạy lại hàm 1 lần
+
   campaignPollingInterval = setInterval(() => {
     // Mẹo tối ưu: Chỉ gọi API chọc xuống Database nếu người dùng ĐANG MỞ tab Lịch sử
     // Nếu họ đang ở tab Flash Sale thì không gọi để giảm tải cho Spring Boot
@@ -1098,19 +1166,27 @@ const fetchCampaigns = async () => {
       "http://localhost:8080/api/chiendich/danh-sach"
     );
     
-    // Lưu tạm lại danh sách chiến dịch cũ đang hiển thị trên màn hình
     const oldCampaigns = campaigns.value;
 
     campaigns.value = response.data.map((cd) => {
-      // Tìm xem chiến dịch này lúc trước đã được mở ra xem (có details) chưa
       const existingCd = oldCampaigns.find(old => old.maCD === cd.maCD);
       
+      if (existingCd) {
+        // QUAN TRỌNG: Trả về chính object cũ để Vue không vẽ lại thẻ div
+        // Chỉ cập nhật các data cần thiết từ server
+        existingCd.trangThai = cd.trangThai;
+        existingCd.tenChienDich = cd.tenChienDich;
+        existingCd.thoiGianBatDau = cd.thoiGianBatDau;
+        existingCd.thoiGianKetThuc = cd.thoiGianKetThuc;
+        return existingCd; 
+      }
+      
+      // Nếu là chiến dịch mới tinh thì khởi tạo state mặc định
       return {
         ...cd,
-        // Nếu đã mở rồi thì giữ nguyên mảng details cũ, nếu chưa thì để null
-        details: existingCd ? existingCd.details : null,
-        loadingDetail: existingCd ? existingCd.loadingDetail : false,
-        isOpen: existingCd ? existingCd.isOpen : false,
+        details: null,
+        loadingDetail: false,
+        isOpen: false,
       };
     });
   } catch (error) {
@@ -1121,24 +1197,21 @@ const fetchCampaigns = async () => {
 
 
 const handleToggleCampaign = async (cd) => {
-  // Tránh việc user nhấp đúp nhiều lần khi đang xoay loading
   if (cd.loadingDetail) return; 
 
-  // 1. TÌNH HUỐNG: Đang mở -> Bấm để ĐÓNG LẠI
+  // 1. Đang mở -> Bấm để ĐÓNG LẠI
   if (cd.isOpen) {
     cd.isOpen = false;
-    document.getElementById(`hidden-btn-${cd.maCD}`).click(); // Kích hoạt đóng
     return;
   }
 
-  // 2. TÌNH HUỐNG: Đang đóng nhưng đã lấy data rồi -> MỞ RA LUÔN (Không load lại)
+  // 2. Đang đóng nhưng đã lấy data rồi -> MỞ RA LUÔN
   if (cd.details !== null) {
     cd.isOpen = true;
-    document.getElementById(`hidden-btn-${cd.maCD}`).click(); // Kích hoạt mở
     return;
   }
 
-  // 3. TÌNH HUỐNG: Lần đầu tiên bấm -> PHẢI LOAD DATA TRƯỚC RỒI MỚI XỔ
+  // 3. Lần đầu tiên bấm -> LOAD DATA RỒI MỚI MỞ
   cd.loadingDetail = true;
   try {
     const response = await axios.get(
@@ -1149,18 +1222,8 @@ const handleToggleCampaign = async (cd) => {
       khuyenMaiEdit: sp.khuyenMai || 0,
     }));
 
-    // Fake delay 0.3s cho mượt theo đúng ý tưởng của bạn
-    await new Promise(resolve => setTimeout(resolve, 90));
-
-    // Đã load xong, đổi trạng thái thành Mở
+    // Vue sẽ tự động thêm class 'show' vào DOM nhờ data binding
     cd.isOpen = true;
-
-    // QUAN TRỌNG: Chờ 50ms cho Vue render xong cái table ẩn ở dưới
-    // Rồi mới ra lệnh cho Bootstrap trượt xuống (Lúc này đã tính toán đúng 100% chiều cao)
-    setTimeout(() => {
-      const hiddenBtn = document.getElementById(`hidden-btn-${cd.maCD}`);
-      if (hiddenBtn) hiddenBtn.click();
-    }, 50);
 
   } catch (error) {
     showToast("Lỗi lấy chi tiết chiến dịch!", "danger");
@@ -1282,10 +1345,6 @@ const handleSidebarCollapse = (collapsedState) => {
   isSidebarCollapsed.value = collapsedState;
 };
 
-onMounted(() => {
-  fetchProducts();
-  fetchCategories();
-});
 </script>
 
 <style scoped>
@@ -1331,6 +1390,40 @@ td .form-control {
 .accordion-button:focus {
   box-shadow: none;
 }
+
+/* --- UI TABLE ĐỒNG BỘ --- */
+.custom-table-wrapper {
+  background: #fff;
+  border-radius: 12px; 
+  overflow: hidden; 
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08); 
+  border: 1px solid #eaeaea; 
+}
+
+.custom-table-wrapper thead th {
+  background-color: #f8f9fa;
+  color: #495057;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 13px;
+  padding: 16px 12px;
+  border-bottom: 2px solid #edf2f9;
+  white-space: nowrap;
+}
+
+.custom-table-wrapper tbody td {
+  padding: 16px 12px;
+  color: #333;
+  border-bottom: 1px solid #f1f3f5;
+}
+
+.custom-table-wrapper tbody tr:last-child td {
+  border-bottom: none; 
+}
+
+.custom-table-wrapper tbody tr:hover td {
+  background-color: #f4f6f8; 
+}
 </style>
 <style>
 /* CSS Global để fix lỗi giật layout do Scrollbar xuất hiện đột ngột */
@@ -1353,4 +1446,6 @@ html {
 .main-content.expanded {
   margin-left: 80px; 
 }
+
+
 </style>

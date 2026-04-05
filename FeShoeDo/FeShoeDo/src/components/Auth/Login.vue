@@ -88,7 +88,7 @@
               <span v-if="loading" class="spinner-border spinner-border-sm me-2"></span>
               {{ forgotPasswordStep === 1 ? 'Gửi OTP' : 'Xác nhận OTP' }}
             </button>
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @click="resetForgotPasswordOtp">Đóng</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @click="resetForgotPasswordOtp">Hủy</button>
           </div>
         </div>
       </div>
@@ -145,7 +145,7 @@
             </div>
           </div>	
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
           </div>
         </div>
       </div>

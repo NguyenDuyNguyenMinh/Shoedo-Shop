@@ -49,6 +49,11 @@ const routes = [
     meta: { requiresAuth: true, role: 'CUSTOMER' }
   },
   {
+    path: '/payment-result',
+    name: 'PaymentResult',
+    component: () => import('@/components/customer/KH_PaymentResult.vue'),
+  },
+  {
     path: '/customer/orders',
     name: 'Orders',
     component: () => import('@/components/customer/KH_QLDonHang.vue'),
@@ -107,6 +112,12 @@ const routes = [
     path: '/employee/flashsale',
     name: 'FlashSaleStock',
     component: () => import('@/components/employee/NV_KhuyenMai.vue'),
+    meta: { requiresAuth: true, roles: ['ADMIN', 'EMPLOYEE'] }
+  },
+      {
+    path: '/employee/voucher',
+    name: 'VoucherSet',
+    component: () => import('@/components/employee/NV_QLVoucher.vue'),
     meta: { requiresAuth: true, roles: ['ADMIN', 'EMPLOYEE'] }
   },
   

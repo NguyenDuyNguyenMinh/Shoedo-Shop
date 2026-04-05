@@ -97,6 +97,12 @@
                 <span v-show="!isCollapsed">Nhập Kho</span>
               </router-link>
             </li>
+            <li>
+              <router-link to="/employee/voucher" :class="{ active: $route.path === '/employee/voucher' }" :title="isCollapsed ? 'Voucher' : ''">
+                <i class="bi bi-ticket-perforated"></i>
+                <span v-show="!isCollapsed">Voucher</span>
+              </router-link>
+</li>
           </ul>
         </div>
       </div>

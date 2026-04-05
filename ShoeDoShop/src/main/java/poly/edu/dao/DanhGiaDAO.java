@@ -57,13 +57,4 @@ public interface DanhGiaDAO extends JpaRepository<DanhGia, Integer> {
             "ORDER BY dg.ngayDG DESC")
      List<DanhGia> findBySao(@Param("sao") Integer sao);
      
-     @Modifying
-     @Transactional
-     @Query(value = "DELETE FROM DanhGia WHERE MaDG = :maDG", nativeQuery = true)
-     void deleteByIdNative(@Param("maDG") Integer maDG);
-     
-     @Modifying
-     @Transactional
-     @Query(value = "UPDATE HoaDonCT SET danhGia = NULL WHERE MaHDCT = (SELECT MaHDCT FROM DanhGia WHERE MaDG = :maDG)", nativeQuery = true)
-     void clearDanhGiaReference(@Param("maDG") Integer maDG);
 }

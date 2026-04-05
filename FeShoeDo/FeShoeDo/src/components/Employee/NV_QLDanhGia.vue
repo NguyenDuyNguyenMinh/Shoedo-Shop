@@ -10,7 +10,7 @@
             <h5 class="modal-title">
               <i class="bi bi-chat-square-text me-2"></i>Chi tiết đánh giá
             </h5>
-            <button type="button" data-bs-dismiss="modal"></button>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
           </div>
           <div class="modal-body">
             <div v-if="selectedReview">
@@ -76,28 +76,28 @@
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-              Đóng
+              Hủy
             </button>
             <button v-if="selectedReview" type="button" class="btn btn-danger" @click="deleteFromModal">
-              <i class="bi bi-trash me-2"></i>Xóa đánh giá
+               <i class="bi bi-eye-slash"></i> Ẩn
             </button>
           </div>
         </div>
       </div>
     </div>
 
-  <!-- modal xác nhận xóa -->
+  <!-- modal xác nhận ẩn -->
   <div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-hidden="true" ref="confirmDeleteModal">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title">
-            <i class="bi bi-exclamation-triangle me-2"></i>Xác nhận xóa
+            <i class="bi bi-exclamation-triangle me-2"></i>Xác nhận ẩn
           </h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
-          <p>Bạn có chắc chắn muốn xóa đánh giá này?</p>
+          <p>Bạn có chắc chắn muốn ẩn đánh giá này?</p>
           <p class="text-muted small">Hành động này không thể hoàn tác.</p>
         </div>
         <div class="modal-footer">
@@ -106,7 +106,7 @@
           </button>
           <button type="button" class="btn btn-danger" @click="executeDelete" :disabled="deleting">
             <span v-if="deleting" class="spinner-border spinner-border-sm me-2"></span>
-            <i v-else class="bi bi-trash me-2"></i>Xóa
+             <i class="bi bi-eye-slash"></i> Ẩn
           </button>
         </div>
       </div>
@@ -183,6 +183,13 @@
                 </select>
               </div>
               <div class="col-md-2">
+                <select v-model="filterStatus" class="form-select">
+                  <option value="all">Tất cả trạng thái</option>
+                  <option value="visible">Hiển thị</option>
+                  <option value="hidden">Đã ẩn</option>
+                </select>
+              </div>
+              <div class="col-md-2">
                 <select v-model="sortOrder" class="form-select">
                   <option value="desc">Mới nhất</option>
                   <option value="asc">Cũ nhất</option>
@@ -191,9 +198,9 @@
               <div class="col-md-2">
                 <input type="date" v-model="filterDate" class="form-control" placeholder="Lọc theo ngày"/>
               </div>
-              <div class="col-md-3">
+              <div class="col-md-1">
                 <button @click="resetFilters" class="btn btn-outline-secondary w-100">
-                  <i class="bi bi-arrow-clockwise me-2"></i>Reset
+                  Reset
                 </button>
               </div>
             </div>
@@ -214,6 +221,9 @@
                           <span class="text-muted ms-2">
                             <i class="bi bi-tag me-1"></i>
                             {{ getTenSanPham(item) }}
+                          </span>
+                          <span v-if="isHiddenReview(item)" class="badge bg-danger ms-2">
+                            <i class="bi bi-eye-slash me-1"></i>Đã ẩn
                           </span>
                         </div>
                       </div>
@@ -259,9 +269,9 @@
                           type="button"
                           class="btn btn-outline-danger btn-sm"
                           @click="confirmDelete(item)"
-                          title="Xóa đánh giá"
+                          title="Ẩn đánh giá"
                         >
-                          <i class="bi bi-trash"></i> Xóa
+                           <i class="bi bi-eye-slash"></i> Ẩn
                         </button>
                       </div>
                     </div>
@@ -327,6 +337,7 @@ const successMessage = ref("");
 const reviews = ref([]);
 const filterKeyword = ref("");
 const filterRating = ref("");
+const filterStatus = ref("all");
 const filterDate = ref("");
 const sortOrder = ref("desc");
 const currentPage = ref(1);
@@ -468,6 +479,10 @@ const formatDate = (dateString) => {
   }
 };
 
+const isHiddenReview = (review) => {
+  return review.danhGiaCT === "Ẩn đánh giá do vi phạm tiêu chuẩn cộng đồng";
+};
+
 const matchesFilters = (item) => {
   const tenKH = getTenKhachHang(item).toLowerCase();
   const tenSP = getTenSanPham(item).toLowerCase();
@@ -481,13 +496,20 @@ const matchesFilters = (item) => {
 
   const matchRating = !filterRating.value || item.sao === parseInt(filterRating.value);
 
+  let matchStatus = true;
+  if (filterStatus.value === "visible") {
+    matchStatus = !isHiddenReview(item);
+  } else if (filterStatus.value === "hidden") {
+    matchStatus = isHiddenReview(item);
+  }
+  
   let matchDate = true;
   if (filterDate.value && item.ngayDG) {
     const reviewDate = new Date(item.ngayDG).toISOString().split('T')[0];
     matchDate = reviewDate === filterDate.value;
   }
 
-  return matchKeyword && matchRating && matchDate;
+  return matchKeyword && matchRating && matchStatus && matchDate;
 };
 
 const filteredReviews = computed(() => {
@@ -529,6 +551,7 @@ const resetFilters = () => {
   filterKeyword.value = "";
   filterRating.value = "";
   filterDate.value = "";
+  filterStatus.value = "all";
   sortOrder.value = "desc";
   currentPage.value = 1;
 };
@@ -566,7 +589,7 @@ const executeDelete = async () => {
   try {
     const response = await axios.delete(`http://localhost:8080/api/danhgia/delete/${deleteTargetId.value}`);
     if (response.data.success) {
-      showToast("Xóa đánh giá thành công!", "success");
+      showToast("Ẩn đánh giá thành công!", "success");
       await fetchReviews();
       
       if (confirmDeleteModalInstance) {
@@ -575,11 +598,11 @@ const executeDelete = async () => {
       
       selectedReview.value = null;
     } else {
-      showToast(response.data.message || "Xóa thất bại", "danger");
+      showToast(response.data.message || "Ẩn thất bại", "danger");
     }
   } catch (error) {
-    console.error("Lỗi xóa đánh giá:", error);
-    showToast(error.response?.data?.message || "Không thể xóa đánh giá", "danger");
+    console.error("Lỗi ẩn đánh giá:", error);
+    showToast(error.response?.data?.message || "Không thể ẩn đánh giá", "danger");
   } finally {
     deleting.value = false;
     deleteTargetId.value = null;
@@ -590,7 +613,7 @@ const handleFilterChange = () => {
   currentPage.value = 1;
 };
 
-watch([filterKeyword, filterRating, filterDate, sortOrder], () => {
+watch([filterKeyword, filterRating, filterStatus, filterDate, sortOrder], () => {
   handleFilterChange();
 });
 

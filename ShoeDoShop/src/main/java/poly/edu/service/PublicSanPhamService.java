@@ -43,6 +43,7 @@ public class PublicSanPhamService {
         Map<Integer, Double>  giaMap = new HashMap<>();
         Map<Integer, Integer> slMap  = new HashMap<>();
         Map<Integer, String>  anhMap = new HashMap<>();
+        Map<Integer, Double>  saoMap = new HashMap<>();
 
         if (!maSPs.isEmpty()) {
             sanPhamChiTietDAO.findGiaThapNhatBatch(maSPs)
@@ -51,10 +52,12 @@ public class PublicSanPhamService {
                     .forEach(row -> slMap.put((Integer) row[0], ((Number) row[1]).intValue()));
             sanPhamChiTietDAO.findAnhDaiDienBatch(maSPs)
                     .forEach(row -> anhMap.putIfAbsent((Integer) row[0], (String) row[1]));
+            sanPhamChiTietDAO.getAvgSaoBatch(maSPs)
+                    .forEach(row -> saoMap.put((Integer) row[0], ((Number) row[1]).doubleValue()));
         }
 
         List<SanPhamListDTO> dtos = sanPhams.stream()
-                .map(sp -> toDTO(sp, giaMap, slMap, anhMap))
+                .map(sp -> toDTO(sp, giaMap, slMap, anhMap, saoMap))
                 .collect(Collectors.toList());
 
         if (onlyInStock) {
@@ -83,6 +86,7 @@ public class PublicSanPhamService {
         Map<Integer, Double>  giaMap = new HashMap<>();
         Map<Integer, Integer> slMap  = new HashMap<>();
         Map<Integer, String>  anhMap = new HashMap<>();
+        Map<Integer, Double>  saoMap = new HashMap<>();
 
         if (!maSPs.isEmpty()) {
             sanPhamChiTietDAO.findGiaThapNhatBatch(maSPs)
@@ -91,10 +95,12 @@ public class PublicSanPhamService {
                     .forEach(r -> slMap.put((Integer) r[0], ((Number) r[1]).intValue()));
             sanPhamChiTietDAO.findAnhDaiDienBatch(maSPs)
                     .forEach(r -> anhMap.putIfAbsent((Integer) r[0], (String) r[1]));
+            sanPhamChiTietDAO.getAvgSaoBatch(maSPs)
+                    .forEach(r -> saoMap.put((Integer) r[0], ((Number) r[1]).doubleValue()));
         }
 
         return sanPhams.stream()
-                .map(sp -> toDTO(sp, giaMap, slMap, anhMap))
+                .map(sp -> toDTO(sp, giaMap, slMap, anhMap, saoMap))
                 .collect(Collectors.toList());
     }
 
@@ -110,13 +116,15 @@ public class PublicSanPhamService {
             SanPham sp,
             Map<Integer, Double>  giaMap,
             Map<Integer, Integer> slMap,
-            Map<Integer, String>  anhMap) {
+            Map<Integer, String>  anhMap,
+            Map<Integer, Double>  saoMap) {
         Integer maSP   = sp.getMaSP();
         int     km     = sp.getKhuyenMai() != null ? sp.getKhuyenMai() : 0;
         Double giaGoc  = giaMap.getOrDefault(maSP, 0.0);
         Double giaSauKM = tinhGiaSauKM(giaGoc, km);
         int    tongSL  = slMap.getOrDefault(maSP, 0);
         String hinhAnh = anhMap.get(maSP);
+        Double avgSao  = saoMap.getOrDefault(maSP, 0.0);
 
         List<String> tenDMs = sp.getSanPhamDanhMucs() == null ? List.of()
                 : sp.getSanPhamDanhMucs().stream()
@@ -131,6 +139,7 @@ public class PublicSanPhamService {
                 .tongSoLuong(tongSL).danhMucs(tenDMs)
                 .conHang(tongSL > 0)
                 .daBan(sp.getDaBan() != null ? sp.getDaBan() : 0)
+                .saoTrungBinh(avgSao)
                 .build();
     }
 
@@ -164,10 +173,14 @@ public class PublicSanPhamService {
                     .sorted(Comparator.comparing(SanPhamListDTO::getKhuyenMai).reversed())
                     .collect(Collectors.toList());
             case "ban_chay"   -> list.stream()
-                    .sorted(Comparator.comparing(
-                            (SanPhamListDTO p) -> p.getDaBan() != null ? p.getDaBan() : 0
-                    ).reversed()).collect(Collectors.toList());
-            default           -> list;
+            .sorted(Comparator.comparing(
+                    (SanPhamListDTO p) -> p.getDaBan() != null ? p.getDaBan() : 0
+            ).reversed()).collect(Collectors.toList());
+    case "rating_desc" -> list.stream()
+            .sorted(Comparator.comparing(
+                    (SanPhamListDTO p) -> p.getSaoTrungBinh() != null ? p.getSaoTrungBinh() : 0.0
+            ).reversed()).collect(Collectors.toList());
+    default           -> list;
         };
     }
 }

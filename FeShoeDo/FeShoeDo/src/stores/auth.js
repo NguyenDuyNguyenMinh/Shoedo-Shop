@@ -98,7 +98,6 @@ export const useAuthStore = defineStore('auth', {
       } catch (error) {
         console.error('Logout error:', error);
       } finally {
-        this.clearAuth();
         window.location.href = '/auth/login';
       }
     },

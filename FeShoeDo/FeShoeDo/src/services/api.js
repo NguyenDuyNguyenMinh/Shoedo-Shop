@@ -140,9 +140,18 @@ export default {
     return apiClient.post('/customer/checkout', data);
   },
 
+  // Customer Vouchers
+  getMyVouchers() {
+    return apiClient.get('/customer/vouchers');
+  },
+
   // VNPay Payment
   createVNPayOrder(data) {
     return apiClient.post('/payment/create-order', data);
+  },
+
+  getVNPayStatus() {
+    return apiClient.get('/payment/vnpay-status');
   },
 
   buyNow(data) {

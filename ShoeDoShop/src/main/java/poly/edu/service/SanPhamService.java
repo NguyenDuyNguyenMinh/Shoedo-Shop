@@ -14,6 +14,10 @@ import poly.edu.dto.SanPhamNDTO;
 import poly.edu.entity.SanPham;
 import poly.edu.entity.SanPhamChiTiet;
 import poly.edu.entity.SanPhamDanhMuc;
+import poly.edu.dao.ChienDichDAO;
+import poly.edu.entity.ChienDich;
+
+import java.time.LocalDateTime;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,6 +35,7 @@ public class SanPhamService {
 
     @Autowired private poly.edu.dao.SanPhamDanhMucDAO sdmDAO;
     @Autowired private poly.edu.dao.SizeDAO sizeDAO;
+    @Autowired private ChienDichDAO chienDichDAO;
 
     @Transactional
     public SanPham createProduct(SanPhamNDTO dto) {
@@ -294,4 +299,57 @@ public class SanPhamService {
                 .build();
     }
     
+    public record ChienDichHienTaiDTO(
+            String tenChienDich,
+            LocalDateTime thoiGianKetThuc,
+            List<SanPhamDTO> products
+        ) {}
+
+        // 1. LẤY CHIẾN DỊCH FLASH SALE ĐANG CHẠY
+        public ChienDichHienTaiDTO layChienDichFlashSale() {
+            List<ChienDich> activeCamps = chienDichDAO.findActiveCampaigns("Đang chạy");
+            if (activeCamps.isEmpty()) return null;
+
+            ChienDich currentCamp = activeCamps.get(0);
+            List<Object[]> campDetails = chienDichDAO.getCampaignDetailsNative(currentCamp.getTenChienDich());
+            List<SanPhamDTO> products = new ArrayList<>();
+
+            for (Object[] row : campDetails) {
+                Integer maSP = (Integer) row[0];
+                String tenSP = (String) row[1];
+                String hinhAnh = (String) row[2];
+                Integer khuyenMai = row[3] != null ? (Integer) row[3] : 0;
+                Double giaGoc = row[4] != null ? ((Number) row[4]).doubleValue() : 0.0;
+                Double giaSauKM = giaGoc * (100 - khuyenMai) / 100.0;
+
+                products.add(SanPhamDTO.builder()
+                        .maSP(maSP).tenSP(tenSP).hinhAnh(hinhAnh)
+                        .giaGoc(giaGoc).giaSauKM(giaSauKM).khuyenMai(khuyenMai)
+                        .build());
+            }
+
+            return new ChienDichHienTaiDTO(currentCamp.getTenChienDich(), currentCamp.getThoiGianKetThuc(), products);
+        }
+
+        // 2. LẤY SIÊU KHUYẾN MÃI (Discount cao nhất)
+        public List<SanPhamDTO> layKhuyenMaiCaoNhat() {
+            return sanPhamDAO.findKhuyenMaiCaoNhat(PageRequest.of(0, 10))
+                    .stream().map(this::chuyenSangDTO).toList();
+        }
+
+        // 3. LẤY HÀNG MỚI VỀ (Mã SP mới nhất)
+        public List<SanPhamDTO> layMoiNhat() {
+            return sanPhamDAO.findMoiNhat(PageRequest.of(0, 10))
+                    .stream().map(this::chuyenSangDTO).toList();
+        }
+
+        // 4. LẤY ĐÁNH GIÁ CAO NHẤT (Nổi bật)
+        public List<SanPhamDTO> layTopDanhGia() {
+            List<SanPham> topList = sanPhamDAO.findTopDanhGia(PageRequest.of(0, 10));
+            // Fallback: Lỡ DB chưa ai mua, chưa có đánh giá nào thì lấy tạm hàng mới về cho đỡ trống UI
+            if (topList.isEmpty()) {
+                topList = sanPhamDAO.findMoiNhat(PageRequest.of(0, 10));
+            }
+            return topList.stream().map(this::chuyenSangDTO).toList();
+        }
 }
