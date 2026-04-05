@@ -544,7 +544,9 @@ export default {
           sessionStorage.removeItem('checkoutItems');
           sessionStorage.removeItem('checkoutItemIds');
           sessionStorage.removeItem('pendingOrder');
+          
           localStorage.removeItem('refMap');
+          localStorage.removeItem('refCode');
 
           // Update cart count
           const authStore = useAuthStore();
