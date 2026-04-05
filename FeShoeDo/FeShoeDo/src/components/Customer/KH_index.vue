@@ -53,9 +53,6 @@ const startTimer = (endTime) => {
   timerInterval = setInterval(updateTimer, 1000)
 }
 
-// ── FETCH DATA ──
-// ── FETCH DATA ──
-// ── FETCH DATA ──
 const fetchTrangChu = async () => {
   try {
     loading.value = true
