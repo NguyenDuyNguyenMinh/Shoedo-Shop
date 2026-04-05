@@ -480,8 +480,8 @@
 <script>
 import { ref, onMounted, computed } from 'vue'
 import axios from 'axios'
-import KH_Navbar from '@/components/shared/KH_Navbar.vue'
-import Footer from '@/components/shared/Footer.vue'
+import KH_Navbar from '@/components/Shared/KH_Navbar.vue'
+import Footer from '@/components/Shared/Footer.vue'
 import { watch } from 'vue'
 
 export default {

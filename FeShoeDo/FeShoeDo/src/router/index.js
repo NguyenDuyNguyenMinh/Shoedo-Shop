@@ -9,115 +9,115 @@ const routes = [
   {
     path: '/auth/login',
     name: 'Login',
-    component: () => import('@/components/auth/Login.vue'),
+    component: () => import('@/components/Auth/Login.vue'),
     meta: { requiresGuest: true }
   },
   {
     path: '/customer/index',
     name: 'CustomerIndex',
-    component: () => import('@/components/customer/KH_index.vue'),
+    component: () => import('@/components/Customer/KH_index.vue'),
     meta: { requiresAuth: true, role: 'CUSTOMER' }
   },
   {
     path: '/customer/detail-product/:id?',
     name: 'DetailProduct',
-    component: () => import('@/components/customer/KH_DetailProduct.vue'),
+    component: () => import('@/components/Customer/KH_DetailProduct.vue'),
     meta: { requiresAuth: true, role: 'CUSTOMER' }
   },
   {
     path: '/customer/cart',
     name: 'Cart',
-    component: () => import('@/components/customer/KH_GioHang.vue'),
+    component: () => import('@/components/Customer/KH_GioHang.vue'),
     meta: { requiresAuth: true, role: 'CUSTOMER' }
   },
     {
     path: '/customer/chinhsach',
     name: 'ChinhSach',
-    component: () => import('@/components/customer/KH_ChinhSach.vue'),
+    component: () => import('@/components/Customer/KH_ChinhSach.vue'),
     meta: { requiresAuth: true, role: 'CUSTOMER' }
   },
     {
     path: '/customer/sanpham',
     name: 'Sanpham',
-    component: () => import('@/components/customer/KH_SanPham.vue'),
+    component: () => import('@/components/Customer/KH_Sanpham.vue'),
     meta: { requiresAuth: true, role: 'CUSTOMER' }
   },
   {
     path: '/customer/checkout',
     name: 'Checkout',
-    component: () => import('@/components/customer/KH_DatHang.vue'),
+    component: () => import('@/components/Customer/KH_DatHang.vue'),
     meta: { requiresAuth: true, role: 'CUSTOMER' }
   },
   {
     path: '/payment-result',
     name: 'PaymentResult',
-    component: () => import('@/components/customer/KH_PaymentResult.vue'),
+    component: () => import('@/components/Customer/KH_PaymentResult.vue'),
   },
   {
     path: '/customer/orders',
     name: 'Orders',
-    component: () => import('@/components/customer/KH_QLDonHang.vue'),
+    component: () => import('@/components/Customer/KH_QLDonHang.vue'),
     meta: { requiresAuth: true, role: 'CUSTOMER' }
   },
   {
     path: '/customer/orders/:id',
     name: 'OrderDetail',
-    component: () => import('@/components/customer/KH_CTDonHang.vue'),
+    component: () => import('@/components/Customer/KH_CTDonHang.vue'),
     meta: { requiresAuth: true, role: 'CUSTOMER' }
   },
   {
     path: '/customer/profile',
     name: 'Profile',
-    component: () => import('@/components/customer/KH_QLProfile.vue'),
+    component: () => import('@/components/Customer/KH_QLProfile.vue'),
     meta: { requiresAuth: true, role: 'CUSTOMER' }
   },
   // Employee routes
   {
     path: '/employee/dashboard',
     name: 'EmployeeDashboard',
-    component: () => import('@/components/employee/NV_ThongKe.vue'),
+    component: () => import('@/components/Employee/NV_ThongKe.vue'),
     meta: { requiresAuth: true, role: 'ADMIN'}
   },
   {
     path: '/employee/products',
     name: 'ProductManagement',
-    component: () => import('@/components/employee/NV_QLSP.vue'),
+    component: () => import('@/components/Employee/NV_QLSP.vue'),
     meta: { requiresAuth: true, roles: ['ADMIN', 'EMPLOYEE'] }
   },
   {
     path: '/employee/orders',
     name: 'OrderManagement',
-    component: () => import('@/components/employee/NV_QLHoaDon.vue'),
+    component: () => import('@/components/Employee/NV_QLHoaDon.vue'),
     meta: { requiresAuth: true, roles: ['ADMIN', 'EMPLOYEE'] }
   },
   {
     path: '/employee/users',
     name: 'UserManagement',
-    component: () => import('@/components/employee/NV_QLUser.vue'),
+    component: () => import('@/components/Employee/NV_QLUser.vue'),
     meta: { requiresAuth: true, roles: ['ADMIN', 'EMPLOYEE'] }
   },
   {
     path: '/employee/danhgia',
     name: 'DanhGiaManagement',
-    component: () => import('@/components/employee/NV_QLDanhGia.vue'),
+    component: () => import('@/components/Employee/NV_QLDanhGia.vue'),
     meta: { requiresAuth: true, roles: ['ADMIN', 'EMPLOYEE'] }
   },
   {
     path: '/employee/import',
     name: 'ImportStock',
-    component: () => import('@/components/employee/NV_NhapKho.vue'),
+    component: () => import('@/components/Employee/NV_NhapKho.vue'),
     meta: { requiresAuth: true, roles: ['ADMIN', 'EMPLOYEE'] }
   },
     {
     path: '/employee/flashsale',
     name: 'FlashSaleStock',
-    component: () => import('@/components/employee/NV_KhuyenMai.vue'),
+    component: () => import('@/components/Employee/NV_KhuyenMai.vue'),
     meta: { requiresAuth: true, roles: ['ADMIN', 'EMPLOYEE'] }
   },
       {
     path: '/employee/voucher',
     name: 'VoucherSet',
-    component: () => import('@/components/employee/NV_QLVoucher.vue'),
+    component: () => import('@/components/Employee/NV_QLVoucher.vue'),
     meta: { requiresAuth: true, roles: ['ADMIN', 'EMPLOYEE'] }
   },
   
