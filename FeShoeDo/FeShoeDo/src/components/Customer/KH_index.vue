@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, computed, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import KH_Navbar from '@/components/Shared/KH_Navbar.vue'
 import Footer from '@/components/Shared/Footer.vue'
@@ -8,15 +8,44 @@ import axios from 'axios'
 
 const router = useRouter()
 
-// ── BANNER CAROUSEL ──
+
+
 const currentSlide = ref(0)
-const slides = ref([
-  { id: 1, bg: '#111',    line1: 'SALE', line2: 'GIÀY XỊN' },
-  { id: 2, bg: '#0d1b2a', line1: 'NEW',  line2: 'ARRIVALS' },
-  { id: 3, bg: '#1a0a0a', line1: 'HOT',  line2: 'DEALS'    },
-])
-const prevSlide = () => currentSlide.value = (currentSlide.value - 1 + slides.value.length) % slides.value.length
-const nextSlide = () => currentSlide.value = (currentSlide.value + 1) % slides.value.length
+let carouselInterval = null // Biến lưu trữ bộ đếm thời gian
+
+const carouselItems = computed(() => {
+  const items = []
+  // Lấy thẳng dữ liệu, không gán thêm badge nữa
+  if (bestSellers.value && bestSellers.value.length > 0) items.push(bestSellers.value[0])
+  if (danhGiaProducts.value && danhGiaProducts.value.length > 0) items.push(danhGiaProducts.value[0])
+  if (moiNhatProducts.value && moiNhatProducts.value.length > 0) items.push(moiNhatProducts.value[0])
+  return items
+})
+
+const startCarousel = () => {
+  carouselInterval = setInterval(() => {
+    if (carouselItems.value.length > 0) {
+      currentSlide.value = (currentSlide.value + 1) % carouselItems.value.length
+    }
+  }, 5000)
+}
+
+const resetCarouselTimer = () => {
+  clearInterval(carouselInterval)
+  startCarousel() // Chạy lại 3s từ đầu sau khi click tay
+}
+
+const prevSlide = () => {
+  if (carouselItems.value.length === 0) return
+  currentSlide.value = (currentSlide.value - 1 + carouselItems.value.length) % carouselItems.value.length
+  resetCarouselTimer() 
+}
+
+const nextSlide = () => {
+  if (carouselItems.value.length === 0) return
+  currentSlide.value = (currentSlide.value + 1) % carouselItems.value.length
+  resetCarouselTimer()
+}
 
 // ── API & STATE ──
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8080/api'
@@ -110,20 +139,51 @@ const getImageUrl = (hinhAnh) => {
 const goToDetail = (id) => router.push({ name: 'DetailProduct', params: { id } })
 const viewAll = (section) => router.push({ name: 'Sanpham', query: { section } })
 
-onMounted(() => fetchTrangChu())
-onUnmounted(() => { if (timerInterval) clearInterval(timerInterval) })
+onMounted(() => {
+  fetchTrangChu()
+  startCarousel()
+})
+
+onUnmounted(() => { 
+  if (timerInterval) clearInterval(timerInterval) 
+  if (carouselInterval) clearInterval(carouselInterval) 
+})
 </script>
 
 <template>
   <div class="kh-index">
     <KH_Navbar />
 
-    <div class="hero-wrap">
-      <div class="hero-main" :style="{ background: slides[currentSlide].bg }">
+    <div class="hero-wrap" v-if="!loading && carouselItems.length > 0">
+      <div class="hero-main">
         <div class="banner-bg"></div>
-        <button class="arrow-btn left" @click="prevSlide">❮</button>
-        <div class="banner-text">ShoeDo Shop<br /><span>{{ slides[currentSlide].line1 }} {{ slides[currentSlide].line2 }}</span></div>
-        <button class="arrow-btn right" @click="nextSlide">❯</button>
+        
+        <div class="click-zone left-zone" @click="prevSlide"></div>
+        <div class="click-zone right-zone" @click="nextSlide"></div>
+
+        <transition name="fade" mode="out-in">
+          <div class="hero-content" :key="currentSlide">
+            
+            <div class="hero-left">
+              <h1 class="hero-title artistic-text">
+                {{ carouselItems[currentSlide].tenSP }}
+              </h1>
+              
+              <p class="hero-subtitle">Mảnh ghép hoàn hảo cho phong cách của bạn.</p>
+              
+              <button class="hero-btn action-btn" @click.stop="goToDetail(carouselItems[currentSlide].maSP)">
+                Khám Phá Ngay ❯
+              </button>
+            </div>
+
+            <div class="hero-right">
+              <div class="hero-image-frame circle-frame">
+                <div class="circle-glow"></div>
+                <img :src="getImageUrl(carouselItems[currentSlide].hinhAnh)" :alt="carouselItems[currentSlide].tenSP" class="hero-img circle-img" />
+              </div>
+            </div>
+          </div>
+        </transition>
       </div>
     </div>
 
@@ -285,7 +345,167 @@ onUnmounted(() => { if (timerInterval) clearInterval(timerInterval) })
 /* Giữ nguyên các style cũ của ông */
 .kh-index { font-family: 'Segoe UI', sans-serif; background: #fafafa; min-height: 100vh; }
 .hero-wrap { width: 100%; border-bottom: 1px solid #ddd; }
-.hero-main { width: 100%; height: 350px; position: relative; display: flex; align-items: center; justify-content: center; transition: background 0.4s ease; }
+
+.hero-main { 
+  width: 100%; 
+  height: 600px; /* Tăng chiều cao làm banner hoành tráng hơn */
+  position: relative; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  /* Nền Gradient cực sâu, kết hợp giữa xám không gian và đen */
+  background: linear-gradient(135deg, #111111 0%, #1e1e24 50%, #0a0a0a 100%);
+  overflow: hidden;
+}
+
+.banner-bg {
+  position: absolute; inset: 0;
+  /* Thêm một quầng sáng mờ đằng sau để tôn sản phẩm */
+  background: radial-gradient(circle at 70% 50%, rgba(255, 255, 255, 0.08) 0%, transparent 60%);
+}
+
+.click-zone {
+  position: absolute;
+  top: 0; bottom: 0;
+  width: 50%;
+  z-index: 5;
+  cursor: pointer;
+}
+.left-zone { left: 0; }
+.right-zone { right: 0; }
+
+/* Đưa nút bấm lên trên cùng để không bị vùng click tàng hình che mất */
+.action-btn {
+  position: relative;
+  z-index: 10; 
+}
+
+/* ── LAYOUT CHIA ĐÔI ── */
+.hero-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 90%;
+  max-width: 1300px;
+  z-index: 2;
+  gap: 60px;
+}
+
+/* ── NỬA TRÁI: TEXT NGHỆ THUẬT ── */
+.hero-left {
+  flex: 1.2;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 20px;
+}
+.hero-badge {
+  background: transparent;
+  color: #fff;
+  padding: 6px 16px;
+  border-radius: 30px;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  text-transform: uppercase;
+}
+
+/* Chữ nghệ thuật: To, in hoa, cắt kẹp dòng */
+.artistic-text {
+  font-size: 72px; /* Rất to */
+  font-weight: 900;
+  line-height: 1.1;
+  margin: 0;
+  text-transform: uppercase;
+  /* Hiệu ứng màu gradient cho chữ */
+  background: linear-gradient(to right, #ffffff, #888888);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.hero-subtitle {
+  color: #aaaaaa;
+  font-size: 18px;
+  font-weight: 300;
+  margin: 0;
+  letter-spacing: 1px;
+}
+
+.hero-btn {
+  margin-top: 10px;
+  padding: 15px 35px;
+  background: #fff;
+  color: #000;
+  font-size: 16px;
+  font-weight: 800;
+  text-transform: uppercase;
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  letter-spacing: 1px;
+}
+.hero-btn:hover { background: #ccc; transform: translateX(5px); }
+
+/* ── NỬA PHẢI: KHUNG ẢNH TRÒN BỰ ── */
+.hero-right {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  position: relative;
+}
+
+.circle-frame {
+  width: 450px; 
+  height: 450px;
+  border-radius: 50%; 
+  background: rgba(255, 255, 255, 0.03); 
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 2;
+  box-shadow: inset 0 0 40px rgba(255,255,255,0.05), 0 20px 50px rgba(0,0,0,0.5);
+  backdrop-filter: blur(5px);
+  /* QUAN TRỌNG: Lệnh này sẽ cắt cụt mọi thứ lòi ra khỏi hình tròn */
+  overflow: hidden; 
+}
+
+.circle-img {
+  width: 100%; /* Sửa lại 100% để vừa đúng lọt lòng khung tròn */
+  height: 100%;
+  object-fit: cover; /* Dùng cover để ảnh lấp đầy vòng tròn, không bị hở viền */
+  filter: drop-shadow(0 30px 20px rgba(0,0,0,0.7));
+  transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+}
+.circle-frame:hover .circle-img { 
+  transform: scale(1.15) rotate(-8deg); 
+}
+@keyframes pulseGlow {
+  0% { transform: translate(-50%, -50%) scale(1); opacity: 0.5; }
+  100% { transform: translate(-50%, -50%) scale(1.1); opacity: 1; }
+}
+
+
+/* Responsive cho điện thoại */
+@media (max-width: 1024px) {
+  .artistic-text { font-size: 56px; }
+  .circle-frame { width: 350px; height: 350px; }
+}
+@media (max-width: 768px) {
+  .hero-main { height: auto; padding: 60px 0; }
+  .hero-content { flex-direction: column-reverse; text-align: center; gap: 40px; }
+  .hero-left { align-items: center; }
+  .artistic-text { font-size: 42px; text-align: center; }
+  .circle-frame { width: 300px; height: 300px; }
+}
 .banner-bg { position: absolute; inset: 0; background: radial-gradient(ellipse at center, rgba(255,255,255,0.05) 0%, transparent 70%); }
 .banner-text { font-size: 56px; font-weight: bold; color: #fff; text-align: center; z-index: 2; }
 .banner-text span { display: block; font-size: 24px; font-weight: normal; margin-top: 10px; }
@@ -310,6 +530,10 @@ onUnmounted(() => { if (timerInterval) clearInterval(timerInterval) })
 .pcard-price-wrap { display: flex; flex-direction: column; gap: 2px; }
 .pcard-price { font-size: 16px; font-weight: 700; color: #d32f2f; }
 .pcard-price-old { font-size: 12px; color: #999; text-decoration: line-through; }
+
+.fade-enter-active, .fade-leave-active { transition: opacity 0.9s ease, transform 0.9s ease; }
+.fade-enter-from { opacity: 0; transform: translateX(30px); }
+.fade-leave-to { opacity: 0; transform: translateX(-30px); }
 
 /* ── BADGES CÁC LOẠI ── */
 .badge-sale, .badge-sold, .badge-new, .badge-star { position: absolute; top: 8px; left: 8px; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; z-index: 2; color: #fff; }
@@ -372,6 +596,9 @@ onUnmounted(() => { if (timerInterval) clearInterval(timerInterval) })
   animation-play-state: paused;
   transform: translateY(-8px) scale(1.03) !important;
 }
+
+
+
 @keyframes floatCard {
   0% { transform: translateY(0); }
   50% { transform: translateY(-12px); } /* Nhô lên 12px */
