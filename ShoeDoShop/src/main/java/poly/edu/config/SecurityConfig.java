@@ -49,14 +49,16 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(
                     "/",
-                    "/auth/**", 
+                    "/auth/**",
+                    "/index.html",
                     "/api/**", 
                     "/images/**",
                     "/anh/**", 
                     "/oauth2/**",
                     "/login/oauth2/**",
                     "/error",
-                    "/api/chat/**"
+                    "/api/chat/**",
+                    "/assets/**"
                 ).permitAll()
                 .anyRequest().authenticated()
             )
