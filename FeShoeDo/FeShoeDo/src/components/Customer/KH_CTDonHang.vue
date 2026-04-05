@@ -263,6 +263,10 @@
             <span v-if="cancellingOrderId === order.maHD" class="spinner-border spinner-border-sm me-2"></span>
             <i class="bi bi-x-circle me-1"></i> Hủy đơn hàng
           </button>
+          <button class="btn btn-success" @click="openConfirmModal(order?.maHD)" :disabled="confirmingOrderId === order?.maHD" v-if="order?.trangThai === 'Đang giao'">
+            <span v-if="confirmingOrderId === order?.maHD" class="spinner-border spinner-border-sm me-2"></span>
+            <i class="bi bi-check-circle me-1"></i> Xác nhận đã nhận hàng
+          </button>
           <button class="btn btn-warning" @click="openReportIssueModal(order)" :disabled="reportingOrderId === order?.maHD" v-if="canReportIssue(order)">
             <span v-if="reportingOrderId === order?.maHD" class="spinner-border spinner-border-sm me-2"></span>
             <i class="bi bi-exclamation-triangle me-1"></i> Báo lỗi
@@ -331,6 +335,32 @@
             <button type="button" class="btn btn-danger" @click="submitCancelOrder" :disabled="!cancelReason || cancelling">
               <span v-if="cancelling" class="spinner-border spinner-border-sm me-2"></span>
               <i class="bi bi-check-circle me-1"></i>Xác nhận hủy
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal xác nhận đã nhận hàng -->
+    <div v-if="showConfirmModal" class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header bg-success text-white">
+            <h5 class="modal-title"><i class="bi bi-check-circle me-2"></i>Xác nhận đã nhận hàng</h5>
+            <button type="button" class="btn-close btn-close-white" @click="closeConfirmModal"></button>
+          </div>
+          <div class="modal-body">
+            <div class="text-center py-3">
+              <i class="bi bi-question-circle text-warning" style="font-size: 4rem;"></i>
+              <h5 class="mt-3">Xác nhận bạn đã nhận được hàng?</h5>
+              <p class="text-muted">Hành động này không thể hoàn tác.</p>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" @click="closeConfirmModal"><i class="bi bi-x-circle me-1"></i>Hủy</button>
+            <button type="button" class="btn btn-success" @click="handleConfirmReceived" :disabled="confirming">
+              <span v-if="confirming" class="spinner-border spinner-border-sm me-2"></span>
+              <i class="bi bi-check-circle me-1"></i>Xác nhận
             </button>
           </div>
         </div>
@@ -581,6 +611,11 @@ const cancelling = ref(false);
 const selectedCancelOrder = ref(null);
 const cancelReason = ref('');
 const cancelNote = ref('');
+// Modal xác nhận đơn hàng
+const confirmingOrderId = ref(null);
+const showConfirmModal = ref(false);
+const confirming = ref(false);
+const pendingOrderId = ref(null);
 
 // Modal báo lỗi
 const showReportIssueModal = ref(false);
@@ -790,6 +825,48 @@ const submitCancelOrder = async () => {
   } finally {
     cancelling.value = false;
     cancellingOrderId.value = null;
+  }
+};
+
+const openConfirmModal = (orderId) => {
+  pendingOrderId.value = orderId;
+  showConfirmModal.value = true;
+};
+
+const closeConfirmModal = () => {
+  showConfirmModal.value = false;
+  pendingOrderId.value = null;
+};
+
+const handleConfirmReceived = async () => {
+  confirming.value = true;
+  try {
+    await confirmReceived(pendingOrderId.value);
+  } finally {
+    confirming.value = false;
+    closeConfirmModal();
+  }
+};
+
+const confirmReceived = async (orderId) => {
+  confirmingOrderId.value = orderId;
+  try {
+    const response = await api.updateCustomerOrderStatus(orderId, 'Hoàn tất');
+    if (response.data.success) {
+      if (order.value && order.value.maHD === orderId) {
+        order.value.trangThai = 'Hoàn tất';
+        order.value.ngayDen = new Date().toISOString();
+      }
+      closeConfirmModal();
+      successMessage.value = 'Xác nhận thành công! Cảm ơn bạn đã mua hàng.';
+      showSuccessModal.value = true;
+    } else {
+      alert(response.data.message || 'Không thể cập nhật trạng thái');
+    }
+  } catch (err) {
+    alert(err.response?.data?.message || 'Lỗi khi cập nhật trạng thái');
+  } finally {
+    confirmingOrderId.value = null;
   }
 };
 

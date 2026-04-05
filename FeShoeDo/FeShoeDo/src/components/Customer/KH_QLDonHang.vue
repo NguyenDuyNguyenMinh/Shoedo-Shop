@@ -64,13 +64,13 @@
                 <!-- Nội dung phía trên - sẽ đẩy nút xuống dưới -->
                 <div class="flex-grow-1">
                   <div class="d-flex justify-content-between align-items-center mb-2">
-      <span class="text-muted small">
-        <i class="bi bi-calendar me-1"></i>
-        {{ formatDate(order.ngayMua) }}
-      </span>
+                    <span class="text-muted small">
+                      <i class="bi bi-calendar me-1"></i>
+                      {{ formatDate(order.ngayMua) }}
+                    </span>
                     <span :class="getStatusClass(order.trangThai)" class="badge">
-        {{ order.trangThai }}
-      </span>
+                      {{ order.trangThai }}
+                    </span>
                   </div>
 
                   <!-- Thông tin sản phẩm đầu tiên + ảnh -->
@@ -117,6 +117,12 @@
                     <i class="bi bi-x-circle me-1"></i> Hủy đơn hàng
                   </button>
 
+                  <!-- Nút Đã nhận hàng -->
+                  <button v-if="order.trangThai === 'Đang giao'" class="btn btn-success btn-sm w-100" @click="openConfirmReceivedModal(order.maHD)" :disabled="receivingOrderId === order.maHD">
+                    <span v-if="receivingOrderId === order.maHD" class="spinner-border spinner-border-sm me-2"></span>
+                    <i class="bi bi-check-circle me-1"></i> Đã nhận hàng
+                  </button>
+
                   <!-- Nút Báo lỗi -->
                   <button v-if="canReportIssue(order)" class="btn btn-warning btn-sm w-100" @click="openReportIssueModal(order)" :disabled="reportingOrderId === order.maHD">
                     <span v-if="reportingOrderId === order.maHD" class="spinner-border spinner-border-sm me-2"></span>
@@ -134,6 +140,36 @@
         </div>
       </div>
     </main>
+
+    <!-- Modal xác nhận đã nhận hàng -->
+    <div v-if="showConfirmModal" class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header bg-success text-white">
+            <h5 class="modal-title">
+              <i class="bi bi-check-circle me-2"></i>Xác nhận đã nhận hàng
+            </h5>
+            <button type="button" class="btn-close btn-close-white" @click="closeConfirmModal"></button>
+          </div>
+          <div class="modal-body">
+            <div class="text-center py-3">
+              <i class="bi bi-question-circle text-warning" style="font-size: 4rem;"></i>
+              <h5 class="mt-3">Xác nhận bạn đã nhận được hàng?</h5>
+              <p class="text-muted">Hành động này không thể hoàn tác.</p>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" @click="closeConfirmModal">
+              <i class="bi bi-x-circle me-1"></i>Hủy
+            </button>
+            <button type="button" class="btn btn-success" @click="handleConfirmReceived" :disabled="confirming">
+              <span v-if="confirming" class="spinner-border spinner-border-sm me-2"></span>
+              <i class="bi bi-check-circle me-1"></i>Xác nhận
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <!-- Modal Hủy đơn hàng -->
     <div v-if="showCancelModal" class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
@@ -301,8 +337,14 @@ const sortDirection = ref('desc');
 const orders = ref([]);
 const loading = ref(false);
 const error = ref('');
+const receivingOrderId = ref(null);
 const reportingOrderId = ref(null);
 const cancellingOrderId = ref(null);
+
+// State cho modal xác nhận đã nhận hàng
+const showConfirmModal = ref(false);
+const confirming = ref(false);
+const pendingOrderId = ref(null);
 
 // State cho modal hủy đơn
 const showCancelModal = ref(false);
@@ -551,6 +593,52 @@ const getStatusClass = (status) => {
     case 'Báo lỗi': return 'badge bg-dark';
     case 'Hoàn hàng/trả hàng': return 'badge bg-secondary';
     default: return 'badge bg-secondary';
+  }
+};
+
+// Xác nhận đã nhận hàng
+const openConfirmReceivedModal = (orderId) => {
+  pendingOrderId.value = orderId;
+  showConfirmModal.value = true;
+};
+
+const handleConfirmReceived = async () => {
+  confirming.value = true;
+  try {
+    await processConfirmReceived(pendingOrderId.value);
+  } finally {
+    confirming.value = false;
+    closeConfirmModal();
+  }
+};
+
+const closeConfirmModal = () => {
+  showConfirmModal.value = false;
+  pendingOrderId.value = null;
+};
+
+const processConfirmReceived = async (orderId) => {
+  receivingOrderId.value = orderId;
+  try {
+    const response = await api.updateCustomerOrderStatus(orderId, 'Hoàn tất');
+    if (response.data.success) {
+      const orderIndex = orders.value.findIndex(o => o.maHD === orderId);
+      if (orderIndex !== -1) {
+        orders.value[orderIndex].trangThai = 'Hoàn tất';
+        orders.value[orderIndex].ngayDen = new Date().toISOString();
+        orders.value = [...orders.value];
+      }
+      successMessage.value = 'Xác nhận thành công!';
+      showSuccessModal.value = true;
+    } else {
+      errorMessage.value = response.data.message || 'Không thể cập nhật trạng thái';
+      showErrorModal.value = true;
+    }
+  } catch (err) {
+    errorMessage.value = err.response?.data?.message || 'Lỗi khi cập nhật trạng thái';
+    showErrorModal.value = true;
+  } finally {
+    receivingOrderId.value = null;
   }
 };
 
