@@ -329,8 +329,8 @@
 <script setup>
 import { ref, onMounted, onBeforeUnmount, computed, watch } from 'vue';
 import api from '@/services/api';
-import KH_Navbar from '@/components/shared/KH_Navbar.vue';
-import Footer from '@/components/shared/Footer.vue';
+import KH_Navbar from '@/components/Shared/KH_Navbar.vue';
+import Footer from '@/components/Shared/Footer.vue';
 
 const currentTab = ref('all');
 const sortDirection = ref('desc');

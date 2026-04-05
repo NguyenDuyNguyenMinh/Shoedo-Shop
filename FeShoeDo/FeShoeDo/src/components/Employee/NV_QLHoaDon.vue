@@ -743,7 +743,7 @@
 
 <script>
 import { ref, computed, onMounted } from 'vue';
-import NV_Sidebar from '@/components/shared/NV_Sidebar.vue';
+import NV_Sidebar from '@/components/Shared/NV_Sidebar.vue';
 import { Modal } from 'bootstrap';
 import axios from 'axios';
 

@@ -89,8 +89,8 @@
 </template>
 
 <script>
-import KH_Navbar from '@/components/shared/KH_Navbar.vue';
-import Footer from '@/components/shared/Footer.vue';
+import KH_Navbar from '@/components/Shared/KH_Navbar.vue';
+import Footer from '@/components/Shared/Footer.vue';
 
 export default {
   name: 'KH_PaymentResult',
