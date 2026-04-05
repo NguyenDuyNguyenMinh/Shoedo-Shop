@@ -61,45 +61,56 @@
           <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
             <div v-for="order in filteredOrders" :key="order.maHD" class="col">
               <div class="card h-100 p-3 d-flex flex-column">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                  <span class="text-muted small">
-                    <i class="bi bi-calendar me-1"></i>
-                    {{ formatDate(order.ngayMua) }}
-                  </span>
-                  <span :class="getStatusClass(order.trangThai)" class="badge">
-                    {{ order.trangThai }}
-                  </span>
-                </div>
+                <!-- Nội dung phía trên - sẽ đẩy nút xuống dưới -->
+                <div class="flex-grow-1">
+                  <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-muted small">
+                      <i class="bi bi-calendar me-1"></i>
+                      {{ formatDate(order.ngayMua) }}
+                    </span>
+                    <span :class="getStatusClass(order.trangThai)" class="badge">
+                      {{ order.trangThai }}
+                    </span>
+                  </div>
 
-                <!-- Thông tin sản phẩm đầu tiên + ảnh -->
-                <div class="d-flex align-items-center mb-3">
-                  <img v-if="getFirstProductImage(order)" :src="getImageUrl(getFirstProductImage(order))" alt="Product" class="me-2 product-image" style="width: 60px; height: 60px; object-fit: cover; border-radius: 5px; border: 1px solid #eee;" @error="handleImageError">
-                  <div class="flex-grow-1">
-                    <strong class="product-name">{{ getFirstProductName(order) }}</strong>
-                    <small class="text-muted d-block" v-if="getProductCount(order) > 1">
-                      và {{ getProductCount(order) - 1 }} sản phẩm khác
-                    </small>
+                  <!-- Thông tin sản phẩm đầu tiên + ảnh -->
+                  <div class="d-flex align-items-center mb-3">
+                    <img v-if="getFirstProductImage(order)" :src="getImageUrl(getFirstProductImage(order))" alt="Product" class="me-2 product-image" style="width: 60px; height: 60px; object-fit: cover; border-radius: 5px; border: 1px solid #eee;" @error="handleImageError">
+                    <div class="flex-grow-1">
+                      <strong class="product-name">{{ getFirstProductName(order) }}</strong>
+                      <small class="text-muted d-block" v-if="getProductCount(order) > 1">
+                        và {{ getProductCount(order) - 1 }} sản phẩm khác
+                      </small>
+                    </div>
+                  </div>
+
+                  <hr class="my-2 w-100">
+
+                  <!-- Thành tiền -->
+                  <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-muted">Thành Tiền: </span>
+                    <strong class="text-danger">
+                      {{ formatPrice(order.tongTien || calculateOrderTotal(order)) }}
+                    </strong>
+                  </div>
+
+                  <!-- Thêm dòng tiết kiệm -->
+                  <div v-if="order.tongTienGoc && order.tongTienGoc > (order.tongTien || calculateOrderTotal(order))" class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-muted small">Tiết kiệm:</span>
+                    <span class="text-success small">
+                      -{{ formatPrice(order.tongTienGoc - (order.tongTien || calculateOrderTotal(order))) }}
+                    </span>
+                  </div>
+
+                  <!-- Hotline -->
+                  <div class="d-flex align-items-center mb-2 small">
+                    <i class="bi bi-telephone-fill me-1"></i>
+                    <span>Hotline: <strong>1900 6869</strong></span>
                   </div>
                 </div>
 
-                <hr class="my-2 w-100">
-
-                <!-- Thành tiền -->
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                  <span class="text-muted">Thành Tiền: </span>
-                  <strong class="text-danger">
-                    {{ formatPrice(order.tongTien || calculateOrderTotal(order)) }}
-                  </strong>
-                </div>
-
-                <!-- Hotline -->
-                <div class="d-flex align-items-center mb-2 small">
-                  <i class="bi bi-telephone-fill me-1"></i>
-                  <span>Hotline: <strong>1900 0001</strong></span>
-                </div>
-
-                <!-- Các nút hành động -->
-                <div class="d-flex flex-column gap-2 mt-2">
+                <!-- Các nút hành động - luôn ở dưới cùng -->
+                <div class="d-flex flex-column gap-2 mt-auto pt-2">
                   <!-- Nút Hủy đơn hàng -->
                   <button v-if="canCancelOrder(order)" class="btn btn-danger btn-sm w-100" @click="openCancelModal(order)" :disabled="cancellingOrderId === order.maHD">
                     <span v-if="cancellingOrderId === order.maHD" class="spinner-border spinner-border-sm me-2"></span>
@@ -196,7 +207,7 @@
             </div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" @click="closeCancelModal">
+            <button type="button" class="btn btn-secondary m-2" @click="closeCancelModal">
               <i class="bi bi-arrow-left me-1"></i>Quay lại
             </button>
             <button type="button" class="btn btn-danger" @click="submitCancelOrder" :disabled="!cancelReason || cancelling">
@@ -318,8 +329,8 @@
 <script setup>
 import { ref, onMounted, onBeforeUnmount, computed, watch } from 'vue';
 import api from '@/services/api';
-import KH_Navbar from '@/components/shared/KH_Navbar.vue';
-import Footer from '@/components/shared/Footer.vue';
+import KH_Navbar from '@/components/Shared/KH_Navbar.vue';
+import Footer from '@/components/Shared/Footer.vue';
 
 const currentTab = ref('all');
 const sortDirection = ref('desc');
@@ -330,7 +341,7 @@ const receivingOrderId = ref(null);
 const reportingOrderId = ref(null);
 const cancellingOrderId = ref(null);
 
-// State cho modal xác nhận
+// State cho modal xác nhận đã nhận hàng
 const showConfirmModal = ref(false);
 const confirming = ref(false);
 const pendingOrderId = ref(null);
@@ -408,6 +419,7 @@ const fetchOrders = async () => {
 
 // Kiểm tra có thể hủy đơn không
 const canCancelOrder = (order) => {
+  if (!order) return false;
   return order.trangThai === 'Đang xử lý';
 };
 
@@ -464,7 +476,6 @@ const canReportIssue = (order) => {
 
 // Tính thời gian còn lại cho modal (cập nhật mỗi giây)
 const remainingTimeDetail = computed(() => {
-  // Dùng modalTimeTick để force re-compute
   const _ = modalTimeTick.value;
 
   if (!selectedOrder.value || !canReportIssue(selectedOrder.value)) {
@@ -533,12 +544,19 @@ const getProductCount = (order) => {
 
 const calculateOrderTotal = (order) => {
   if (order.tongTien) return order.tongTien;
+
   if (order.chiTiet?.length > 0) {
+    const hasSauKm = order.chiTiet.some(item => item.thanhTienSauKmSp);
+    if (hasSauKm) {
+      return order.chiTiet.reduce((total, item) => total + (item.thanhTienSauKmSp || 0), 0);
+    }
     return order.chiTiet.reduce((total, item) => total + (item.soLuong * item.donGia), 0);
   }
+
   if (order.hoaDonCTs?.length > 0) {
     return order.hoaDonCTs.reduce((total, item) => total + (item.soLuong * item.donGia), 0);
   }
+
   return 0;
 };
 
@@ -655,21 +673,13 @@ const submitCancelOrder = async () => {
         ? `${cancelReason.value} - ${cancelNote.value}`
         : cancelReason.value;
 
-    console.log('Cancelling order:', {
-      orderId: selectedCancelOrder.value?.maHD,
-      reason: fullReason
-    });
-
     const response = await api.cancelOrder(selectedCancelOrder.value?.maHD, fullReason);
-
-    console.log('Cancel response:', response.data);
 
     if (response.data.success) {
       closeCancelModal();
       successMessage.value = 'Đơn hàng đã được hủy thành công!';
       showSuccessModal.value = true;
 
-      // Cập nhật trạng thái đơn hàng trong danh sách
       const orderIndex = orders.value.findIndex(o => o.maHD === selectedCancelOrder.value?.maHD);
       if (orderIndex !== -1) {
         orders.value[orderIndex].trangThai = 'Đã từ chối';
@@ -677,19 +687,15 @@ const submitCancelOrder = async () => {
         orders.value = [...orders.value];
       }
 
-      // Reload trang sau 1 giây
       setTimeout(() => {
         window.location.reload();
       }, 1000);
 
     } else {
-      console.error('Cancel failed:', response.data.message);
       errorMessage.value = response.data.message || 'Không thể hủy đơn hàng';
       showErrorModal.value = true;
     }
   } catch (err) {
-    console.error('Cancel error:', err);
-    console.error('Error response:', err.response?.data);
     errorMessage.value = err.response?.data?.message || err.message || 'Lỗi khi hủy đơn hàng';
     showErrorModal.value = true;
   } finally {
@@ -736,14 +742,12 @@ const submitReportIssue = async () => {
       successMessage.value = 'Báo lỗi đã được ghi nhận!';
       showSuccessModal.value = true;
 
-      // Cập nhật trạng thái đơn hàng trong danh sách
       const orderIndex = orders.value.findIndex(o => o.maHD === selectedOrder.value?.maHD);
       if (orderIndex !== -1) {
         orders.value[orderIndex].trangThai = 'Báo lỗi';
         orders.value = [...orders.value];
       }
 
-      // Reload trang sau 1 giây để đảm bảo dữ liệu đồng bộ
       setTimeout(() => {
         window.location.reload();
       }, 1000);

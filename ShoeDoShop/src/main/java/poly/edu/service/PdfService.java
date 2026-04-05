@@ -113,13 +113,35 @@ public class PdfService {
         }
 
         document.add(table);
-
-        Paragraph total = new Paragraph("Tổng cộng: " + formatCurrency(tongTien))
+        
+        double voucherGiam = 0;
+        String voucherTen = "";
+        if (hoaDon.getKhachHangVoucher() != null && hoaDon.getKhachHangVoucher().getVoucher() != null) {
+            voucherGiam = hoaDon.getKhachHangVoucher().getVoucher().getGiaTriGiam() != null ? 
+                         hoaDon.getKhachHangVoucher().getVoucher().getGiaTriGiam() : 0;
+            voucherTen = hoaDon.getKhachHangVoucher().getVoucher().getTenVoucher();
+        }
+        
+        double tongTienSauGiam = tongTien - Math.min(voucherGiam, tongTien);
+        
+        if (voucherGiam > 0) {
+            Paragraph voucherInfo = new Paragraph()
+                    .add(new Paragraph("Voucher áp dụng: " + voucherTen).setTextAlignment(TextAlignment.RIGHT))
+                    .setFontSize(11);
+            document.add(voucherInfo);
+        }
+        if (voucherGiam > 0) {
+	        Paragraph voucherDow = new Paragraph("−" + formatCurrency(voucherGiam))
+			        .setTextAlignment(TextAlignment.RIGHT)      
+			        .setFontSize(11);
+			document.add(voucherDow);
+        }
+        Paragraph total = new Paragraph("Tổng cộng: " + formatCurrency(tongTienSauGiam))
                 .setTextAlignment(TextAlignment.RIGHT)
                 .setBold()
                 .setFontSize(14);
         document.add(total);
-
+        
         document.add(new Paragraph("\n"));
 
         if (hoaDon.getGhiChu() != null && !hoaDon.getGhiChu().isEmpty()) {

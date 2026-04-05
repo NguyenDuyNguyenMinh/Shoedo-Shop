@@ -54,8 +54,8 @@
             <button class="nav-link" :class="{ active: activeTab === 'pending' }" 
                     @click="setActiveTab('pending')">
               Chờ duyệt
-              <span v-if="orderCounts.pending > 0" class="badge bg-warning ms-2">
-                {{ orderCounts.pending }}
+              <span v-if="filteredStats.pending > 0" class="badge bg-warning ms-2">
+                {{ filteredStats.pending }}
               </span>
             </button>
           </li>
@@ -63,8 +63,8 @@
             <button class="nav-link" :class="{ active: activeTab === 'delivering' }" 
                     @click="setActiveTab('delivering')">
               Đang giao
-              <span v-if="orderCounts.delivering > 0" class="badge bg-primary ms-2">
-                {{ orderCounts.delivering }}
+              <span v-if="filteredStats.delivering > 0" class="badge bg-primary ms-2">
+                {{ filteredStats.delivering }}
               </span>
             </button>
           </li>
@@ -72,8 +72,8 @@
             <button class="nav-link" :class="{ active: activeTab === 'completed' }" 
                     @click="setActiveTab('completed')">
               Hoàn tất
-              <span v-if="orderCounts.completed > 0" class="badge bg-success ms-2">
-                {{ orderCounts.completed }}
+              <span v-if="filteredStats.completed > 0" class="badge bg-success ms-2">
+                {{ filteredStats.completed }}
               </span>
             </button>
           </li>
@@ -81,8 +81,8 @@
             <button class="nav-link" :class="{ active: activeTab === 'rejected' }" 
                     @click="setActiveTab('rejected')">
               Từ chối
-              <span v-if="orderCounts.rejected > 0" class="badge bg-danger ms-2">
-                {{ orderCounts.rejected }}
+              <span v-if="filteredStats.rejected > 0" class="badge bg-danger ms-2">
+                {{ filteredStats.rejected }}
               </span>
             </button>
           </li>
@@ -90,8 +90,8 @@
             <button class="nav-link" :class="{ active: activeTab === 'error' }" 
                     @click="setActiveTab('error')">
               Báo lỗi
-              <span v-if="orderCounts.error > 0" class="badge bg-info ms-2">
-                {{ orderCounts.error }}
+              <span v-if="filteredStats.error > 0" class="badge bg-info ms-2">
+                {{ filteredStats.error }}
               </span>
             </button>
           </li>
@@ -128,7 +128,9 @@
               <input type="date" v-model="filterDate" class="form-control">
             </div>
             <div class="col-md-2">
-              <button class="btn btn-secondary" @click="resetFilters">Reset</button>
+              <button @click="resetFilters" class="btn btn-outline-secondary w-100">
+                  <i class="bi bi-arrow-clockwise me-2"></i>Reset
+                </button>
             </div>
           </div>
           
@@ -175,9 +177,13 @@
                     
                     <hr>
                     
+                    <div v-if="order.voucherGiam > 0" class="d-flex justify-content-between align-items-center mb-2">
+                      <span class="text-muted">Voucher giảm:</span>
+                      <strong class="text-danger">-{{ formatPrice(order.voucherGiam) }}</strong>
+                    </div>
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                      <span class="text-muted">Tổng tiền:</span>
-                      <strong class="text-primary fs-5">{{ formatPrice(order.tongTien) }}</strong>
+                      <span class="text-muted fw-bold">Tổng tiền:</span>
+                      <strong class="text-primary fs-5">{{ formatPrice(order.tongTienSauGiam || order.tongTien) }}</strong>
                     </div>
                     
                     <div v-if="order.maQT" class="mb-2">
@@ -252,9 +258,13 @@
                     
                     <hr>
                     
+                    <div v-if="order.voucherGiam > 0" class="d-flex justify-content-between align-items-center mb-2">
+                      <span class="text-muted">Voucher giảm:</span>
+                      <strong class="text-danger">-{{ formatPrice(order.voucherGiam) }}</strong>
+                    </div>
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                      <span class="text-muted">Tổng tiền:</span>
-                      <strong class="text-primary fs-5">{{ formatPrice(order.tongTien) }}</strong>
+                      <span class="text-muted fw-bold">Tổng tiền:</span>
+                      <strong class="text-primary fs-5">{{ formatPrice(order.tongTienSauGiam || order.tongTien) }}</strong>
                     </div>
                     
                     <div class="mb-2">
@@ -331,9 +341,13 @@
                     
                     <hr>
                     
+                    <div v-if="order.voucherGiam > 0" class="d-flex justify-content-between align-items-center mb-2">
+                      <span class="text-muted">Voucher giảm:</span>
+                      <strong class="text-danger">-{{ formatPrice(order.voucherGiam) }}</strong>
+                    </div>
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                      <span class="text-muted">Tổng tiền:</span>
-                      <strong class="text-primary fs-5">{{ formatPrice(order.tongTien) }}</strong>
+                      <span class="text-muted fw-bold">Tổng tiền:</span>
+                      <strong class="text-primary fs-5">{{ formatPrice(order.tongTienSauGiam || order.tongTien) }}</strong>
                     </div>
                     
                     <div class="mb-2">
@@ -402,9 +416,13 @@
                     
                     <hr>
                     
+                    <div v-if="order.voucherGiam > 0" class="d-flex justify-content-between align-items-center mb-2">
+                      <span class="text-muted">Voucher giảm:</span>
+                      <strong class="text-danger">-{{ formatPrice(order.voucherGiam) }}</strong>
+                    </div>
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                      <span class="text-muted">Tổng tiền:</span>
-                      <strong class="text-primary fs-5">{{ formatPrice(order.tongTien) }}</strong>
+                      <span class="text-muted fw-bold">Tổng tiền:</span>
+                      <strong class="text-primary fs-5">{{ formatPrice(order.tongTienSauGiam || order.tongTien) }}</strong>
                     </div>
                   </div>
                   <div class="card-footer bg-transparent">
@@ -473,9 +491,13 @@
                     
                     <hr>
                     
+                    <div v-if="order.voucherGiam > 0" class="d-flex justify-content-between align-items-center mb-2">
+                      <span class="text-muted">Voucher giảm:</span>
+                      <strong class="text-danger">-{{ formatPrice(order.voucherGiam) }}</strong>
+                    </div>
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                      <span class="text-muted">Tổng tiền:</span>
-                      <strong class="text-primary fs-5">{{ formatPrice(order.tongTien) }}</strong>
+                      <span class="text-muted fw-bold">Tổng tiền:</span>
+                      <strong class="text-primary fs-5">{{ formatPrice(order.tongTienSauGiam || order.tongTien) }}</strong>
                     </div>
                   </div>
                   <div class="card-footer bg-transparent">
@@ -565,6 +587,21 @@
                 </div>
               </div>
 
+              <div v-if="orderDetail.voucherApDung" class="row mb-4">
+                <div class="col-md-12">
+                  <h6 class="fw-bold">Voucher áp dụng</h6>
+                  <div class="border p-3 rounded bg-light">
+                    <div class="d-flex justify-content-between align-items-center">
+                      <div>
+                        <div class="fw-bold text-success">{{ orderDetail.voucherApDung.tenVoucher }}</div>
+                        <div class="text-muted small">Đơn tối thiểu: {{ formatPrice(orderDetail.voucherApDung.donToiThieu) }}</div>
+                      </div>
+                      <div class="text-danger fw-bold">-{{ formatPrice(orderDetail.voucherApDung.giaTriGiam) }}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <div class="mb-4">
                 <h6 class="fw-bold mb-3">Chi tiết sản phẩm</h6>
                 <div class="table-responsive">
@@ -590,9 +627,13 @@
                       </tr>
                     </tbody>
                     <tfoot>
-                      <tr>
-                        <td colspan="5" class="text-end"><strong>Tổng cộng:</strong></td>
-                        <td class="fw-bold text-primary text-end">{{ formatPrice(orderDetail.tongTien) }}</td>
+                      <tr v-if="orderDetail.voucherGiam > 0">
+                        <td colspan="5" class="text-end text-danger"><strong>Voucher giảm:</strong></td>
+                        <td class="fw-bold text-danger text-end">-{{ formatPrice(orderDetail.voucherGiam) }}</td>
+                      </tr>
+                      <tr class="table-active">
+                        <td colspan="5" class="text-end"><strong>Tổng tiền:</strong></td>
+                        <td class="fw-bold text-primary text-end fs-5">{{ formatPrice(orderDetail.tongTienSauGiam || orderDetail.tongTien) }}</td>
                       </tr>
                     </tfoot>
                   </table>
@@ -638,7 +679,7 @@
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title">Từ chối đơn hàng</h5>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
           </div>
           <div class="modal-body">
             <p>Từ chối đơn hàng <strong>#HD{{ orderToReject ? String(orderToReject.maHD).padStart(4, '0') : '' }}</strong>?</p>
@@ -702,7 +743,7 @@
 
 <script>
 import { ref, computed, onMounted } from 'vue';
-import NV_Sidebar from '@/components/shared/NV_Sidebar.vue';
+import NV_Sidebar from '@/components/Shared/NV_Sidebar.vue';
 import { Modal } from 'bootstrap';
 import axios from 'axios';
 
@@ -755,6 +796,29 @@ export default {
       error: orders.value.error.length
     }));
 
+     const isOrderInDate = (order, date) => {
+      if (!date) return true;
+      const orderDate = new Date(order.ngayMua).toISOString().split('T')[0];
+      return orderDate === date;
+    };
+
+    const filteredStats = computed(() => {
+        const date = filterDate.value;
+        
+        const filterByDate = (orderList) => {
+          if (!date) return orderList;
+          return orderList.filter(order => isOrderInDate(order, date));
+        };
+
+        return {
+        pending: filterByDate(orders.value.pending).length,
+        delivering: filterByDate(orders.value.delivering).length,
+        completed: filterByDate(orders.value.completed).length,
+        rejected: filterByDate(orders.value.rejected).length,
+        error: filterByDate(orders.value.error).length
+      };
+    });
+
     const filteredOrders = computed(() => {
       const keyword = searchKeyword.value.toLowerCase().trim();
       const date = filterDate.value;
@@ -762,7 +826,9 @@ export default {
       const sort = sortOrder.value; 
 
       const filterFn = (order) => {
+        
         if (keyword) {
+          if (date && !isOrderInDate(order, date)) return false;
           const maHDStr = `HD${String(order.maHD).padStart(4, '0')}`.toLowerCase();
           const matchesKeyword = 
             maHDStr.includes(keyword) ||
@@ -1073,6 +1139,7 @@ const handleSidebarCollapse = (collapsedState) => {
       employees,
       filterEmployee,
       sortOrder,
+      filteredStats,
       loadEmployees,
       
       // Methods
@@ -1186,10 +1253,6 @@ const handleSidebarCollapse = (collapsedState) => {
 
 .bg-gradient-1 {
   background: linear-gradient(135deg, #212529, #000000);
-}
-
-.modal-header .btn-close-white {
-  filter: invert(1);
 }
 
 .btn-success {

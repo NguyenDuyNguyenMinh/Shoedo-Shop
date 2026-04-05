@@ -260,7 +260,6 @@
       </div>
     </div>
 
-    <!-- Modal Voucher -->
     <div v-if="showVoucherModal" class="modal fade show d-block" style="background: rgba(0,0,0,0.5)">
       <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -273,61 +272,20 @@
           <div class="modal-body">
             <ul class="nav nav-tabs mb-2">
               <li class="nav-item">
-                <a class="nav-link" :class="{ active: activeTab === 'myVouchers' }" 
-                   @click="activeTab = 'myVouchers'">
-                  <i class="fas fa-gift me-1"></i> Voucher của tôi
+                <a class="nav-link" :class="{ active: activeTab === 'available' }" 
+                    @click="activeTab = 'available'">
+                  <i class="fas fa-store me-1"></i> Đổi điểm lấy voucher
                 </a>
               </li>
               <li class="nav-item">
-                <a class="nav-link" :class="{ active: activeTab === 'available' }" 
-                   @click="activeTab = 'available'; loadAvailableVouchers()">
-                  <i class="fas fa-store me-1"></i> Đổi điểm lấy voucher
+                <a class="nav-link" :class="{ active: activeTab === 'myVouchers' }" 
+                    @click="activeTab = 'myVouchers'">
+                  <i class="fas fa-gift me-1"></i> Voucher của tôi
                 </a>
               </li>
             </ul>
 
-            <!-- Tab 1: Voucher của tôi -->
-            <div v-if="activeTab === 'myVouchers'">
-              <div class="filter-bar mb-2 d-flex gap-2">
-                <select v-model="myVoucherStatusFilter" class="form-select form-select-sm" style="width: auto;">
-                  <option value="all">Tất cả trạng thái</option>
-                  <option value="Chưa sử dụng">Chưa sử dụng</option>
-                  <option value="Đã sử dụng">Đã sử dụng</option>
-                  <option value="Hết hạn">Hết hạn</option>
-                </select>
-                <select v-model="myVoucherSortBy" class="form-select form-select-sm" style="width: auto;">
-                  <option value="newest">Mới nhất</option>
-                  <option value="oldest">Cũ nhất</option>
-                  <option value="high-low">Giá trị cao - thấp</option>
-                  <option value="low-high">Giá trị thấp - cao</option>
-                </select>
-              </div>
-              
-              <div v-if="filteredMyVouchers.length > 0" class="voucher-list">
-                <div v-for="item in filteredMyVouchers" :key="item.maKHVC" 
-                     class="voucher-card mb-2 p-3 border rounded">
-                  <div class="row align-items-center">
-                    <div class="col-md-8">
-                      <div class="fw-bold fs-5">{{ item.voucher.tenVoucher }}</div>
-                      <div class="text-muted small">Giảm {{ formatMoney(item.voucher.giaTriGiam) }}</div>
-                      <div class="text-muted small">Đơn tối thiểu: {{ formatMoney(item.voucher.donToiThieu) }}</div>
-                      <div class="text-muted small">Hạn sử dụng: {{ formatDate(item.hanSuDung) }}</div>
-                    </div>
-                    <div class="col-md-4 text-end">
-                      <span class="badge" :class="getStatusBadgeClass(item.trangThai)">
-                        {{ item.trangThai }}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div v-else class="text-center text-muted py-4">
-                <i class="fas fa-ticket-alt fa-3x mb-3"></i>
-                <p>Bạn chưa có voucher nào</p>
-              </div>
-            </div>
-
-            <!-- Tab 2: Đổi điểm lấy voucher -->
+            <!-- Tab 1: Đổi điểm lấy voucher (giữ nguyên) -->
             <div v-if="activeTab === 'available'">
               <div class="filter-bar mb-2 d-flex gap-2">
                 <select v-model="availableVoucherFilter" class="form-select form-select-sm" style="width: auto;">
@@ -373,6 +331,92 @@
                 <p>Không có voucher nào phù hợp với bộ lọc</p>
               </div>
             </div>
+
+            <!-- Tab 2: Voucher của tôi -->
+            <div v-if="activeTab === 'myVouchers'">
+              <!-- Thanh công cụ với checkbox chọn tất cả và nút xóa hàng loạt -->
+              <div class="toolbar mb-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div class="d-flex gap-2 align-items-center">
+                  <div class="filter-bar d-flex gap-2">
+                    <select v-model="myVoucherStatusFilter" class="form-select form-select-sm" style="width: auto;">
+                      <option value="all">Tất cả trạng thái</option>
+                      <option value="Chưa sử dụng">Chưa sử dụng</option>
+                      <option value="Hết hạn">Hết hạn</option>
+                    </select>
+                    <select v-model="myVoucherSortBy" class="form-select form-select-sm" style="width: auto;">
+                      <option value="newest">Mới nhất</option>
+                      <option value="oldest">Cũ nhất</option>
+                      <option value="high-low">Giá trị cao - thấp</option>
+                      <option value="low-high">Giá trị thấp - cao</option>
+                    </select>
+                  </div>
+                </div>
+                
+                <div class="d-flex gap-2 align-items-center" v-if="hasExpiredVouchers">
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="selectAllExpired" v-model="selectAllExpired">
+                    <label class="form-check-label small" for="selectAllExpired">
+                      Chọn tất cả hết hạn
+                    </label>
+                  </div>
+                  <button class="btn btn-danger btn-sm" 
+                          @click="deleteSelectedExpiredVouchers" 
+                          :disabled="selectedExpiredIds.length === 0 || deleteBatchLoading">
+                    <span v-if="deleteBatchLoading" class="spinner-border spinner-border-sm me-1"></span>
+                    <i v-else class="fas fa-trash-alt me-1"></i>
+                    Xóa đã chọn ({{ selectedExpiredIds.length }})
+                  </button>
+                </div>
+              </div>
+              
+              <div v-if="filteredMyVouchers.length > 0" class="voucher-list">
+                <div v-for="item in filteredMyVouchers" :key="item.maKHVC" 
+                      class="voucher-card mb-2 p-3 border rounded position-relative"
+                      :class="{ 'expired-voucher': item.trangThai === 'Hết hạn' }">
+                  
+                  <!-- Status badge ở góc trên bên phải -->
+                  <span class="status-badge-corner" :class="getStatusBadgeClass(item.trangThai)">
+                    {{ item.trangThai }}
+                  </span>
+                  
+                  <div class="row align-items-center">
+                    <!-- Checkbox cho voucher hết hạn -->
+                    <div class="col-sm-1" v-if="item.trangThai === 'Hết hạn'">
+                      <div class="form-check">
+                        <input class="form-check-input" type="checkbox" 
+                                :value="item.maKHVC"
+                                v-model="selectedExpiredIds">
+                      </div>
+                    </div>
+                    
+                    <!-- Nội dung voucher -->
+                    <div :class="item.trangThai === 'Hết hạn' ? 'col-md-10' : 'col-md-11'">
+                      <div class="fw-bold fs-5">{{ item.voucher.tenVoucher }}</div>
+                      <div class="text-muted small">Giảm {{ formatMoney(item.voucher.giaTriGiam) }}</div>
+                      <div class="text-muted small">Đơn tối thiểu: {{ formatMoney(item.voucher.donToiThieu) }}</div>
+                      <div class="text-muted small">Hạn sử dụng: {{ formatDate(item.hanSuDung) }}</div>
+                      <div class="text-muted small">Ngày đổi: {{ formatDate(item.ngayDoi) }}</div>
+                    </div>
+                    
+                    <!-- Nút xóa ở giữa (căn giữa theo chiều dọc) -->
+                    <div class="col-sm-1 text-center">
+                      <button v-if="item.trangThai === 'Hết hạn'"   
+                              class="btn btn-sm btn-outline-danger" 
+                              @click="deleteSingleExpiredVoucher(item.maKHVC)"
+                              :disabled="deleteSingleLoading === item.maKHVC"
+                              style="width: 36px; height: 36px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;">
+                        <span v-if="deleteSingleLoading === item.maKHVC" class="spinner-border spinner-border-sm"></span>
+                        <i v-else class="fas fa-trash"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div v-else class="text-center text-muted py-4">
+                <i class="fas fa-ticket-alt fa-3x mb-3"></i>
+                <p>Bạn chưa có voucher nào</p>
+              </div>
+            </div>      
           </div>
           <div class="modal-footer d-flex justify-content-between align-items-center">
             <div>
@@ -436,8 +480,9 @@
 <script>
 import { ref, onMounted, computed } from 'vue'
 import axios from 'axios'
-import KH_Navbar from '@/components/shared/KH_Navbar.vue'
-import Footer from '@/components/shared/Footer.vue'
+import KH_Navbar from '@/components/Shared/KH_Navbar.vue'
+import Footer from '@/components/Shared/Footer.vue'
+import { watch } from 'vue'
 
 export default {
   name: 'QLProfile',
@@ -460,7 +505,7 @@ export default {
     const showHistoryModal = ref(false)
     const showVoucherModal = ref(false)
     const showReferralModal = ref(false)
-    const activeTab = ref('myVouchers')
+    const activeTab = ref('available')
     const pointsHistory = ref({ history: [], currentPoints: 0 })
     const myVouchers = ref([])
     const availableVouchers = ref([])
@@ -473,10 +518,25 @@ export default {
     const myVoucherSortBy = ref('newest')
     const availableVoucherFilter = ref('all')
     const availableVoucherSortBy = ref('newest')
+    
+    const selectedExpiredIds = ref([])
+    const selectAllExpired = ref(false)
+    const deleteSingleLoading = ref(null)
+    const deleteBatchLoading = ref(false)
+
+    const expiredVouchers = computed(() => {
+      return myVouchers.value.filter(v => v.trangThai === 'Hết hạn')
+    })
+
+    const hasExpiredVouchers = computed(() => {
+      return expiredVouchers.value.length > 0
+    })
+
+    const watchSelectAllExpired = () => {
+    }
 
     const filteredHistory = computed(() => {
       let history = [...(pointsHistory.value.history || [])]
-
       switch (historySortBy.value) {
         case 'newest':
           history.sort((a, b) => new Date(b.ngayGiaoDich) - new Date(a.ngayGiaoDich))
@@ -491,12 +551,12 @@ export default {
           history.sort((a, b) => a.soDiem - b.soDiem)
           break
       }
-      
       return history
     })
 
     const filteredMyVouchers = computed(() => {
       let vouchers = [...(myVouchers.value || [])]
+      vouchers = vouchers.filter(v => v.trangThai !== 'Đã sử dụng')
 
       if (myVoucherStatusFilter.value !== 'all') {
         vouchers = vouchers.filter(v => v.trangThai === myVoucherStatusFilter.value)
@@ -523,6 +583,10 @@ export default {
     const filteredAvailableVouchers = computed(() => {
       let vouchers = [...(availableVouchers.value || [])]
       const currentPoints = customer.value.diemTichLuy || 0
+
+      const redeemedVoucherIds = myVouchers.value.map(v => v.voucher?.maVoucher)
+
+      vouchers = vouchers.filter(v => !redeemedVoucherIds.includes(v.maVoucher))
 
       switch (availableVoucherFilter.value) {
         case 'enough':
@@ -557,16 +621,78 @@ export default {
       return vouchers
     })
 
+    const deleteSingleExpiredVoucher = async (maKHVC) => {
+      if (!confirm('Bạn có chắc muốn xóa voucher này?')) return
+      
+      deleteSingleLoading.value = maKHVC
+      
+      try {
+        const { data } = await axios.delete(`/api/customer/vouchers/${maKHVC}`)
+        if (data.success) {
+          message.value = data.message
+          await fetchMyVouchers()
+          selectedExpiredIds.value = []
+          selectAllExpired.value = false
+        } else {
+          error.value = data.message
+        }
+      } catch (err) {
+        error.value = err.response?.data?.message || 'Lỗi khi xóa voucher'
+      } finally {
+        deleteSingleLoading.value = null
+      }
+    }
+
+    const deleteSelectedExpiredVouchers = async () => {
+      if (selectedExpiredIds.value.length === 0) {
+        error.value = 'Vui lòng chọn voucher cần xóa'
+        return
+      }
+      
+      if (!confirm(`Bạn có chắc muốn xóa ${selectedExpiredIds.value.length} voucher đã hết hạn?`)) return
+      
+      deleteBatchLoading.value = true
+      
+      try {
+        const { data } = await axios.delete('/api/customer/vouchers/batch', {
+          data: { ids: selectedExpiredIds.value }
+        })
+        
+        if (data.success) {
+          message.value = data.message
+          await fetchMyVouchers()
+          selectedExpiredIds.value = []
+          selectAllExpired.value = false
+        } else {
+          error.value = data.message
+        }
+      } catch (err) {
+        error.value = err.response?.data?.message || 'Lỗi khi xóa voucher'
+      } finally {
+        deleteBatchLoading.value = false
+      }
+    }
+
+    watch(selectAllExpired, (newVal) => {
+      if (newVal) {
+        selectedExpiredIds.value = expiredVouchers.value.map(v => v.maKHVC)
+      } else {
+        selectedExpiredIds.value = []
+      }
+    })
+
+    watch(expiredVouchers, () => {
+      selectedExpiredIds.value = []
+      selectAllExpired.value = false
+    })
+
     const fetchProfile = async () => {
       try {
         const { data } = await axios.get('/api/customer/profile')
-        console.log('Profile data:', data)
         if (data.success) {
           user.value = data.user
           customer.value = data.customer
-          addresses.value = (data.addresses || []).sort((a, b) => 
-            b.macDinh - a.macDinh
-          )
+          addresses.value = (data.addresses || []).sort((a, b) => b.macDinh - a.macDinh)
         }
       } catch (err) {
         error.value = 'Không thể tải thông tin'
@@ -600,12 +726,8 @@ export default {
         const { data } = await axios.get('/api/customer/vouchers/available')
         if (data.success) {
           availableVouchers.value = data.vouchers || []
-          if (availableVouchers.value.length === 0) {
-            error.value = ''
-          }
         } else {
           console.error('Không thể tải voucher:', data.message)
-          error.value = data.message
           availableVouchers.value = []
         }
       } catch (err) {
@@ -784,6 +906,7 @@ export default {
       }
     }
 
+
     const closeVoucherModal = () => {
       showVoucherModal.value = false
       activeTab.value = 'myVouchers'
@@ -792,6 +915,8 @@ export default {
       myVoucherSortBy.value = 'newest'
       availableVoucherFilter.value = 'all'
       availableVoucherSortBy.value = 'newest'
+      selectedExpiredIds.value = []
+      selectAllExpired.value = false
     }
 
     const closeReferralModal = () => {
@@ -848,7 +973,6 @@ export default {
     const getStatusBadgeClass = (status) => {
       switch (status) {
         case 'Chưa sử dụng': return 'bg-success'
-        case 'Đã sử dụng': return 'bg-secondary'
         case 'Hết hạn': return 'bg-danger'
         default: return 'bg-secondary'
       }
@@ -873,6 +997,7 @@ export default {
       await fetchProfile()
       await fetchPointsHistory()
       await fetchMyVouchers()
+      await loadAvailableVouchers()
     })
 
     return {
@@ -885,6 +1010,10 @@ export default {
       historySortBy, myVoucherStatusFilter, myVoucherSortBy, 
       availableVoucherFilter, availableVoucherSortBy,
       filteredHistory, filteredMyVouchers, filteredAvailableVouchers,
+      // Delete expired vouchers
+      selectedExpiredIds, selectAllExpired, hasExpiredVouchers,
+      deleteSingleLoading, deleteBatchLoading,
+      deleteSingleExpiredVoucher, deleteSelectedExpiredVouchers,
       // Methods
       updateProfile, changePassword, saveAddress, deleteAddress,
       setDefaultAddress, editAddress, closeModal,
@@ -1152,5 +1281,38 @@ export default {
 
 .filter-bar .form-select {
   min-width: 140px;
+}
+
+.status-badge-corner {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 0.75rem;
+  color:#ffffff;
+  padding: 4px 8px;
+  border-radius: 4px;
+  z-index: 1;
+}
+
+.voucher-card {
+  position: relative;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.voucher-card .row {
+  padding-right: 80px; 
+}
+
+@media (max-width: 768px) {
+  .voucher-card .row {
+    padding-right: 70px;
+  }
+  
+  .status-badge-corner {
+    top: 5px;
+    right: 5px;
+    font-size: 0.7rem;
+    padding: 3px 6px;
+  }
 }
 </style>

@@ -9,7 +9,7 @@ const routes = [
   {
     path: '/auth/login',
     name: 'Login',
-    component: () => import('@/components/auth/Login.vue'),
+    component: () => import('@/components/Auth/Login.vue'),
     meta: { requiresGuest: true }
   },
   {
@@ -39,7 +39,7 @@ const routes = [
     {
     path: '/customer/sanpham',
     name: 'Sanpham',
-    component: () => import('@/components/Customer/KH_SanPham.vue'),
+    component: () => import('@/components/Customer/KH_Sanpham.vue'),
     meta: { requiresAuth: true, role: 'CUSTOMER' }
   },
   {
@@ -75,7 +75,7 @@ const routes = [
   {
     path: '/employee/dashboard',
     name: 'EmployeeDashboard',
-    component: () => import('@/components/employee/NV_ThongKe.vue'),
+    component: () => import('@/components/Employee/NV_ThongKe.vue'),
     meta: { requiresAuth: true, role: 'ADMIN'}
   },
   {

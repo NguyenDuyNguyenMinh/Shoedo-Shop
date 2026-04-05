@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import poly.edu.service.ProfileService;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -76,5 +77,15 @@ public class ProfileController {
     @PostMapping("/apply-referral")
     public ResponseEntity<Map<String, Object>> applyReferralCode(@RequestBody Map<String, String> request) {
         return ResponseEntity.ok(profileService.applyReferralCode(request.get("referralCode")));
+    }
+    
+    @DeleteMapping("/vouchers/{id}")
+    public ResponseEntity<Map<String, Object>> deleteExpiredVoucher(@PathVariable Integer id) {
+        return ResponseEntity.ok(profileService.deleteExpiredVoucher(id));
+    }
+
+    @DeleteMapping("/vouchers/batch")
+    public ResponseEntity<Map<String, Object>> deleteBatchExpiredVouchers(@RequestBody Map<String, List<Integer>> request) {
+        return ResponseEntity.ok(profileService.deleteBatchExpiredVouchers(request.get("ids")));
     }
 }

@@ -282,7 +282,7 @@ public class DonHangService {
         );
     }
 
-    //Hủy đơn hàng
+    // Hủy đơn hàng
     @Transactional
     public Map<String, Object> cancelOrder(Integer orderId, String cancelReason, Users currentUser) {
         try {
@@ -307,6 +307,22 @@ public class DonHangService {
             if (!"Đang xử lý".equals(hoaDon.getTrangThai())) {
                 System.out.println("ERROR: Trạng thái không thể hủy: " + hoaDon.getTrangThai());
                 return Map.of("success", false, "message", "Chỉ có thể hủy đơn hàng đang ở trạng thái 'Đang xử lý'");
+            }
+
+            // Kiểm tra phương thức thanh toán VNPAY không cho hủy
+            if ("VNPAY".equals(hoaDon.getPhuongThucTT())) {
+                return Map.of("success", false, "message", "Đơn hàng thanh toán qua VNPAY không thể hủy. Vui lòng liên hệ CSKH để được hỗ trợ.");
+            }
+
+            //Trả lại voucher nếu có áp dụng ***
+            if (hoaDon.getKhachHangVoucher() != null) {
+                KhachHangVoucher khachHangVoucher = hoaDon.getKhachHangVoucher();
+                // Chỉ trả lại voucher nếu chưa sử dụng hoặc đang được áp dụng
+                if ("Đã sử dụng".equals(khachHangVoucher.getTrangThai())) {
+                    khachHangVoucher.setTrangThai("Chưa sử dụng");
+                    // Có thể reset lại ngày nếu cần
+                    // khachHangVoucher.setHanSuDung(originalExpiryDate);
+                }
             }
 
             // Cập nhật trạng thái
@@ -414,6 +430,25 @@ public class DonHangService {
         return hoaDons.stream().map(this::buildOrderSummary).collect(Collectors.toList());
     }
 
+    private void parseDiaChi(HoaDon hd, Map<String, Object> orderMap) {
+        if (hd.getDiaChiJson() != null && !hd.getDiaChiJson().isEmpty()) {
+            try {
+                DiaChiJsonDTO diaChi = objectMapper.readValue(hd.getDiaChiJson(), DiaChiJsonDTO.class);
+                orderMap.put("sdt", diaChi.getSdt());
+                orderMap.put("tenNN", diaChi.getTenNN());
+                orderMap.put("diemGiao", diaChi.getDiemGiao());
+            } catch (Exception e) {
+                orderMap.put("sdt", "");
+                orderMap.put("tenNN", "");
+                orderMap.put("diemGiao", "");
+            }
+        } else {
+            orderMap.put("sdt", "");
+            orderMap.put("tenNN", "");
+            orderMap.put("diemGiao", "");
+        }
+    }
+
     private Map<String, Object> buildOrderSummary(HoaDon hd) {
         Map<String, Object> orderMap = new LinkedHashMap<>();
         orderMap.put("maHD", hd.getMaHD());
@@ -450,51 +485,100 @@ public class DonHangService {
         }
 
         int totalItems = 0;
-        double tongTien = 0.0;
+        double tongTienGoc = 0.0;           // Tổng tiền gốc (chưa KM sản phẩm)
+        double tongTienSauKmSp = 0.0;       // Tổng tiền sau khuyến mãi sản phẩm (đã trừ % KM)
+        double tongGiamGiaKmSp = 0.0;       // Tổng tiền giảm từ khuyến mãi sản phẩm
+        double tongGiamGiaVoucher = 0.0;    // Tổng tiền giảm từ voucher
 
         if (hd.getHoaDonCTs() != null && !hd.getHoaDonCTs().isEmpty()) {
             totalItems = hd.getHoaDonCTs().stream()
                     .mapToInt(HoaDonCT::getSoLuong)
                     .sum();
 
-            tongTien = hd.getHoaDonCTs().stream()
-                    .mapToDouble(ct -> ct.getSoLuong() * ct.getDonGia())
-                    .sum();
+            // Tính tổng tiền gốc và tổng tiền sau khuyến mãi sản phẩm
+            for (HoaDonCT ct : hd.getHoaDonCTs()) {
+                double giaGoc = getGiaGocSanPham(ct);  // Lấy giá gốc từ SanPhamChiTiet
+                double giaSauKm = ct.getDonGia();      // Giá đã lưu là giá sau KM sản phẩm
+
+                double thanhTienGoc = ct.getSoLuong() * giaGoc;
+                double thanhTienSauKm = ct.getSoLuong() * giaSauKm;
+
+                tongTienGoc += thanhTienGoc;
+                tongTienSauKmSp += thanhTienSauKm;
+            }
+
+            tongGiamGiaKmSp = tongTienGoc - tongTienSauKmSp;
+
+            // Tính giảm giá từ voucher (áp dụng cho toàn đơn sau khi đã tính KM sản phẩm)
+            if (hd.getKhachHangVoucher() != null && hd.getKhachHangVoucher().getVoucher() != null) {
+                Voucher voucher = hd.getKhachHangVoucher().getVoucher();
+                Map<String, Object> voucherInfo = new LinkedHashMap<>();
+                voucherInfo.put("maVoucher", voucher.getMaVoucher());
+                voucherInfo.put("tenVoucher", voucher.getTenVoucher());
+                voucherInfo.put("donToiThieu", voucher.getDonToiThieu());
+                voucherInfo.put("diemCanDoi", voucher.getDiemCanDoi());
+
+                // Chỉ có giảm theo số tiền (GiaTriGiam)
+                if (voucher.getGiaTriGiam() != null && voucher.getGiaTriGiam() > 0) {
+                    tongGiamGiaVoucher = voucher.getGiaTriGiam();
+                    if (tongGiamGiaVoucher > tongTienSauKmSp) {
+                        tongGiamGiaVoucher = tongTienSauKmSp;
+                    }
+                    voucherInfo.put("giaTriGiam", voucher.getGiaTriGiam());
+                }
+
+                orderMap.put("voucherApDung", voucherInfo);
+            }
 
             HoaDonCT firstItem = hd.getHoaDonCTs().get(0);
             if (firstItem.getSanPhamChiTiet() != null) {
                 orderMap.put("productImage", firstItem.getSanPhamChiTiet().getHinhAnh());
                 orderMap.put("productName", firstItem.getSanPhamChiTiet().getSanPham() != null ?
                         firstItem.getSanPhamChiTiet().getSanPham().getTenSP() : "");
-
-                // Thêm thông tin đánh giá
                 orderMap.put("daDanhGia", firstItem.getDanhGia() != null);
             }
         }
 
-        orderMap.put("tongTien", tongTien);
+        double tongTienCuoiCung = tongTienSauKmSp - tongGiamGiaVoucher;
+        if (tongTienCuoiCung < 0) tongTienCuoiCung = 0;
+
+        orderMap.put("tongTienGoc", tongTienGoc);                    // Tổng tiền gốc
+        orderMap.put("tongGiamGiaKmSp", tongGiamGiaKmSp);           // Giảm từ KM sản phẩm
+        orderMap.put("tongTienSauKmSp", tongTienSauKmSp);           // Tiền sau KM sản phẩm
+        orderMap.put("tongGiamGiaVoucher", tongGiamGiaVoucher);     // Giảm từ voucher
+        orderMap.put("tongTien", tongTienCuoiCung);                 // Tiền cuối cùng phải trả
         orderMap.put("totalItems", totalItems);
 
         return orderMap;
     }
 
-    private void parseDiaChi(HoaDon hd, Map<String, Object> orderMap) {
-        if (hd.getDiaChiJson() != null && !hd.getDiaChiJson().isEmpty()) {
-            try {
-                DiaChiJsonDTO diaChi = objectMapper.readValue(hd.getDiaChiJson(), DiaChiJsonDTO.class);
-                orderMap.put("sdt", diaChi.getSdt());
-                orderMap.put("tenNN", diaChi.getTenNN());
-                orderMap.put("diemGiao", diaChi.getDiemGiao());
-            } catch (Exception e) {
-                orderMap.put("sdt", "");
-                orderMap.put("tenNN", "");
-                orderMap.put("diemGiao", "");
-            }
-        } else {
-            orderMap.put("sdt", "");
-            orderMap.put("tenNN", "");
-            orderMap.put("diemGiao", "");
+    /**
+     * Lấy giá gốc của sản phẩm (trước khuyến mãi)
+     * donGia trong HoaDonCT là giá sau KM sản phẩm
+     */
+    private double getGiaGocSanPham(HoaDonCT ct) {
+        SanPhamChiTiet spct = ct.getSanPhamChiTiet();
+        if (spct == null) {
+            return ct.getDonGia(); // fallback
         }
+
+        double giaGoc = spct.getDonGia(); // Giá gốc từ bảng SanPhamChiTiet
+        double khuyenMai = 0;
+
+        if (spct.getSanPham() != null && spct.getSanPham().getKhuyenMai() != null) {
+            khuyenMai = spct.getSanPham().getKhuyenMai();
+        }
+
+        // Nếu có khuyến mãi %, tính ngược lại giá gốc
+        // ct.getDonGia() = giaGoc * (100 - khuyenMai) / 100
+        // => giaGoc = ct.getDonGia() * 100 / (100 - khuyenMai)
+        if (khuyenMai > 0 && ct.getDonGia() != null && ct.getDonGia() > 0) {
+            giaGoc = ct.getDonGia() * 100 / (100 - khuyenMai);
+            // Làm tròn đến 2 chữ số thập phân
+            giaGoc = Math.round(giaGoc * 100.0) / 100.0;
+        }
+
+        return giaGoc;
     }
 
     private Map<String, Object> buildOrderDetail(HoaDon hd) {
@@ -507,7 +591,9 @@ public class DonHangService {
         }
 
         List<Map<String, Object>> chiTietList = new ArrayList<>();
-        double tongTien = 0.0;
+        double tongTienGoc = 0.0;
+        double tongTienSauKmSp = 0.0;
+        double tongGiamGiaKmSp = 0.0;
 
         if (hd.getHoaDonCTs() != null && !hd.getHoaDonCTs().isEmpty()) {
             for (HoaDonCT ct : hd.getHoaDonCTs()) {
@@ -521,6 +607,8 @@ public class DonHangService {
                     if (spct.getSanPham() != null) {
                         ctMap.put("tenSP", spct.getSanPham().getTenSP());
                         ctMap.put("moTa", spct.getSanPham().getMoTa());
+                        ctMap.put("khuyenMaiSP", spct.getSanPham().getKhuyenMai() != null ?
+                                spct.getSanPham().getKhuyenMai() : 0);
                     }
 
                     ctMap.put("tenMau", spct.getTenMau());
@@ -532,9 +620,37 @@ public class DonHangService {
                 }
 
                 ctMap.put("soLuong", ct.getSoLuong());
-                ctMap.put("donGia", ct.getDonGia());
-                double thanhTien = ct.getSoLuong() * ct.getDonGia();
-                ctMap.put("thanhTien", thanhTien);
+
+                // Tính giá gốc
+                double giaGoc = getGiaGocSanPham(ct);
+                double giaSauKmSp = ct.getDonGia();
+                double khuyenMaiPhanTram = 0;
+
+                if (spct != null && spct.getSanPham() != null && spct.getSanPham().getKhuyenMai() != null) {
+                    khuyenMaiPhanTram = spct.getSanPham().getKhuyenMai();
+                }
+
+                double giamGiaKmSp = giaGoc - giaSauKmSp;
+                if (giamGiaKmSp < 0) giamGiaKmSp = 0;
+
+                ctMap.put("giaGoc", giaGoc);
+                ctMap.put("khuyenMaiPhanTram", khuyenMaiPhanTram);
+                ctMap.put("giamGiaKmSp", giamGiaKmSp);
+                ctMap.put("donGia", giaSauKmSp);
+
+                double thanhTienGoc = ct.getSoLuong() * giaGoc;
+                double thanhTienSauKmSp = ct.getSoLuong() * giaSauKmSp;
+                double giamGiaSp = thanhTienGoc - thanhTienSauKmSp;
+                if (giamGiaSp < 0) giamGiaSp = 0;
+
+                ctMap.put("thanhTienGoc", thanhTienGoc);
+                ctMap.put("giamGiaSp", giamGiaSp);
+                ctMap.put("thanhTienSauKmSp", thanhTienSauKmSp);
+                ctMap.put("thanhTien", thanhTienSauKmSp);
+
+                tongTienGoc += thanhTienGoc;
+                tongTienSauKmSp += thanhTienSauKmSp;
+                tongGiamGiaKmSp += giamGiaSp;
 
                 // Thông tin đánh giá
                 if (ct.getDanhGia() != null) {
@@ -549,13 +665,14 @@ public class DonHangService {
                     ctMap.put("daDanhGia", false);
                 }
 
-                tongTien += thanhTien;
                 chiTietList.add(ctMap);
             }
         }
 
         detail.put("chiTiet", chiTietList);
-        detail.put("tongTien", tongTien);
+        detail.put("tongTienGoc", tongTienGoc);
+        detail.put("tongGiamGiaKmSp", tongGiamGiaKmSp);
+        detail.put("tongTienSauKmSp", tongTienSauKmSp);
         detail.put("soLuongSanPham", chiTietList.size());
 
         return detail;
