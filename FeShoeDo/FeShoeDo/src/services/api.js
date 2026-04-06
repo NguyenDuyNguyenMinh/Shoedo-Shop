@@ -257,7 +257,7 @@ export default {
   },
 
   updateUser(id, userData) {
-    return axios.put(`/api/employee/users/${id}`, userData);
+    return apiClient.put(`/employee/users/${id}`, userData);
   },
 
   toggleUserStatus(id) {
@@ -458,3 +458,5 @@ export default {
     });
   }
 };
+
+export { apiClient };

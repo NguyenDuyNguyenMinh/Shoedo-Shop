@@ -293,11 +293,9 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from "vue";
-import axios from "axios";
+import { apiClient } from "@/services/api.js";
 import NV_Sidebar from "@/components/Shared/NV_Sidebar.vue";
 import { Modal } from "bootstrap";
-
-axios.defaults.withCredentials = true;
 
 const isSidebarCollapsed = ref(false);
 const vouchers = ref([]);
@@ -353,7 +351,7 @@ const executeActivateVoucher = async () => {
   if (!selectedVoucher.value) return;
   activating.value = true;
   try {
-    await axios.put(`http://localhost:8080/api/voucher/activate/${selectedVoucher.value.maVoucher}`);
+    await apiClient.put(`/voucher/activate/${selectedVoucher.value.maVoucher}`);
     showToast("Đã mở lại voucher thành công!");
     fetchVouchers(); // Load lại bảng
     if (confirmActivateModalInstance) confirmActivateModalInstance.hide();
@@ -368,7 +366,7 @@ const executeActivateVoucher = async () => {
 const fetchVouchers = async () => {
   loading.value = true;
   try {
-    const response = await axios.get("http://localhost:8080/api/voucher/list");
+    const response = await apiClient.get("/voucher/list");
     // Giả sử API trả về mảng trực tiếp hoặc response.data.data
     vouchers.value = response.data.data || response.data;
   } catch (error) {
@@ -471,15 +469,15 @@ const saveVoucher = async () => {
 
   saving.value = true;
   try {
-    let url = "http://localhost:8080/api/voucher/add";
+    let url = "/voucher/add";
     let method = "post";
 
     if (isEdit.value) {
-      url = `http://localhost:8080/api/voucher/update/${formData.value.maVoucher}`;
+      url = `/voucher/update/${formData.value.maVoucher}`;
       method = "put";
     }
 
-    const response = await axios[method](url, formData.value);
+    const response = await apiClient[method](url, formData.value);
     
     if (response.data) {
       showToast(isEdit.value ? "Cập nhật thành công!" : "Thêm mới thành công!");
@@ -503,7 +501,7 @@ const executeStopVoucher = async () => {
   if (!selectedVoucher.value) return;
   deactivating.value = true;
   try {
-    await axios.put(`http://localhost:8080/api/voucher/deactivate/${selectedVoucher.value.maVoucher}`);
+    await apiClient.put(`/voucher/deactivate/${selectedVoucher.value.maVoucher}`);
     showToast("Đã ngừng hoạt động voucher thành công!");
     fetchVouchers();
     if (confirmStopModalInstance) confirmStopModalInstance.hide();

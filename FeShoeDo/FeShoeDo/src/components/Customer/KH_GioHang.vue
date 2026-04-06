@@ -168,6 +168,8 @@ import Footer from '@/components/Shared/Footer.vue';
 import api from '@/services/api';
 import { useAuthStore } from '@/stores/auth';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+
 export default {
   name: 'KH_GioHang',
   components: { KH_Navbar, Footer },
@@ -220,7 +222,7 @@ export default {
       if (!hinhAnh) return 'https://via.placeholder.com/200?text=No+Image';
       if (hinhAnh.startsWith('http')) return hinhAnh;
       // Thử tải từ backend
-      return `http://localhost:8080/images/${hinhAnh}`;
+      return `${API_URL}/images/${hinhAnh}`;
     },
 
     handleImageError(event, item) {
@@ -230,9 +232,9 @@ export default {
       
       // Danh sách fallback URLs thử theo thứ tự
       const fallbacks = [
-        `http://localhost:8080/images/sp${maSP}.jpg`,
-        `http://localhost:8080/images/sp${maSP}_black.jpg`,
-        `http://localhost:8080/images/sp${maSP}_white.jpg`,
+        `${API_URL}/images/sp${maSP}.jpg`,
+        `${API_URL}/images/sp${maSP}_black.jpg`,
+        `${API_URL}/images/sp${maSP}_white.jpg`,
         'https://via.placeholder.com/200?text=No+Image'
       ];
       

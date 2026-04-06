@@ -7,6 +7,8 @@ import ChatBox from '@/components/Shared/ChatBox.vue'
 import api from '@/services/api.js'
 import { useAuthStore } from '@/stores/auth'
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080'
+
 const route  = useRoute()
 const router = useRouter()
 
@@ -125,7 +127,7 @@ const formatPrice = (num) => {
 const getImageUrl = (hinhAnh) => {
   if (!hinhAnh) return 'https://placehold.co/600x600?text=No+Image'
   if (hinhAnh.startsWith('http')) return hinhAnh
-  return `http://localhost:8080/images/${hinhAnh}`
+  return `${API_URL}/images/${hinhAnh}`
 }
 
 // ── BUILD map: tenMau → danh sách hình ảnh riêng biệt từ chiTiets ──
