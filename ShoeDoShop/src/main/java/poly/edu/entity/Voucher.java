@@ -10,7 +10,7 @@ import java.util.List;
 
 @Entity
 @Data
-@Table(name = "Voucher")
+@Table(name = "voucher")
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Voucher {
     @Id

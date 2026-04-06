@@ -7,7 +7,7 @@ import java.io.Serializable;
 
 @Entity
 @Data
-@Table(name = "SanPham_DanhMuc")
+@Table(name = "sanpham_danhmuc")
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class SanPhamDanhMuc {
     

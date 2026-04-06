@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Data
-@Table(name = "ChienDich")
+@Table(name = "chiendich")
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class ChienDich {
     
