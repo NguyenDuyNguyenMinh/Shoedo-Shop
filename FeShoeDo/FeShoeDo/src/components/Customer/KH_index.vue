@@ -48,7 +48,7 @@ const nextSlide = () => {
 }
 
 // ── API & STATE ──
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8080/api'
+const API_BASE = (import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api` : 'http://localhost:8080/api')
 const activeCampaigns = ref(null) // Mocked object cho Flash Sale Bùng Nổ
 const khuyenMaiProducts = ref([])
 const moiNhatProducts = ref([])
