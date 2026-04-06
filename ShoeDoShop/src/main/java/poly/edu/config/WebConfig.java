@@ -20,7 +20,7 @@ public class WebConfig implements WebMvcConfigurer {
 	    
 	    config.setAllowCredentials(true);
 	    config.addAllowedOrigin("http://localhost:5173");
-	    config.addAllowedOrigin("https://shoedo-shop.vercel.app/");
+	    config.addAllowedOrigin("https://shoedo-shop.vercel.app");
 	    config.addAllowedOrigin("http://localhost:5174");
 	    config.addAllowedOrigin("http://localhost:8080");
 	    config.addAllowedOrigin("http://localhost:4200");
@@ -44,7 +44,7 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOrigins("http://localhost:5173", "http://localhost:5174", "http://localhost:8080")
+                .allowedOrigins("http://localhost:5173", "http://localhost:5174", "http://localhost:8080","https://shoedo-shop.vercel.app")
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
                 .allowCredentials(true)

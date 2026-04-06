@@ -42,6 +42,7 @@ public class SecurityConfig {
                 config.addAllowedOrigin("http://localhost:5173");
                 config.addAllowedOrigin("http://localhost:5174");
                 config.addAllowedOrigin("http://localhost:8080");
+                config.addAllowedOrigin("https://shoedo-shop.vercel.app");
                 config.addAllowedHeader("*");
                 config.addAllowedMethod("*");
                 return config;
