@@ -23,7 +23,7 @@ public class DanhGia {
     @Column(name = "Sao")
     private Integer sao;
 
-    @Column(name = "DanhGiaCT", columnDefinition = "nvarchar(max)")
+    @Column(name = "DanhGiaCT", length = 5000)
     private String danhGiaCT;
 
     @Column(name = "NgayDG")

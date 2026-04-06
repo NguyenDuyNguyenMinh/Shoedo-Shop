@@ -35,13 +35,13 @@ public class HoaDon {
     @Column(name = "PhuongThucTT")
     private String phuongThucTT;
 
-    @Column(name = "DiaChiJson", columnDefinition = "nvarchar(max)")
+    @Column(name = "DiaChiJson", length = 5000)
     private String diaChiJson;
 
     @Column(name = "TrangThai")
     private String trangThai;
 
-    @Column(name = "GhiChu", columnDefinition = "nvarchar(max)")
+    @Column(name = "GhiChu", length = 5000)
     private String ghiChu;
 
     @Column(name = "NgayMua")

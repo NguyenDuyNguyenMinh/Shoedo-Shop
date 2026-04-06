@@ -24,7 +24,7 @@ public class SanPhamChiTiet {
     @Column(name = "TenMau")
     private String tenMau;
     
-    @Column(name = "HinhAnh", columnDefinition = "nvarchar(max)")
+    @Column(name = "HinhAnh", length = 5000)
     private String hinhAnh;
 
     @ManyToOne(fetch = FetchType.EAGER)
