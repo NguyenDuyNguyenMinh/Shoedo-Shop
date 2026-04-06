@@ -198,7 +198,7 @@
                       <img
                         :src="
                           item.hinhAnhDaiDien
-                            ? `http://localhost:8080/images/${item.hinhAnhDaiDien}`
+                            ? `${API_URL}/images/${item.hinhAnhDaiDien}`
                             : 'https://placehold.co/80x80'
                         "
                         alt="Product"
@@ -1074,7 +1074,7 @@
                       <img
                         :src="
                           v.hinhAnh
-                            ? `http://localhost:8080/images/${v.hinhAnh}`
+                            ? `${API_URL}/images/${v.hinhAnh}`
                             : 'https://placehold.co/50x50'
                         "
                         alt="Variant Image"
@@ -1182,7 +1182,7 @@
                   @click="selectImage(img)"
                 >
                   <img
-                    :src="`http://localhost:8080/images/${img}`"
+                    :src="`${API_URL}/images/${img}`"
                     :alt="img"
                   />
                   <div class="image-name" :title="img">{{ img }}</div>
@@ -1224,10 +1224,10 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from "vue";
-import axios from "axios";
+import { apiClient } from "@/services/api.js";
 import NV_Sidebar from "@/components/Shared/NV_Sidebar.vue";
 
-axios.defaults.withCredentials = true;
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
 const successMessage = ref("");
 const products = ref([]);
@@ -1278,8 +1278,8 @@ watch([filterKeyword, filterCategory, filterGender, filterStatus], () => {
 // api danh mục
 const fetchCategories = async () => {
   try {
-    const response = await axios.get(
-      "http://localhost:8080/api/sanpham/danhmuc"
+    const response = await apiClient.get(
+      "/sanpham/danhmuc"
     );
     categories.value = response.data;
   } catch (error) {
@@ -1289,7 +1289,7 @@ const fetchCategories = async () => {
 // api size
 const fetchSizes = async () => {
   try {
-    const response = await axios.get("http://localhost:8080/api/sanpham/sizes");
+    const response = await apiClient.get("/sanpham/sizes");
     sizes.value = response.data;
   } catch (error) {
     console.error("Lỗi lấy sizes:", error);
@@ -1299,7 +1299,7 @@ const fetchSizes = async () => {
 // api sản phẩm
 const fetchProducts = async () => {
   try {
-    const response = await axios.get("http://localhost:8080/api/sanpham/list");
+    const response = await apiClient.get("/sanpham/list");
     products.value = response.data;
   } catch (error) {
     console.error("Lỗi lấy sản phẩm:", error);
@@ -1386,8 +1386,8 @@ const saveNewCategory = async () => {
     return;
   }
   try {
-    const response = await axios.post(
-      "http://localhost:8080/api/sanpham/danhmuc/create",
+    const response = await apiClient.post(
+      "/sanpham/danhmuc/create",
       {
         tenDM: newCategoryName.value.trim(),
       }
@@ -1480,7 +1480,7 @@ const isEditMode = ref(false); // kiểm tra đang ở form sửa hay thêm mớ
 // api hình ảnh
 const fetchImages = async () => {
   try {
-    const res = await axios.get("http://localhost:8080/api/sanpham/images");
+    const res = await apiClient.get("/sanpham/images");
     availableImages.value = res.data;
   } catch (error) {
     console.error(error);
@@ -1524,8 +1524,8 @@ const handleFileUpload = async (event) => {
   formData.append("file", file);
 
   try {
-    const res = await axios.post(
-      "http://localhost:8080/api/sanpham/upload",
+    const res = await apiClient.post(
+      "/sanpham/upload",
       formData,
       {
         headers: { "Content-Type": "multipart/form-data" },
@@ -1556,7 +1556,7 @@ const editProductData = ref({
 // Khi ấn nút Cây Bút, load data vào Modal
 const openEditModal = async (maSP) => {
   try {
-    const res = await axios.get(`http://localhost:8080/api/sanpham/${maSP}`);
+    const res = await apiClient.get(`/sanpham/${maSP}`);
     editProductData.value = res.data;
   } catch (error) {
     showToast("Lỗi tải thông tin sản phẩm!", "danger");
@@ -1597,7 +1597,7 @@ const saveEditProduct = async () => {
       }
     }
     payload.variants = formattedVariants;
-    await axios.put("http://localhost:8080/api/sanpham/update", payload);
+    await apiClient.put("/sanpham/update", payload);
     showToast("Cập nhật sản phẩm thành công!");
 document.querySelector('#editProductModal .btn-close').click();
     await fetchProducts();
@@ -1650,8 +1650,8 @@ const viewVariants = async (item) => {
   selectedVariants.value = [];
   try {
     // dùng lại api đã viết sẵn cho chức năng edit
-    const res = await axios.get(
-      `http://localhost:8080/api/sanpham/${item.maSP}`
+    const res = await apiClient.get(
+      `/sanpham/${item.maSP}`
     );
     selectedVariants.value = res.data.variants;
   } catch (error) {
@@ -1668,8 +1668,8 @@ const toggleProductStatus = async (maSP, currentStatus) => {
     return;
   }
   try {
-    const res = await axios.put(
-      `http://localhost:8080/api/sanpham/toggle-status/${maSP}`
+    const res = await apiClient.put(
+      `/sanpham/toggle-status/${maSP}`
     );
     if (res.data.success) {
       const productIndex = products.value.findIndex((p) => p.maSP === maSP);
@@ -1714,8 +1714,8 @@ const saveProduct = async () => {
       });
     }
     payload.variants = formattedVariants;
-    const res = await axios.post(
-      "http://localhost:8080/api/sanpham/create",
+    const res = await apiClient.post(
+      "/sanpham/create",
       payload
     );
     showToast("Thêm sản phẩm thành công!");

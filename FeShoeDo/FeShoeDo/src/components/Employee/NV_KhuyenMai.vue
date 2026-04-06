@@ -800,11 +800,8 @@
 
 <script setup>
 import { ref, onMounted, computed, onUnmounted, watch } from "vue";
-import axios from "axios";
+import { apiClient } from "@/services/api.js";
 import NV_Sidebar from "@/components/Shared/NV_Sidebar.vue";
-
-
-axios.defaults.withCredentials = true;
 
 // =================== SHARED ===================
 const products = ref([]);
@@ -821,8 +818,8 @@ const filterActive = ref("");
 
 const fetchCategories = async () => {
   try {
-    const response = await axios.get(
-      "http://localhost:8080/api/nhapkho/danhmuc"
+    const response = await apiClient.get(
+      "/nhapkho/danhmuc"
     );
     categories.value = response.data;
   } catch (error) {
@@ -832,8 +829,8 @@ const fetchCategories = async () => {
 
 const fetchProducts = async () => {
   try {
-    const response = await axios.get(
-      "http://localhost:8080/api/khuyenmai/sanpham"
+    const response = await apiClient.get(
+      "/khuyenmai/sanpham"
     );
     products.value = response.data.map((item) => ({
       ...item,
@@ -925,8 +922,8 @@ const handleBulkSave = async () => {
     khuyenMai: item.khuyenMaiMoi,
   }));
   try {
-    await axios.post(
-      "http://localhost:8080/api/khuyenmai/cap-nhat-hang-loat",
+    await apiClient.post(
+      "/khuyenmai/cap-nhat-hang-loat",
       payload
     );
     showToast(
@@ -950,7 +947,7 @@ const handleSingleSave = async (item) => {
     return;
   }
   try {
-    await axios.post("http://localhost:8080/api/khuyenmai/cap-nhat", {
+    await apiClient.post("/khuyenmai/cap-nhat", {
       maSP: item.maSP,
       khuyenMai: item.khuyenMaiMoi,
     });
@@ -1125,7 +1122,7 @@ const handleStartCampaign = async () => {
   };
 
   try {
-    await axios.post("http://localhost:8080/api/chiendich/tao", payload);
+    await apiClient.post("/chiendich/tao", payload);
     showToast(
       `Chiến dịch "${campaign.value.tenChienDich}" đã được tạo thành công!`
     );
@@ -1162,8 +1159,8 @@ const filteredCampaigns = computed(() => {
 
 const fetchCampaigns = async () => {
   try {
-    const response = await axios.get(
-      "http://localhost:8080/api/chiendich/danh-sach"
+    const response = await apiClient.get(
+      "/chiendich/danh-sach"
     );
     
     const oldCampaigns = campaigns.value;
@@ -1214,8 +1211,8 @@ const handleToggleCampaign = async (cd) => {
   // 3. Lần đầu tiên bấm -> LOAD DATA RỒI MỚI MỞ
   cd.loadingDetail = true;
   try {
-    const response = await axios.get(
-      `http://localhost:8080/api/chiendich/${cd.maCD}/chi-tiet`
+    const response = await apiClient.get(
+      `/chiendich/${cd.maCD}/chi-tiet`
     );
     cd.details = response.data.map((sp) => ({
       ...sp,
@@ -1238,8 +1235,8 @@ const loadCampaignDetail = async (cd) => {
   if (cd.details !== null) return;
   cd.loadingDetail = true;
   try {
-    const response = await axios.get(
-      `http://localhost:8080/api/chiendich/${cd.maCD}/chi-tiet`
+    const response = await apiClient.get(
+      `/chiendich/${cd.maCD}/chi-tiet`
     );
     // Gán trực tiếp dữ liệu chuẩn từ Backend trả về
     cd.details = response.data.map((sp) => ({
@@ -1261,8 +1258,8 @@ const handleEndCampaignEarly = async (cd) => {
   )
     return;
   try {
-    await axios.put(
-      `http://localhost:8080/api/chiendich/${cd.maCD}/ket-thuc-som`
+    await apiClient.put(
+      `/chiendich/${cd.maCD}/ket-thuc-som`
     );
     showToast(`Đã kết thúc sớm chiến dịch "${cd.tenChienDich}"!`);
     await fetchCampaigns();
@@ -1278,8 +1275,8 @@ const handleUpdateCampaignDiscount = async (cd, sp) => {
     return;
   }
   try {
-    await axios.put(
-      `http://localhost:8080/api/chiendich/${cd.maCD}/cap-nhat-km`,
+    await apiClient.put(
+      `/chiendich/${cd.maCD}/cap-nhat-km`,
       {
         maSP: sp.maSP,
         khuyenMai: sp.khuyenMaiEdit,

@@ -327,11 +327,9 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from "vue";
-import axios from "axios";
+import { apiClient } from "@/services/api.js";
 import NV_Sidebar from "@/components/Shared/NV_Sidebar.vue";
 import { Modal } from "bootstrap";
-
-axios.defaults.withCredentials = true;
 
 const successMessage = ref("");
 const reviews = ref([]);
@@ -372,7 +370,7 @@ const showToast = (message, type = "success") => {
 const fetchReviews = async () => {
   loading.value = true;
   try {
-    const response = await axios.get("http://localhost:8080/api/danhgia/list");
+    const response = await apiClient.get("/danhgia/list");
     if (response.data.success) {
       reviews.value = response.data.data;
     } else {
@@ -587,7 +585,7 @@ const executeDelete = async () => {
   
   deleting.value = true;
   try {
-    const response = await axios.delete(`http://localhost:8080/api/danhgia/delete/${deleteTargetId.value}`);
+    const response = await apiClient.delete(`/danhgia/delete/${deleteTargetId.value}`);
     if (response.data.success) {
       showToast("Ẩn đánh giá thành công!", "success");
       await fetchReviews();

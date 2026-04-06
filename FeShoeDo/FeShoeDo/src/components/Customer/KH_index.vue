@@ -130,7 +130,7 @@ const formatPrice = (price) => {
 const getImageUrl = (hinhAnh) => {
   if (!hinhAnh) return 'https://placehold.co/300x300?text=No+Image'
   if (hinhAnh.startsWith('http')) return hinhAnh
-  return `http://localhost:8080/images/${hinhAnh}`
+  return `${import.meta.env.VITE_API_URL || 'http://localhost:8080'}/images/${hinhAnh}`
 }
 
 const goToDetail = (id) => router.push({ name: 'DetailProduct', params: { id } })

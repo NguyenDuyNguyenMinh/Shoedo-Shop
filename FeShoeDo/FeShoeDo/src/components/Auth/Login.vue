@@ -1,5 +1,5 @@
 <template>
-  <div class="auth-page">
+  <div class="auth-page" :style="authPageStyle">
     <div class="bg-overlay"></div>
     <router-link to="/customer/index" class="btn btn-outline-white btn-sm">
       <i class="bi bi-house"></i>
@@ -230,7 +230,7 @@
                   Hoặc
                 </span>
               </div>
-              <a href="http://localhost:8080/oauth2/authorization/google" 
+              <a :href="`${apiBaseUrl}/oauth2/authorization/google`" 
                 class="btn btn-outline-dark d-flex align-items-center justify-content-center gap-2 mx-auto"
                 style="width: 210px; border-radius: 50px;">
                 <img :src="getImageUrl('anh/logo GG.png')" alt="Google Logo" style="width: 20px; height: 20px;">
@@ -286,10 +286,17 @@ import { useAuthStore } from '@/stores/auth';
 import * as bootstrap from 'bootstrap';
 import axios from 'axios';
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+
 export default {
   name: 'Login',
   data() {
     return {
+      apiBaseUrl: API_BASE_URL,
+      authPageStyle: {
+        background: `url('${API_BASE_URL}/anh/login2.jpg') no-repeat center center fixed`,
+        backgroundSize: 'cover'
+      },
       loginForm: {
         identifier: '',
         pass: '',
@@ -364,7 +371,7 @@ export default {
     },
     
     getImageUrl(imagePath) {
-      return `http://localhost:8080/${imagePath}`;
+      return `${API_BASE_URL}/${imagePath}`;
     },
     
     onlyNumbers(event) {
@@ -869,7 +876,6 @@ input[type="text"].text-center {
   display: flex;
   justify-content: center;
   align-items: center;
-  background: url('http://localhost:8080/anh/login2.jpg') no-repeat center center fixed;
   background-size: cover;
 }
 

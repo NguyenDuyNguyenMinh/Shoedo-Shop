@@ -5,6 +5,8 @@ import KH_Navbar from '@/components/Shared/KH_Navbar.vue'
 import Footer from '@/components/Shared/Footer.vue'
 import api from '@/services/api.js'
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080'
+
 const router = useRouter()
 const route  = useRoute()
 
@@ -200,7 +202,7 @@ const formatPrice = (val) => {
 const getImageUrl = (hinhAnh) => {
   if (!hinhAnh) return 'https://placehold.co/400x400?text=No+Image'
   if (hinhAnh.startsWith('http')) return hinhAnh
-  return `http://localhost:8080/images/${hinhAnh}`
+  return `${API_URL}/images/${hinhAnh}`
 }
 
 const updateSortPos = () => {

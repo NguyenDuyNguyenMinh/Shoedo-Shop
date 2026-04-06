@@ -1,6 +1,6 @@
 <script setup>
 import { ref, nextTick } from 'vue'
-import axios from 'axios'
+import { apiClient } from '@/services/api.js'
 
 // Hàm chuyển đổi Markdown sang HTML (Link và Xuống dòng)
 const formatBotMessage = (text) => {
@@ -46,7 +46,7 @@ const sendMessage = async () => {
 
   try {
     // Gọi API sang Spring Boot
-    const response = await axios.post('http://localhost:8080/api/chat/send', {
+    const response = await apiClient.post('/chat/send', {
       text: textToSend
     })
     

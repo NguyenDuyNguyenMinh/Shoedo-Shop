@@ -381,10 +381,8 @@
 
 <script setup>
 import { ref, onMounted, watch, computed } from "vue";
-import axios from "axios";
+import { apiClient } from "@/services/api.js";
 import NV_Sidebar from "@/components/Shared/NV_Sidebar.vue";
-
-axios.defaults.withCredentials = true;
 
 const activeTab = ref("import");
 const products = ref([]);
@@ -411,8 +409,8 @@ watch([filterKeyword, filterCategory, filterStatus], () => { importCurrentPage.v
 // api lấy danh mục
 const fetchCategories = async () => {
   try {
-    const response = await axios.get(
-      "http://localhost:8080/api/nhapkho/danhmuc"
+    const response = await apiClient.get(
+      "/nhapkho/danhmuc"
     );
     categories.value = response.data;
   } catch (error) {
@@ -422,8 +420,8 @@ const fetchCategories = async () => {
 
 const fetchProducts = async () => {
   try {
-    const response = await axios.get(
-      "http://localhost:8080/api/nhapkho/sanpham"
+    const response = await apiClient.get(
+      "/nhapkho/sanpham"
     );
     products.value = response.data.map((item) => ({
       ...item,
@@ -437,8 +435,8 @@ const fetchProducts = async () => {
 
 const fetchHistory = async () => {
   try {
-    const response = await axios.get(
-      "http://localhost:8080/api/nhapkho/lichsu"
+    const response = await apiClient.get(
+      "/nhapkho/lichsu"
     );
     history.value = response.data;
   } catch (error) {
@@ -523,8 +521,8 @@ const handleBulkImport = async () => {
     soLuongNhap: item.soLuongNhap,
   }));
   try {
-    await axios.post(
-      "http://localhost:8080/api/nhapkho/nhap-hang-loat",
+    await apiClient.post(
+      "/nhapkho/nhap-hang-loat",
       payload
     );
     showToast(`Đã nhập kho thành công ${selectedItems.length} sản phẩm!`);
@@ -542,7 +540,7 @@ const handleImportSingle = async (item) => {
     return;
   }
   try {
-    await axios.post("http://localhost:8080/api/nhapkho/nhap", {
+    await apiClient.post("/nhapkho/nhap", {
       maSKU: item.maSKU,
       soLuongNhap: item.soLuongNhap,
     });
