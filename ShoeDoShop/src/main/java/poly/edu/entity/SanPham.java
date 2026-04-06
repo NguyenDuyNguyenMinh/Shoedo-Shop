@@ -22,7 +22,7 @@ public class SanPham {
     @Column(name = "GioiTinh")
     private Boolean gioiTinh;
 
-    @Column(name = "MoTa", columnDefinition = "nvarchar(max)")
+    @Column(name = "MoTa", length = 5000)
     private String moTa;
 
     @Column(name = "KhuyenMai")
