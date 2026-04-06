@@ -1,6 +1,8 @@
 import { defineStore } from 'pinia';
 import axios from 'axios'; 
 
+import api from '@/services/api';
+
 export const useAuthStore = defineStore('auth', {
   state: () => ({
     user: null,
@@ -58,9 +60,7 @@ export const useAuthStore = defineStore('auth', {
 
     async checkSession() {
       try {
-        const response = await axios.get('/api/auth/current-user', {
-          withCredentials: true
-        });
+        const response = await api.getCurrentUser();
 
         if (response.data.success && response.data.user) {
           this.user = response.data.user;
@@ -75,9 +75,7 @@ export const useAuthStore = defineStore('auth', {
 
     async autoLoginFromCookie() {
       try {
-        const response = await axios.get('/api/auth/auto-login', {
-          withCredentials: true
-        });
+        const response = await api.autoLogin();
 
         if (response.data.success && response.data.user) {
           this.user = response.data.user;
@@ -92,9 +90,7 @@ export const useAuthStore = defineStore('auth', {
 
     async logout() {
       try {
-        await axios.post('/api/auth/logout', {}, {
-          withCredentials: true
-        });
+        await api.logout();
       } catch (error) {
         console.error('Logout error:', error);
       } finally {
@@ -104,9 +100,7 @@ export const useAuthStore = defineStore('auth', {
 
     async fetchCurrentUser() {
       try {
-        const response = await axios.get('/api/auth/current-user', {
-          withCredentials: true
-        });
+        const response = await api.getCurrentUser();
         if (response.data.success) {
           this.user = response.data.user;
           this.cartCount = response.data.user.cartCount || 0;
@@ -126,9 +120,7 @@ export const useAuthStore = defineStore('auth', {
       }
       
       try {
-        const response = await axios.get('/api/customer/cart/count', {
-          withCredentials: true
-        });
+        const response = await api.getCartCount();
 
         if (response.data.success) {
           this.cartCount = response.data.cartCount || 0;

@@ -381,6 +381,9 @@ export default {
       }
     });
   },
+    autoLogin() {
+    return apiClient.get('/auth/auto-login');
+  },
   
   getProductDetail(id) {
     return apiClient.get(`/employee/products/${id}`);
