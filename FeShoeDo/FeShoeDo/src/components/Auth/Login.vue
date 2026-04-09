@@ -1,18 +1,19 @@
 <template>
   <div class="auth-page">
     <div class="bg-overlay"></div>
-    <router-link to="/customer/index" class="btn btn-outline-white btn-sm">
+    <router-link to="/customer/index" class="btn btn-outline-white btn-sm home-btn">
       <i class="bi bi-house"></i>
     </router-link>
 
+    <!-- Toast Component -->
+    <Toast />
+
     <!-- Google Password Modal -->
-    <div class="modal fade" id="googlePasswordModal" tabindex="-1" aria-hidden="true">
-      <div class="modal-dialog">
+    <div class="modal fade" id="googlePasswordModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+      <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title">
-              TÀI KHOẢN GOOGLE
-            </h5>
+            <h5 class="modal-title">TÀI KHOẢN GOOGLE</h5>
           </div>
           <div class="modal-body">
             <div class="mb-1">
@@ -43,15 +44,14 @@
     </div>
 
     <!-- Forgot Password OTP Modal -->
-    <div class="modal fade" id="forgotPasswordOtpModal" tabindex="-1" aria-hidden="true">
-      <div class="modal-dialog">
+    <div class="modal fade" id="forgotPasswordOtpModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+      <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title">Xác nhận quên mật khẩu</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal" @click="resetForgotPasswordOtp"></button>
           </div>
           <div class="modal-body">
-            <!-- Step 1: Enter Email -->
             <div v-if="forgotPasswordStep === 1">
               <div class="mb-3">
                 <label>Email</label>
@@ -63,7 +63,6 @@
               </div>
             </div>
             
-            <!-- Step 2: Enter OTP -->
             <div v-if="forgotPasswordStep === 2">
               <div class="mb-3">
                 <label>Mã OTP</label>
@@ -95,15 +94,14 @@
     </div>
 
     <!-- Registration OTP Modal -->
-    <div class="modal fade" id="registerOtpModal" tabindex="-1" aria-hidden="true">
-      <div class="modal-dialog">
+    <div class="modal fade" id="registerOtpModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+      <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title">Xác nhận đăng ký</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal" @click="resetRegisterOtp"></button>
           </div>
           <div class="modal-body">
-            
             <div class="mb-3">
               <label>Mã OTP</label>
               <div class="input-group">
@@ -132,8 +130,8 @@
     </div>
 
     <!-- Terms Modal -->
-    <div class="modal fade" id="about" tabindex="-1" aria-hidden="true">
-      <div class="modal-dialog">
+    <div class="modal fade" id="about" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+      <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title">Điều khoản sử dụng</h5>
@@ -152,47 +150,34 @@
     </div>
 
     <!-- Main Auth Form -->
-    <div class="auth-wrapper">
-      <!-- Left section -->
-      <div class="auth-left">
-        <h2>Welcome to ShoeDo Shop!</h2>
-        <p>Khám phá bộ sưu tập giày thể thao mới nhất.</p>
-        <p>Đăng nhập để trải nghiệm mua sắm tuyệt vời!</p>
+    <div class="auth-wrapper fade-in-up">
+      <div class="auth-left fade-in-left">
+        <h2 class="slide-in-text">Welcome to ShoeDo Shop!</h2>
+        <p class="slide-in-text-delay">Khám phá bộ sưu tập giày thể thao mới nhất.</p>
+        <p class="slide-in-text-delay-2">Đăng nhập để trải nghiệm mua sắm tuyệt vời!</p>
       </div>
 
-      <!-- Right section -->
       <div class="auth-right">
         <ul class="nav nav-tabs" id="authTabs" role="tablist">
           <li class="nav-item">
-            <button class="nav-link active" id="login-tab" data-bs-toggle="tab" data-bs-target="#login"
+            <button class="nav-link active tab-hover" id="login-tab" data-bs-toggle="tab" data-bs-target="#login"
               type="button">Login</button>
           </li>
           <li class="nav-item">
-            <button class="nav-link" id="register-tab" data-bs-toggle="tab" data-bs-target="#register"
+            <button class="nav-link tab-hover" id="register-tab" data-bs-toggle="tab" data-bs-target="#register"
               type="button">Sign up</button>
           </li>
         </ul>
-
-        <!-- Hiển thị thông báo -->
-        <div v-if="message" class="alert alert-success alert-dismissible fade show mt-3">
-          <span>{{ message }}</span>
-          <button type="button" class="btn-close" @click="message = ''"></button>
-        </div>
-        
-        <div v-if="error" class="alert alert-danger alert-dismissible fade show mt-3">
-          <span>{{ error }}</span>
-          <button type="button" class="btn-close" @click="error = ''"></button>
-        </div>
 
         <div class="tab-content form-section" id="authTabsContent">
           <!-- LOGIN -->
           <div class="tab-pane fade show active" id="login" role="tabpanel" aria-labelledby="login-tab">
             <form @submit.prevent="handleLogin">
-              <div class="mt-3 mb-3">
+              <div class="mt-3 mb-3 form-item">
                 <label for="loginIdentifier">Tài khoản</label>
                 <input 
                   type="text" 
-                  class="form-control" 
+                  class="form-control input-hover" 
                   id="loginIdentifier" 
                   v-model="loginForm.identifier" 
                   placeholder="Nhập username hoặc email"
@@ -200,75 +185,77 @@
                 >
                 <small class="text-muted">Bạn có thể đăng nhập bằng username hoặc email</small>
               </div>
-              <div class="mb-3">
+              <div class="mb-3 form-item">
                 <label for="loginPassword">Mật khẩu</label>
-                <input type="password" class="form-control" id="loginPassword" v-model="loginForm.pass" required>
+                <input type="password" class="form-control input-hover" id="loginPassword" v-model="loginForm.pass" required>
               </div>
               
-              <div v-if="accountLocked" class="alert alert-warning alert-dismissible fade show mt-2 mb-2">
+              <div v-if="accountLocked" class="alert alert-warning alert-dismissible fade show mt-2 mb-2 shake-alert">
                 <i class="bi bi-exclamation-triangle-fill me-2"></i>
                 <span>{{ accountLockedMessage }}</span>
               </div>
               
-              <div class="d-flex justify-content-between align-items-center mb-3">
+              <div class="d-flex justify-content-between align-items-center mb-3 form-item">
                 <div class="form-check">
-                  <input class="form-check-input" type="checkbox" id="rememberMe" v-model="loginForm.remember">
+                  <input class="form-check-input checkbox-hover" type="checkbox" id="rememberMe" v-model="loginForm.remember">
                   <label for="rememberMe">Ghi nhớ đăng nhập</label>
                 </div>
-                <a href="#" data-bs-toggle="modal" data-bs-target="#forgotPasswordOtpModal">Quên mật khẩu?</a>
+                <a href="#" data-bs-toggle="modal" data-bs-target="#forgotPasswordOtpModal" class="link-hover">Quên mật khẩu?</a>
               </div>
-              <div class="d-grid">
-                <button type="submit" class="btn btn-dark" :disabled="loading">
+              <div class="d-grid form-item">
+                <button type="submit" class="btn btn-dark btn-hover" :disabled="loading">
                   <span v-if="loading" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
                   {{ loading ? 'Đang xử lý...' : 'Đăng nhập' }}
                 </button>
               </div>
               <br>
-              <div class="position-relative text-center mb-3">
+              <div class="position-relative text-center mb-3 form-item">
                 <hr class="position-absolute top-50 start-0 end-0 m-0">
                 <span class="px-3 bg-white text-muted position-relative" style="z-index: 1;">
                   Hoặc
                 </span>
               </div>
-              <a href="http://localhost:8080/oauth2/authorization/google" 
-                class="btn btn-outline-dark d-flex align-items-center justify-content-center gap-2 mx-auto"
-                style="width: 210px; border-radius: 50px;">
-                <img :src="getImageUrl('anh/logo GG.png')" alt="Google Logo" style="width: 20px; height: 20px;">
-                <span>Sign in with Google</span>
-              </a>
+              <div class="form-item">
+                <a href="http://localhost:8080/oauth2/authorization/google" 
+                  class="btn btn-outline-dark d-flex align-items-center justify-content-center gap-2 mx-auto google-btn"
+                  style="width: 210px; border-radius: 50px;">
+                  <img :src="getImageUrl('anh/logo GG.png')" alt="Google Logo" style="width: 20px; height: 20px;" class="google-icon">
+                  <span>Sign in with Google</span>
+                </a>
+              </div>
             </form>
           </div>
 
           <!-- REGISTER -->
           <div class="tab-pane fade" id="register" role="tabpanel" aria-labelledby="register-tab">
             <form @submit.prevent="handleRegister">
-              <div class="mt-3 mb-3">
+              <div class="mt-3 mb-3 form-item">
                 <label for="regMail">Email</label>
-                <input type="email" class="form-control" id="regMail" v-model="registerForm.mail" required>
+                <input type="email" class="form-control input-hover" id="regMail" v-model="registerForm.mail" required>
               </div>
-              <div class="mb-3">
+              <div class="mb-3 form-item">
                 <label for="regPassword">Mật khẩu</label>
-                <input type="password" class="form-control" id="regPassword" v-model="registerForm.pass" required>
+                <input type="password" class="form-control input-hover" id="regPassword" v-model="registerForm.pass" required>
               </div>
-              <div class="mb-3">
+              <div class="mb-3 form-item">
                 <label for="regFullname">Họ và tên</label>
-                <input type="text" class="form-control" id="regFullname" v-model="registerForm.fullname" required>
+                <input type="text" class="form-control input-hover" id="regFullname" v-model="registerForm.fullname" required>
               </div>
-              <div class="mb-3">
+              <div class="mb-3 form-item">
                 <label for="regPhone">Số điện thoại</label>
-                <input type="tel" class="form-control" id="regPhone" v-model="registerForm.phone" 
+                <input type="tel" class="form-control input-hover" id="regPhone" v-model="registerForm.phone" 
                        pattern="[0-9]{9,11}" required>
                 <small class="text-muted">Nhập 9-11 số điện thoại</small>
               </div>
-              <div class="form-check mb-3">
-                <input class="form-check-input" type="checkbox" id="termsCheck" v-model="registerForm.terms" required>
+              <div class="form-check mb-3 form-item">
+                <input class="form-check-input checkbox-hover" type="checkbox" id="termsCheck" v-model="registerForm.terms" required>
                 <label class="form-check-label" for="termsCheck">
-                  Tôi đồng ý với <a href="#" data-bs-toggle="modal" data-bs-target="#about">điều khoản sử dụng</a>
+                  Tôi đồng ý với <a href="#" data-bs-toggle="modal" data-bs-target="#about" class="link-hover">điều khoản sử dụng</a>
                 </label>
               </div>
               
-              <div class="d-grid">
-                <button type="submit" class="btn btn-dark" :disabled="loading">
+              <div class="d-grid form-item">
+                <button type="submit" class="btn btn-dark btn-hover" :disabled="loading">
                   <span v-if="loading" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
                   {{ loading ? 'Đang xử lý...' : 'Đăng ký' }}
                 </button>
@@ -285,9 +272,11 @@
 import { useAuthStore } from '@/stores/auth';
 import * as bootstrap from 'bootstrap';
 import axios from 'axios';
+import Toast from '@/components/Shared/Toast.vue';
 
 export default {
   name: 'Login',
+  components: { Toast },
   data() {
     return {
       loginForm: {
@@ -314,8 +303,6 @@ export default {
       registerOtp: '',
       registerTempData: null,
       loading: false,
-      message: '',
-      error: '',
       accountLocked: false,
       accountLockedMessage: '',
       resendCountdown: 0,
@@ -415,8 +402,6 @@ export default {
 
     async handleLogin() {
       this.loading = true;
-      this.error = '';
-      this.message = '';
       this.accountLocked = false;
       this.accountLockedMessage = '';
       
@@ -437,7 +422,7 @@ export default {
           authStore.user = data.user;
           authStore.cartCount = data.user.cartCount || 0;
           
-          this.message = 'Đăng nhập thành công!';
+          window.showToast('Đăng nhập thành công!', 'success');
           
           setTimeout(() => {
             if (authStore.isCustomer) {
@@ -451,7 +436,7 @@ export default {
             }
           }, 1000);
         } else {
-          this.error = data.message || 'Đăng nhập thất bại';
+          window.showToast(data.message || 'Đăng nhập thất bại', 'danger');
           
           if (data.message && data.message.includes('bị khóa')) {
             this.accountLocked = true;
@@ -460,7 +445,7 @@ export default {
         }
       } catch (error) {
         console.error('Login error:', error);
-        this.error = error.response?.data?.message || 'Đăng nhập thất bại. Vui lòng thử lại sau.';
+        window.showToast(error.response?.data?.message || 'Đăng nhập thất bại. Vui lòng thử lại sau.', 'danger');
       } finally {
         this.loading = false;
       }
@@ -468,17 +453,16 @@ export default {
 
     async handleRegister() {
       if (!this.registerForm.terms) {
-        this.error = 'Vui lòng đồng ý với điều khoản sử dụng';
+        window.showToast('Vui lòng đồng ý với điều khoản sử dụng', 'warning');
         return;
       }
 
       if (!/^\d{9,11}$/.test(this.registerForm.phone)) {
-        this.error = 'Số điện thoại phải từ 9-11 số';
+        window.showToast('Số điện thoại phải từ 9-11 số', 'warning');
         return;
       }
 
       this.loading = true;
-      this.error = '';
       
       try {
         const response = await axios.post('/api/auth/send-register', {
@@ -494,17 +478,17 @@ export default {
         
         if (data.success) {
           this.registerTempData = { ...this.registerForm };
-          this.message = 'Mã OTP đã được gửi đến email của bạn!';
+          window.showToast('Mã OTP đã được gửi đến email của bạn!', 'success');
           
           const modal = new bootstrap.Modal(document.getElementById('registerOtpModal'));
           modal.show();
           
           this.startResendCountdown(60);
         } else {
-          this.error = data.message || 'Có lỗi xảy ra khi gửi OTP';
+          window.showToast(data.message || 'Có lỗi xảy ra khi gửi OTP', 'danger');
         }
       } catch (error) {
-        this.error = error.response?.data?.message || 'Có lỗi xảy ra. Vui lòng thử lại sau.';
+        window.showToast(error.response?.data?.message || 'Có lỗi xảy ra. Vui lòng thử lại sau.', 'danger');
       } finally {
         this.loading = false;
       }
@@ -512,12 +496,11 @@ export default {
 
     async verifyRegisterOtp() {
       if (!this.registerOtp || this.registerOtp.length !== 6) {
-        this.error = 'Vui lòng nhập mã OTP 6 số';
+        window.showToast('Vui lòng nhập mã OTP 6 số', 'warning');
         return;
       }
 
       this.loading = true;
-      this.error = '';
 
       try {
         const response = await axios.post('/api/auth/complete-register', {
@@ -544,17 +527,17 @@ export default {
             authStore.user = loginResponse.data.user;
             authStore.cartCount = loginResponse.data.user.cartCount || 0;
             
-            this.message = 'Đăng ký và đăng nhập thành công!';
+            window.showToast('Đăng ký và đăng nhập thành công!', 'success');
             
             setTimeout(() => {
               this.$router.push('/customer/index');
             }, 1000);
           }
         } else {
-          this.error = data.message || 'Mã OTP không chính xác';
+          window.showToast(data.message || 'Mã OTP không chính xác', 'danger');
         }
       } catch (error) {
-        this.error = error.response?.data?.message || 'Có lỗi xảy ra';
+        window.showToast(error.response?.data?.message || 'Có lỗi xảy ra', 'danger');
       } finally {
         this.loading = false;
       }
@@ -564,7 +547,6 @@ export default {
       if (!this.registerTempData) return;
 
       this.loading = true;
-      this.error = '';
 
       try {
         const response = await axios.post('/api/auth/send-register', {
@@ -579,13 +561,13 @@ export default {
         const data = response.data;
         
         if (data.success) {
-          this.message = 'Mã OTP mới đã được gửi!';
+          window.showToast('Mã OTP mới đã được gửi!', 'success');
           this.startResendCountdown(60);
         } else {
-          this.error = data.message || 'Có lỗi xảy ra khi gửi lại OTP';
+          window.showToast(data.message || 'Có lỗi xảy ra khi gửi lại OTP', 'danger');
         }
       } catch (error) {
-        this.error = error.response?.data?.message || 'Có lỗi xảy ra. Vui lòng thử lại sau.';
+        window.showToast(error.response?.data?.message || 'Có lỗi xảy ra. Vui lòng thử lại sau.', 'danger');
       } finally {
         this.loading = false;
       }
@@ -594,12 +576,11 @@ export default {
     async handleForgotPasswordOtp() {
       if (this.forgotPasswordStep === 1) {
         if (!this.forgotPasswordEmail) {
-          this.error = 'Vui lòng nhập email';
+          window.showToast('Vui lòng nhập email', 'warning');
           return;
         }
 
         this.loading = true;
-        this.error = '';
 
         try {
           const response = await axios.post('/api/auth/send-fg-pass', {
@@ -611,25 +592,24 @@ export default {
           const data = response.data;
           
           if (data.success) {
-            this.message = 'Mã OTP đã được gửi đến email của bạn!';
+            window.showToast('Mã OTP đã được gửi đến email của bạn!', 'success');
             this.forgotPasswordStep = 2;
             this.startResendCountdown(60);
           } else {
-            this.error = data.message || 'Có lỗi xảy ra';
+            window.showToast(data.message || 'Có lỗi xảy ra', 'danger');
           }
         } catch (error) {
-          this.error = error.response?.data?.message || 'Có lỗi xảy ra. Vui lòng thử lại sau';
+          window.showToast(error.response?.data?.message || 'Có lỗi xảy ra. Vui lòng thử lại sau', 'danger');
         } finally {
           this.loading = false;
         }
       } else {
         if (!this.forgotPasswordOtp || this.forgotPasswordOtp.length !== 6) {
-          this.error = 'Vui lòng nhập mã OTP 6 số';
+          window.showToast('Vui lòng nhập mã OTP 6 số', 'warning');
           return;
         }
 
         this.loading = true;
-        this.error = '';
 
         try {
           const response = await axios.post('/api/auth/confirm-fg-pass', {
@@ -642,13 +622,13 @@ export default {
           const data = response.data;
           
           if (data.success) {
-            this.message = 'Mật khẩu mới đã được gửi đến email của bạn!';
+            window.showToast('Mật khẩu mới đã được gửi đến email của bạn!', 'success');
             this.closeForgotPasswordModal();
           } else {
-            this.error = data.message || 'Mã OTP không chính xác';
+            window.showToast(data.message || 'Mã OTP không chính xác', 'danger');
           }
         } catch (error) {
-          this.error = error.response?.data?.message || 'Có lỗi xảy ra. Vui lòng thử lại sau';
+          window.showToast(error.response?.data?.message || 'Có lỗi xảy ra. Vui lòng thử lại sau', 'danger');
         } finally {
           this.loading = false;
         }
@@ -672,7 +652,6 @@ export default {
 
     async resendForgotPasswordOtp() {
       this.loading = true;
-      this.error = '';
 
       try {
         const response = await axios.post('/api/auth/send-fg-pass', {
@@ -684,13 +663,13 @@ export default {
         const data = response.data;
         
         if (data.success) {
-          this.message = 'Mã OTP mới đã được gửi!';
+          window.showToast('Mã OTP mới đã được gửi!', 'success');
           this.startResendCountdown(60);
         } else {
-          this.error = data.message || 'Có lỗi xảy ra';
+          window.showToast(data.message || 'Có lỗi xảy ra', 'danger');
         }
       } catch (error) {
-        this.error = error.response?.data?.message || 'Có lỗi xảy ra. Vui lòng thử lại sau';
+        window.showToast(error.response?.data?.message || 'Có lỗi xảy ra. Vui lòng thử lại sau', 'danger');
       } finally {
         this.loading = false;
       }
@@ -721,7 +700,7 @@ export default {
               await this.completeGoogleLogin(data.email || email, data.name || name);
             }
           } else {
-            this.error = data.message || 'Đăng nhập Google thất bại';
+            window.showToast(data.message || 'Đăng nhập Google thất bại', 'danger');
             if (data.message && data.message.includes('bị khóa')) {
               this.accountLocked = true;
               this.accountLockedMessage = data.message + ' Vui lòng liên hệ quản trị viên qua Hotline: 1900 6869 để được khắc phục.';
@@ -729,7 +708,7 @@ export default {
           }
         }
       } catch (error) {
-        this.error = error.response?.data?.message || 'Lỗi xử lý đăng nhập Google';
+        window.showToast(error.response?.data?.message || 'Lỗi xử lý đăng nhập Google', 'danger');
       }
     },
 
@@ -744,7 +723,7 @@ export default {
 
     submitGooglePassword() {
       if (!this.googlePassword || this.googlePassword.trim() === '') {
-        alert('Vui lòng nhập mật khẩu để tiếp tục!');
+        window.showToast('Vui lòng nhập mật khẩu để tiếp tục!', 'warning');
         return;
       }
 
@@ -779,16 +758,16 @@ export default {
           authStore.user = data.user;
           window.history.replaceState({}, document.title, window.location.pathname);
           
-          this.message = 'Đăng nhập Google thành công!';
+          window.showToast('Đăng nhập Google thành công!', 'success');
           
           setTimeout(() => {
             this.$router.push('/customer/index');
           }, 1000);
         } else {
-          this.error = data.message || 'Đăng nhập Google thất bại';
+          window.showToast(data.message || 'Đăng nhập Google thất bại', 'danger');
         }
       } catch (error) {
-        this.error = error.response?.data?.message || 'Lỗi xử lý đăng nhập Google';
+        window.showToast(error.response?.data?.message || 'Lỗi xử lý đăng nhập Google', 'danger');
       } finally {
         this.loading = false;
       }
@@ -812,16 +791,16 @@ export default {
 
           window.history.replaceState({}, document.title, window.location.pathname);
           
-          this.message = 'Đăng nhập Google thành công!';
+          window.showToast('Đăng nhập Google thành công!', 'success');
           
           setTimeout(() => {
             this.$router.push('/customer/index');
           }, 1000);
         } else {
-          this.error = data.message || 'Đăng nhập Google thất bại';
+          window.showToast(data.message || 'Đăng nhập Google thất bại', 'danger');
         }
       } catch (error) {
-        this.error = error.response?.data?.message || 'Lỗi xử lý đăng nhập Google';
+        window.showToast(error.response?.data?.message || 'Lỗi xử lý đăng nhập Google', 'danger');
       } finally {
         this.loading = false;
       }
@@ -843,7 +822,172 @@ export default {
 </script>
 
 <style scoped>
+/* ===== ANIMATIONS ===== */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 
+@keyframes fadeInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+.fade-in-up {
+  animation: fadeInUp 0.5s ease-out forwards;
+}
+
+.fade-in-left {
+  animation: fadeInLeft 0.6s ease-out forwards;
+}
+
+.slide-in-text {
+  animation: slideIn 0.5s ease-out forwards;
+}
+
+.slide-in-text-delay {
+  opacity: 0;
+  animation: slideIn 0.5s ease-out 0.15s forwards;
+}
+
+.slide-in-text-delay-2 {
+  opacity: 0;
+  animation: slideIn 0.5s ease-out 0.3s forwards;
+}
+
+.form-item {
+  opacity: 0;
+  animation: fadeInUp 0.4s ease-out forwards;
+  animation-delay: calc(var(--i, 0) * 0.05s);
+}
+
+.form-item:nth-child(1) { --i: 1; }
+.form-item:nth-child(2) { --i: 2; }
+.form-item:nth-child(3) { --i: 3; }
+.form-item:nth-child(4) { --i: 4; }
+.form-item:nth-child(5) { --i: 5; }
+.form-item:nth-child(6) { --i: 6; }
+.form-item:nth-child(7) { --i: 7; }
+.form-item:nth-child(8) { --i: 8; }
+
+.shake-alert {
+  animation: shake 0.4s ease-in-out;
+}
+
+/* ===== HOVER EFFECTS ===== */
+.home-btn {
+  transition: all 0.2s ease;
+}
+
+.home-btn:hover {
+  transform: scale(1.05);
+  background-color: #ffffff;
+  color: #000000;
+}
+
+.tab-hover {
+  transition: all 0.2s ease;
+}
+
+.tab-hover:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.input-hover {
+  transition: all 0.2s ease;
+}
+
+.input-hover:focus {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.btn-hover {
+  transition: all 0.2s ease;
+}
+
+.btn-hover:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.link-hover {
+  position: relative;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.link-hover::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background: #000;
+  transition: width 0.2s ease;
+}
+
+.link-hover:hover::after {
+  width: 100%;
+}
+
+.checkbox-hover {
+  transition: transform 0.2s ease;
+  cursor: pointer;
+}
+
+.checkbox-hover:hover {
+  transform: scale(1.1);
+}
+
+.google-btn {
+  transition: all 0.2s ease;
+}
+
+.google-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.google-icon {
+  transition: transform 0.3s ease;
+}
+
+.google-btn:hover .google-icon {
+  transform: rotate(360deg);
+}
+
+/* ===== EXISTING STYLES ===== */
 input[type="text"].text-center {
   font-size: 1.2rem;
   letter-spacing: 2px;
@@ -862,6 +1006,10 @@ input[type="text"].text-center {
   cursor: not-allowed;
 }
 
+.modal-content {
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
 .auth-page {
   font-family: 'Segoe UI', sans-serif;
   height: 100vh;
@@ -869,7 +1017,7 @@ input[type="text"].text-center {
   display: flex;
   justify-content: center;
   align-items: center;
-  background: url('http://localhost:8080/anh/login2.jpg') no-repeat center center fixed;
+  background: url('http://localhost:8080/anh/login2.jpg') no-repeat center center;
   background-size: cover;
 }
 
@@ -895,6 +1043,12 @@ input[type="text"].text-center {
   z-index: 1;
   position: relative;
   border: 3px solid #000000;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.auth-wrapper:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
 }
 
 .auth-left {
@@ -985,9 +1139,15 @@ small {
   left: 20px; 
   z-index: 1000;
 }
+</style>
 
-.btn-outline-white:hover {
-  background-color: #ffffff;
-  color: #000000;
+<style>
+.modal-backdrop {
+  background-color: rgba(0, 0, 0, 0.25) !important;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(12px) brightness(0.9);
+}
+.modal-backdrop.show {
+  opacity: 1 !important;
 }
 </style>

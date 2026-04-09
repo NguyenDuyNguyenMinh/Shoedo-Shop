@@ -1,24 +1,14 @@
 <template>
   <div class="customer-layout">
+    <Toast />
     <KH_Navbar />
     
     <main class="container mt-4">
-      <div v-if="message" class="alert alert-success alert-dismissible fade show">
-        <i class="fas fa-check-circle me-2"></i>
-        {{ message }}
-        <button type="button" class="btn-close" @click="message = ''"></button>
-      </div>
-          
-      <div v-if="error" class="alert alert-danger alert-dismissible fade show">
-        <i class="fas fa-exclamation-circle me-2"></i>
-        {{ error }}
-        <button type="button" class="btn-close" @click="error = ''"></button>
-      </div>
 
       <!-- Thanh ngang hiển thị điểm -->
       <div class="row mb-4">
         <div class="col-12">
-          <div class="points-card">
+          <div class="points-card animate-slide-down">
             <div class="points-display">
               <i class="fas fa-star points-icon ms-2"></i>
               <span class="points-label text-white">Điểm tích lũy</span>
@@ -39,7 +29,7 @@
       <div class="row">
         <!-- Thông tin cá nhân -->
         <div class="col-md-7">
-          <div class="card shadow-sm mb-4">
+          <div class="card shadow-sm mb-4 animate-fade-in" style="animation-delay: 0.1s">
             <div class="card-header d-flex justify-content-between align-items-center">
               <span><i class="fa-solid fa-user me-2"></i> Thông tin cá nhân</span>
             </div>
@@ -47,19 +37,19 @@
               <form @submit.prevent="updateProfile">
                 <div class="row">
                   <div class="col-md-6">
-                    <div class="mb-3">
+                    <div class="mb-3 animate-slide-right" style="animation-delay: 0.15s">
                       <label class="form-label fw-bold">Tên đăng nhập</label>
                       <input type="text" class="form-control" v-model="user.userName" required 
                              @input="user.userName = user.userName.trimStart()">
                     </div>
-                    <div class="mb-3">
+                    <div class="mb-3 animate-slide-right" style="animation-delay: 0.2s">
                       <label class="form-label fw-bold">Họ và tên</label>
                       <input type="text" class="form-control" v-model="customer.tenKH" required
                              @input="customer.tenKH = customer.tenKH.trimStart()">
                     </div>
                   </div>
                   <div class="col-md-6">
-                    <div class="mb-3">
+                    <div class="mb-3 animate-slide-left" style="animation-delay: 0.15s">
                       <label class="form-label fw-bold">Mã giới thiệu của bạn</label>
                       <div class="input-group">
                         <input type="text" class="form-control" :value="customer.maGioiThieu" disabled>
@@ -68,7 +58,7 @@
                         </button>
                       </div>
                     </div>
-                    <div class="mb-3">
+                    <div class="mb-3 animate-slide-left" style="animation-delay: 0.2s">
                       <label class="form-label fw-bold">Số điện thoại</label>
                       <input type="text" class="form-control" v-model="customer.sdt" required 
                              pattern="[0-9]{9,11}" placeholder="090xxxxxxx"
@@ -77,13 +67,13 @@
                   </div>
                 </div>
                 <div class="row">
-                  <div class="col-md-12 mb-3">
+                  <div class="col-md-12 mb-3 animate-fade-in" style="animation-delay: 0.25s">
                     <label class="form-label fw-bold">Email</label>
                     <input type="email" class="form-control" :value="user.mail" disabled>
                   </div>
                 </div>
                 
-                <div class="text-end d-flex justify-content-end gap-2">
+                <div class="text-end d-flex justify-content-end gap-2 animate-fade-in" style="animation-delay: 0.3s">
                   <button v-if="!customer.hasAppliedReferral" 
                           type="button"
                           class="btn btn-outline-primary" 
@@ -102,26 +92,26 @@
               
         <!-- Đổi mật khẩu -->
         <div class="col-md-5">
-          <div class="card shadow-sm mb-4">
+          <div class="card shadow-sm mb-4 animate-fade-in" style="animation-delay: 0.15s">
             <div class="card-header">
               <i class="fas fa-key me-2"></i> Đổi mật khẩu
             </div>
             <div class="card-body">
               <form @submit.prevent="changePassword">
-                <div class="mb-3">
+                <div class="mb-3 animate-slide-left" style="animation-delay: 0.2s">
                   <label class="form-label fw-bold">Mật khẩu hiện tại</label>
                   <input type="password" class="form-control" v-model="password.currentPassword" required>
                 </div>
-                <div class="mb-3">
+                <div class="mb-3 animate-slide-left" style="animation-delay: 0.25s">
                   <label class="form-label fw-bold">Mật khẩu mới</label>
                   <input type="password" class="form-control" v-model="password.newPassword" required>
                 </div>
-                <div class="mb-3">
+                <div class="mb-3 animate-slide-left" style="animation-delay: 0.3s">
                   <label class="form-label fw-bold">Xác nhận mật khẩu mới</label>
                   <input type="password" class="form-control" v-model="password.confirmPassword" required>
                 </div>
 
-                <div class="text-end">
+                <div class="text-end animate-fade-in" style="animation-delay: 0.35s">
                   <button type="submit" class="btn btn-primary" :disabled="passwordLoading">
                     <span v-if="passwordLoading" class="spinner-border spinner-border-sm me-1"></span>
                     <i v-else class="fas fa-key me-1"></i> Đổi mật khẩu
@@ -134,7 +124,7 @@
       </div>
 
       <!-- Quản lý địa chỉ -->
-      <div class="card shadow-sm">
+      <div class="card shadow-sm animate-fade-in" style="animation-delay: 0.4s">
         <div class="card-header d-flex justify-content-between align-items-center">
           <span><i class="fa-solid fa-location-dot me-2"></i>Quản lý địa chỉ nhận hàng</span>
           <button class="btn btn-light btn-sm" @click="showAddModal = true">
@@ -142,8 +132,10 @@
           </button>
         </div>
         <div class="card-body">
-          <div v-for="address in addresses" :key="address.maDC" 
-               class="address-card mb-3" :class="{ 'default': address.macDinh }">
+          <div v-for="(address, index) in addresses" :key="address.maDC" 
+               class="address-card mb-3 animate-slide-up" 
+               :class="{ 'default': address.macDinh }"
+               :style="{ animationDelay: `${0.05 * index}s` }">
             <div class="d-flex justify-content-between align-items-center">
               <div>
                 <div class="address-header">
@@ -173,7 +165,7 @@
             </div>
           </div>
 
-          <div v-if="addresses.length === 0" class="text-center text-muted p-4">
+          <div v-if="addresses.length === 0" class="text-center text-muted p-4 animate-fade-in" style="animation-delay: 0.5s">
             <i class="fas fa-map-marked-alt fa-3x mb-3"></i>
             <p>Chưa có địa chỉ nào. Thêm địa chỉ mới để dễ dàng đặt hàng!</p>
           </div>
@@ -182,8 +174,8 @@
     </main>
 
     <!-- Modal Lịch sử điểm -->
-    <div v-if="showHistoryModal" class="modal fade show d-block" style="background: rgba(0,0,0,0.5)">
-      <div class="modal-dialog modal-lg">
+    <div v-if="showHistoryModal" class="modal fade show d-block glass-backdrop" @click.self="showHistoryModal = false">
+      <div class="modal-dialog modal-lg modal-dialog-centered modal-zoom-in">
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title">
@@ -207,8 +199,9 @@
             </div>
             
             <div v-if="filteredHistory.length > 0" class="history-list">
-              <div v-for="item in filteredHistory" :key="item.ngayGiaoDich" 
-                   class="history-item d-flex justify-content-between align-items-center border-bottom py-2">
+              <div v-for="(item, index) in filteredHistory" :key="item.ngayGiaoDich" 
+                   class="history-item d-flex justify-content-between align-items-center border-bottom py-2 modal-item-fade"
+                   :style="{ animationDelay: `${0.03 * index}s` }">
                 <div>
                   <div class="fw-bold">{{ item.loaiGiaoDich }}</div>
                   <div class="small text-muted">{{ formatDate(item.ngayGiaoDich) }}</div>
@@ -224,15 +217,15 @@
             </div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" @click="showHistoryModal = false">Hủy</button>
+            <button type="button" class="btn btn-secondary" @click="showHistoryModal = false">Đóng</button>
           </div>
         </div>
       </div>
     </div>
 
     <!-- Modal Nhập mã giới thiệu -->
-    <div v-if="showReferralModal" class="modal fade show d-block" style="background: rgba(0,0,0,0.5)">
-      <div class="modal-dialog">
+    <div v-if="showReferralModal" class="modal fade show d-block glass-backdrop" @click.self="closeReferralModal">
+      <div class="modal-dialog modal-dialog-centered modal-zoom-in">
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title">
@@ -260,8 +253,9 @@
       </div>
     </div>
 
-    <div v-if="showVoucherModal" class="modal fade show d-block" style="background: rgba(0,0,0,0.5)">
-      <div class="modal-dialog modal-lg">
+    <!-- Modal Voucher -->
+    <div v-if="showVoucherModal" class="modal fade show d-block glass-backdrop" @click.self="closeVoucherModal">
+      <div class="modal-dialog modal-lg modal-dialog-centered modal-zoom-in">
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title">
@@ -285,7 +279,7 @@
               </li>
             </ul>
 
-            <!-- Tab 1: Đổi điểm lấy voucher (giữ nguyên) -->
+            <!-- Tab 1: Đổi điểm lấy voucher -->
             <div v-if="activeTab === 'available'">
               <div class="filter-bar mb-2 d-flex gap-2">
                 <select v-model="availableVoucherFilter" class="form-select form-select-sm" style="width: auto;">
@@ -305,8 +299,9 @@
               
               <div v-if="filteredAvailableVouchers.length > 0" class="voucherdoi-list">
                 <div class="row">
-                  <div v-for="voucher in filteredAvailableVouchers" :key="voucher.maVoucher" class="col-md-6 mb-2">
-                    <div class="voucher-card p-3 border rounded h-100">
+                  <div v-for="(voucher, index) in filteredAvailableVouchers" :key="voucher.maVoucher" class="col-md-6 mb-2">
+                    <div class="voucher-card p-3 border rounded h-100 modal-item-fade"
+                         :style="{ animationDelay: `${0.05 * index}s` }">
                       <div class="fw-bold fs-6">{{ voucher.tenVoucher }}</div>
                       <div class="text-danger fw-bold">-{{ formatMoney(voucher.giaTriGiam) }}</div>
                       <div class="small text-muted">Đơn tối thiểu: {{ formatMoney(voucher.donToiThieu) }}</div>
@@ -334,7 +329,6 @@
 
             <!-- Tab 2: Voucher của tôi -->
             <div v-if="activeTab === 'myVouchers'">
-              <!-- Thanh công cụ với checkbox chọn tất cả và nút xóa hàng loạt -->
               <div class="toolbar mb-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
                 <div class="d-flex gap-2 align-items-center">
                   <div class="filter-bar d-flex gap-2">
@@ -370,17 +364,16 @@
               </div>
               
               <div v-if="filteredMyVouchers.length > 0" class="voucher-list">
-                <div v-for="item in filteredMyVouchers" :key="item.maKHVC" 
-                      class="voucher-card mb-2 p-3 border rounded position-relative"
-                      :class="{ 'expired-voucher': item.trangThai === 'Hết hạn' }">
+                <div v-for="(item, index) in filteredMyVouchers" :key="item.maKHVC" 
+                      class="voucher-card mb-2 p-3 border rounded position-relative modal-item-fade"
+                      :class="{ 'expired-voucher': item.trangThai === 'Hết hạn' }"
+                      :style="{ animationDelay: `${0.04 * index}s` }">
                   
-                  <!-- Status badge ở góc trên bên phải -->
                   <span class="status-badge-corner" :class="getStatusBadgeClass(item.trangThai)">
                     {{ item.trangThai }}
                   </span>
                   
                   <div class="row align-items-center">
-                    <!-- Checkbox cho voucher hết hạn -->
                     <div class="col-sm-1" v-if="item.trangThai === 'Hết hạn'">
                       <div class="form-check">
                         <input class="form-check-input" type="checkbox" 
@@ -389,7 +382,6 @@
                       </div>
                     </div>
                     
-                    <!-- Nội dung voucher -->
                     <div :class="item.trangThai === 'Hết hạn' ? 'col-md-10' : 'col-md-11'">
                       <div class="fw-bold fs-5">{{ item.voucher.tenVoucher }}</div>
                       <div class="text-muted small">Giảm {{ formatMoney(item.voucher.giaTriGiam) }}</div>
@@ -398,7 +390,6 @@
                       <div class="text-muted small">Ngày đổi: {{ formatDate(item.ngayDoi) }}</div>
                     </div>
                     
-                    <!-- Nút xóa ở giữa (căn giữa theo chiều dọc) -->
                     <div class="col-sm-1 text-center">
                       <button v-if="item.trangThai === 'Hết hạn'"   
                               class="btn btn-sm btn-outline-danger" 
@@ -423,15 +414,15 @@
               <strong>Điểm hiện có: </strong> 
               <span class="text-yellow fw-bold">{{ customer.diemTichLuy || 0 }}</span>
             </div>
-            <button type="button" class="btn btn-secondary" @click="closeVoucherModal">Hủy</button>
+            <button type="button" class="btn btn-secondary" @click="closeVoucherModal">Đóng</button>
           </div>
         </div>
       </div>
     </div>
 
     <!-- Modal Thêm/Sửa Địa Chỉ -->
-    <div v-if="showAddModal || editingAddress" class="modal fade show d-block" style="background: rgba(0,0,0,0.5)">
-      <div class="modal-dialog">
+    <div v-if="showAddModal || editingAddress" class="modal fade show d-block glass-backdrop" @click.self="closeModal">
+      <div class="modal-dialog modal-dialog-centered modal-zoom-in">
         <div class="modal-content">
           <form @submit.prevent="saveAddress">
             <div class="modal-header">
@@ -482,11 +473,12 @@ import { ref, onMounted, computed } from 'vue'
 import axios from 'axios'
 import KH_Navbar from '@/components/Shared/KH_Navbar.vue'
 import Footer from '@/components/Shared/Footer.vue'
+import Toast from '@/components/Shared/Toast.vue'
 import { watch } from 'vue'
 
 export default {
   name: 'QLProfile',
-  components: { KH_Navbar, Footer },
+  components: { KH_Navbar, Footer, Toast },
   setup() {
     const user = ref({ userName: '', mail: '', createAt: '' })
     const customer = ref({ tenKH: '', sdt: '', diemTichLuy: 0, maGioiThieu: '', hasAppliedReferral: false })
@@ -495,8 +487,6 @@ export default {
     const referralCodeInput = ref('')
     
     const loading = ref({ profile: false, password: false, address: false, referral: false })
-    const message = ref('')
-    const error = ref('')
     const showAddModal = ref(false)
     const editingAddress = ref(null)
     const addressForm = ref({ maDC: null, tenNN: '', sdt: '', diemGiao: '', macDinh: false })
@@ -531,9 +521,6 @@ export default {
     const hasExpiredVouchers = computed(() => {
       return expiredVouchers.value.length > 0
     })
-
-    const watchSelectAllExpired = () => {
-    }
 
     const filteredHistory = computed(() => {
       let history = [...(pointsHistory.value.history || [])]
@@ -629,15 +616,15 @@ export default {
       try {
         const { data } = await axios.delete(`/api/customer/vouchers/${maKHVC}`)
         if (data.success) {
-          message.value = data.message
+          window.showToast(data.message, 'success')
           await fetchMyVouchers()
           selectedExpiredIds.value = []
           selectAllExpired.value = false
         } else {
-          error.value = data.message
+          window.showToast(data.message, 'danger')
         }
       } catch (err) {
-        error.value = err.response?.data?.message || 'Lỗi khi xóa voucher'
+        window.showToast(err.response?.data?.message || 'Lỗi khi xóa voucher', 'danger')
       } finally {
         deleteSingleLoading.value = null
       }
@@ -645,7 +632,7 @@ export default {
 
     const deleteSelectedExpiredVouchers = async () => {
       if (selectedExpiredIds.value.length === 0) {
-        error.value = 'Vui lòng chọn voucher cần xóa'
+        window.showToast('Vui lòng chọn voucher cần xóa', 'warning')
         return
       }
       
@@ -659,15 +646,15 @@ export default {
         })
         
         if (data.success) {
-          message.value = data.message
+          window.showToast(data.message, 'success')
           await fetchMyVouchers()
           selectedExpiredIds.value = []
           selectAllExpired.value = false
         } else {
-          error.value = data.message
+          window.showToast(data.message, 'danger')
         }
       } catch (err) {
-        error.value = err.response?.data?.message || 'Lỗi khi xóa voucher'
+        window.showToast(err.response?.data?.message || 'Lỗi khi xóa voucher', 'danger')
       } finally {
         deleteBatchLoading.value = false
       }
@@ -695,7 +682,7 @@ export default {
           addresses.value = (data.addresses || []).sort((a, b) => b.macDinh - a.macDinh)
         }
       } catch (err) {
-        error.value = 'Không thể tải thông tin'
+        window.showToast('Không thể tải thông tin', 'danger')
       }
     }
 
@@ -731,7 +718,7 @@ export default {
           availableVouchers.value = []
         }
       } catch (err) {
-        error.value = err.response?.data?.message || 'Không thể tải danh sách voucher'
+        window.showToast(err.response?.data?.message || 'Không thể tải danh sách voucher', 'danger')
         availableVouchers.value = []
       }
     }
@@ -745,16 +732,16 @@ export default {
       try {
         const { data } = await axios.post('/api/customer/vouchers/redeem', { maVoucher })
         if (data.success) {
-          message.value = data.message
+          window.showToast(data.message, 'success')
           customer.value.diemTichLuy = data.remainingPoints
           await fetchMyVouchers()
           await loadAvailableVouchers()
           await fetchPointsHistory()
         } else {
-          error.value = data.message
+          window.showToast(data.message, 'danger')
         }
       } catch (err) {
-        error.value = err.response?.data?.message || 'Lỗi khi đổi voucher'
+        window.showToast(err.response?.data?.message || 'Lỗi khi đổi voucher', 'danger')
       } finally {
         redeemLoading.value = false
         selectedVoucher.value = null
@@ -763,12 +750,11 @@ export default {
 
     const submitReferralCode = async () => {
       if (!referralCodeInput.value.trim()) {
-        error.value = 'Vui lòng nhập mã giới thiệu'
+        window.showToast('Vui lòng nhập mã giới thiệu', 'warning')
         return
       }
       
       loading.value.referral = true
-      clearMessages()
       
       try {
         const { data } = await axios.post('/api/customer/apply-referral', {
@@ -776,7 +762,7 @@ export default {
         })
         
         if (data.success) {
-          message.value = data.message
+          window.showToast(data.message, 'success')
           customer.value.diemTichLuy = data.newPoints
           customer.value.hasAppliedReferral = true
           referralCodeInput.value = ''
@@ -784,10 +770,10 @@ export default {
           await fetchPointsHistory()
           closeReferralModal()
         } else {
-          error.value = data.message
+          window.showToast(data.message, 'danger')
         }
       } catch (err) {
-        error.value = err.response?.data?.message || 'Lỗi khi nhập mã giới thiệu'
+        window.showToast(err.response?.data?.message || 'Lỗi khi nhập mã giới thiệu', 'danger')
       } finally {
         loading.value.referral = false
       }
@@ -797,12 +783,9 @@ export default {
       const code = customer.value.maGioiThieu
       if (code) {
         navigator.clipboard.writeText(code)
-        message.value = 'Đã sao chép mã giới thiệu: ' + code
-        setTimeout(() => {
-          if (message.value) message.value = ''
-        }, 3000)
+        window.showToast('Đã sao chép mã giới thiệu: ' + code, 'success')
       } else {
-        error.value = 'Không có mã giới thiệu'
+        window.showToast('Không có mã giới thiệu', 'warning')
       }
     }
 
@@ -810,7 +793,6 @@ export default {
       if (!validateProfile()) return
       
       loading.value.profile = true
-      clearMessages()
       
       try {
         const { data } = await axios.put('/api/customer/profile', {
@@ -820,15 +802,17 @@ export default {
         })
         
         if (data.success) {
-          message.value = data.message
+          window.showToast(data.message, 'success')
           if (data.user) user.value.userName = data.user.userName
           if (data.customer) {
             customer.value.tenKH = data.customer.tenKH
             customer.value.sdt = data.customer.sdt
           }
-        } else error.value = data.message
+        } else {
+          window.showToast(data.message, 'danger')
+        }
       } catch (err) {
-        error.value = err.response?.data?.message || 'Lỗi kết nối'
+        window.showToast(err.response?.data?.message || 'Lỗi kết nối', 'danger')
       } finally {
         loading.value.profile = false
       }
@@ -838,17 +822,18 @@ export default {
       if (!validatePassword()) return
       
       loading.value.password = true
-      clearMessages()
       
       try {
         const { data } = await axios.put('/api/customer/change-password', password.value)
         
         if (data.success) {
-          message.value = data.message
+          window.showToast(data.message, 'success')
           password.value = { currentPassword: '', newPassword: '', confirmPassword: '' }
-        } else error.value = data.message
+        } else {
+          window.showToast(data.message, 'danger')
+        }
       } catch (err) {
-        error.value = err.response?.data?.message || 'Mật khẩu hiện tại không đúng'
+        window.showToast(err.response?.data?.message || 'Mật khẩu hiện tại không đúng', 'danger')
       } finally {
         loading.value.password = false
       }
@@ -858,7 +843,6 @@ export default {
       if (!validateAddress()) return
       
       loading.value.address = true
-      clearMessages()
       
       try {
         const url = editingAddress.value 
@@ -869,12 +853,14 @@ export default {
         const { data } = await axios[method](url, addressForm.value)
         
         if (data.success) {
-          message.value = data.message
+          window.showToast(data.message, 'success')
           await fetchProfile()
           closeModal()
-        } else error.value = data.message
+        } else {
+          window.showToast(data.message, 'danger')
+        }
       } catch (err) {
-        error.value = err.response?.data?.message || 'Lỗi kết nối'
+        window.showToast(err.response?.data?.message || 'Lỗi kết nối', 'danger')
       } finally {
         loading.value.address = false
       }
@@ -886,11 +872,13 @@ export default {
       try {
         const { data } = await axios.delete(`/api/customer/address/${maDC}`)
         if (data.success) {
-          message.value = data.message
+          window.showToast(data.message, 'success')
           await fetchProfile()
-        } else error.value = data.message
+        } else {
+          window.showToast(data.message, 'danger')
+        }
       } catch (err) {
-        error.value = err.response?.data?.message || 'Lỗi kết nối'
+        window.showToast(err.response?.data?.message || 'Lỗi kết nối', 'danger')
       }
     }
 
@@ -898,19 +886,19 @@ export default {
       try {
         const { data } = await axios.post(`/api/customer/address/${maDC}/set-default`)
         if (data.success) {
-          message.value = data.message
+          window.showToast(data.message, 'success')
           await fetchProfile()
-        } else error.value = data.message
+        } else {
+          window.showToast(data.message, 'danger')
+        }
       } catch (err) {
-        error.value = err.response?.data?.message || 'Lỗi kết nối'
+        window.showToast(err.response?.data?.message || 'Lỗi kết nối', 'danger')
       }
     }
-
 
     const closeVoucherModal = () => {
       showVoucherModal.value = false
       activeTab.value = 'myVouchers'
-      // Reset filters
       myVoucherStatusFilter.value = 'all'
       myVoucherSortBy.value = 'newest'
       availableVoucherFilter.value = 'all'
@@ -924,7 +912,6 @@ export default {
       referralCodeInput.value = ''
     }
 
-    // Helper functions
     const validateProfile = () => {
       const { userName, tenKH, sdt } = { 
         userName: user.value.userName.trim(), 
@@ -932,24 +919,43 @@ export default {
         sdt: customer.value.sdt.trim() 
       }
       
-      if (!/^\d{9,11}$/.test(sdt)) return setError('Số điện thoại không hợp lệ')
-      if (userName.length < 3) return setError('Tên đăng nhập phải có ít nhất 3 ký tự')
-      if (!tenKH) return setError('Họ và tên không được để trống')
+      if (!/^\d{9,11}$/.test(sdt)) {
+        window.showToast('Số điện thoại không hợp lệ', 'warning')
+        return false
+      }
+      if (userName.length < 3) {
+        window.showToast('Tên đăng nhập phải có ít nhất 3 ký tự', 'warning')
+        return false
+      }
+      if (!tenKH) {
+        window.showToast('Họ và tên không được để trống', 'warning')
+        return false
+      }
       return true
     }
 
     const validatePassword = () => {
-      if (password.value.newPassword !== password.value.confirmPassword) 
-        return setError('Mật khẩu mới không khớp')
-      if (password.value.currentPassword === password.value.newPassword) 
-        return setError('Mật khẩu mới không được trùng với mật khẩu hiện tại')
+      if (password.value.newPassword !== password.value.confirmPassword) {
+        window.showToast('Mật khẩu mới không khớp', 'warning')
+        return false
+      }
+      if (password.value.currentPassword === password.value.newPassword) {
+        window.showToast('Mật khẩu mới không được trùng với mật khẩu hiện tại', 'warning')
+        return false
+      }
       return true
     }
 
     const validateAddress = () => {
       const { tenNN, sdt } = addressForm.value
-      if (!tenNN.trim()) return setError('Vui lòng nhập tên người nhận')
-      if (!/^\d{9,11}$/.test(sdt.trim())) return setError('Số điện thoại không hợp lệ')
+      if (!tenNN.trim()) {
+        window.showToast('Vui lòng nhập tên người nhận', 'warning')
+        return false
+      }
+      if (!/^\d{9,11}$/.test(sdt.trim())) {
+        window.showToast('Số điện thoại không hợp lệ', 'warning')
+        return false
+      }
       return true
     }
 
@@ -977,9 +983,6 @@ export default {
         default: return 'bg-secondary'
       }
     }
-
-    const setError = (msg) => { error.value = msg; return false }
-    const clearMessages = () => { message.value = ''; error.value = '' }
     
     const editAddress = (address) => {
       editingAddress.value = address
@@ -1002,19 +1005,16 @@ export default {
 
     return {
       user, customer, addresses, password,
-      loading, message, error, showAddModal, editingAddress, addressForm,
+      loading, showAddModal, editingAddress, addressForm,
       showHistoryModal, showVoucherModal, showReferralModal, activeTab, pointsHistory, 
       myVouchers, availableVouchers, redeemLoading, selectedVoucher,
       referralCodeInput,
-      // Filters
       historySortBy, myVoucherStatusFilter, myVoucherSortBy, 
       availableVoucherFilter, availableVoucherSortBy,
       filteredHistory, filteredMyVouchers, filteredAvailableVouchers,
-      // Delete expired vouchers
       selectedExpiredIds, selectAllExpired, hasExpiredVouchers,
       deleteSingleLoading, deleteBatchLoading,
       deleteSingleExpiredVoucher, deleteSelectedExpiredVouchers,
-      // Methods
       updateProfile, changePassword, saveAddress, deleteAddress,
       setDefaultAddress, editAddress, closeModal,
       fetchPointsHistory, fetchMyVouchers, loadAvailableVouchers, 
@@ -1027,6 +1027,118 @@ export default {
 </script>
 
 <style scoped>
+/* ===== ANIMATION KEYFRAMES ===== */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideLeft {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideRight {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes zoomIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes modalItemFade {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ===== ANIMATION CLASSES ===== */
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out forwards;
+  opacity: 0;
+}
+
+.animate-slide-down {
+  animation: slideDown 0.6s ease-out forwards;
+  opacity: 0;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.5s ease-out forwards;
+  opacity: 0;
+}
+
+.animate-slide-left {
+  animation: slideLeft 0.5s ease-out forwards;
+  opacity: 0;
+}
+
+.animate-slide-right {
+  animation: slideRight 0.5s ease-out forwards;
+  opacity: 0;
+}
+
+.modal-zoom-in {
+  animation: zoomIn 0.3s ease-out forwards;
+}
+
+.modal-item-fade {
+  animation: modalItemFade 0.4s ease-out forwards;
+  opacity: 0;
+}
+
+/* ===== EXISTING STYLES ===== */
 .card-header {
   font-weight: bold;
   background-color: #000000;
@@ -1044,6 +1156,7 @@ export default {
 
 .address-card:hover {
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
 }
 
 .address-card.default {
@@ -1060,55 +1173,68 @@ export default {
 .btn-primary, .btn-success {
   background-color: #000000;
   border-color: #000000;
+  transition: all 0.3s ease;
 }
 
 .btn-primary:hover, .btn-success:hover {
   background-color: #333333;
   border-color: #333333;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 }
 
 .btn-secondary {
   background-color: #ffffff;
   border-color: #000000;
   color: #000000;
+  transition: all 0.3s ease;
 }
+
 .btn-secondary:hover {
   background-color: #f0f0f0;
   border-color: #000000;
   color: #000000;
+  transform: translateY(-2px);
 }
 
 .btn-outline-primary {
   border-color: #000000;
   color: #000000;
+  transition: all 0.3s ease;
 }
 
 .btn-outline-primary:hover {
   background-color: #000000;
   border-color: #000000;
   color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 }
 
 .btn-outline-success {
   border-color: #28a745;
   color: #28a745;
+  transition: all 0.3s ease;
 }
 
 .btn-outline-success:hover {
   background-color: #28a745;
   border-color: #28a745;
   color: #ffffff;
+  transform: translateY(-2px);
 }
 
 .btn-outline-danger {
   border-color: #dc3545;
   color: #dc3545;
+  transition: all 0.3s ease;
 }
 
 .btn-outline-danger:hover:not(:disabled) {
   background-color: #dc3545;
   border-color: #dc3545;
   color: #ffffff;
+  transform: translateY(-2px);
 }
 
 .btn-outline-danger:disabled {
@@ -1120,6 +1246,7 @@ export default {
 
 .form-control {
   border: 1px solid #000000;
+  transition: all 0.3s ease;
 }
 
 .form-control:focus {
@@ -1159,6 +1286,12 @@ export default {
   justify-content: space-between;
   align-items: center;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.points-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
 }
 
 .points-display {
@@ -1170,6 +1303,16 @@ export default {
 .points-icon {
   font-size: 2rem;
   color: #ffc107;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
 }
 
 .points-label {
@@ -1215,13 +1358,13 @@ export default {
 }
 
 .history-item {
-  transition: background 0.2s;
+  transition: all 0.2s ease;
   padding: 10px 20px;
 }
 
 .history-item:hover {
   background: #f8f9fa;
-  transform: translateY(-2px);
+  transform: translateX(5px);
 }
 
 .voucher-list {
@@ -1257,6 +1400,7 @@ export default {
 .nav-tabs .nav-link {
   color: #333;
   cursor: pointer;
+  transition: all 0.3s ease;
 }
 
 .nav-tabs .nav-link.active {
@@ -1267,6 +1411,7 @@ export default {
 
 .nav-tabs .nav-link:hover:not(.active) {
   border-color: #dee2e6 #dee2e6 #ddd;
+  background-color: #f8f9fa;
 }
 
 .text-yellow {
@@ -1303,6 +1448,10 @@ export default {
   padding-right: 80px; 
 }
 
+body.modal-open {
+  overflow: hidden;
+}
+
 @media (max-width: 768px) {
   .voucher-card .row {
     padding-right: 70px;
@@ -1314,5 +1463,18 @@ export default {
     font-size: 0.7rem;
     padding: 3px 6px;
   }
+}
+</style>
+
+<style>
+.glass-backdrop {
+  background-color: rgba(0, 0, 0, 0.25) !important;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(8px);
+  animation: fadeIn 0.3s ease-out;
+}
+
+.glass-backdrop.show {
+  opacity: 1 !important;
 }
 </style>

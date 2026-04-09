@@ -1,96 +1,98 @@
 <template>
   <div class="employee-layout">
-<NV_Sidebar @toggle-collapse="handleSidebarCollapse" />
-<main class="main-content" :class="{ 'expanded': isSidebarCollapsed }">
+    <!-- Toast Component -->
+    <Toast />
+    
+    <NV_Sidebar @toggle-collapse="handleSidebarCollapse" />
+    <main class="main-content" :class="{ 'expanded': isSidebarCollapsed }">
       <div class="page-container">
-        <!-- Thông báo -->
-        <div v-if="message" class="alert alert-success alert-dismissible fade show" role="alert">
-          <span>{{ message }}</span>
-          <button type="button" class="btn-close" @click="message = ''"></button>
-        </div>
-
-        <div v-if="error" class="alert alert-danger alert-dismissible fade show" role="alert">
-          <span>{{ error }}</span>
-          <button type="button" class="btn-close" @click="error = ''"></button>
-        </div>
-
         <!-- Thống kê nhanh -->
         <div class="row g-3 mb-4">
           <div class="col-md">
-            <div class="text-white stats-mini bg-gradient-1" @click="setActiveTab('pending')" style="cursor: pointer;">
-              <h4>{{ orderCounts.pending }}</h4>
+            <div class="text-white stats-mini bg-gradient-1 stats-card-animate" 
+                 :style="{ '--delay': '0.1s' }"
+                 @click="setActiveTab('pending')" style="cursor: pointer;">
+              <h4 class="counter-animate">{{ orderCounts.pending }}</h4>
               <p>Chờ duyệt</p>
             </div>
           </div>
           <div class="col-md">
-            <div class="text-white stats-mini bg-gradient-1" @click="setActiveTab('delivering')" style="cursor: pointer;">
-              <h4>{{ orderCounts.delivering }}</h4>
+            <div class="text-white stats-mini bg-gradient-1 stats-card-animate" 
+                 :style="{ '--delay': '0.2s' }"
+                 @click="setActiveTab('delivering')" style="cursor: pointer;">
+              <h4 class="counter-animate">{{ orderCounts.delivering }}</h4>
               <p>Đang giao</p>
             </div>
           </div>
           <div class="col-md">
-            <div class="text-white stats-mini bg-gradient-1" @click="setActiveTab('completed')" style="cursor: pointer;">
-              <h4>{{ orderCounts.completed }}</h4>
+            <div class="text-white stats-mini bg-gradient-1 stats-card-animate" 
+                 :style="{ '--delay': '0.3s' }"
+                 @click="setActiveTab('completed')" style="cursor: pointer;">
+              <h4 class="counter-animate">{{ orderCounts.completed }}</h4>
               <p>Hoàn tất</p>
             </div>
           </div>
           <div class="col-md">
-            <div class="text-white stats-mini bg-gradient-1" @click="setActiveTab('rejected')" style="cursor: pointer;">
-              <h4>{{ orderCounts.rejected }}</h4>
+            <div class="text-white stats-mini bg-gradient-1 stats-card-animate" 
+                 :style="{ '--delay': '0.4s' }"
+                 @click="setActiveTab('rejected')" style="cursor: pointer;">
+              <h4 class="counter-animate">{{ orderCounts.rejected }}</h4>
               <p>Từ chối</p>
             </div>
           </div>
           <div class="col-md">
-            <div class="text-white stats-mini bg-gradient-1" @click="setActiveTab('error')" style="cursor: pointer;">
-              <h4>{{ orderCounts.error }}</h4>
+            <div class="text-white stats-mini bg-gradient-1 stats-card-animate" 
+                 :style="{ '--delay': '0.5s' }"
+                 @click="setActiveTab('error')" style="cursor: pointer;">
+              <h4 class="counter-animate">{{ orderCounts.error }}</h4>
               <p>Báo lỗi</p>
             </div>  
           </div>
         </div>
 
         <!-- Tabs Navigation -->
-        <ul class="nav nav-tabs" id="ordersTab" role="tablist">
-          <li class="nav-item" role="presentation">
-            <button class="nav-link" :class="{ active: activeTab === 'pending' }" 
+        <ul class="nav nav-tabs tab-nav-animate" id="ordersTab" role="tablist">
+          <li class="nav-item tab-item-animate" role="presentation" :style="{ '--delay': '0.1s' }">
+            <button class="nav-link tab-link-hover" :class="{ active: activeTab === 'pending' }" 
                     @click="setActiveTab('pending')">
               Chờ duyệt
-              <span v-if="filteredStats.pending > 0" class="badge bg-warning ms-2">
+              <span v-if="filteredStats.pending > 0" class="badge bg-warning ms-2 badge-pulse">
                 {{ filteredStats.pending }}
               </span>
             </button>
           </li>
-          <li class="nav-item" role="presentation">
-            <button class="nav-link" :class="{ active: activeTab === 'delivering' }" 
+          <li class="nav-item tab-item-animate" role="presentation" :style="{ '--delay': '0.15s' }">
+            <button class="nav-link tab-link-hover" :class="{ active: activeTab === 'delivering' }" 
                     @click="setActiveTab('delivering')">
               Đang giao
-              <span v-if="filteredStats.delivering > 0" class="badge bg-primary ms-2">
+              <span v-if="filteredStats.delivering > 0" class="badge bg-primary ms-2 badge-pulse">
                 {{ filteredStats.delivering }}
               </span>
             </button>
           </li>
-          <li class="nav-item" role="presentation">
-            <button class="nav-link" :class="{ active: activeTab === 'completed' }" 
+          <li class="nav-item tab-item-animate" role="presentation" :style="{ '--delay': '0.2s' }">
+            <button class="nav-link tab-link-hover" :class="{ active: activeTab === 'completed' }" 
                     @click="setActiveTab('completed')">
               Hoàn tất
-              <span v-if="filteredStats.completed > 0" class="badge bg-success ms-2">
+              <span v-if="filteredStats.completed > 0" class="badge bg-success ms-2 badge-pulse">
                 {{ filteredStats.completed }}
               </span>
             </button>
           </li>
-          <li class="nav-item" role="presentation">
-            <button class="nav-link" :class="{ active: activeTab === 'rejected' }" 
+          <li class="nav-item tab-item-animate" role="presentation" :style="{ '--delay': '0.25s' }">
+            <button class="nav-link tab-link-hover" :class="{ active: activeTab === 'rejected' }" 
                     @click="setActiveTab('rejected')">
               Từ chối
-              <span v-if="filteredStats.rejected > 0" class="badge bg-danger ms-2">
+              <span v-if="filteredStats.rejected > 0" class="badge bg-danger ms-2 badge-pulse">
                 {{ filteredStats.rejected }}
               </span>
             </button>
           </li>
-          <li class="nav-item" role="presentation">
-            <button class="nav-link" :class="{ active: activeTab === 'error' }" 
+          <li class="nav-item tab-item-animate" role="presentation" :style="{ '--delay': '0.3s' }">
+            <button class="nav-link tab-link-hover" :class="{ active: activeTab === 'error' }" 
                     @click="setActiveTab('error')">
               Báo lỗi
-              <span v-if="filteredStats.error > 0" class="badge bg-info ms-2">
+              <span v-if="filteredStats.error > 0" class="badge bg-info ms-2 badge-pulse">
                 {{ filteredStats.error }}
               </span>
             </button>
@@ -98,54 +100,56 @@
         </ul>
 
         <!-- Tab Content -->
-        <div class="tab-content p-3 bg-white rounded-bottom shadow-sm">
+        <div class="tab-content p-3 bg-white rounded-bottom shadow-sm content-animate">
           <!-- Search bar -->
           <div class="row g-2 mb-3">
-            <div class="col-md-4">
+            <div class="col-md-4 search-item-animate" style="--delay: 0.1s">
               <div class="input-group">
                 <span class="input-group-text bg-light"><i class="bi bi-search"></i></span>
                 <input type="text" v-model="searchKeyword" 
                        placeholder="Mã HD, tên KH, SĐT..." 
-                       class="form-control">
+                       class="form-control input-focus-animate">
               </div>
             </div>
-            <div class="col-md-2">
-              <select v-model="filterEmployee" class="form-select">
+            <div class="col-md-2 search-item-animate" style="--delay: 0.15s">
+              <select v-model="filterEmployee" class="form-select select-animate">
                 <option value="">Tất cả nhân viên</option>
                 <option v-for="emp in employees" :key="emp.maQT" :value="emp.maQT">
                   #QT{{ String(emp.maQT).padStart(4, '0') }} - {{ emp.tenQT }}
                 </option>
               </select>
             </div>
-            <div class="col-md-2">
-              <select v-model="sortOrder" class="form-select">
+            <div class="col-md-2 search-item-animate" style="--delay: 0.2s">
+              <select v-model="sortOrder" class="form-select select-animate">
                 <option value="desc">Mới nhất</option>
                 <option value="asc">Cũ nhất</option>
               </select>
             </div>
             
-            <div class="col-md-2">
-              <input type="date" v-model="filterDate" class="form-control">
+            <div class="col-md-2 search-item-animate" style="--delay: 0.25s">
+              <input type="date" v-model="filterDate" class="form-control input-focus-animate">
             </div>
-            <div class="col-md-2">
-              <button @click="resetFilters" class="btn btn-outline-secondary w-100">
+            <div class="col-md-2 search-item-animate" style="--delay: 0.3s">
+              <button @click="resetFilters" class="btn btn-outline-secondary w-100 btn-hover-scale">
                   <i class="bi bi-arrow-clockwise me-2"></i>Reset
                 </button>
             </div>
           </div>
           
           <!-- Tab Chờ Duyệt -->
-          <div v-show="activeTab === 'pending'">
-            <div v-if="filteredOrders.pending.length === 0" class="text-center p-5 text-muted">
-              Không có đơn hàng chờ duyệt
+          <div v-show="activeTab === 'pending'" class="tab-pane-animate">
+            <div v-if="filteredOrders.pending.length === 0" class="text-center p-5 text-muted empty-state-animate">
+              <i class="bi bi-inbox display-4 icon-float"></i>
+              <p class="mt-3">Không có đơn hàng chờ duyệt</p>
             </div>
             
             <div v-else class="row g-3">
-              <div v-for="order in filteredOrders.pending" :key="order.maHD" class="col-12 col-md-6 col-lg-4">
-                <div class="card h-100 border-dark">
+              <div v-for="(order, index) in filteredOrders.pending" :key="order.maHD" class="col-12 col-md-6 col-lg-4">
+                <div class="card h-100 border-dark order-card-animate" 
+                     :style="{ '--delay': `${0.05 * index}s` }">
                   <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
                     <strong>#HD{{ String(order.maHD).padStart(4, '0') }}</strong>
-                    <span class="badge bg-warning text-white">Chờ duyệt</span>
+                    <span class="badge bg-warning text-white status-badge">Chờ duyệt</span>
                   </div>
                   <div class="card-body">
                     <div class="mb-2">
@@ -196,17 +200,17 @@
                   </div>
                   <div class="card-footer bg-transparent">
                     <div class="d-flex gap-2 mb-2">
-                      <button class="btn btn-danger btn-sm flex-fill" @click="showRejectModal(order)">
+                      <button class="btn btn-danger btn-sm flex-fill btn-hover-scale" @click="showRejectModal(order)">
                         <i class="fas fa-times me-1"></i>Từ chối
                       </button>
-                      <button class="btn btn-success btn-sm flex-fill" @click="confirmOrder(order.maHD)">
+                      <button class="btn btn-success btn-sm flex-fill btn-hover-scale" @click="confirmOrder(order.maHD)">
                         <i class="fas fa-check me-1"></i>Duyệt
                       </button>
                     </div>
-                    <button class="btn btn-outline-dark btn-sm w-100" @click="showOrderDetail(order)">
+                    <button class="btn btn-outline-dark btn-sm w-100 btn-hover-scale" @click="showOrderDetail(order)">
                       <i class="fas fa-eye me-1"></i>Xem chi tiết
                     </button>
-                    <button class="btn btn-outline-primary btn-sm w-100 mt-2" @click="printOrder(order)">
+                    <button class="btn btn-outline-primary btn-sm w-100 mt-2 btn-hover-scale" @click="printOrder(order)">
                       <i class="fas fa-print me-1"></i>Xuất hóa đơn
                     </button>
                   </div>
@@ -216,17 +220,19 @@
           </div>
 
           <!-- Tab Đang Giao -->
-          <div v-show="activeTab === 'delivering'">
-            <div v-if="filteredOrders.delivering.length === 0" class="text-center p-5 text-muted">
-              Không có đơn hàng đang giao
+          <div v-show="activeTab === 'delivering'" class="tab-pane-animate">
+            <div v-if="filteredOrders.delivering.length === 0" class="text-center p-5 text-muted empty-state-animate">
+              <i class="bi bi-truck display-4 icon-float"></i>
+              <p class="mt-3">Không có đơn hàng đang giao</p>
             </div>
             
             <div v-else class="row g-3">
-              <div v-for="order in filteredOrders.delivering" :key="order.maHD" class="col-12 col-md-6 col-lg-4">
-                <div class="card h-100 border-dark">
+              <div v-for="(order, index) in filteredOrders.delivering" :key="order.maHD" class="col-12 col-md-6 col-lg-4">
+                <div class="card h-100 border-dark order-card-animate" 
+                     :style="{ '--delay': `${0.05 * index}s` }">
                   <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
                     <strong>#HD{{ String(order.maHD).padStart(4, '0') }}</strong>
-                    <span class="badge bg-primary text-white">Đang giao</span>
+                    <span class="badge bg-primary text-white status-badge">Đang giao</span>
                   </div>
                   <div class="card-body">
                     <div class="mb-2">
@@ -274,17 +280,17 @@
                   </div>
                   <div class="card-footer bg-transparent">
                     <div class="d-flex gap-2 mb-2">
-                      <button class="btn btn-warning btn-sm flex-fill" @click="showDeliveryFailedModal(order)">
+                      <button class="btn btn-warning btn-sm flex-fill btn-hover-scale" @click="showDeliveryFailedModal(order)">
                         <i class="fas fa-truck me-1"></i>Thất bại
                       </button>
-                      <button class="btn btn-success btn-sm flex-fill" @click="deliverySuccess(order.maHD)">
+                      <button class="btn btn-success btn-sm flex-fill btn-hover-scale" @click="deliverySuccess(order.maHD)">
                         <i class="fas fa-check-circle me-1"></i>Thành công
                       </button>
                     </div>
-                    <button class="btn btn-outline-dark btn-sm w-100" @click="showOrderDetail(order)">
+                    <button class="btn btn-outline-dark btn-sm w-100 btn-hover-scale" @click="showOrderDetail(order)">
                       <i class="fas fa-eye me-1"></i>Xem chi tiết
                     </button>
-                    <button class="btn btn-outline-primary btn-sm w-100 mt-2" @click="printOrder(order)">
+                    <button class="btn btn-outline-primary btn-sm w-100 mt-2 btn-hover-scale" @click="printOrder(order)">
                       <i class="fas fa-print me-1"></i>Xuất hóa đơn
                     </button>
                   </div>
@@ -294,17 +300,19 @@
           </div>
 
           <!-- Tab Hoàn Tất -->
-          <div v-show="activeTab === 'completed'">
-            <div v-if="filteredOrders.completed.length === 0" class="text-center p-5 text-muted">
-              Chưa có đơn hàng hoàn tất
+          <div v-show="activeTab === 'completed'" class="tab-pane-animate">
+            <div v-if="filteredOrders.completed.length === 0" class="text-center p-5 text-muted empty-state-animate">
+              <i class="bi bi-check-circle display-4 icon-float"></i>
+              <p class="mt-3">Chưa có đơn hàng hoàn tất</p>
             </div>
             
             <div v-else class="row g-3">
-              <div v-for="order in filteredOrders.completed" :key="order.maHD" class="col-12 col-md-6 col-lg-4">
-                <div class="card h-100 border-dark">
+              <div v-for="(order, index) in filteredOrders.completed" :key="order.maHD" class="col-12 col-md-6 col-lg-4">
+                <div class="card h-100 border-dark order-card-animate" 
+                     :style="{ '--delay': `${0.05 * index}s` }">
                   <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
                     <strong>#HD{{ String(order.maHD).padStart(4, '0') }}</strong>
-                    <span class="badge bg-success text-white">Hoàn tất</span>
+                    <span class="badge bg-success text-white status-badge">Hoàn tất</span>
                   </div>
                   <div class="card-body">
                     <div class="mb-2">
@@ -356,10 +364,10 @@
                     </div>
                   </div>
                   <div class="card-footer bg-transparent">
-                    <button class="btn btn-outline-dark  btn-sm w-100" @click="showOrderDetail(order)">
+                    <button class="btn btn-outline-dark btn-sm w-100 btn-hover-scale" @click="showOrderDetail(order)">
                       <i class="fas fa-eye me-1"></i>Xem chi tiết
                     </button>
-                    <button class="btn btn-outline-primary btn-sm w-100 mt-2" @click="printOrder(order)">
+                    <button class="btn btn-outline-primary btn-sm w-100 mt-2 btn-hover-scale" @click="printOrder(order)">
                       <i class="fas fa-print me-1"></i>Xuất hóa đơn
                     </button>
                   </div>
@@ -369,17 +377,19 @@
           </div>
 
           <!-- Tab Từ Chối -->
-          <div v-show="activeTab === 'rejected'">
-            <div v-if="filteredOrders.rejected.length === 0" class="text-center p-5 text-muted">
-              Không có đơn hàng bị từ chối
+          <div v-show="activeTab === 'rejected'" class="tab-pane-animate">
+            <div v-if="filteredOrders.rejected.length === 0" class="text-center p-5 text-muted empty-state-animate">
+              <i class="bi bi-x-circle display-4 icon-float"></i>
+              <p class="mt-3">Không có đơn hàng bị từ chối</p>
             </div>
             
             <div v-else class="row g-3">
-              <div v-for="order in filteredOrders.rejected" :key="order.maHD" class="col-12 col-md-6 col-lg-4">
-                <div class="card h-100 border-dark">
+              <div v-for="(order, index) in filteredOrders.rejected" :key="order.maHD" class="col-12 col-md-6 col-lg-4">
+                <div class="card h-100 border-dark order-card-animate" 
+                     :style="{ '--delay': `${0.05 * index}s` }">
                   <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
                     <strong>#HD{{ String(order.maHD).padStart(4, '0') }}</strong>
-                    <span class="badge bg-danger text-white">Từ chối</span>
+                    <span class="badge bg-danger text-white status-badge">Từ chối</span>
                   </div>
                   <div class="card-body">
                     <div class="mb-2">
@@ -426,10 +436,10 @@
                     </div>
                   </div>
                   <div class="card-footer bg-transparent">
-                    <button class="btn btn-outline-dark  btn-sm w-100" @click="showOrderDetail(order)">
+                    <button class="btn btn-outline-dark btn-sm w-100 btn-hover-scale" @click="showOrderDetail(order)">
                       <i class="fas fa-eye me-1"></i>Xem chi tiết
                     </button>
-                    <button class="btn btn-outline-primary btn-sm w-100 mt-2" @click="printOrder(order)">
+                    <button class="btn btn-outline-primary btn-sm w-100 mt-2 btn-hover-scale" @click="printOrder(order)">
                       <i class="fas fa-print me-1"></i>Xuất hóa đơn
                     </button>
                   </div>
@@ -439,17 +449,19 @@
           </div>
 
           <!-- Tab Báo Lỗi -->
-          <div v-show="activeTab === 'error'">
-            <div v-if="filteredOrders.error.length === 0" class="text-center p-5 text-muted">
-              Không có đơn hàng báo lỗi
+          <div v-show="activeTab === 'error'" class="tab-pane-animate">
+            <div v-if="filteredOrders.error.length === 0" class="text-center p-5 text-muted empty-state-animate">
+              <i class="bi bi-exclamation-triangle display-4 icon-float"></i>
+              <p class="mt-3">Không có đơn hàng báo lỗi</p>
             </div>
             
             <div v-else class="row g-3">
-              <div v-for="order in filteredOrders.error" :key="order.maHD" class="col-12 col-md-6 col-lg-4">
-                <div class="card h-100 border-dark">
+              <div v-for="(order, index) in filteredOrders.error" :key="order.maHD" class="col-12 col-md-6 col-lg-4">
+                <div class="card h-100 border-dark order-card-animate" 
+                     :style="{ '--delay': `${0.05 * index}s` }">
                   <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
                     <strong>#HD{{ String(order.maHD).padStart(4, '0') }}</strong>
-                    <span class="badge bg-info text-white">Báo lỗi</span>
+                    <span class="badge bg-info text-white status-badge">Báo lỗi</span>
                   </div>
                   <div class="card-body">
                     <div class="mb-2">
@@ -501,13 +513,13 @@
                     </div>
                   </div>
                   <div class="card-footer bg-transparent">
-                    <button class="btn btn-info btn-sm w-100 mb-2" @click="sendApologyEmail(order.maHD)">
+                    <button class="btn btn-info btn-sm w-100 mb-2 btn-hover-scale" @click="sendApologyEmail(order.maHD)">
                       <i class="fas fa-envelope me-1"></i>Gửi email xin lỗi
                     </button>
-                    <button class="btn btn-outline-dark  btn-sm w-100" @click="showOrderDetail(order)">
+                    <button class="btn btn-outline-dark btn-sm w-100 btn-hover-scale" @click="showOrderDetail(order)">
                       <i class="fas fa-eye me-1"></i>Xem chi tiết
                     </button>
-                    <button class="btn btn-outline-primary btn-sm w-100 mt-2" @click="printOrder(order)">
+                    <button class="btn btn-outline-primary btn-sm w-100 mt-2 btn-hover-scale" @click="printOrder(order)">
                       <i class="fas fa-print me-1"></i>Xuất hóa đơn
                     </button>
                   </div>
@@ -520,17 +532,17 @@
     </main>
 
     <!-- Order Detail Modal -->
-    <div class="modal fade" id="orderDetailModal" tabindex="-1" aria-hidden="true" ref="orderDetailModal">
-      <div class="modal-dialog modal-lg">
+    <div class="modal fade" id="orderDetailModal" tabindex="-1" aria-hidden="true" ref="orderDetailModal" data-bs-backdrop="static" data-bs-keyboard="false">
+      <div class="modal-dialog modal-lg modal-dialog-centered modal-zoom-in">
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title">Chi tiết đơn hàng #HD{{ selectedOrder ? String(selectedOrder.maHD).padStart(4, '0') : '' }}</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
           </div>
           <div class="modal-body">
-            <div v-if="orderDetail">
+            <div v-if="orderDetail" class="modal-content-animate">
               <div class="row mb-4">
-                <div class="col-md-5">
+                <div class="col-md-5 detail-item-animate" style="--delay: 0.05s">
                   <h6 class="fw-bold">Thông tin đơn hàng</h6>
                   <div class="border p-3 rounded">
                     <div class="d-flex mb-2">
@@ -568,7 +580,7 @@
                   </div>
                 </div>
                 
-                <div class="col-md-7">
+                <div class="col-md-7 detail-item-animate" style="--delay: 0.1s">
                   <h6 class="fw-bold">Thông tin giao hàng</h6>
                   <div class="border p-3 rounded">
                     <div class="d-flex mb-2">
@@ -588,7 +600,7 @@
               </div>
 
               <div v-if="orderDetail.voucherApDung" class="row mb-4">
-                <div class="col-md-12">
+                <div class="col-md-12 detail-item-animate" style="--delay: 0.15s">
                   <h6 class="fw-bold">Voucher áp dụng</h6>
                   <div class="border p-3 rounded bg-light">
                     <div class="d-flex justify-content-between align-items-center">
@@ -602,7 +614,7 @@
                 </div>
               </div>
 
-              <div class="mb-4">
+              <div class="mb-4 detail-item-animate" style="--delay: 0.2s">
                 <h6 class="fw-bold mb-3">Chi tiết sản phẩm</h6>
                 <div class="table-responsive">
                   <table class="table table-bordered">
@@ -617,7 +629,7 @@
                       </tr>
                     </thead>
                     <tbody>
-                      <tr v-for="(item, index) in orderDetail.chiTiet" :key="index">
+                      <tr v-for="(item, index) in orderDetail.chiTiet" :key="index" class="table-row-animate" :style="{ '--delay': `${0.05 * index}s` }">
                         <td>{{ index + 1 }}</td>
                         <td>{{ item.tenSP }}</td>
                         <td>{{ item.tenMau }} - Size {{ item.coGiay === 0 ? 'Free' : item.coGiay }}</td>
@@ -640,7 +652,7 @@
                 </div>
               </div>
 
-              <div v-if="orderDetail.maQT" class="mb-3">
+              <div v-if="orderDetail.maQT" class="mb-3 detail-item-animate" style="--delay: 0.25s">
                 <h6 class="fw-bold mb-2">Nhân viên xử lý</h6>
                 <div class="border p-3 rounded">
                   <div class="row">
@@ -657,26 +669,26 @@
                 </div>
               </div>
 
-              <div v-if="orderDetail.ghiChu" class="mt-3 p-3 border rounded" :class="getNoteClass(orderDetail.trangThai)">
+              <div v-if="orderDetail.ghiChu" class="mt-3 p-3 border rounded detail-item-animate" :class="getNoteClass(orderDetail.trangThai)" style="--delay: 0.3s">
                 <strong class="d-block mb-2"> Ghi chú:</strong>
                 <p class="mb-0">{{ orderDetail.ghiChu }}</p>
               </div>
             </div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-primary" @click="printOrder(orderDetail)">
+            <button type="button" class="btn btn-primary btn-hover-scale" @click="printOrder(orderDetail)">
               <i class="fas fa-print me-2"></i>Xuất hóa đơn
             </button>
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+            <button type="button" class="btn btn-secondary btn-hover-scale" data-bs-dismiss="modal">Hủy</button>
           </div>
         </div>
       </div>
     </div>
 
     <!-- Reject Modal -->
-    <div class="modal fade" id="rejectModal" tabindex="-1" aria-hidden="true" ref="rejectModal">
-      <div class="modal-dialog">
-        <div class="modal-content">
+    <div class="modal fade" id="rejectModal" tabindex="-1" aria-hidden="true" ref="rejectModal" data-bs-backdrop="static" data-bs-keyboard="false">
+      <div class="modal-dialog modal-dialog-centered modal-zoom-in">
+        <div class="modal-content modal-shake">
           <div class="modal-header">
             <h5 class="modal-title">Từ chối đơn hàng</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -686,18 +698,18 @@
             
             <div class="mb-3">
               <label class="form-label fw-bold">Lý do từ chối:</label>
-              <textarea v-model="rejectReason" class="form-control" rows="3" 
+              <textarea v-model="rejectReason" class="form-control input-focus-animate" rows="3" 
                         placeholder="Nhập lý do từ chối..."></textarea>
             </div>
 
-            <div class="alert alert-warning">
-              <i class="fas fa-exclamation-triangle me-2"></i>
+            <div class="alert alert-warning alert-animate">
+              <i class="fas fa-exclamation-triangle me-2 icon-pulse"></i>
               {{ getRejectWarning(orderToReject?.trangThai) }}
             </div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-            <button type="button" class="btn btn-danger" @click="confirmRejectOrder" :disabled="processing">
+            <button type="button" class="btn btn-secondary btn-hover-scale" data-bs-dismiss="modal">Hủy</button>
+            <button type="button" class="btn btn-danger btn-hover-scale" @click="confirmRejectOrder" :disabled="processing">
               <span v-if="processing" class="spinner-border spinner-border-sm me-2"></span>
               Xác nhận từ chối
             </button>
@@ -707,9 +719,9 @@
     </div>
 
     <!-- Delivery Failed Modal -->
-    <div class="modal fade" id="deliveryFailedModal" tabindex="-1" aria-hidden="true" ref="deliveryFailedModal">
-      <div class="modal-dialog">
-        <div class="modal-content">
+    <div class="modal fade" id="deliveryFailedModal" tabindex="-1" aria-hidden="true" ref="deliveryFailedModal" data-bs-backdrop="static" data-bs-keyboard="false">
+      <div class="modal-dialog modal-dialog-centered modal-zoom-in">
+        <div class="modal-content modal-shake">
           <div class="modal-header bg-warning text-dark">
             <h5 class="modal-title">Giao hàng thất bại</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -719,18 +731,18 @@
             
             <div class="mb-3">
               <label class="form-label fw-bold">Lý do thất bại:</label>
-              <textarea v-model="failReason" class="form-control" rows="3" 
+              <textarea v-model="failReason" class="form-control input-focus-animate" rows="3" 
                         placeholder="Nhập lý do giao hàng thất bại..."></textarea>
             </div>
 
-            <div class="alert alert-info">
-              <i class="fas fa-info-circle me-2"></i>
+            <div class="alert alert-info alert-animate">
+              <i class="fas fa-info-circle me-2 icon-pulse"></i>
               Hệ thống sẽ hoàn trả số lượng sản phẩm về kho.
             </div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-            <button type="button" class="btn btn-warning" @click="confirmDeliveryFailed" :disabled="processing">
+            <button type="button" class="btn btn-secondary btn-hover-scale" data-bs-dismiss="modal">Hủy</button>
+            <button type="button" class="btn btn-warning btn-hover-scale" @click="confirmDeliveryFailed" :disabled="processing">
               <span v-if="processing" class="spinner-border spinner-border-sm me-2"></span>
               Xác nhận thất bại
             </button>
@@ -744,14 +756,15 @@
 <script>
 import { ref, computed, onMounted } from 'vue';
 import NV_Sidebar from '@/components/Shared/NV_Sidebar.vue';
+import Toast from '@/components/Shared/Toast.vue';
 import { Modal } from 'bootstrap';
 import axios from 'axios';
-
 
 export default {
   name: 'QLDonHang',
   components: {
-    NV_Sidebar
+    NV_Sidebar,
+    Toast
   },
   setup() {
     // State
@@ -768,8 +781,6 @@ export default {
     const activeTab = ref('pending');
     const searchKeyword = ref('');
     const filterDate = ref('');
-    const message = ref('');
-    const error = ref('');
     const processing = ref(false);
     const selectedOrder = ref(null);
     const orderDetail = ref(null);
@@ -796,7 +807,7 @@ export default {
       error: orders.value.error.length
     }));
 
-     const isOrderInDate = (order, date) => {
+    const isOrderInDate = (order, date) => {
       if (!date) return true;
       const orderDate = new Date(order.ngayMua).toISOString().split('T')[0];
       return orderDate === date;
@@ -883,9 +894,11 @@ export default {
         const response = await axios.get('/api/employee/orders/all');
         if (response.data.success) {
           orders.value = response.data.data;
+        } else {
+          window.showToast(response.data.message || 'Lỗi khi tải danh sách đơn hàng', 'danger');
         }
       } catch (err) {
-        error.value = 'Lỗi khi tải danh sách đơn hàng';
+        window.showToast('Lỗi khi tải danh sách đơn hàng', 'danger');
       }
     };
 
@@ -907,9 +920,11 @@ export default {
           orderDetail.value = response.data.order;
           selectedOrder.value = order;
           orderDetailModalInstance?.show();
+        } else {
+          window.showToast(response.data.message || 'Lỗi khi tải chi tiết đơn hàng', 'danger');
         }
       } catch (err) {
-        error.value = 'Lỗi khi tải chi tiết đơn hàng';
+        window.showToast('Lỗi khi tải chi tiết đơn hàng', 'danger');
       }
     };
 
@@ -919,11 +934,13 @@ export default {
       try {
         const response = await axios.post(`/api/employee/orders/${orderId}/confirm`);
         if (response.data.success) {
-          message.value = response.data.message;
+          window.showToast(response.data.message, 'success');
           await loadOrders();
+        } else {
+          window.showToast(response.data.message || 'Lỗi khi xác nhận đơn hàng', 'danger');
         }
       } catch (err) {
-        error.value = err.response?.data?.message || 'Lỗi khi xác nhận đơn hàng';
+        window.showToast(err.response?.data?.message || 'Lỗi khi xác nhận đơn hàng', 'danger');
       } finally {
         processing.value = false;
       }
@@ -938,7 +955,7 @@ export default {
     const confirmRejectOrder = async () => {
       if (!orderToReject.value) return;
       if (!rejectReason.value.trim()) {
-        error.value = 'Vui lòng nhập lý do từ chối';
+        window.showToast('Vui lòng nhập lý do từ chối', 'warning');
         return;
       }
       processing.value = true;
@@ -947,12 +964,14 @@ export default {
           lyDo: rejectReason.value
         });
         if (response.data.success) {
-          message.value = response.data.message;
+          window.showToast(response.data.message, 'success');
           await loadOrders();
           rejectModalInstance?.hide();
+        } else {
+          window.showToast(response.data.message || 'Lỗi khi từ chối đơn hàng', 'danger');
         }
       } catch (err) {
-        error.value = err.response?.data?.message || 'Lỗi khi từ chối đơn hàng';
+        window.showToast(err.response?.data?.message || 'Lỗi khi từ chối đơn hàng', 'danger');
       } finally {
         processing.value = false;
       }
@@ -964,11 +983,13 @@ export default {
       try {
         const response = await axios.post(`/api/employee/orders/${orderId}/delivery-success`);
         if (response.data.success) {
-          message.value = response.data.message;
+          window.showToast(response.data.message, 'success');
           await loadOrders();
+        } else {
+          window.showToast(response.data.message || 'Lỗi khi cập nhật giao hàng thành công', 'danger');
         }
       } catch (err) {
-        error.value = err.response?.data?.message || 'Lỗi khi cập nhật giao hàng thành công';
+        window.showToast(err.response?.data?.message || 'Lỗi khi cập nhật giao hàng thành công', 'danger');
       } finally {
         processing.value = false;
       }
@@ -983,7 +1004,7 @@ export default {
     const confirmDeliveryFailed = async () => {
       if (!orderToFail.value) return;
       if (!failReason.value.trim()) {
-        error.value = 'Vui lòng nhập lý do giao hàng thất bại';
+        window.showToast('Vui lòng nhập lý do giao hàng thất bại', 'warning');
         return;
       }
       processing.value = true;
@@ -992,12 +1013,14 @@ export default {
           lyDo: failReason.value
         });
         if (response.data.success) {
-          message.value = response.data.message;
+          window.showToast(response.data.message, 'success');
           await loadOrders();
           deliveryFailedModalInstance?.hide();
+        } else {
+          window.showToast(response.data.message || 'Lỗi khi cập nhật giao hàng thất bại', 'danger');
         }
       } catch (err) {
-        error.value = err.response?.data?.message || 'Lỗi khi cập nhật giao hàng thất bại';
+        window.showToast(err.response?.data?.message || 'Lỗi khi cập nhật giao hàng thất bại', 'danger');
       } finally {
         processing.value = false;
       }
@@ -1009,11 +1032,13 @@ export default {
       try {
         const response = await axios.post(`/api/employee/orders/${orderId}/send-apology-email`);
         if (response.data.success) {
-          message.value = response.data.message;
+          window.showToast(response.data.message, 'success');
           await loadOrders();
+        } else {
+          window.showToast(response.data.message || 'Lỗi khi gửi email', 'danger');
         }
       } catch (err) {
-        error.value = err.response?.data?.message || 'Lỗi khi gửi email';
+        window.showToast(err.response?.data?.message || 'Lỗi khi gửi email', 'danger');
       } finally {
         processing.value = false;
       }
@@ -1034,11 +1059,11 @@ export default {
         link.download = `HD${String(order.maHD).padStart(4, '0')}.pdf`;
         link.click();
         window.URL.revokeObjectURL(link.href);
-        message.value = 'Đã tải xuống hóa đơn thành công!';
+        window.showToast('Đã tải xuống hóa đơn thành công!', 'success');
 
       } catch (err) {
         console.error('Lỗi xuất hóa đơn:', err);
-        error.value = 'Lỗi khi xuất hóa đơn';
+        window.showToast('Lỗi khi xuất hóa đơn', 'danger');
       } finally {
         processing.value = false;
       }
@@ -1103,9 +1128,9 @@ export default {
 
     const isSidebarCollapsed = ref(false);
 
-const handleSidebarCollapse = (collapsedState) => {
-  isSidebarCollapsed.value = collapsedState;
-};
+    const handleSidebarCollapse = (collapsedState) => {
+      isSidebarCollapsed.value = collapsedState;
+    };
 
     onMounted(() => {
       loadOrders();
@@ -1117,13 +1142,10 @@ const handleSidebarCollapse = (collapsedState) => {
     });
 
     return {
-      // State
       orders,
       activeTab,
       searchKeyword,
       filterDate,
-      message,
-      error,
       processing,
       selectedOrder,
       orderDetail,
@@ -1132,8 +1154,6 @@ const handleSidebarCollapse = (collapsedState) => {
       orderToFail,
       failReason,
       isSidebarCollapsed,
-      
-      // Computed
       orderCounts,
       filteredOrders,
       employees,
@@ -1141,8 +1161,6 @@ const handleSidebarCollapse = (collapsedState) => {
       sortOrder,
       filteredStats,
       loadEmployees,
-      
-      // Methods
       setActiveTab,
       resetFilters,
       formatPrice,
@@ -1166,9 +1184,239 @@ const handleSidebarCollapse = (collapsedState) => {
 </script>
 
 <style scoped>
+/* ===== ANIMATION KEYFRAMES ===== */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideLeft {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes zoomIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+  20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+
+/* ===== ANIMATION CLASSES ===== */
+.stats-card-animate {
+  animation: slideUp 0.5s ease-out forwards;
+  opacity: 0;
+  animation-delay: var(--delay, 0s);
+  transition: all 0.3s ease;
+}
+
+.stats-card-animate:hover {
+  transform: translateY(-5px) scale(1.02);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.counter-animate {
+  animation: pulse 0.5s ease-out;
+}
+
+.tab-nav-animate {
+  animation: slideDown 0.5s ease-out forwards;
+}
+
+.tab-item-animate {
+  animation: fadeIn 0.4s ease-out forwards;
+  opacity: 0;
+  animation-delay: var(--delay, 0s);
+}
+
+.tab-link-hover {
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.tab-link-hover::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  width: 0;
+  height: 3px;
+  background: #000000;
+  transition: all 0.3s ease;
+  transform: translateX(-50%);
+}
+
+.tab-link-hover:hover::after {
+  width: 100%;
+}
+
+.tab-link-hover.active::after {
+  width: 100%;
+}
+
+.badge-pulse {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.content-animate {
+  animation: fadeIn 0.6s ease-out forwards;
+}
+
+.tab-pane-animate {
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+.search-item-animate {
+  animation: slideLeft 0.4s ease-out forwards;
+  opacity: 0;
+  animation-delay: var(--delay, 0s);
+}
+
+.input-focus-animate {
+  border: 1px solid #dee2e6;
+}
+
+.input-focus-animate:focus {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-color: #000000;
+}
+
+.select-animate {
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.select-animate:hover {
+  border-color: #000000;
+}
+
+.btn-hover-scale {
+  transition: all 0.3s ease;
+}
+
+.btn-hover-scale:hover {
+  transform: scale(1.05) translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn-hover-scale:active {
+  transform: scale(0.98);
+}
+
+.order-card-animate {
+  animation: slideUp 0.5s ease-out forwards;
+  opacity: 0;
+  animation-delay: var(--delay, 0s);
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.order-card-animate:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+}
+
+.status-badge {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.empty-state-animate {
+  animation: fadeIn 0.6s ease-out forwards;
+}
+
+.icon-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.icon-pulse {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* ===== MODAL ANIMATIONS ===== */
+.modal-zoom-in {
+  animation: zoomIn 0.3s ease-out forwards;
+}
+
+.modal-shake {
+  animation: shake 0.5s ease-in-out;
+}
+
+.modal-content-animate {
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+.detail-item-animate {
+  animation: slideUp 0.4s ease-out forwards;
+  opacity: 0;
+  animation-delay: var(--delay, 0s);
+}
+
+.table-row-animate {
+  animation: fadeIn 0.3s ease-out forwards;
+  opacity: 0;
+  animation-delay: var(--delay, 0s);
+}
+
+.alert-animate {
+  animation: slideUp 0.3s ease-out;
+}
+
+/* ===== EXISTING STYLES ===== */
 .main-content {
   margin-left: 260px;
   min-height: 100vh;
+  transition: margin-left 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.main-content.expanded {
+  margin-left: 80px;
 }
 
 .page-container {
@@ -1205,11 +1453,6 @@ const handleSidebarCollapse = (collapsedState) => {
   transition: transform 0.2s;
 }
 
-.card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-}
-
 .card-header {
   font-weight: 600;
 }
@@ -1219,16 +1462,8 @@ const handleSidebarCollapse = (collapsedState) => {
   padding: 0.35em 0.65em;
 }
 
-.table td {
-  padding: 0.5rem;
-}
-
 .text-primary {
   color: #007bff !important;
-}
-
-.modal-header.bg-dark {
-  background-color: #343a40 !important;
 }
 
 .stats-mini {
@@ -1296,15 +1531,53 @@ const handleSidebarCollapse = (collapsedState) => {
   background-color: #007bff;
   color: #fff;
 }
-.main-content {
-  margin-left: 260px; /* Trạng thái Sidebar mặc định */
-  min-height: 100vh;
-  background: #f8f9fa;
-  transition: margin-left 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); /* Thêm dòng này để mượt */
+
+.modal-content {
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  border: none;
+  border-radius: 16px;
 }
 
-/* Khi Sidebar thu nhỏ thì nới rộng nội dung chính ra */
-.main-content.expanded {
-  margin-left: 80px; 
+.modal-header {
+  border-bottom: 2px solid #e9ecef;
+  padding: 1rem 1.5rem;
+}
+
+.modal-footer {
+  border-top: 2px solid #e9ecef;
+  padding: 1rem 1.5rem;
+}
+
+body.modal-open {
+  overflow: hidden;
+  padding-right: 0 !important;
+}
+
+@media (max-width: 768px) {
+  .main-content {
+    margin-left: 0;
+  }
+  
+  .page-container {
+    padding: 15px;
+  }
+}
+</style>
+
+<style>
+.modal-backdrop {
+  background-color: rgba(0, 0, 0, 0.25) !important;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(12px) brightness(0.9);
+  animation: fadeIn 0.3s ease-out;
+}
+
+.modal-backdrop.show {
+  opacity: 1 !important;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 </style>
