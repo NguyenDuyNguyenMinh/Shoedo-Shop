@@ -1144,7 +1144,19 @@ const handleStartCampaign = async () => {
     activeTab.value = "history";
     await fetchCampaigns();
   } catch (error) {
-    showToast("Có lỗi xảy ra khi tạo chiến dịch!", "danger");
+    if (error.response && error.response.data) {
+      // Lấy câu thông báo lỗi (vd: "Lỗi: Tên chiến dịch '...' đã tồn tại...")
+      const errorMessage = error.response.data.message || error.response.data;
+      
+      // Đảm bảo errorMessage là một chuỗi (string) trước khi show lên
+      if (typeof errorMessage === 'string') {
+        showToast(errorMessage, "danger");
+      } else {
+        showToast("Có lỗi xảy ra khi tạo chiến dịch!", "danger");
+      }
+    } else {
+      showToast("Không thể kết nối đến máy chủ!", "danger");
+    }
     console.error(error);
   }
 };

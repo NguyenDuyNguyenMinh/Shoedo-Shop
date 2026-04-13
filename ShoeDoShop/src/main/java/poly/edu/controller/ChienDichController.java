@@ -17,8 +17,12 @@ public class ChienDichController {
 
     @PostMapping("/tao")
     public ResponseEntity<?> createCampaign(@RequestBody CampaignRequestDTO request) {
+        try{
         chienDichService.createCampaign(request);
         return ResponseEntity.ok().body("Tạo chiến dịch thành công");
+        }catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     @GetMapping("/danh-sach")

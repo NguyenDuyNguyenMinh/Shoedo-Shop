@@ -223,7 +223,14 @@ const resetFilters = () => {
   router.replace({ name: 'Sanpham', query: {} })
 }
 
-onMounted(() => { document.addEventListener('click', closeDropdowns) })
+const pageVisible = ref(false)
+
+onMounted(() => {
+  document.addEventListener('click', closeDropdowns)
+  requestAnimationFrame(() => {
+    pageVisible.value = true
+  })
+})
 onUnmounted(() => document.removeEventListener('click', closeDropdowns))
 </script>
 
@@ -231,7 +238,7 @@ onUnmounted(() => document.removeEventListener('click', closeDropdowns))
   <div class="kh-sanpham">
     <KH_Navbar />
 
-    <div class="page-body">
+    <div class="page-body" :class="{ 'page-visible': pageVisible }">
 
       <!-- HEADER -->
       <div class="page-header">
@@ -313,9 +320,10 @@ onUnmounted(() => document.removeEventListener('click', closeDropdowns))
       <!-- PRODUCT GRID -->
       <div class="product-grid" v-else-if="displayProducts.length > 0">
         <div
-          v-for="p in displayProducts"
+          v-for="(p, index) in displayProducts"
           :key="p.maSP"
           class="pcard"
+          :style="{ animationDelay: `${Math.min(index * 0.06, 0.5)}s` }"
           @click="goToDetail(p.maSP)"
         >
           <div class="pcard-img-wrap">
@@ -497,7 +505,28 @@ onUnmounted(() => document.removeEventListener('click', closeDropdowns))
 .btn-reset { padding: 10px 24px; background: #111; border: none; border-radius: 6px; color: #fff; font-size: 13px; font-weight: 600; cursor: pointer; }
 .btn-reset:hover { background: #333; }
 
-@media (max-width: 1024px) { .product-grid { grid-template-columns: repeat(3, 1fr); } }
+/* ── FADE UP khi vào trang ── */
+@keyframes fadeUpAnim {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.page-body {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.55s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.page-body.page-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── Stagger fade-up cho từng card sản phẩm ── */
+.pcard {
+  opacity: 0;
+  animation: fadeUpAnim 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
 @media (max-width: 768px)  { .product-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; } .page-title { font-size: 22px; } .filter-bar { flex-wrap: wrap; } }
 @media (max-width: 480px)  { .product-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; } }
 </style>
