@@ -190,7 +190,7 @@ public class SanPhamController {
                     sanPhamService.layKhuyenMaiCaoNhat(),
                     sanPhamService.layMoiNhat(),
                     sanPhamService.layTopDanhGia(),
-                    sanPhamService.layBanChay() // Giữ nguyên hàm layBanChay() cũ của ông
+                    sanPhamService.layBanChay()
             );
             return ResponseEntity.ok(ApiResponse.ok(body));
         } catch (Exception e) {
@@ -199,7 +199,7 @@ public class SanPhamController {
         }
     }
 
-    // Sửa lại record TrangChuResponse
+
     public record TrangChuResponse(
             poly.edu.service.SanPhamService.ChienDichHienTaiDTO chienDichFlashSale,
             List<SanPhamDTO> khuyenMai,

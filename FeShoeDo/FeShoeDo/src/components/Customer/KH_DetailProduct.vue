@@ -371,23 +371,23 @@ onMounted(() => {
 
     <KH_Navbar />
 
-    <div class="page-body">
+<div class="page-body">
 
-      <!-- Loading -->
-      <div v-if="loading" style="text-align:center; padding: 80px 0; color: #666;">
+      <Transition name="page-fade" mode="out-in">
+        <div v-if="loading" style="text-align:center; padding: 80px 0; color: #666;">
         <div style="width:40px;height:40px;border:4px solid #eee;border-top-color:#e53935;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 16px;"></div>
         <p>Đang tải sản phẩm...</p>
       </div>
 
       <!-- Error -->
-      <div v-else-if="error" style="text-align:center; padding: 80px 0; color: #c62828;">
+<div v-else-if="error" style="text-align:center; padding: 80px 0; color: #c62828;">
         <p>⚠️ {{ error }}</p>
         <button @click="fetchProduct(route.params.id)" style="margin-top:12px;padding:8px 24px;background:#e53935;color:#fff;border:none;border-radius:4px;cursor:pointer;">
           Thử lại
         </button>
       </div>
 
-      <template v-else-if="product">
+      <div v-else-if="product" class="product-wrapper">
 
         <!-- Breadcrumb -->
 <div class="breadcrumb-bar">
@@ -653,7 +653,7 @@ onMounted(() => {
           </div>
         </div>
 
-      </template>
+        </div> </Transition>
 
     </div>
 
@@ -982,4 +982,49 @@ onMounted(() => {
 }
 
 @keyframes spin { to { transform: rotate(360deg); } }
+
+.page-fade-enter-active,
+.page-fade-leave-active {
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+.page-fade-enter-from,
+.page-fade-leave-to {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+/* 2. Keyframes trượt lên cho các khối */
+@keyframes fadeUpAnim {
+  0% {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 3. Phân bổ thời gian xuất hiện (Staggered Delay) */
+.product-wrapper .breadcrumb-bar {
+  animation: fadeUpAnim 0.5s ease forwards;
+}
+
+.product-wrapper .detail-wrap {
+  animation: fadeUpAnim 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation-delay: 0.1s;
+  opacity: 0; /* Ẩn đi chờ delay */
+}
+
+.product-wrapper .product-info-container {
+  animation: fadeUpAnim 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation-delay: 0.2s; 
+  opacity: 0;
+}
+
+.product-wrapper .related-wrap {
+  animation: fadeUpAnim 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation-delay: 0.3s;
+  opacity: 0;
+}
 </style>

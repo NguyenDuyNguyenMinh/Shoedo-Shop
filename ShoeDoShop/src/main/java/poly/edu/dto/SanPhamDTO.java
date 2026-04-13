@@ -1,4 +1,3 @@
-// File: src/main/java/poly/edu/dto/ProductListDTO.java
 package poly.edu.dto;
 
 import lombok.Data;
@@ -27,7 +26,6 @@ public class SanPhamDTO {
     private String trangThai;
     private Boolean isActive;
 
-    // Fields used by public product pages
     private String  hinhAnh;
     private Double  giaGoc;
     private Double  giaSauKM;

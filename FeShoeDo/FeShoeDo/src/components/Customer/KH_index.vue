@@ -491,17 +491,24 @@ onUnmounted(() => {
 }
 
 
-/* Responsive cho điện thoại */
 @media (max-width: 1024px) {
   .artistic-text { font-size: 56px; }
   .circle-frame { width: 350px; height: 350px; }
 }
 @media (max-width: 768px) {
-  .hero-main { height: auto; padding: 60px 0; }
-  .hero-content { flex-direction: column-reverse; text-align: center; gap: 40px; }
-  .hero-left { align-items: center; }
-  .artistic-text { font-size: 42px; text-align: center; }
-  .circle-frame { width: 300px; height: 300px; }
+  .hero-main { height: auto; padding: 40px 0; }
+  .hero-content { flex-direction: column-reverse; text-align: center; gap: 24px; width: 95%; }
+  .hero-left { align-items: center; gap: 16px; }
+  .artistic-text { font-size: 36px; text-align: center; line-height: 1.2; }
+  .hero-subtitle { font-size: 15px; }
+  .hero-btn { font-size: 14px; padding: 12px 28px; }
+  .circle-frame { width: 260px; height: 260px; }
+  /* Thu hẹp vùng click chuyển slide để tránh đè lên nút Khám phá */
+  .click-zone { width: 15%; } 
+}
+@media (max-width: 480px) {
+  .artistic-text { font-size: 28px; }
+  .circle-frame { width: 220px; height: 220px; }
 }
 .banner-bg { position: absolute; inset: 0; background: radial-gradient(ellipse at center, rgba(255,255,255,0.05) 0%, transparent 70%); }
 .banner-text { font-size: 56px; font-weight: bold; color: #fff; text-align: center; z-index: 2; }
@@ -611,9 +618,37 @@ onUnmounted(() => {
 .badge-shock { position: absolute; top: 0; right: 0; background: #ffeb3b; color: #d32f2f; padding: 8px 12px; font-size: 16px; font-weight: 900; border-bottom-left-radius: 12px; box-shadow: -2px 2px 10px rgba(0,0,0,0.3); animation: shockShake 0.5s infinite alternate; z-index: 2;}
 @keyframes shockShake { 0% { transform: rotate(-3deg) scale(1); } 100% { transform: rotate(3deg) scale(1.1); } }
 
-/* ════════ RESPONSIVE ════════ */
+/* ════════ RESPONSIVE TOÀN DIỆN ════════ */
 @media (max-width: 1200px) { .product-grid { grid-template-columns: repeat(4, 1fr); } }
-@media (max-width: 992px)  { .product-grid { grid-template-columns: repeat(3, 1fr); } .campaign-title { font-size: 24px; } }
-@media (max-width: 768px)  { .product-grid { grid-template-columns: repeat(2, 1fr); } .campaign-header { flex-direction: column; align-items: flex-start; } }
-@media (max-width: 480px)  { .product-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; } .timer { font-size: 16px; } .time-box { min-width: 35px; padding: 4px 6px; } }
+@media (max-width: 992px)  { 
+  .product-grid { grid-template-columns: repeat(3, 1fr); } 
+  .campaign-title { font-size: 24px; } 
+}
+@media (max-width: 768px)  { 
+  .product-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; } 
+  .campaign-header { flex-direction: column; align-items: flex-start; gap: 12px; } 
+  .countdown-wrapper { width: 100%; justify-content: center; padding: 8px; }
+  /* Tiêu đề mục: Dàn hàng ngang để giữ nút Xem tất cả nằm cạnh tiêu đề */
+  .section-header { align-items: center; } 
+  .section-title { font-size: 18px; }
+  .view-all-btn { font-size: 12px; padding: 6px 12px; }
+}
+@media (max-width: 480px)  { 
+  .sections-container { padding: 20px 0 40px; gap: 28px; }
+  .product-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; } 
+  
+  /* Căn chỉnh lại nội dung Card Sản Phẩm cho 2 cột */
+  .pcard-body { padding: 8px; gap: 6px; }
+  .pcard-name { font-size: 12px; }
+  .pcard-price { font-size: 14px; }
+  .pcard-price-old { font-size: 11px; }
+  .badge-sale, .badge-sold, .badge-new, .badge-star { padding: 2px 6px; font-size: 10px; }
+  
+  /* Căn chỉnh lại Flash Sale */
+  .campaign-title { font-size: 20px; }
+  .marquee-item { width: 200px; } /* Thu nhỏ chiều ngang card chạy marquee */
+  .timer { font-size: 14px; gap: 4px; } 
+  .time-box { min-width: 32px; padding: 4px; } 
+  .time-box span { font-size: 16px; }
+}
 </style>

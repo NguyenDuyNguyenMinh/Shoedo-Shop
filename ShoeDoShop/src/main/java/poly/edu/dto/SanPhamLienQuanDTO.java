@@ -3,9 +3,6 @@ package poly.edu.dto;
 import lombok.*;
 
 
-/**
- * DTO gọn cho sản phẩm liên quan hiển thị ở cuối trang DetailProduct.
- */
 @Getter
 @Setter
 @NoArgsConstructor

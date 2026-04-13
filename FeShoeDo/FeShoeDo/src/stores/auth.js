@@ -1,6 +1,8 @@
 import { defineStore } from 'pinia';
 import axios from 'axios'; 
 
+const API_DOMAIN = import.meta.env.VITE_API_URL || '';
+
 export const useAuthStore = defineStore('auth', {
   state: () => ({
     user: null,
@@ -58,7 +60,7 @@ export const useAuthStore = defineStore('auth', {
 
     async checkSession() {
       try {
-        const response = await axios.get('/api/auth/current-user', {
+        const response = await axios.get(`${API_DOMAIN}/api/auth/current-user`, {
           withCredentials: true
         });
 
@@ -75,7 +77,7 @@ export const useAuthStore = defineStore('auth', {
 
     async autoLoginFromCookie() {
       try {
-        const response = await axios.get('/api/auth/auto-login', {
+        const response = await axios.get(`${API_DOMAIN}/api/auth/auto-login`, {
           withCredentials: true
         });
 
@@ -92,7 +94,7 @@ export const useAuthStore = defineStore('auth', {
 
     async logout() {
       try {
-        await axios.post('/api/auth/logout', {}, {
+        await axios.post(`${API_DOMAIN}/api/auth/logout`, {}, {
           withCredentials: true
         });
       } catch (error) {
@@ -104,7 +106,7 @@ export const useAuthStore = defineStore('auth', {
 
     async fetchCurrentUser() {
       try {
-        const response = await axios.get('/api/auth/current-user', {
+        const response = await axios.get(`${API_DOMAIN}/api/auth/current-user`, {
           withCredentials: true
         });
         if (response.data.success) {
@@ -126,7 +128,7 @@ export const useAuthStore = defineStore('auth', {
       }
       
       try {
-        const response = await axios.get('/api/customer/cart/count', {
+        const response = await axios.get(`${API_DOMAIN}/api/customer/cart/count`, {
           withCredentials: true
         });
 

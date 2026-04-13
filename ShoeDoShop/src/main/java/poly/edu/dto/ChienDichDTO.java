@@ -23,7 +23,7 @@ public class ChienDichDTO {
     // 3. DTO trả về danh sách lịch sử (đã group)
     @Data
     public static class CampaignResponseDTO {
-        private Integer maCD; // Lấy MaCD đầu tiên làm đại diện
+        private Integer maCD;
         private String tenChienDich;
         private LocalDateTime thoiGianBatDau;
         private LocalDateTime thoiGianKetThuc;
@@ -44,8 +44,8 @@ public class ChienDichDTO {
         private Integer maSP;
         private String tenSP;
         private String hinhAnh;
-        private Integer khuyenMai; // Lấy từ bảng SanPham
-        private Double donGiaMin;  // Mock hoặc query từ SanPham_ChiTiet
+        private Integer khuyenMai;
+        private Double donGiaMin;
         private Double donGiaMax;
     }
 	

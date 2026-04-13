@@ -1,6 +1,9 @@
 package poly.edu.dto;
+import lombok.Data;
+
 import java.math.BigDecimal;
 
+@Data
 public class SanPhamKhuyenMaiResponse {
     private Integer maSP;
     private String tenSP;
@@ -23,23 +26,23 @@ public class SanPhamKhuyenMaiResponse {
         this.isActive = isActive;
         this.maDMs = maDMs;
     }
-
-    public Integer getMaSP() { return maSP; }
-    public void setMaSP(Integer maSP) { this.maSP = maSP; }
-    public String getTenSP() { return tenSP; }
-    public void setTenSP(String tenSP) { this.tenSP = tenSP; }
-    public Integer getDaBan() { return daBan; }
-    public void setDaBan(Integer daBan) { this.daBan = daBan; }
-    public Integer getKhuyenMai() { return khuyenMai; }
-    public void setKhuyenMai(Integer khuyenMai) { this.khuyenMai = khuyenMai; }
-    public String getHinhAnh() { return hinhAnh; }
-    public void setHinhAnh(String hinhAnh) { this.hinhAnh = hinhAnh; }
-    public BigDecimal getDonGiaMin() { return donGiaMin; }
-    public void setDonGiaMin(BigDecimal donGiaMin) { this.donGiaMin = donGiaMin; }
-    public BigDecimal getDonGiaMax() { return donGiaMax; }
-    public void setDonGiaMax(BigDecimal donGiaMax) { this.donGiaMax = donGiaMax; }
-    public Boolean getIsActive() { return isActive; }
-    public void setIsActive(Boolean isActive) { this.isActive = isActive; }
-    public String getMaDMs() { return maDMs; }
-    public void setMaDMs(String maDMs) { this.maDMs = maDMs; }
+//
+//    public Integer getMaSP() { return maSP; }
+//    public void setMaSP(Integer maSP) { this.maSP = maSP; }
+//    public String getTenSP() { return tenSP; }
+//    public void setTenSP(String tenSP) { this.tenSP = tenSP; }
+//    public Integer getDaBan() { return daBan; }
+//    public void setDaBan(Integer daBan) { this.daBan = daBan; }
+//    public Integer getKhuyenMai() { return khuyenMai; }
+//    public void setKhuyenMai(Integer khuyenMai) { this.khuyenMai = khuyenMai; }
+//    public String getHinhAnh() { return hinhAnh; }
+//    public void setHinhAnh(String hinhAnh) { this.hinhAnh = hinhAnh; }
+//    public BigDecimal getDonGiaMin() { return donGiaMin; }
+//    public void setDonGiaMin(BigDecimal donGiaMin) { this.donGiaMin = donGiaMin; }
+//    public BigDecimal getDonGiaMax() { return donGiaMax; }
+//    public void setDonGiaMax(BigDecimal donGiaMax) { this.donGiaMax = donGiaMax; }
+//    public Boolean getIsActive() { return isActive; }
+//    public void setIsActive(Boolean isActive) { this.isActive = isActive; }
+//    public String getMaDMs() { return maDMs; }
+//    public void setMaDMs(String maDMs) { this.maDMs = maDMs; }
 }

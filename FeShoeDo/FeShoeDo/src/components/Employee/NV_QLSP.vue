@@ -1238,16 +1238,6 @@ const filterCategory = ref("");
 const filterGender = ref("");
 const filterStatus = ref("");
 
-// //Trạng thái sản phẩm
-// const autoUpdateStatus = (variant) => {
-//   const quantity = parseInt(variant.soLuong) || 0;
-//   if (quantity <= 0) {
-//     variant.soLuong = 0;
-//     variant.trangThai = "Hết hàng";
-//   } else if (quantity > 0 && variant.trangThai === "Hết hàng") {
-//     variant.trangThai = "Còn hàng";
-//   }
-// };
 
 //phân trang
 const currentPage = ref(1);
