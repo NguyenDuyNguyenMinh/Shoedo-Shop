@@ -67,6 +67,8 @@ const shareProduct = () => {
   })
 }
 
+const pageVisible = ref(false)
+
 const resetUI = () => {
   selectedImage.value  = 0
   selectedSize.value   = null
@@ -363,6 +365,11 @@ onMounted(() => {
     fetchRelated(id)
     fetchDanhGia(id)
   }
+
+  // Trigger fade-up animation sau 1 tick
+  requestAnimationFrame(() => {
+    pageVisible.value = true
+  })
 })
 </script>
 
@@ -371,7 +378,7 @@ onMounted(() => {
 
     <KH_Navbar />
 
-    <div class="page-body">
+    <div class="page-body" :class="{ 'page-visible': pageVisible }">
 
       <!-- Loading -->
       <div v-if="loading" style="text-align:center; padding: 80px 0; color: #666;">
@@ -982,4 +989,16 @@ onMounted(() => {
 }
 
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── FADE UP khi vào trang ── */
+.page-body {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.55s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.page-body.page-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
 </style>
