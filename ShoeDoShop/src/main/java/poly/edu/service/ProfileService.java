@@ -292,11 +292,11 @@ public class ProfileService {
         
         if (referralCode == null || referralCode.trim().isEmpty()) return error("Vui lòng nhập mã giới thiệu");
         
-        referralCode = referralCode.trim().toUpperCase();
+        referralCode = referralCode.trim();
         if (referralCode.equals(customer.getMaGioiThieu())) return error("Bạn không thể nhập mã giới thiệu của chính mình");
         
         KhachHang referrer = khachHangDAO.findByMaGioiThieu(referralCode);
-        if (referrer == null) return error("Mã giới thiệu không hợp lệ");
+        if (referrer == null || !referrer.getMaGioiThieu().equals(referralCode)) return error("Mã giới thiệu không hợp lệ");
         
         customer.setMaNguoiGioiThieu(referralCode);
         khachHangDAO.save(customer);
