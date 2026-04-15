@@ -85,7 +85,18 @@ const fetchProduct = async (id) => {
   try {
     const { data } = await api.getSanPhamChiTiet(id)
     if (data.success) {
-      apiProduct.value = data.data
+      let pData = data.data
+      
+      if (pData && pData.chiTiets) {
+        pData.chiTiets = pData.chiTiets.filter(sku => sku.trangThai === 'Hiển thị')
+        
+        pData.danhSachMau = [...new Set(pData.chiTiets.map(sku => sku.tenMau).filter(Boolean))]
+        
+        pData.danhSachSize = [...new Set(pData.chiTiets.map(sku => sku.coGiay).filter(s => s !== null && s !== undefined))].sort((a, b) => a - b)
+        
+        pData.danhSachHinhAnh = [...new Set(pData.chiTiets.map(sku => sku.hinhAnh).filter(Boolean))]
+      }
+      apiProduct.value = pData
     } else {
       error.value = data.message || 'Không thể tải sản phẩm'
     }
