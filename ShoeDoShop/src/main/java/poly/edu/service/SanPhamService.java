@@ -201,13 +201,14 @@ public class SanPhamService {
             if (!chiTiets.isEmpty()) {
                 hinhAnh = chiTiets.get(0).getHinhAnh();
                 for (SanPhamChiTiet ct : chiTiets) {
-                    tongTon += (ct.getSoLuong() != null ? ct.getSoLuong() : 0);
-                    
+                    if ("Hiển thị".equals(ct.getTrangThai())) {
+                        tongTon += (ct.getSoLuong() != null ? ct.getSoLuong() : 0);
 
-                    Double gia = ct.getDonGia();
-                    if (gia != null) {
-                        if (giaMin == null || gia < giaMin) giaMin = gia;
-                        if (giaMax == null || gia > giaMax) giaMax = gia;
+                        Double gia = ct.getDonGia();
+                        if (gia != null) {
+                            if (giaMin == null || gia < giaMin) giaMin = gia;
+                            if (giaMax == null || gia > giaMax) giaMax = gia;
+                        }
                     }
                 }
             }

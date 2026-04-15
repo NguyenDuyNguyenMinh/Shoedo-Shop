@@ -92,6 +92,13 @@
                   <option value="Hết hàng">Hết hàng (SL = 0)</option>
                 </select>
               </div>
+              <div class="col-md-3">
+                <select v-model="filterDisplayStatus" class="form-select">
+                  <option value="">Trạng thái hiển thị</option>
+                  <option value="Hiển thị">Hiển thị (Đang bán)</option>
+                  <option value="Đã ẩn">Đã ẩn (Ngừng bán)</option>
+                </select>
+              </div>
               <div class="col-md-2">
                 <button @click="resetFilters" class="btn btn-secondary">
                   <i class="bi bi-arrow-clockwise me-2"></i>Reset
@@ -161,7 +168,7 @@
                     <th class="text-center align-middle">Phân loại</th>
                     <th class="text-center align-middle">Giá</th>
                     <th class="text-center align-middle">SL tồn</th>
-                    <th class="text-center align-middle">Trạng thái</th>
+                    <th class="text-center align-middle">Trạng thái hiển thị</th>
                     <th style="width: 180px" class="text-center align-middle">Số lượng nhập</th>
                   </tr>
                 </thead>
@@ -198,15 +205,15 @@
                         Mã SKU: {{ item.maSKU }}
                       </div>
                     </td>
-                    <td>
+                    <td class="text-center align-middle">
                       <span class="badge bg-info text-dark"
                         >{{ item.tenMau }} - Size {{ item.size?.coGiay }}</span
                       >
                     </td>
-                    <td class="text-end">
+                    <td class="text-end text-center">
                       {{ item.donGia?.toLocaleString("vi-VN") }} ₫
                     </td>
-                    <td class="text-end">
+                    <td class="text-end text-center">
                       <span
                         :class="[
                           'fw-bold',
@@ -220,20 +227,16 @@
                         {{ item.soLuong }}
                       </span>
                     </td>
-                    <td>
-  <span
-    :class="[
-      'badge',
-      item.soLuong > 10
-        ? 'bg-success'
-        : item.soLuong > 0
-        ? 'bg-warning text-dark'
-        : 'bg-danger',
-    ]"
-  >
-    {{ item.soLuong > 10 ? "Còn hàng" : item.soLuong > 0 ? "Sắp hết" : "Hết hàng" }}
-  </span>
-</td>
+                    <td class="text-center align-middle">
+                      <span
+                        :class="[
+                          'badge',
+                          item.trangThai === 'Hiển thị' ? 'bg-success' : 'bg-secondary'
+                        ]"
+                      >
+                        {{ item.trangThai === 'Hiển thị' ? 'Hiển thị' : 'Đã ẩn' }}
+                      </span>
+                    </td>
                     <td>
                       <div class="d-flex align-items-center gap-2">
                         <div class="input-group" style="min-width: 150px">
@@ -316,9 +319,8 @@
                   <tr>
                     <th class="text-center">Mã NK</th>
                     <th>Sản phẩm</th>
-                    <th>Danh mục</th>
-                    <th>Phân loại</th>
-                    <th>Số lượng</th>
+                    <th class="text-center align-middle">Phân loại</th>
+                    <th class="text-center align-middle">Số lượng</th>
                     <th>Ngày nhập</th>
                   </tr>
                 </thead>
@@ -329,13 +331,10 @@
                       <strong>{{ log.sanPhamChiTiet?.sanPham?.tenSP }}</strong>
                       <div class="text-muted small">Mã SKU: {{ log.sanPhamChiTiet?.maSKU }}</div>
                     </td>
-                    <td>
-                      <span class="badge bg-secondary">Lịch sử</span>
-                    </td>
-                    <td>
+                    <td class="text-center align-middle">
                       <span class="badge bg-info text-dark">{{ log.sanPhamChiTiet?.tenMau }} - Size {{ log.sanPhamChiTiet?.size?.coGiay }}</span>
                     </td>
-                    <td>
+                    <td class="text-center align-middle">
                       <span class="badge bg-success">+{{ log.soLuong }}</span>
                     </td>
                     <td>{{ formatDate(log.ngayNhap) }}</td>
@@ -394,6 +393,7 @@ const categories = ref([]);
 const filterKeyword = ref("");
 const filterCategory = ref("");
 const filterStatus = ref("");
+const filterDisplayStatus = ref("");
 
 // --- LOGIC PHÂN TRANG CHUNG ---
 const itemsPerPage = 10;
@@ -406,7 +406,7 @@ const paginatedImportProducts = computed(() => {
   return filteredProducts.value.slice(start, start + itemsPerPage);
 });
 const goToImportPage = (page) => { if (page >= 1 && page <= importTotalPages.value) importCurrentPage.value = page; };
-watch([filterKeyword, filterCategory, filterStatus], () => { importCurrentPage.value = 1; });
+watch([filterKeyword, filterCategory, filterStatus, filterDisplayStatus], () => { importCurrentPage.value = 1; });
 
 // api lấy danh mục
 const fetchCategories = async () => {
@@ -472,7 +472,11 @@ const filteredProducts = computed(() => {
         );
       }
     }
-    return matchKeyword && matchStatus && matchCategory;
+    let matchDisplayStatus = true;
+    if (filterDisplayStatus.value) {
+      matchDisplayStatus = item.trangThai === filterDisplayStatus.value;
+    }
+    return matchKeyword && matchStatus && matchCategory && matchDisplayStatus;
   });
 });
 
@@ -481,6 +485,7 @@ const resetFilters = () => {
   filterKeyword.value = "";
   filterCategory.value = "";
   filterStatus.value = "";
+  filterDisplayStatus.value = "";
 };
 
 
