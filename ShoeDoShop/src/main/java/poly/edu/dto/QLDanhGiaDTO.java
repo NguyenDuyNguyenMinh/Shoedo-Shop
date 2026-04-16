@@ -12,7 +12,6 @@ public class QLDanhGiaDTO {
     
     // Thông tin từ HoaDonCT
     private Integer maHDCT;
-    private Double donGia;
     private Integer soLuong;
     
     // Thông tin từ HoaDon
@@ -20,12 +19,6 @@ public class QLDanhGiaDTO {
     private String phuongThucTT;
     private String trangThaiHD;
     private Date ngayMua;
-    
-    // Thông tin voucher được áp dụng
-    private Double giaTriGiam;        // Số tiền được giảm từ voucher
-    private String tenVoucher;        // Tên voucher đã áp dụng
-    private Double donGiaSauGiam;     // Giá sau khi giảm (giá thực tế đã mua)
-    private Double donToiThieu;        // Đơn tối thiểu để áp dụng voucher
     
     // Thông tin từ KhachHang
     private Integer maKH;
