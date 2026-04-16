@@ -2,36 +2,123 @@ package poly.edu.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import poly.edu.dao.DanhGiaDAO;
-import poly.edu.entity.DanhGia;
+import poly.edu.dto.QLDanhGiaDTO;
+import poly.edu.entity.*;
 
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
 public class QLDanhGiaService {
 
     @Autowired private DanhGiaDAO danhGiaDAO;
-    @Autowired private JdbcTemplate jdbcTemplate;
 
     public Map<String, Object> getAllDanhGia() {
         try {
             List<DanhGia> danhGiaList = danhGiaDAO.findAllWithDetails();
-            return success("data", danhGiaList);
+            
+            // Chuyển đổi sang DTO để tránh vòng lặp JSON
+            List<QLDanhGiaDTO> dtoList = danhGiaList.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+            
+            return success("data", dtoList);
         } catch (Exception e) {
-            return success("data", danhGiaDAO.findAll());
+            log.error("Lỗi lấy danh sách đánh giá: ", e);
+            // Fallback: lấy danh sách không có details
+            List<DanhGia> danhGiaList = danhGiaDAO.findAll();
+            List<QLDanhGiaDTO> dtoList = danhGiaList.stream()
+                .map(this::convertToSimpleDTO)
+                .collect(Collectors.toList());
+            return success("data", dtoList);
         }
+    }
+    
+    private QLDanhGiaDTO convertToDTO(DanhGia dg) {
+        QLDanhGiaDTO dto = new QLDanhGiaDTO();
+        dto.setMaDG(dg.getMaDG());
+        dto.setSao(dg.getSao());
+        dto.setDanhGiaCT(dg.getDanhGiaCT());
+        dto.setNgayDG(dg.getNgayDG());
+        
+        // Lấy thông tin từ HoaDonCT
+        if (dg.getHoaDonCT() != null) {
+            HoaDonCT hdct = dg.getHoaDonCT();
+            dto.setMaHDCT(hdct.getMaHDCT());
+            dto.setSoLuong(hdct.getSoLuong());
+            
+            // Lấy thông tin HoaDon
+            if (hdct.getHoaDon() != null) {
+                HoaDon hd = hdct.getHoaDon();
+                dto.setMaHD(hd.getMaHD());
+                dto.setPhuongThucTT(hd.getPhuongThucTT());
+                dto.setTrangThaiHD(hd.getTrangThai());
+                dto.setNgayMua(hd.getNgayMua());
+                
+                // Lấy thông tin KhachHang
+                if (hd.getKhachHang() != null) {
+                    KhachHang kh = hd.getKhachHang();
+                    dto.setMaKH(kh.getMaKH());
+                    dto.setTenKH(kh.getTenKH());
+                    dto.setSdt(kh.getSdt());
+                    
+                    // Lấy thông tin User
+                    if (kh.getUser() != null) {
+                        dto.setUserName(kh.getUser().getUserName());
+                        dto.setMail(kh.getUser().getMail());
+                    }
+                }
+            }
+            
+            // Lấy thông tin SanPhamChiTiet
+            if (hdct.getSanPhamChiTiet() != null) {
+                SanPhamChiTiet spct = hdct.getSanPhamChiTiet();
+                dto.setMaSKU(spct.getMaSKU());
+                dto.setTenMau(spct.getTenMau());
+                dto.setHinhAnh(spct.getHinhAnh());
+                
+                // Lấy thông tin SanPham
+                if (spct.getSanPham() != null) {
+                    SanPham sp = spct.getSanPham();
+                    dto.setMaSP(sp.getMaSP());
+                    dto.setTenSP(sp.getTenSP());
+                    dto.setGioiTinh(sp.getGioiTinh());
+                }
+                
+                // Lấy thông tin Size
+                if (spct.getSize() != null) {
+                    dto.setMaSize(spct.getSize().getMaSize());
+                    dto.setCoGiay(spct.getSize().getCoGiay());
+                }
+            }
+        }
+        
+        return dto;
+    }
+    
+    private QLDanhGiaDTO convertToSimpleDTO(DanhGia dg) {
+    	QLDanhGiaDTO dto = new QLDanhGiaDTO();
+        dto.setMaDG(dg.getMaDG());
+        dto.setSao(dg.getSao());
+        dto.setDanhGiaCT(dg.getDanhGiaCT());
+        dto.setNgayDG(dg.getNgayDG());
+        
+        if (dg.getHoaDonCT() != null) {
+            dto.setMaHDCT(dg.getHoaDonCT().getMaHDCT());
+            dto.setTenKH("Khách hàng " + dg.getHoaDonCT().getMaHDCT());
+            dto.setTenSP("Sản phẩm " + dg.getHoaDonCT().getMaHDCT());
+        }
+        
+        return dto;
     }
 
     public Map<String, Object> getDanhGiaById(Integer id) {
         Optional<DanhGia> danhGia = danhGiaDAO.findById(id);
         if (danhGia.isPresent()) {
-            return success("data", danhGia.get());
+            return success("data", convertToDTO(danhGia.get()));
         }
         return error("Không tìm thấy đánh giá");
     }
@@ -45,27 +132,36 @@ public class QLDanhGiaService {
             Optional<DanhGia> danhGiaOpt = danhGiaDAO.findById(id);
             if (danhGiaOpt.isPresent()) {
                 DanhGia danhGia = danhGiaOpt.get();
-
                 danhGia.setDanhGiaCT("Ẩn đánh giá do vi phạm tiêu chuẩn cộng đồng");
                 danhGiaDAO.save(danhGia);
-                return success("Đã xóa đánh giá do vi phạm tiêu chuẩn cộng đồng");
+                return success("Đã ẩn đánh giá thành công");
             }
             return error("Không tìm thấy đánh giá cần xóa");
             
         } catch (Exception e) {
+            log.error("Lỗi khi ẩn đánh giá: ", e);
             return error("Không thể ẩn đánh giá: " + e.getMessage());
         }
     }
     
     private Map<String, Object> success(String key, Object value) {
-        return Map.of("success", true, key, value);
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put(key, value);
+        return response;
     }
 
     private Map<String, Object> success(String message) {
-        return Map.of("success", true, "message", message);
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("message", message);
+        return response;
     }
 
     private Map<String, Object> error(String message) {
-        return Map.of("success", false, "message", message);
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", false);
+        response.put("message", message);
+        return response;
     }
 }
