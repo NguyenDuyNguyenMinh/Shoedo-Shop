@@ -50,13 +50,6 @@
                 </div>
               </div>
 
-              <div class="mb-3 detail-item" style="--delay: 0.3s">
-                <label class="form-label fw-bold">Đơn giá khi mua</label>
-                <p class="form-control-plaintext text-primary fw-bold">
-                  {{ formatPrice(getDonGia(selectedReview)) }}
-                </p>
-              </div>
-
               <div class="mb-3 detail-item" style="--delay: 0.35s">
                 <label class="form-label fw-bold">Đánh giá</label>
                 <div class="rating mb-2">
@@ -366,74 +359,24 @@ const fetchReviews = async () => {
 };
 
 const getTenKhachHang = (review) => {
-  try {
-    if (review.hoaDonCT?.hoaDon?.khachHang?.tenKH) {
-      return review.hoaDonCT.hoaDon.khachHang.tenKH;
-    }
-  } catch (e) {
-    console.error("Lỗi lấy tên khách hàng:", e);
-  }
-  return "Khách hàng ẩn danh";
+  return review.tenKH || "Khách hàng ẩn danh";
 };
 
 const getUsername = (review) => {
-  try {
-    const user = review.hoaDonCT?.hoaDon?.khachHang?.user;
-    if (user && user.userName) {
-      return user.userName;
-    }
-  } catch (e) {
-    console.error("Lỗi lấy username:", e);
-  }
-  return "Không có username";
+  return review.userName || "Không có username";
 };
 
 const getTenSanPham = (review) => {
-  try {
-    if (review.hoaDonCT?.sanPhamChiTiet?.sanPham?.tenSP) {
-      return review.hoaDonCT.sanPhamChiTiet.sanPham.tenSP;
-    }
-  } catch (e) {
-    console.error("Lỗi lấy tên sản phẩm:", e);
-  }
-  return "Sản phẩm không xác định";
+  return review.tenSP || "Sản phẩm không xác định";
 };
 
 const getMauSac = (review) => {
-  try {
-    const spct = review.hoaDonCT?.sanPhamChiTiet;
-    if (spct && spct.tenMau) {
-      return spct.tenMau;
-    }
-  } catch (e) {
-    console.error("Lỗi lấy màu sắc:", e);
-  }
-  return null;
+  return review.tenMau || null;
 };
 
 const getSize = (review) => {
-  try {
-    const size = review.hoaDonCT?.sanPhamChiTiet?.size;
-    if (size) {
-      return size.coGiay === 0 ? "Freesize" : size.coGiay;
-    }
-  } catch (e) {
-    console.error("Lỗi lấy size:", e);
-  }
-  return null;
-};
-
-const getDonGia = (review) => {
-  try {
-    return review.hoaDonCT?.donGia || 0;
-  } catch (e) {
-    return 0;
-  }
-};
-
-const formatPrice = (price) => {
-  if (!price || price === 0) return "0 ₫";
-  return price.toLocaleString("vi-VN") + " ₫";
+  if (review.coGiay === 0) return "Freesize";
+  return review.coGiay || null;
 };
 
 const getShortContent = (content) => {
@@ -698,13 +641,20 @@ onMounted(() => {
 }
 
 @keyframes starGlow {
-  0%, 100% {
-    transform: scale(1);
-    text-shadow: 0 0 5px rgba(255, 193, 7, 0.5);
+  0% {
+    opacity: 0;
+    transform: scale(0.9);
+    text-shadow: 0 0 5px rgba(255, 193, 7, 0);
   }
   50% {
+    opacity: 0.7;
     transform: scale(1.2);
     text-shadow: 0 0 15px rgba(255, 193, 7, 0.8);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+    text-shadow: 0 0 5px rgba(255, 193, 7, 0.5);
   }
 }
 
