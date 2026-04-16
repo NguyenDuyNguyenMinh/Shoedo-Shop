@@ -1031,28 +1031,23 @@ const paginatedCampaignProducts = computed(() => {
 });
 const goToCpPage = (page) => { if (page >= 1 && page <= cpTotalPages.value) cpCurrentPage.value = page; };
 watch([campaignFilterKeyword, campaignFilterCategory, campaignFilterActive], () => { cpCurrentPage.value = 1; });
-// =================== AUTO POLLING (CHẠY NGẦM) ===================
+// chạy ngầm reload chiến dịch
 let campaignPollingInterval = null;
 
 onMounted(() => {
   fetchProducts();
   fetchCategories();
-  
-  // Khởi tạo lấy danh sách chiến dịch ngay khi vừa vào trang
   fetchCampaigns();
 
 
   campaignPollingInterval = setInterval(() => {
-    // Mẹo tối ưu: Chỉ gọi API chọc xuống Database nếu người dùng ĐANG MỞ tab Lịch sử
-    // Nếu họ đang ở tab Flash Sale thì không gọi để giảm tải cho Spring Boot
     if (activeTab.value === 'history') {
       fetchCampaigns();
     }
-  }, 3000);
+  }, 10000);
 });
 
-// RẤT QUAN TRỌNG: Hàm này sẽ tự động chạy khi bạn chuyển sang component khác (Vd: qua trang QL Sản Phẩm)
-// Nó giúp "tiêu diệt" vòng lặp 5s, tránh việc gọi API ảo gây giật lag và tốn RAM trình duyệt
+//tắt tự động chạy ngầm khi sang component khác
 onUnmounted(() => {
   if (campaignPollingInterval) {
     clearInterval(campaignPollingInterval);
