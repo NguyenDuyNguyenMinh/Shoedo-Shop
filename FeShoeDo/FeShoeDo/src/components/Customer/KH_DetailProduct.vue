@@ -340,10 +340,26 @@ const buyNow = async () => {
   }
 
   try {
+    // 1. Thêm vào giỏ hàng
     await api.addToCart({ maSKU: sku.maSKU, soLuong: quantity.value })
     const authStore = useAuthStore()
     authStore.incrementCartCount()
-    router.push({ name: 'Cart' })
+
+    // 2. Lấy giỏ hàng để tìm item vừa thêm (cần maGH và thông tin đầy đủ)
+    const cartResp = await api.getCart()
+    if (cartResp.data.success && cartResp.data.items) {
+      const cartItems = cartResp.data.items
+      // Tìm item trong giỏ hàng khớp với SKU vừa thêm
+      const matchedItem = cartItems.find(item => item.maSKU === sku.maSKU)
+      if (matchedItem) {
+        // 3. Lưu vào sessionStorage để trang đặt hàng sử dụng
+        sessionStorage.setItem('checkoutItems', JSON.stringify([matchedItem]))
+        sessionStorage.setItem('checkoutItemIds', JSON.stringify([matchedItem.maGH]))
+      }
+    }
+
+    // 4. Chuyển đến trang đặt hàng
+    router.push({ name: 'Checkout' })
   } catch (e) {
     console.error('Lỗi mua ngay:', e)
     alert('Không thể thực hiện.')
