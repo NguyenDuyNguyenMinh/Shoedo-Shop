@@ -268,556 +268,291 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, onMounted, onBeforeUnmount } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import * as bootstrap from 'bootstrap';
 import axios from 'axios';
 import Toast from '@/components/Shared/Toast.vue';
 
-export default {
-  name: 'Login',
-  components: { Toast },
-  data() {
-    return {
-      loginForm: {
-        identifier: '',
-        pass: '',
-        remember: false
-      },
-      registerForm: {
-        mail: '',
-        pass: '',
-        fullname: '',
-        phone: '',
-        terms: false,
-        remember: false
-      },
-      googlePassword: '',
-      googleTemp: {
-        email: '',
-        name: ''
-      },
-      forgotPasswordStep: 1,
-      forgotPasswordEmail: '',
-      forgotPasswordOtp: '',
-      registerOtp: '',
-      registerTempData: null,
-      loading: false,
-      accountLocked: false,
-      accountLockedMessage: '',
-      resendCountdown: 0,
-      resendDisabled: false,
-      countdownInterval: null
-    };
-  },
+const router = useRouter();
+const route = useRoute();
+const authStore = useAuthStore();
 
-  mounted() {
-    this.handleGoogleCallback();
-    const authStore = useAuthStore();
-    if (authStore.isAuthenticated) {
-      this.redirectByRole(authStore);
-    }
-    this.checkAndOpenRegisterTab();
-  },
+const loginForm = ref({ identifier: '', pass: '', remember: false });
+const registerForm = ref({ mail: '', pass: '', fullname: '', phone: '', terms: false });
+const googlePassword = ref('');
+const googleTemp = ref({ email: '', name: '' });
 
-  beforeUnmount() {
-    if (this.countdownInterval) {
-      clearInterval(this.countdownInterval);
-    }
-  },
+const forgotPasswordStep = ref(1);
+const forgotPasswordEmail = ref('');
+const forgotPasswordOtp = ref('');
+const registerOtp = ref('');
+const registerTempData = ref(null);
 
-  methods: {
-    checkAndOpenRegisterTab() {
-      const urlParams = new URLSearchParams(window.location.search);
-      const tab = urlParams.get('tab');
-      
-      if (tab === 'register') {
-        const registerTab = document.getElementById('register-tab');
-        const loginTab = document.getElementById('login-tab');
-        
-        if (registerTab && loginTab) {
-          registerTab.classList.add('active');
-          loginTab.classList.remove('active');
-          
-          const registerPane = document.getElementById('register');
-          const loginPane = document.getElementById('login');
-          
-          if (registerPane && loginPane) {
-            registerPane.classList.add('show', 'active');
-            loginPane.classList.remove('show', 'active');
-          }
-        }
-      }
-    },
-    
-    getImageUrl(imagePath) {
-      return `http://localhost:8080/${imagePath}`;
-    },
-    
-    onlyNumbers(event) {
-      const char = String.fromCharCode(event.keyCode);
-      if (!/[0-9]/.test(char)) {
-        event.preventDefault();
-      }
-    },
+const loading = ref(false);
+const accountLocked = ref(false);
+const accountLockedMessage = ref('');
+const resendCountdown = ref(0);
+const resendDisabled = ref(false);
+let countdownInterval = null;
 
-    startResendCountdown(seconds = 60) {
-      this.resendDisabled = true;
-      this.resendCountdown = seconds;
-      
-      if (this.countdownInterval) {
-        clearInterval(this.countdownInterval);
-      }
-      
-      this.countdownInterval = setInterval(() => {
-        if (this.resendCountdown > 0) {
-          this.resendCountdown--;
-        } else {
-          this.resendDisabled = false;
-          clearInterval(this.countdownInterval);
-        }
-      }, 1000);
-    },
+onMounted(() => {
+  handleGoogleCallback();
+  if (authStore.isAuthenticated) redirectByRole(authStore);
+  checkAndOpenRegisterTab();
+});
 
-    resetForgotPasswordOtp() {
-      this.forgotPasswordStep = 1;
-      this.forgotPasswordEmail = '';
-      this.forgotPasswordOtp = '';
-      if (this.countdownInterval) {
-        clearInterval(this.countdownInterval);
-        this.resendDisabled = false;
-        this.resendCountdown = 0;
-      }
-    },
+onBeforeUnmount(() => {
+  if (countdownInterval) clearInterval(countdownInterval);
+});
 
-    resetRegisterOtp() {
-      this.registerOtp = '';
-      this.registerTempData = null;
-      if (this.countdownInterval) {
-        clearInterval(this.countdownInterval);
-        this.resendDisabled = false;
-        this.resendCountdown = 0;
-      }
-    },
-
-    async handleLogin() {
-      this.loading = true;
-      this.accountLocked = false;
-      this.accountLockedMessage = '';
-      
-      try {
-        const response = await axios.post('/api/auth/login', {
-          identifier: this.loginForm.identifier,
-          pass: this.loginForm.pass,
-          remember: this.loginForm.remember
-        }, {
-          withCredentials: true 
-        });
-
-        const data = response.data;
-        
-        if (data.success) {
-          const authStore = useAuthStore();
-          
-          authStore.user = data.user;
-          authStore.cartCount = data.user.cartCount || 0;
-          
-          window.showToast('Đăng nhập thành công!', 'success');
-          
-          setTimeout(() => {
-            if (authStore.isCustomer) {
-              this.$router.push('/customer/index');
-            } else if (authStore.isAdmin) {
-              this.$router.push('/employee/dashboard');
-            } else if (authStore.isEmployee) {
-              this.$router.push('/employee/products');
-            } else {
-              this.$router.push('/customer/index');
-            }
-          }, 1000);
-        } else {
-          window.showToast(data.message || 'Đăng nhập thất bại', 'danger');
-          
-          if (data.message && data.message.includes('bị khóa')) {
-            this.accountLocked = true;
-            this.accountLockedMessage = data.message;
-          }
-        }
-      } catch (error) {
-        console.error('Login error:', error);
-        window.showToast(error.response?.data?.message || 'Đăng nhập thất bại. Vui lòng thử lại sau.', 'danger');
-      } finally {
-        this.loading = false;
-      }
-    },
-
-    async handleRegister() {
-      if (!this.registerForm.terms) {
-        window.showToast('Vui lòng đồng ý với điều khoản sử dụng', 'warning');
-        return;
-      }
-
-      if (!/^\d{9,11}$/.test(this.registerForm.phone)) {
-        window.showToast('Số điện thoại phải từ 9-11 số', 'warning');
-        return;
-      }
-
-      this.loading = true;
-      
-      try {
-        const response = await axios.post('/api/auth/send-register', {
-          mail: this.registerForm.mail,
-          pass: this.registerForm.pass,
-          fullname: this.registerForm.fullname,
-          phone: this.registerForm.phone
-        }, {
-          withCredentials: true
-        });
-
-        const data = response.data;
-        
-        if (data.success) {
-          this.registerTempData = { ...this.registerForm };
-          window.showToast('Mã OTP đã được gửi đến email của bạn!', 'success');
-          
-          const modal = new bootstrap.Modal(document.getElementById('registerOtpModal'));
-          modal.show();
-          
-          this.startResendCountdown(60);
-        } else {
-          window.showToast(data.message || 'Có lỗi xảy ra khi gửi OTP', 'danger');
-        }
-      } catch (error) {
-        window.showToast(error.response?.data?.message || 'Có lỗi xảy ra. Vui lòng thử lại sau.', 'danger');
-      } finally {
-        this.loading = false;
-      }
-    },
-
-    async verifyRegisterOtp() {
-      if (!this.registerOtp || this.registerOtp.length !== 6) {
-        window.showToast('Vui lòng nhập mã OTP 6 số', 'warning');
-        return;
-      }
-
-      this.loading = true;
-
-      try {
-        const response = await axios.post('/api/auth/complete-register', {
-          mail: this.registerForm.mail,
-          confirmationCode: this.registerOtp
-        }, {
-          withCredentials: true
-        });
-
-        const data = response.data;
-        
-        if (data.success) {
-          const modal = bootstrap.Modal.getInstance(document.getElementById('registerOtpModal'));
-          modal.hide();
-
-          const loginResponse = await axios.post('/api/auth/login', {
-            identifier: this.registerForm.mail,
-            pass: this.registerForm.pass,
-            remember: true
-          }, { withCredentials: true });
-
-          if (loginResponse.data.success) {
-            const authStore = useAuthStore();
-            authStore.user = loginResponse.data.user;
-            authStore.cartCount = loginResponse.data.user.cartCount || 0;
-            
-            window.showToast('Đăng ký và đăng nhập thành công!', 'success');
-            
-            setTimeout(() => {
-              this.$router.push('/customer/index');
-            }, 1000);
-          }
-        } else {
-          window.showToast(data.message || 'Mã OTP không chính xác', 'danger');
-        }
-      } catch (error) {
-        window.showToast(error.response?.data?.message || 'Có lỗi xảy ra', 'danger');
-      } finally {
-        this.loading = false;
-      }
-    },
-
-    async resendRegisterOtp() {
-      if (!this.registerTempData) return;
-
-      this.loading = true;
-
-      try {
-        const response = await axios.post('/api/auth/send-register', {
-          mail: this.registerTempData.mail,
-          pass: this.registerTempData.pass,
-          fullname: this.registerTempData.fullname,
-          phone: this.registerTempData.phone
-        }, {
-          withCredentials: true
-        });
-
-        const data = response.data;
-        
-        if (data.success) {
-          window.showToast('Mã OTP mới đã được gửi!', 'success');
-          this.startResendCountdown(60);
-        } else {
-          window.showToast(data.message || 'Có lỗi xảy ra khi gửi lại OTP', 'danger');
-        }
-      } catch (error) {
-        window.showToast(error.response?.data?.message || 'Có lỗi xảy ra. Vui lòng thử lại sau.', 'danger');
-      } finally {
-        this.loading = false;
-      }
-    },
-
-    async handleForgotPasswordOtp() {
-      if (this.forgotPasswordStep === 1) {
-        if (!this.forgotPasswordEmail) {
-          window.showToast('Vui lòng nhập email', 'warning');
-          return;
-        }
-
-        this.loading = true;
-
-        try {
-          const response = await axios.post('/api/auth/send-fg-pass', {
-            email: this.forgotPasswordEmail
-          }, {
-            withCredentials: true
-          });
-
-          const data = response.data;
-          
-          if (data.success) {
-            window.showToast('Mã OTP đã được gửi đến email của bạn!', 'success');
-            this.forgotPasswordStep = 2;
-            this.startResendCountdown(60);
-          } else {
-            window.showToast(data.message || 'Có lỗi xảy ra', 'danger');
-          }
-        } catch (error) {
-          window.showToast(error.response?.data?.message || 'Có lỗi xảy ra. Vui lòng thử lại sau', 'danger');
-        } finally {
-          this.loading = false;
-        }
-      } else {
-        if (!this.forgotPasswordOtp || this.forgotPasswordOtp.length !== 6) {
-          window.showToast('Vui lòng nhập mã OTP 6 số', 'warning');
-          return;
-        }
-
-        this.loading = true;
-
-        try {
-          const response = await axios.post('/api/auth/confirm-fg-pass', {
-            email: this.forgotPasswordEmail,
-            confirmationCode: this.forgotPasswordOtp
-          }, {
-            withCredentials: true
-          });
-
-          const data = response.data;
-          
-          if (data.success) {
-            window.showToast('Mật khẩu mới đã được gửi đến email của bạn!', 'success');
-            this.closeForgotPasswordModal();
-          } else {
-            window.showToast(data.message || 'Mã OTP không chính xác', 'danger');
-          }
-        } catch (error) {
-          window.showToast(error.response?.data?.message || 'Có lỗi xảy ra. Vui lòng thử lại sau', 'danger');
-        } finally {
-          this.loading = false;
-        }
-      }
-    },
-
-    closeForgotPasswordModal() {
-      const modal = bootstrap.Modal.getInstance(document.getElementById('forgotPasswordOtpModal'));
-      if (modal) {
-        modal.hide();
-      }
-
-      const backdrops = document.querySelectorAll('.modal-backdrop');
-      backdrops.forEach(backdrop => backdrop.remove());
-      document.body.classList.remove('modal-open');
-      document.body.style.removeProperty('overflow');
-      document.body.style.removeProperty('padding-right');
-      
-      this.resetForgotPasswordOtp();
-    },
-
-    async resendForgotPasswordOtp() {
-      this.loading = true;
-
-      try {
-        const response = await axios.post('/api/auth/send-fg-pass', {
-          email: this.forgotPasswordEmail
-        }, {
-          withCredentials: true
-        });
-
-        const data = response.data;
-        
-        if (data.success) {
-          window.showToast('Mã OTP mới đã được gửi!', 'success');
-          this.startResendCountdown(60);
-        } else {
-          window.showToast(data.message || 'Có lỗi xảy ra', 'danger');
-        }
-      } catch (error) {
-        window.showToast(error.response?.data?.message || 'Có lỗi xảy ra. Vui lòng thử lại sau', 'danger');
-      } finally {
-        this.loading = false;
-      }
-    },
-
-    async handleGoogleCallback() {
-      try {
-        const urlParams = new URLSearchParams(window.location.search);
-        const googleSuccess = urlParams.get('googleSuccess');
-        const email = urlParams.get('email');
-        const name = urlParams.get('name');
-        
-        if (googleSuccess === 'true' && email) {
-          const response = await axios.get('/api/oauth2/google/callback', {
-            params: {
-              email: email,
-              name: name || ''
-            },
-            withCredentials: true
-          });
-          
-          const data = response.data;
-
-          if (data.success) {
-            if (data.requirePassword) {
-              this.showGooglePasswordModal(data.email || email, data.name || name);
-            } else {
-              await this.completeGoogleLogin(data.email || email, data.name || name);
-            }
-          } else {
-            window.showToast(data.message || 'Đăng nhập Google thất bại', 'danger');
-            if (data.message && data.message.includes('bị khóa')) {
-              this.accountLocked = true;
-              this.accountLockedMessage = data.message + ' Vui lòng liên hệ quản trị viên qua Hotline: 1900 6869 để được khắc phục.';
-            }
-          }
-        }
-      } catch (error) {
-        window.showToast(error.response?.data?.message || 'Lỗi xử lý đăng nhập Google', 'danger');
-      }
-    },
-
-    showGooglePasswordModal(email, name) {
-      this.googleTemp.email = email;
-      this.googleTemp.name = name || 'Google User';
-      this.googlePassword = '';
-
-      const modal = new bootstrap.Modal(document.getElementById('googlePasswordModal'));
-      modal.show();
-    },
-
-    submitGooglePassword() {
-      if (!this.googlePassword || this.googlePassword.trim() === '') {
-        window.showToast('Vui lòng nhập mật khẩu để tiếp tục!', 'warning');
-        return;
-      }
-
-      const modal = bootstrap.Modal.getInstance(document.getElementById('googlePasswordModal'));
-      modal.hide();
-
-      this.completeGoogleLoginNewUser(
-        this.googleTemp.email, 
-        this.googleTemp.name, 
-        this.googlePassword
-      );
-      this.googlePassword = '';
-      this.googleTemp.email = '';
-      this.googleTemp.name = '';
-    },
-
-    async completeGoogleLoginNewUser(email, name, password) {
-      this.loading = true;
-      try {
-        const response = await axios.post('/api/oauth2/google-login-newuser', {
-          email: email,
-          name: name,
-          password: password
-        }, {
-          withCredentials: true
-        });
-        
-        const data = response.data;
-        
-        if (data.success) {
-          const authStore = useAuthStore();
-          authStore.user = data.user;
-          window.history.replaceState({}, document.title, window.location.pathname);
-          
-          window.showToast('Đăng nhập Google thành công!', 'success');
-          
-          setTimeout(() => {
-            this.$router.push('/customer/index');
-          }, 1000);
-        } else {
-          window.showToast(data.message || 'Đăng nhập Google thất bại', 'danger');
-        }
-      } catch (error) {
-        window.showToast(error.response?.data?.message || 'Lỗi xử lý đăng nhập Google', 'danger');
-      } finally {
-        this.loading = false;
-      }
-    },
-    
-    async completeGoogleLogin(email, name) {
-      this.loading = true;
-      try {
-        const response = await axios.post('/api/oauth2/google-login', {
-          email: email,
-          name: name
-        }, {
-          withCredentials: true
-        });
-        
-        const data = response.data;
-        
-        if (data.success) {
-          const authStore = useAuthStore();
-          authStore.user = data.user;
-
-          window.history.replaceState({}, document.title, window.location.pathname);
-          
-          window.showToast('Đăng nhập Google thành công!', 'success');
-          
-          setTimeout(() => {
-            this.$router.push('/customer/index');
-          }, 1000);
-        } else {
-          window.showToast(data.message || 'Đăng nhập Google thất bại', 'danger');
-        }
-      } catch (error) {
-        window.showToast(error.response?.data?.message || 'Lỗi xử lý đăng nhập Google', 'danger');
-      } finally {
-        this.loading = false;
-      }
-    },
-
-    redirectByRole(authStore) {
-      if (authStore.isCustomer) {
-        this.$router.push('/customer/index');
-      } else if (authStore.isEmployee) {
-        this.$router.push('/employee/dashboard');
-      } else if (authStore.isAdmin) {
-        this.$router.push('/employee/dashboard');
-      } else {
-        this.$router.push('/customer/index');
+const checkAndOpenRegisterTab = () => {
+  const tab = route.query.tab;
+  if (tab === 'register') {
+    const registerTab = document.getElementById('register-tab');
+    const loginTab = document.getElementById('login-tab');
+    if (registerTab && loginTab) {
+      registerTab.classList.add('active');
+      loginTab.classList.remove('active');
+      const registerPane = document.getElementById('register');
+      const loginPane = document.getElementById('login');
+      if (registerPane && loginPane) {
+        registerPane.classList.add('show', 'active');
+        loginPane.classList.remove('show', 'active');
       }
     }
   }
+};
+
+const getImageUrl = (path) => `http://localhost:8080/${path}`;
+const onlyNumbers = (e) => { if (!/[0-9]/.test(String.fromCharCode(e.keyCode))) e.preventDefault(); };
+
+const startResendCountdown = (seconds = 60) => {
+  resendDisabled.value = true;
+  resendCountdown.value = seconds;
+  if (countdownInterval) clearInterval(countdownInterval);
+  countdownInterval = setInterval(() => {
+    if (resendCountdown.value > 0) resendCountdown.value--;
+    else {
+      resendDisabled.value = false;
+      clearInterval(countdownInterval);
+    }
+  }, 1000);
+};
+
+const resetForgotPasswordOtp = () => {
+  forgotPasswordStep.value = 1;
+  forgotPasswordEmail.value = '';
+  forgotPasswordOtp.value = '';
+  if (countdownInterval) { clearInterval(countdownInterval); resendDisabled.value = false; resendCountdown.value = 0; }
+};
+
+const resetRegisterOtp = () => {
+  registerOtp.value = '';
+  registerTempData.value = null;
+  if (countdownInterval) { clearInterval(countdownInterval); resendDisabled.value = false; resendCountdown.value = 0; }
+};
+
+const redirectByRole = (store) => {
+  if (store.isCustomer) router.push('/customer/index');
+  else if (store.isEmployee || store.isAdmin) router.push('/employee/dashboard');
+  else router.push('/customer/index');
+};
+
+const handleLogin = async () => {
+  loading.value = true;
+  accountLocked.value = false;
+  accountLockedMessage.value = '';
+  try {
+    const { data } = await axios.post('/api/auth/login', loginForm.value, { withCredentials: true });
+    if (data.success) {
+      authStore.user = data.user;
+      authStore.cartCount = data.user.cartCount || 0;
+      window.showToast?.('Đăng nhập thành công!', 'success');
+      setTimeout(() => redirectByRole(authStore), 1000);
+    } else {
+      window.showToast?.(data.message || 'Đăng nhập thất bại', 'danger');
+      if (data.message?.includes('bị khóa')) {
+        accountLocked.value = true;
+        accountLockedMessage.value = data.message;
+      }
+    }
+  } catch (error) {
+    window.showToast?.(error.response?.data?.message || 'Đăng nhập thất bại', 'danger');
+  } finally { loading.value = false; }
+};
+
+const handleRegister = async () => {
+  if (!registerForm.value.terms) return window.showToast?.('Vui lòng đồng ý với điều khoản sử dụng', 'warning');
+  if (!/^\d{9,11}$/.test(registerForm.value.phone)) return window.showToast?.('Số điện thoại phải từ 9-11 số', 'warning');
+  
+  loading.value = true;
+  try {
+    const { data } = await axios.post('/api/auth/send-register', registerForm.value, { withCredentials: true });
+    if (data.success) {
+      registerTempData.value = { ...registerForm.value };
+      window.showToast?.('Mã OTP đã được gửi đến email của bạn!', 'success');
+      new bootstrap.Modal(document.getElementById('registerOtpModal')).show();
+      startResendCountdown(60);
+    } else window.showToast?.(data.message || 'Lỗi gửi OTP', 'danger');
+  } catch (err) { window.showToast?.(err.response?.data?.message || 'Có lỗi xảy ra', 'danger'); } 
+  finally { loading.value = false; }
+};
+
+const verifyRegisterOtp = async () => {
+  if (!registerOtp.value || registerOtp.value.length !== 6) return window.showToast?.('Nhập OTP 6 số', 'warning');
+  loading.value = true;
+  try {
+    const { data } = await axios.post('/api/auth/complete-register', { 
+      mail: registerForm.value.mail, confirmationCode: registerOtp.value 
+    }, { withCredentials: true });
+    
+    if (data.success) {
+      bootstrap.Modal.getInstance(document.getElementById('registerOtpModal'))?.hide();
+      const loginRes = await axios.post('/api/auth/login', {
+        identifier: registerForm.value.mail, pass: registerForm.value.pass, remember: true
+      }, { withCredentials: true });
+      if (loginRes.data.success) {
+        authStore.user = loginRes.data.user;
+        authStore.cartCount = loginRes.data.user.cartCount || 0;
+        window.showToast?.('Đăng kí thành công!', 'success');
+        setTimeout(() => router.push('/customer/index'), 1000);
+      }
+    } else window.showToast?.(data.message || 'OTP không đúng', 'danger');
+  } catch (err) { window.showToast?.('Có lỗi xảy ra', 'danger'); }
+  finally { loading.value = false; }
+};
+
+const resendRegisterOtp = async () => {
+  if (!registerTempData.value) return;
+  loading.value = true;
+  try {
+    const { data } = await axios.post('/api/auth/send-register', registerTempData.value, { withCredentials: true });
+    if (data.success) {
+      window.showToast?.('OTP mới đã được gửi!', 'success');
+      startResendCountdown(60);
+    } else window.showToast?.(data.message || 'Lỗi gửi lại OTP', 'danger');
+  } catch (err) { window.showToast?.('Có lỗi xảy ra', 'danger'); }
+  finally { loading.value = false; }
+};
+
+const handleForgotPasswordOtp = async () => {
+  if (forgotPasswordStep.value === 1) {
+    if (!forgotPasswordEmail.value) return window.showToast?.('Nhập email', 'warning');
+    loading.value = true;
+    try {
+      const { data } = await axios.post('/api/auth/send-fg-pass', { email: forgotPasswordEmail.value }, { withCredentials: true });
+      if (data.success) {
+        window.showToast?.('OTP đã gửi!', 'success');
+        forgotPasswordStep.value = 2;
+        startResendCountdown(60);
+      } else window.showToast?.(data.message || 'Có lỗi xảy ra', 'danger');
+    } catch (err) { window.showToast?.('Có lỗi xảy ra', 'danger'); }
+    finally { loading.value = false; }
+  } else {
+    if (!forgotPasswordOtp.value || forgotPasswordOtp.value.length !== 6) return window.showToast?.('Nhập OTP 6 số', 'warning');
+    loading.value = true;
+    try {
+      const { data } = await axios.post('/api/auth/confirm-fg-pass', { 
+        email: forgotPasswordEmail.value, confirmationCode: forgotPasswordOtp.value 
+      }, { withCredentials: true });
+      if (data.success) {
+        window.showToast?.('Mật khẩu mới đã gửi vào email!', 'success');
+        closeForgotPasswordModal();
+      } else window.showToast?.(data.message || 'OTP không đúng', 'danger');
+    } catch (err) { window.showToast?.('Có lỗi xảy ra', 'danger'); }
+    finally { loading.value = false; }
+  }
+};
+
+const closeForgotPasswordModal = () => {
+  bootstrap.Modal.getInstance(document.getElementById('forgotPasswordOtpModal'))?.hide();
+  document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
+  document.body.classList.remove('modal-open');
+  document.body.style.removeProperty('overflow');
+  document.body.style.removeProperty('padding-right');
+  resetForgotPasswordOtp();
+};
+
+const resendForgotPasswordOtp = async () => {
+  loading.value = true;
+  try {
+    const { data } = await axios.post('/api/auth/send-fg-pass', { email: forgotPasswordEmail.value }, { withCredentials: true });
+    if (data.success) {
+      window.showToast?.('OTP mới đã gửi!', 'success');
+      startResendCountdown(60);
+    } else window.showToast?.(data.message || 'Có lỗi', 'danger');
+  } catch (err) { window.showToast?.('Có lỗi', 'danger'); }
+  finally { loading.value = false; }
+};
+
+const handleGoogleCallback = async () => {
+  try {
+    const googleSuccess = route.query.googleSuccess;
+    const email = route.query.email;
+    const name = route.query.name;
+    
+    if (googleSuccess === 'true' && email) {
+      const { data } = await axios.get('/api/oauth2/google/callback', {
+        params: { email, name: name || '' },
+        withCredentials: true
+      });
+      if (data.success) {
+        if (data.requirePassword) showGooglePasswordModal(data.email || email, data.name || name);
+        else await completeGoogleLogin(data.email || email, data.name || name);
+      } else {
+        window.showToast?.(data.message || 'Lỗi đăng nhập Google', 'danger');
+        if (data.message?.includes('bị khóa')) {
+          accountLocked.value = true;
+          accountLockedMessage.value = data.message + ' Liên hệ Hotline 1900 6869 để khắc phục.';
+        }
+      }
+    }
+  } catch (error) { window.showToast?.('Lỗi xử lý Google Callback', 'danger'); }
+};
+
+const showGooglePasswordModal = (email, name) => {
+  googleTemp.value = { email, name: name || 'Google User' };
+  googlePassword.value = '';
+  new bootstrap.Modal(document.getElementById('googlePasswordModal')).show();
+};
+
+const submitGooglePassword = () => {
+  if (!googlePassword.value.trim()) return window.showToast?.('Vui lòng nhập mật khẩu!', 'warning');
+  bootstrap.Modal.getInstance(document.getElementById('googlePasswordModal'))?.hide();
+  completeGoogleLoginNewUser(googleTemp.value.email, googleTemp.value.name, googlePassword.value);
+  googlePassword.value = '';
+  googleTemp.value = { email: '', name: '' };
+};
+
+const completeGoogleLoginNewUser = async (email, name, password) => {
+  loading.value = true;
+  try {
+    const { data } = await axios.post('/api/oauth2/google-login-newuser', { email, name, password }, { withCredentials: true });
+    if (data.success) {
+      authStore.user = data.user;
+      router.replace(route.path);
+      window.showToast?.('Đăng nhập Google thành công!', 'success');
+      setTimeout(() => redirectByRole(authStore), 1000);
+    } else window.showToast?.(data.message || 'Lỗi đăng nhập Google', 'danger');
+  } catch (err) { window.showToast?.('Lỗi đăng nhập Google', 'danger'); }
+  finally { loading.value = false; }
+};
+
+const completeGoogleLogin = async (email, name) => {
+  loading.value = true;
+  try {
+    const { data } = await axios.post('/api/oauth2/google-login', { email, name }, { withCredentials: true });
+    if (data.success) {
+      authStore.user = data.user;
+      router.replace(route.path);
+      window.showToast?.('Đăng nhập Google thành công!', 'success');
+      setTimeout(() => redirectByRole(authStore), 1000);
+    } else window.showToast?.(data.message || 'Lỗi đăng nhập Google', 'danger');
+  } catch (err) { window.showToast?.('Lỗi đăng nhập Google', 'danger'); }
+  finally { loading.value = false; }
 };
 </script>
 

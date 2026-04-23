@@ -66,7 +66,7 @@ public class AuthService {
             return error("Sai tài khoản hoặc mật khẩu");
         }
         
-        return success(doLogin(user, remember));
+        return success(doLogin(user, remember, false));
     }
 
     public Map<String, Object> autoLogin() {
@@ -189,7 +189,7 @@ public class AuthService {
         
         if (!user.getIsActive()) return error("Tài khoản đã bị khóa");
         
-        return success(doLogin(user, false));
+        return success(doLogin(user, false, true));
     }
 
     public Map<String, Object> googleLogin(Map<String, String> request) {
@@ -202,7 +202,7 @@ public class AuthService {
             return error("Tài khoản đã bị khóa");
         }
                   
-        return success(doLogin(user, false));
+        return success(doLogin(user, false, true));
     }
 
     public Map<String, Object> googleLoginNew(Map<String, String> request) {
@@ -233,7 +233,7 @@ public class AuthService {
             khachHangDAO.save(kh);
         }
         
-        return success(doLogin(user, false));
+        return success(doLogin(user, false, true));
     }
 
     public Map<String, Object> sendForgotPass(Map<String, String> request) {
@@ -326,7 +326,7 @@ public class AuthService {
         return success("Đăng xuất thành công");
     }
 
-    private Map<String, Object> doLogin(Users user, boolean remember) {
+    private Map<String, Object> doLogin(Users user, boolean remember, boolean isGoogleUser) {
     	try { 
 	        QuanTri qt = quanTriDAO.findByUser_MaUser(user.getMaUser());
 	        KhachHang kh = khachHangDAO.findByUser_MaUser(user.getMaUser());
@@ -335,12 +335,12 @@ public class AuthService {
 	            sessionService.set("userRole", qt.getRole() ? "ADMIN" : "EMPLOYEE");
 	            sessionService.set("userName", qt.getTenQT());
 	            sessionService.set("user", user);
-	            sessionService.set("isGoogleUser", true);
+	            sessionService.set("isGoogleUser", isGoogleUser);
 	        } else if (kh != null) {
 	            sessionService.set("userRole", "CUSTOMER");
 	            sessionService.set("userName", kh.getTenKH());
 	            sessionService.set("user", user);
-	            sessionService.set("isGoogleUser", true);
+	            sessionService.set("isGoogleUser", isGoogleUser);
 	        }
 	        
 	        sessionService.set("user", user);
@@ -488,7 +488,7 @@ public class AuthService {
             
             Users user = usersDAO.findById(Integer.parseInt(parts[0])).orElse(null);
             if (user != null && user.getMail().equals(parts[1]) && user.getIsActive()) {
-                doLogin(user, false);
+                doLogin(user, false, false);
                 return true;
             }
         } catch (Exception e) {

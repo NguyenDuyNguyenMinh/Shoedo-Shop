@@ -15,14 +15,12 @@ const routes = [
   {
     path: '/customer/index',
     name: 'CustomerIndex',
-    component: () => import('@/components/Customer/KH_index.vue'),
-    meta: { requiresAuth: true, role: 'CUSTOMER' }
+    component: () => import('@/components/Customer/KH_index.vue')
   },
   {
     path: '/customer/detail-product/:id?',
     name: 'DetailProduct',
-    component: () => import('@/components/Customer/KH_DetailProduct.vue'),
-    meta: { requiresAuth: true, role: 'CUSTOMER' }
+    component: () => import('@/components/Customer/KH_DetailProduct.vue')
   },
   {
     path: '/customer/cart',
@@ -30,17 +28,15 @@ const routes = [
     component: () => import('@/components/Customer/KH_GioHang.vue'),
     meta: { requiresAuth: true, role: 'CUSTOMER' }
   },
-    {
+  {
     path: '/customer/chinhsach',
     name: 'ChinhSach',
-    component: () => import('@/components/Customer/KH_ChinhSach.vue'),
-    meta: { requiresAuth: true, role: 'CUSTOMER' }
+    component: () => import('@/components/Customer/KH_ChinhSach.vue')
   },
-    {
+  {
     path: '/customer/sanpham',
     name: 'Sanpham',
-    component: () => import('@/components/Customer/KH_Sanpham.vue'),
-    meta: { requiresAuth: true, role: 'CUSTOMER' }
+    component: () => import('@/components/Customer/KH_Sanpham.vue')
   },
   {
     path: '/customer/checkout',
@@ -76,7 +72,7 @@ const routes = [
     path: '/employee/dashboard',
     name: 'EmployeeDashboard',
     component: () => import('@/components/Employee/NV_ThongKe.vue'),
-    meta: { requiresAuth: true, role: 'ADMIN'}
+    meta: { requiresAuth: true, roles: ['ADMIN'] }
   },
   {
     path: '/employee/products',
@@ -108,19 +104,18 @@ const routes = [
     component: () => import('@/components/Employee/NV_NhapKho.vue'),
     meta: { requiresAuth: true, roles: ['ADMIN', 'EMPLOYEE'] }
   },
-    {
+  {
     path: '/employee/flashsale',
     name: 'FlashSaleStock',
     component: () => import('@/components/Employee/NV_KhuyenMai.vue'),
     meta: { requiresAuth: true, roles: ['ADMIN', 'EMPLOYEE'] }
   },
-      {
+  {
     path: '/employee/voucher',
     name: 'VoucherSet',
     component: () => import('@/components/Employee/NV_QLVoucher.vue'),
     meta: { requiresAuth: true, roles: ['ADMIN', 'EMPLOYEE'] }
-  },
-  
+  }
 ];
 
 const router = createRouter({
@@ -133,75 +128,44 @@ router.beforeEach(async (to, from, next) => {
 
   if (!authStore.isInitialized) {
     await authStore.initAuth();
-    authStore.isInitialized = true;
-  }
-
-  const publicPaths = [
-    '/',
-    '/customer/index',
-    '/customer/detail-product/:id?',
-    '/customer/chinhsach',
-    '/customer/sanpham',
-    '/auth/login'
-  ];
-  
-  const isPublicPath = publicPaths.some(path => {
-    if (path.includes(':')) {
-      const pattern = new RegExp('^' + path.replace(/:\w+\?/g, '([^/]+)?').replace(/\//g, '\\/') + '$');
-      return pattern.test(to.path);
-    }
-    return to.path === path;
-  });
-  
-  if (isPublicPath) {
-    next();
-    return;
-  }
-  
-  if (to.meta.requiresAuth) {
-    if (!authStore.isAuthenticated) {
-      try {
-        await authStore.fetchCurrentUser();
-        
-        if (!authStore.isAuthenticated) {
-          next('/auth/login');
-          return;
-        }
-      } catch (error) {
-        next('/auth/login');
-        return;
-      }
-    }
-
-    if (to.meta.role) {
-      const userRole = authStore.userRole;
-      if (userRole !== to.meta.role) {
-        if (userRole === 'CUSTOMER') {
-          next('/customer/index');
-        } else if (userRole === 'ADMIN') {
-          next('/employee/dashboard');
-        } else if (userRole === 'EMPLOYEE') {
-          next('/employee/dashboard');   
-        } else {
-          next('/auth/login');
-        }
-        return;
-      }
-    }
   }
 
   if (to.meta.requiresGuest && authStore.isAuthenticated) {
-    if (authStore.userRole === 'CUSTOMER') {
-      next('/customer/index');
-    } else if (authStore.userRole === 'EMPLOYEE') {
-      next('/employee/dashboard');
+    const role = authStore.userRole;
+    return next(role === 'CUSTOMER' ? '/customer/index' : '/employee/dashboard');
+  }
+
+  if (to.meta.requiresAuth) {
+    if (!authStore.isAuthenticated) {
+      if (await authStore.fetchCurrentUser()) {
+        checkAccessValidation(to, authStore, next);
+      } else {
+        return next('/auth/login');
+      }
     } else {
-      next('/');
+      checkAccessValidation(to, authStore, next);
     }
-    return;
-  } 
-  
-  next();
+  } else {
+    next();
+  }
 });
+
+function checkAccessValidation(to, authStore, next) {
+  const role = authStore.userRole;
+  
+  if (to.meta.role && to.meta.role !== role) {
+    return redirectRoleBased(role, next);
+  }
+  if (to.meta.roles && !to.meta.roles.includes(role)) {
+    return redirectRoleBased(role, next);
+  }
+  next();
+}
+
+function redirectRoleBased(role, next) {
+  if (role === 'CUSTOMER') return next('/customer/index');
+  if (role === 'ADMIN' || role === 'EMPLOYEE') return next('/employee/dashboard');
+  return next('/auth/login');
+}
 
 export default router;

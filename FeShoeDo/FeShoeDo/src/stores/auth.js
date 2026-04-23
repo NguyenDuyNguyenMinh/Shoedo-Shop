@@ -32,23 +32,13 @@ export const useAuthStore = defineStore('auth', {
     async initAuth() {
       if (this.isInitialized) return;
       this.isLoading = true;
-      
       try {
-        const success = await this.checkSession();
-        if (success) {
+        if (await this.checkSession() || await this.autoLoginFromCookie()) {
           this.isInitialized = true;
           return;
         }
-
-        const cookieSuccess = await this.autoLoginFromCookie();
-        if (cookieSuccess) {
-          this.isInitialized = true;
-          return;
-        }
-        
         this.clearAuth();
       } catch (error) {
-        console.error('Init auth error:', error);
         this.clearAuth();
       } finally {
         this.isLoading = false;
@@ -152,7 +142,6 @@ export const useAuthStore = defineStore('auth', {
     clearAuth() {
       this.user = null;
       this.cartCount = 0;
-      this.logout;
     }
   }
 });
