@@ -88,6 +88,7 @@ export const useAuthStore = defineStore('auth', {
       } catch (error) {
         console.error('Logout error:', error);
       } finally {
+        localStorage.setItem('auth-event', 'logout-' + Date.now());
         window.location.href = '/auth/login';
       }
     },

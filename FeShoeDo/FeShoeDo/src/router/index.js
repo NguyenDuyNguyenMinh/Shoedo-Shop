@@ -152,7 +152,7 @@ router.beforeEach(async (to, from, next) => {
 
 function checkAccessValidation(to, authStore, next) {
   const role = authStore.userRole;
-  
+
   if (to.meta.role && to.meta.role !== role) {
     return redirectRoleBased(role, next);
   }
@@ -164,7 +164,8 @@ function checkAccessValidation(to, authStore, next) {
 
 function redirectRoleBased(role, next) {
   if (role === 'CUSTOMER') return next('/customer/index');
-  if (role === 'ADMIN' || role === 'EMPLOYEE') return next('/employee/dashboard');
+  if (role === 'ADMIN') return next('/employee/dashboard');
+  if (role === 'EMPLOYEE') return next('/employee/flashsale');
   return next('/auth/login');
 }
 
