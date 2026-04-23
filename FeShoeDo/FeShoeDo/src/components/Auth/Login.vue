@@ -357,7 +357,8 @@ const resetRegisterOtp = () => {
 
 const redirectByRole = (store) => {
   if (store.isCustomer) router.push('/customer/index');
-  else if (store.isEmployee || store.isAdmin) router.push('/employee/dashboard');
+  else if (store.userRole === 'ADMIN') router.push('/employee/dashboard');
+  else if (store.userRole === 'EMPLOYEE') router.push('/employee/flashsale');
   else router.push('/customer/index');
 };
 
@@ -533,9 +534,10 @@ const completeGoogleLoginNewUser = async (email, name, password) => {
     const { data } = await axios.post('/api/oauth2/google-login-newuser', { email, name, password }, { withCredentials: true });
     if (data.success) {
       authStore.user = data.user;
-      router.replace(route.path);
+      // Xóa query params khỏi URL mà không reload trang để Toast vẫn hiển thị
+      history.replaceState(null, '', route.path);
       window.showToast?.('Đăng nhập Google thành công!', 'success');
-      setTimeout(() => redirectByRole(authStore), 1000);
+      setTimeout(() => redirectByRole(authStore), 1500);
     } else window.showToast?.(data.message || 'Lỗi đăng nhập Google', 'danger');
   } catch (err) { window.showToast?.('Lỗi đăng nhập Google', 'danger'); }
   finally { loading.value = false; }
@@ -547,9 +549,10 @@ const completeGoogleLogin = async (email, name) => {
     const { data } = await axios.post('/api/oauth2/google-login', { email, name }, { withCredentials: true });
     if (data.success) {
       authStore.user = data.user;
-      router.replace(route.path);
+      // Xóa query params khỏi URL mà không reload trang để Toast vẫn hiển thị
+      history.replaceState(null, '', route.path);
       window.showToast?.('Đăng nhập Google thành công!', 'success');
-      setTimeout(() => redirectByRole(authStore), 1000);
+      setTimeout(() => redirectByRole(authStore), 1500);
     } else window.showToast?.(data.message || 'Lỗi đăng nhập Google', 'danger');
   } catch (err) { window.showToast?.('Lỗi đăng nhập Google', 'danger'); }
   finally { loading.value = false; }
