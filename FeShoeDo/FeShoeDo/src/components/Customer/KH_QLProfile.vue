@@ -468,19 +468,14 @@
   </div>
 </template>
 
-<script>
-import { ref, onMounted, computed } from 'vue'
+<script setup>
+import { ref, onMounted, computed, watch } from 'vue'
 import axios from 'axios'
 import KH_Navbar from '@/components/Shared/KH_Navbar.vue'
 import Footer from '@/components/Shared/Footer.vue'
 import Toast from '@/components/Shared/Toast.vue'
-import { watch } from 'vue'
 
-export default {
-  name: 'QLProfile',
-  components: { KH_Navbar, Footer, Toast },
-  setup() {
-    const user = ref({ userName: '', mail: '', createAt: '' })
+const user = ref({ userName: '', mail: '', createAt: '' })
     const customer = ref({ tenKH: '', sdt: '', diemTichLuy: 0, maGioiThieu: '', hasAppliedReferral: false })
     const addresses = ref([])
     const password = ref({ currentPassword: '', newPassword: '', confirmPassword: '' })
@@ -1002,28 +997,6 @@ export default {
       await fetchMyVouchers()
       await loadAvailableVouchers()
     })
-
-    return {
-      user, customer, addresses, password,
-      loading, showAddModal, editingAddress, addressForm,
-      showHistoryModal, showVoucherModal, showReferralModal, activeTab, pointsHistory, 
-      myVouchers, availableVouchers, redeemLoading, selectedVoucher,
-      referralCodeInput,
-      historySortBy, myVoucherStatusFilter, myVoucherSortBy, 
-      availableVoucherFilter, availableVoucherSortBy,
-      filteredHistory, filteredMyVouchers, filteredAvailableVouchers,
-      selectedExpiredIds, selectAllExpired, hasExpiredVouchers,
-      deleteSingleLoading, deleteBatchLoading,
-      deleteSingleExpiredVoucher, deleteSelectedExpiredVouchers,
-      updateProfile, changePassword, saveAddress, deleteAddress,
-      setDefaultAddress, editAddress, closeModal,
-      fetchPointsHistory, fetchMyVouchers, loadAvailableVouchers, 
-      redeemVoucher, submitReferralCode, copyReferralCode,
-      formatMoney, formatDate, formatDateShort, getStatusBadgeClass,
-      closeVoucherModal, closeReferralModal
-    }
-  }
-}
 </script>
 
 <style scoped>

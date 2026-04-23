@@ -753,20 +753,13 @@
   </div>
 </template>
 
-<script>
+<script setup>
 import { ref, computed, onMounted } from 'vue';
 import NV_Sidebar from '@/components/Shared/NV_Sidebar.vue';
 import Toast from '@/components/Shared/Toast.vue';
 import { Modal } from 'bootstrap';
 import axios from 'axios';
 
-export default {
-  name: 'QLDonHang',
-  components: {
-    NV_Sidebar,
-    Toast
-  },
-  setup() {
     // State
     const orders = ref({
       pending: [],
@@ -1139,49 +1132,7 @@ export default {
       orderDetailModalInstance = new Modal(document.getElementById('orderDetailModal'));
       rejectModalInstance = new Modal(document.getElementById('rejectModal'));
       deliveryFailedModalInstance = new Modal(document.getElementById('deliveryFailedModal'));
-    });
-
-    return {
-      orders,
-      activeTab,
-      searchKeyword,
-      filterDate,
-      processing,
-      selectedOrder,
-      orderDetail,
-      orderToReject,
-      rejectReason,
-      orderToFail,
-      failReason,
-      isSidebarCollapsed,
-      orderCounts,
-      filteredOrders,
-      employees,
-      filterEmployee,
-      sortOrder,
-      filteredStats,
-      loadEmployees,
-      setActiveTab,
-      resetFilters,
-      formatPrice,
-      formatDate,
-      getStatusBadgeClass,
-      getNoteClass,
-      getRejectWarning,
-      showOrderDetail,
-      confirmOrder,
-      showRejectModal,
-      confirmRejectOrder,
-      deliverySuccess,
-      showDeliveryFailedModal,
-      confirmDeliveryFailed,
-      sendApologyEmail,
-      printOrder,
-      handleSidebarCollapse
-    };
-  }
-};
-</script>
+    });</script>
 
 <style scoped>
 /* ===== ANIMATION KEYFRAMES ===== */

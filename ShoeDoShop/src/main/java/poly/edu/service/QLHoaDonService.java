@@ -31,15 +31,25 @@ public class QLHoaDonService {
     private final ObjectMapper mapper = new ObjectMapper();
 
     public Map<String, Object> getAllOrders() {
-        List<HoaDon> all = hoaDonDAO.findAll();
-  
-        Map<String, List<Map<String, Object>>> result = new HashMap<>();
-        result.put("pending", mapList(filterByStatus(all, "Đang xử lý")));
-        result.put("delivering", mapList(filterByStatus(all, "Đang giao")));
-        result.put("completed", mapList(filterByStatus(all, "Hoàn tất")));
-        result.put("rejected", mapList(filterByStatus(all, "Đã từ chối")));
-        result.put("error", mapList(filterByStatus(all, "Báo lỗi")));
+        Map<String, List<Map<String, Object>>> result = Map.of(
+            "pending", new ArrayList<>(),
+            "delivering", new ArrayList<>(),
+            "completed", new ArrayList<>(),
+            "rejected", new ArrayList<>(),
+            "error", new ArrayList<>()
+        );
         
+        for (HoaDon hd : hoaDonDAO.findAll()) {
+            Map<String, Object> summary = buildSummary(hd);
+            if (hd.getTrangThai() == null) continue;
+            switch (hd.getTrangThai()) {
+                case "Đang xử lý": result.get("pending").add(summary); break;
+                case "Đang giao": result.get("delivering").add(summary); break;
+                case "Hoàn tất": result.get("completed").add(summary); break;
+                case "Đã từ chối": result.get("rejected").add(summary); break;
+                case "Báo lỗi": result.get("error").add(summary); break;
+            }
+        }
         return success("data", result);
     }
     
@@ -287,10 +297,6 @@ public class QLHoaDonService {
 
     private QuanTri getCurrentEmployee() {
         return authService.getCurrentUser().getQuanTri();
-    }
-
-    private List<HoaDon> filterByStatus(List<HoaDon> list, String status) {
-        return list.stream().filter(h -> status.equals(h.getTrangThai())).collect(Collectors.toList());
     }
 
     private List<Map<String, Object>> mapList(List<HoaDon> list) {

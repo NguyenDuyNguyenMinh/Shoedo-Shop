@@ -5,57 +5,39 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 import jakarta.servlet.http.*;
 import poly.edu.service.AuthService;
+import java.util.List;
 
 @Component
 public class AuthInterceptor implements HandlerInterceptor {
 
     @Autowired AuthService authService;
 
+    private static final List<String> PUBLIC_PREFIXES = List.of(
+        "/auth/", "/api/auth/", "/api/oauth2/", "/oauth2/", 
+        "/images/", "/anh/", "/api/sanpham/flash-sales", 
+        "/api/sanpham/noi-bat", "/api/sanpham/ban-chay", 
+        "/api/sanpham/trang-chu", "/api/sanpham/detail", 
+        "/api/san-pham/", "/api/danh-gia/", "/api/public/", "/api/chat/"
+    );
+
+    private static final List<String> PUBLIC_EXACT = List.of(
+        "/", "/customer/index", "/customer/chinhsach", "/customer/sanpham"
+    );
+
     @Override
     public boolean preHandle(HttpServletRequest req, HttpServletResponse res, Object handler) throws Exception {
         String uri = req.getRequestURI();
         
-        if (uri.startsWith("/auth/") || 
-            uri.startsWith("/api/auth/") ||
-            uri.startsWith("/api/oauth2/") ||
-            uri.startsWith("/oauth2/") ||
-            uri.startsWith("/images/") ||
-            uri.startsWith("/anh/") ||
-            uri.startsWith("/api/sanpham/flash-sales") ||
-            uri.startsWith("/api/sanpham/noi-bat") ||
-            uri.startsWith("/api/sanpham/ban-chay") ||
-            uri.startsWith("/api/sanpham/trang-chu") ||
-            uri.startsWith("/api/sanpham/detail") ||
-            uri.startsWith("/api/san-pham/") ||
-            uri.startsWith("/api/danh-gia/") || 
-            uri.startsWith("/api/public/") ||
-            uri.startsWith("/api/chat/") ||
-            uri.equals("/") ||
-            uri.equals("/customer/index") ||
-            uri.equals("/customer/chinhsach") ||
-            uri.equals("/customer/sanpham")) {
+        if (PUBLIC_EXACT.contains(uri) || PUBLIC_PREFIXES.stream().anyMatch(uri::startsWith)) {
             return true;
         }
         
         if (req.getSession().getAttribute("user") == null) {
-            boolean isHighSecurityRoute = uri.startsWith("/employee") || 
-                                          uri.startsWith("/api/employee");
-            
-            if (isHighSecurityRoute) {
+            if (uri.startsWith("/employee") || uri.startsWith("/api/employee")) {
                 res.sendRedirect("/auth/login");
                 return false;
             }
-            
-            boolean autoLoggedIn = authService.autoLoginFromCookie();
-            if (!autoLoggedIn) {
-                res.sendRedirect("/auth/login");
-                return false;
-            }
-        }
-        
-        if (authService.getCurrentUser() == null) {
-            boolean autoLoggedIn = authService.autoLoginFromCookie();
-            if (!autoLoggedIn) {
+            if (!authService.autoLoginFromCookie()) {
                 res.sendRedirect("/auth/login");
                 return false;
             }

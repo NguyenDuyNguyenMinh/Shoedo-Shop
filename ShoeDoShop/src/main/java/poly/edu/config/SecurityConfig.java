@@ -64,7 +64,6 @@ public class SecurityConfig {
             )
             .oauth2Login(oauth2 -> oauth2
                 .loginPage("/auth/login")
-                .defaultSuccessUrl("http://localhost:5173/auth/login?googleSuccess=true", true)
                 .userInfoEndpoint(userInfo -> userInfo
                     .userService(oauth2UserService())
                 )
