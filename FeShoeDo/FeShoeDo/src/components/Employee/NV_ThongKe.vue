@@ -333,7 +333,7 @@ const error = ref(null);
 
 // Data states
 const thongKeData = ref(null);
-const selectedFilter = ref('1'); // Default Hôm nay
+const selectedFilter = ref('7'); // Default 7 ngày
 
 // Modal states
 const showStatusModal = ref(false);
@@ -665,7 +665,7 @@ onMounted(() => {
 
 /* Time Filter */
 .time-filter .btn {
-  border-radius: 8px;
+  border-radius: 20px !important;
   font-size: 13px;
   padding: 6px 16px;
 }
