@@ -205,7 +205,9 @@ onUnmounted(() => {
           
           <div class="marquee-wrapper">
             <div class="marquee-container">
-              <div class="marquee-group" :class="{ 'is-scrolling': activeCampaigns.products.length > 5 }">
+              <div class="marquee-group" 
+                   :class="{ 'is-scrolling': activeCampaigns.products.length > 5 }"
+                   :style="{ animationDuration: (activeCampaigns.products.length * 4) + 's' }">
                 <div v-for="(product, index) in activeCampaigns.products" :key="'cd-'+product.maSP" 
                      class="pcard flame-border marquee-item floating-card" 
                      :style="{ animationDelay: `${index * 0.4}s` }"
@@ -224,7 +226,10 @@ onUnmounted(() => {
                 </div>
               </div>
 
-              <div v-if="activeCampaigns.products.length > 5" class="marquee-group is-scrolling" aria-hidden="true">
+              <div v-if="activeCampaigns.products.length > 5" 
+                   class="marquee-group is-scrolling" 
+                   aria-hidden="true"
+                   :style="{ animationDuration: (activeCampaigns.products.length * 4) + 's' }">
                 <div v-for="(product, index) in activeCampaigns.products" :key="'cd-clone-'+product.maSP" 
                      class="pcard flame-border marquee-item floating-card" 
                      :style="{ animationDelay: `${index * 0.4}s` }"
@@ -384,7 +389,9 @@ onUnmounted(() => {
   justify-content: space-between;
   width: 90%;
   max-width: 1300px;
-  z-index: 2;
+  position: relative; /* QUAN TRỌNG: z-index chỉ hoạt động khi có position */
+  z-index: 10; /* Nổi lên trên cùng, qua mặt click-zone */
+  pointer-events: none; /* Click xuyên qua vùng trống để vẫn ăn sự kiện đổi slide */
   gap: 60px;
 }
 
@@ -447,6 +454,7 @@ onUnmounted(() => {
   cursor: pointer;
   transition: all 0.3s ease;
   letter-spacing: 1px;
+  pointer-events: auto; /* Kích hoạt lại click riêng cho nút */
 }
 .hero-btn:hover { background: #ccc; transform: translateX(5px); }
 
@@ -471,8 +479,8 @@ onUnmounted(() => {
   z-index: 2;
   box-shadow: inset 0 0 40px rgba(255,255,255,0.05), 0 20px 50px rgba(0,0,0,0.5);
   backdrop-filter: blur(5px);
-  /* QUAN TRỌNG: Lệnh này sẽ cắt cụt mọi thứ lòi ra khỏi hình tròn */
   overflow: hidden; 
+  pointer-events: auto; /* Kích hoạt lại hover riêng cho khung ảnh */
 }
 
 .circle-img {

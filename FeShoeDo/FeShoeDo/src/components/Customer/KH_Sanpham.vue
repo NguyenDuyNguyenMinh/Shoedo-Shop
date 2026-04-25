@@ -31,6 +31,61 @@ const selectedSort     = ref('Mặc định')
 const showCategoryMenu = ref(false)
 const showSortMenu     = ref(false)
 
+// State cho khoảng giá & Slider
+const inputMinPrice   = ref('')
+const inputMaxPrice   = ref('')
+const appliedMinPrice = ref(null)
+const appliedMaxPrice = ref(null)
+
+const minLimit  = 0
+const maxLimit  = 5000000 // Tối đa 5 triệu (bạn có thể chỉnh tùy ý)
+const stepPrice = 50000   // Mỗi bước kéo 50k
+const sliderMin = ref(minLimit)
+const sliderMax = ref(maxLimit)
+
+// Tính toán màu nền thanh kéo ở giữa 2 mốc
+const sliderTrackStyle = computed(() => {
+  const minPercent = (sliderMin.value / maxLimit) * 100
+  const maxPercent = (sliderMax.value / maxLimit) * 100
+  return {
+    background: `linear-gradient(to right, #ddd ${minPercent}%, #111 ${minPercent}%, #111 ${maxPercent}%, #ddd ${maxPercent}%)`
+  }
+})
+
+// Bắt sự kiện khi kéo thanh
+const handleSliderInput = () => {
+  if (sliderMin.value > sliderMax.value) {
+    let tmp = sliderMin.value;
+    sliderMin.value = sliderMax.value;
+    sliderMax.value = tmp;
+  }
+  // Nếu kéo về mốc 0 hoặc max thì để ô input rỗng cho đẹp
+  inputMinPrice.value = sliderMin.value === minLimit ? '' : sliderMin.value
+  inputMaxPrice.value = sliderMax.value === maxLimit ? '' : sliderMax.value
+}
+
+// Bắt sự kiện khi gõ vào ô input text
+const syncSliderFromInput = () => {
+  let minVal = inputMinPrice.value ? Number(inputMinPrice.value) : minLimit
+  let maxVal = inputMaxPrice.value ? Number(inputMaxPrice.value) : maxLimit
+
+  if (minVal < minLimit) minVal = minLimit
+  if (maxVal > maxLimit) maxVal = maxLimit
+  if (minVal > maxVal) {
+    let temp = minVal; minVal = maxVal; maxVal = temp;
+  }
+  sliderMin.value = minVal
+  sliderMax.value = maxVal
+}
+
+const applyPriceFilter = () => {
+  appliedMinPrice.value = inputMinPrice.value ? Number(inputMinPrice.value) : null
+  appliedMaxPrice.value = inputMaxPrice.value ? Number(inputMaxPrice.value) : null
+  if (!isSearchMode.value) {
+    fetchProducts()
+  }
+}
+
 const sortOptions = ['Mặc định', 'Giá tăng dần', 'Giá giảm dần', 'Mới nhất', '🔥 Khuyến Mãi', '📈 Bán Chạy', '⭐ Đánh Giá Cao']
 
 const sortMap = {
@@ -87,6 +142,8 @@ const fetchProducts = async () => {
         gender   : selectedGender.value   === 'Tất cả' ? undefined : selectedGender.value,
         inStock  : onlyInStock.value,
         sort     : sortMap[selectedSort.value] || 'default',
+        minPrice : appliedMinPrice.value || undefined,
+        maxPrice : appliedMaxPrice.value || undefined
       }
       res = await api.getPublicProducts(params)
     }
@@ -130,6 +187,14 @@ const displayProducts = computed(() => {
   // Lọc còn hàng
   if (onlyInStock.value) {
     list = list.filter(p => p.conHang)
+  }
+
+  // Lọc khoảng giá (áp dụng khi đang ở chế độ Search)
+  if (appliedMinPrice.value !== null) {
+    list = list.filter(p => (p.giaSauKM || 0) >= appliedMinPrice.value)
+  }
+  if (appliedMaxPrice.value !== null) {
+    list = list.filter(p => (p.giaSauKM || 0) <= appliedMaxPrice.value)
   }
 
   // Sort client-side
@@ -220,6 +285,16 @@ const resetFilters = () => {
   selectedGender.value = 'Tất cả'; 
   onlyInStock.value = false; 
   selectedSort.value = 'Mặc định';
+  
+  inputMinPrice.value = '';
+  inputMaxPrice.value = '';
+  appliedMinPrice.value = null;
+  appliedMaxPrice.value = null;
+  
+  // Trả thanh kéo về 2 mép
+  sliderMin.value = minLimit;
+  sliderMax.value = maxLimit;
+
   router.replace({ name: 'Sanpham', query: {} })
 }
 
@@ -263,9 +338,26 @@ onUnmounted(() => document.removeEventListener('click', closeDropdowns))
 
       <div class="filter-bar">
         
-        <div class="gender-tabs">
-          <button class="gender-btn" :class="{ active: selectedGender === 'Nam' }" @click.stop="setGender('Nam')">Nam</button>
-          <button class="gender-btn" :class="{ active: selectedGender === 'Nữ' }"  @click.stop="setGender('Nữ')">Nữ</button>
+        <div class="filter-left">
+          <div class="gender-tabs">
+            <button class="gender-btn" :class="{ active: selectedGender === 'Nam' }" @click.stop="setGender('Nam')">Nam</button>
+            <button class="gender-btn" :class="{ active: selectedGender === 'Nữ' }"  @click.stop="setGender('Nữ')">Nữ</button>
+          </div>
+
+          <div class="price-filter-container">
+            <div class="price-filter-box">
+              <input type="number" v-model="inputMinPrice" placeholder="Giá từ" class="price-input" @input="syncSliderFromInput" @keyup.enter="applyPriceFilter" />
+              <span class="price-separator">-</span>
+              <input type="number" v-model="inputMaxPrice" placeholder="Đến" class="price-input" @input="syncSliderFromInput" @keyup.enter="applyPriceFilter" />
+              <button class="price-apply-btn" @click="applyPriceFilter">Áp dụng</button>
+            </div>
+            
+            <div class="multi-range-slider">
+              <input type="range" class="range-min" :min="minLimit" :max="maxLimit" :step="stepPrice" v-model.number="sliderMin" @input="handleSliderInput">
+              <input type="range" class="range-max" :min="minLimit" :max="maxLimit" :step="stepPrice" v-model.number="sliderMax" @input="handleSliderInput">
+              <div class="slider-track" :style="sliderTrackStyle"></div>
+            </div>
+          </div>
         </div>
 
         <div class="filter-right">
@@ -505,6 +597,35 @@ onUnmounted(() => document.removeEventListener('click', closeDropdowns))
 .btn-reset { padding: 10px 24px; background: #111; border: none; border-radius: 6px; color: #fff; font-size: 13px; font-weight: 600; cursor: pointer; }
 .btn-reset:hover { background: #333; }
 
+/* --- Lọc Giá --- */
+.filter-left { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.price-filter-box { display: flex; align-items: center; gap: 6px; background: #fff; padding: 4px 6px; border: 1.5px solid #bbb; border-radius: 50px; }
+.price-input { width: 80px; border: none; outline: none; padding: 4px 8px; font-size: 13px; text-align: center; background: transparent; }
+/* Ẩn mũi tên tăng giảm của input number */
+.price-input::-webkit-outer-spin-button, .price-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.price-input[type=number] { -moz-appearance: textfield; }
+.price-separator { color: #888; font-weight: 500; }
+.price-apply-btn { background: #111; color: #fff; border: none; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+.price-apply-btn:hover { background: #333; }
+
+/* --- Multi Range Slider --- */
+.price-filter-container { display: flex; flex-direction: column; gap: 6px; position: relative; }
+.multi-range-slider { position: relative; width: 100%; height: 12px; margin-top: 2px; }
+.slider-track { position: absolute; width: 100%; height: 4px; background: #ddd; border-radius: 4px; top: 50%; transform: translateY(-50%); z-index: 1; }
+.multi-range-slider input[type="range"] { position: absolute; width: 100%; height: 4px; top: 50%; transform: translateY(-50%); background: transparent; pointer-events: none; -webkit-appearance: none; z-index: 2; margin: 0; outline: none; }
+
+.multi-range-slider input[type="range"]::-webkit-slider-thumb { pointer-events: auto; -webkit-appearance: none; width: 14px; height: 14px; background: #111; border-radius: 50%; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.3); transition: transform 0.1s; }
+.multi-range-slider input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.15); }
+.multi-range-slider input[type="range"]::-moz-range-thumb { pointer-events: auto; width: 14px; height: 14px; background: #111; border-radius: 50%; cursor: pointer; border: none; box-shadow: 0 2px 4px rgba(0,0,0,0.3); transition: transform 0.1s; }
+.multi-range-slider input[type="range"]::-moz-range-thumb:hover { transform: scale(1.15); }
+
+/* Responsive nhỏ lại cho điện thoại */
+@media (max-width: 768px) {
+  .filter-left { width: 100%; justify-content: space-between; }
+  .price-filter-container { flex: 1; margin-left: 10px; }
+  .price-filter-box { justify-content: center; }
+  .price-input { width: 60px; font-size: 12px; }
+}
 /* ── FADE UP khi vào trang ── */
 @keyframes fadeUpAnim {
   from { opacity: 0; transform: translateY(24px); }
