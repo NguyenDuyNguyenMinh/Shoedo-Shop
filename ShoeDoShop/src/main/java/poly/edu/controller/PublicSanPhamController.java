@@ -53,13 +53,15 @@ public class PublicSanPhamController {
             @RequestParam(required = false)                          String  category,
             @RequestParam(required = false)                          String  gender,
             @RequestParam(required = false, defaultValue = "false")  boolean inStock,
-            @RequestParam(required = false, defaultValue = "default") String  sort
+            @RequestParam(required = false, defaultValue = "default") String  sort,
+            @RequestParam(required = false)                          Double  minPrice,
+            @RequestParam(required = false)                          Double  maxPrice
     ) {
-        log.info("GET /api/public/products category={} gender={} inStock={} sort={}",
-                category, gender, inStock, sort);
+        log.info("GET /api/public/products category={} gender={} inStock={} sort={} minPrice={} maxPrice={}",
+                category, gender, inStock, sort, minPrice, maxPrice);
         try {
             List<SanPhamListDTO> data = publicSanPhamService.laySanPhamList(
-                    category, gender, inStock, sort);
+                    category, gender, inStock, sort, minPrice, maxPrice);
             return ResponseEntity.ok(ApiResponse.ok(data));
         } catch (Exception e) {
             log.error("Lỗi getProducts: {}", e.getMessage(), e);
@@ -95,8 +97,9 @@ public class PublicSanPhamController {
     ) {
         log.info("GET /api/public/products/{}", id);
         try {
+            // Cập nhật thêm null, null cho minPrice và maxPrice
             List<SanPhamListDTO> all = publicSanPhamService.laySanPhamList(
-                    null, null, false, "default");
+                    null, null, false, "default", null, null);
 
             return all.stream()
                     .filter(p -> p.getMaSP().equals(id))

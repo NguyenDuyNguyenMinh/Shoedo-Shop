@@ -31,9 +31,9 @@ public class PublicSanPhamService {
     }
 
     public List<SanPhamListDTO> laySanPhamList(
-            String tenDM, String gioiTinhStr, boolean onlyInStock, String sortBy) {
-        log.debug("laySanPhamList tenDM={} gioiTinh={} inStock={} sort={}", tenDM, gioiTinhStr, onlyInStock, sortBy);
-
+            String tenDM, String gioiTinhStr, boolean onlyInStock, String sortBy, Double minPrice, Double maxPrice) {
+        log.debug("laySanPhamList tenDM={} gioiTinh={} inStock={} sort={} minPrice={} maxPrice={}",
+                tenDM, gioiTinhStr, onlyInStock, sortBy, minPrice, maxPrice);
         Boolean gioiTinh = parseGioiTinh(gioiTinhStr);
         boolean filterDM = tenDM != null && !tenDM.isBlank();
 
@@ -63,6 +63,12 @@ public class PublicSanPhamService {
         if (onlyInStock) {
             dtos = dtos.stream().filter(SanPhamListDTO::getConHang).collect(Collectors.toList());
         }
+        if (minPrice != null) {
+            dtos = dtos.stream().filter(p -> p.getGiaSauKM() != null && p.getGiaSauKM() >= minPrice).collect(Collectors.toList());
+        }
+        if (maxPrice != null) {
+            dtos = dtos.stream().filter(p -> p.getGiaSauKM() != null && p.getGiaSauKM() <= maxPrice).collect(Collectors.toList());
+        }
 
         return sort(dtos, sortBy);
     }
@@ -71,7 +77,7 @@ public class PublicSanPhamService {
         log.debug("timKiem keyword={}", keyword);
 
         if (keyword == null || keyword.isBlank()) {
-            return laySanPhamList(null, null, false, "default");
+            return laySanPhamList(null, null, false, "default", null, null);
         }
 
         String kw = keyword.trim();
